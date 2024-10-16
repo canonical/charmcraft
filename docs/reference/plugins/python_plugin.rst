@@ -3,7 +3,7 @@
 Python plugin
 =============
 
-The Python plugin builds charms written in Python. It's typically 
+The Python plugin builds charms written in Python. It's typically
 used in conjunction with the `Operator framework`_.
 
 .. include:: /common/craft-parts/reference/plugins/python_plugin.rst

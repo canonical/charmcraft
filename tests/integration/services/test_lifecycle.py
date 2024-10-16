@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the lifecycle service."""
 
-
 import distro
 import pytest
 from craft_application import errors, models, util

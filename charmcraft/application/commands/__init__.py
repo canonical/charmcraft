@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft commands."""
+
 import craft_application
 
 from charmcraft.application.commands.analyse import Analyse, Analyze
@@ -109,7 +110,8 @@ def fill_command_groups(app: craft_application.Application) -> None:
         ],
     )
     app.add_command_group(
-        "Extensions", [ExpandExtensionsCommand, ExtensionsCommand, ListExtensionsCommand]
+        "Extensions",
+        [ExpandExtensionsCommand, ExtensionsCommand, ListExtensionsCommand],
     )
     app.add_command_group(
         "Other",

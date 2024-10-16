@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charm plugin for craft-parts."""
+
 import os
 import pathlib
 import re
@@ -55,7 +56,9 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
     """
 
     @pydantic.field_validator("charm_entrypoint", mode="after")
-    def _validate_entrypoint(cls, charm_entrypoint: str, info: pydantic.ValidationInfo) -> str:
+    def _validate_entrypoint(
+        cls, charm_entrypoint: str, info: pydantic.ValidationInfo
+    ) -> str:
         """Validate the entry point."""
         # the location of the project is needed
         if "source" not in info.data:
@@ -67,11 +70,15 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
         # check that the entrypoint is inside the project
         filepath = (project_dirpath / charm_entrypoint).resolve()
         if project_dirpath not in filepath.parents:
-            raise ValueError(f"charm entry point must be inside the project: {str(filepath)!r}")
+            raise ValueError(
+                f"charm entry point must be inside the project: {str(filepath)!r}"
+            )
 
         # store the entrypoint always relative to the project's path (no matter if the origin
         # was relative or absolute)
-        rel_entrypoint = (project_dirpath / charm_entrypoint).relative_to(project_dirpath)
+        rel_entrypoint = (project_dirpath / charm_entrypoint).relative_to(
+            project_dirpath
+        )
         return rel_entrypoint.as_posix()
 
     @pydantic.model_validator(mode="after")
@@ -90,7 +97,10 @@ class CharmPluginProperties(plugins.PluginProperties, frozen=True):
 
         # if nothing indicated, and default file is there, use it
         default_reqs_name = "requirements.txt"
-        if not self.charm_requirements and (project_dirpath / default_reqs_name).is_file():
+        if (
+            not self.charm_requirements
+            and (project_dirpath / default_reqs_name).is_file()
+        ):
             self.charm_requirements.append(default_reqs_name)
 
         return self
@@ -188,7 +198,10 @@ class CharmPlugin(plugins.Plugin):
         elif platform.is_yum_based():
             try:
                 os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+                if (os_release.id(), os_release.version_id()) in (
+                    ("centos", "7"),
+                    ("rhel", "7"),
+                ):
                     # CentOS 7 Python 3.8 from SCL repo
                     return {
                         "autoconf",
@@ -305,7 +318,10 @@ class CharmPlugin(plugins.Plugin):
         options = cast(CharmPluginProperties, self._options)
         return [
             "--strict-dependencies",
-            *(f"--binary-package={package}" for package in options.charm_binary_python_packages),
+            *(
+                f"--binary-package={package}"
+                for package in options.charm_binary_python_packages
+            ),
             *(f"--requirement={reqs}" for reqs in options.charm_requirements),
         ]
 
@@ -324,7 +340,10 @@ class CharmPlugin(plugins.Plugin):
                         base_tools.remove(pkg)
 
                 os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+                if (os_release.id(), os_release.version_id()) in (
+                    ("centos", "7"),
+                    ("rhel", "7"),
+                ):
                     # CentOS 7 compatibility, bootstrap base tools use binary packages
                     for pkg in base_tools:
                         parameters.extend(["-b", pkg])
@@ -354,7 +373,10 @@ class CharmPlugin(plugins.Plugin):
         """Return a str of PATH for special OS."""
         with suppress(OsReleaseIdError, OsReleaseVersionIdError):
             os_release = os_utils.OsRelease()
-            if (os_release.id(), os_release.version_id()) in (("centos", "7"), ("rhel", "7")):
+            if (os_release.id(), os_release.version_id()) in (
+                ("centos", "7"),
+                ("rhel", "7"),
+            ):
                 # CentOS 7 Python 3.8 from SCL repo
                 return "/opt/rh/rh-python38/root/usr/bin"
 

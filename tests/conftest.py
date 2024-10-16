@@ -63,7 +63,13 @@ def simple_charm(basic_charm_dict: dict[str, Any]):
                             "architectures": [util.get_host_architecture()],
                         }
                     ],
-                    "run-on": [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
+                    "run-on": [
+                        {
+                            "name": "ubuntu",
+                            "channel": "22.04",
+                            "architectures": ["arm64"],
+                        }
+                    ],
                 }
             ],
         }
@@ -317,7 +323,9 @@ def assert_output(capsys):
         for match_line in match_lines:
             if match_line not in printed_lines:
                 printed_repr = "\n".join(map(repr, printed_lines))
-                pytest.fail(f"Line {match_line!r} not found in the output found:\n{printed_repr}")
+                pytest.fail(
+                    f"Line {match_line!r} not found in the output found:\n{printed_repr}"
+                )
 
     return helper
 
@@ -377,7 +385,9 @@ def charm_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 @pytest.fixture
@@ -399,7 +409,9 @@ def bundle_plugin(tmp_path):
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
 
-    return plugins.get_plugin(part=part, part_info=part_info, properties=plugin_properties)
+    return plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
 
 
 @pytest.fixture

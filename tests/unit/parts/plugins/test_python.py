@@ -24,16 +24,22 @@ import pytest_check
 
 from charmcraft.parts import plugins
 
-pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
+]
 
 
-def test_get_build_environment(python_plugin: plugins.PythonPlugin, install_path: pathlib.Path):
+def test_get_build_environment(
+    python_plugin: plugins.PythonPlugin, install_path: pathlib.Path
+):
     env = python_plugin.get_build_environment()
 
     assert env["PIP_NO_BINARY"] == ":all:"
 
 
-def test_get_venv_directory(python_plugin: plugins.PythonPlugin, install_path: pathlib.Path):
+def test_get_venv_directory(
+    python_plugin: plugins.PythonPlugin, install_path: pathlib.Path
+):
     assert python_plugin._get_venv_directory() == install_path / "venv"
 
 
@@ -58,8 +64,12 @@ def test_get_package_install_commands(
     }
     python_plugin._options = plugins.PythonPluginProperties.unmarshal(spec)
     python_plugin._get_pip = lambda: "/python -m pip"
-    copy_src_cmd = f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
-    copy_lib_cmd = f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+    copy_src_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+    )
+    copy_lib_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+    )
 
     actual = python_plugin._get_package_install_commands()
 
@@ -93,7 +103,9 @@ def test_get_package_install_commands(
     pytest_check.is_in(copy_lib_cmd, python_plugin._get_package_install_commands())
 
 
-def test_get_rm_command(python_plugin: plugins.PythonPlugin, install_path: pathlib.Path):
+def test_get_rm_command(
+    python_plugin: plugins.PythonPlugin, install_path: pathlib.Path
+):
     assert f"rm -rf {install_path / 'venv/bin'}" in python_plugin.get_build_commands()
 
 
@@ -106,4 +118,6 @@ def test_no_get_rm_command(
         "python-keep-bins": True,
     }
     python_plugin._options = plugins.PythonPluginProperties.unmarshal(spec)
-    assert f"rm -rf {install_path / 'venv/bin'}" not in python_plugin.get_build_commands()
+    assert (
+        f"rm -rf {install_path / 'venv/bin'}" not in python_plugin.get_build_commands()
+    )

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
+
 import datetime
 import pathlib
 
@@ -47,14 +48,18 @@ def package_service(new_path: pathlib.Path, service_factory, default_build_plan)
         for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
     ],
 )
-@freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
+@freezegun.freeze_time(
+    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
+)
 def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     test_prime_dir = new_path / "prime"
     test_prime_dir.mkdir()
     expected_prime_dir = project_path / "prime"
 
-    project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
+    project = models.CharmcraftProject.from_yaml_file(
+        project_path / "project" / "charmcraft.yaml"
+    )
     project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
@@ -71,7 +76,9 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
         for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
     ],
 )
-@freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
+@freezegun.freeze_time(
+    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
+)
 def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path):
     """Test that the metadata file gets rewritten for a charm.
 
@@ -82,7 +89,9 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     test_prime_dir.mkdir()
     expected_prime_dir = project_path / "prime"
 
-    project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
+    project = models.CharmcraftProject.from_yaml_file(
+        project_path / "project" / "charmcraft.yaml"
+    )
     project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 
@@ -94,7 +103,9 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
         pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
 
 
-@freezegun.freeze_time(datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc))
+@freezegun.freeze_time(
+    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
+)
 def test_no_overwrite_reactive_metadata(monkeypatch, new_path, package_service):
     """Test that the metadata file doesn't get overwritten for a reactive charm..
 
@@ -108,7 +119,9 @@ def test_no_overwrite_reactive_metadata(monkeypatch, new_path, package_service):
     test_stage_dir.mkdir()
     (test_stage_dir / const.METADATA_FILENAME).write_text("INVALID!!")
 
-    project = models.CharmcraftProject.from_yaml_file(project_path / "project" / "charmcraft.yaml")
+    project = models.CharmcraftProject.from_yaml_file(
+        project_path / "project" / "charmcraft.yaml"
+    )
     project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
     package_service._project = project
 

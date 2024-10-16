@@ -25,7 +25,6 @@ from charmcraft import utils
 
 
 class PoetryPluginProperties(poetry_plugin.PoetryPluginProperties, frozen=True):
-
     poetry_keep_bins: bool = False
     """Keep the virtual environment's 'bin' directory."""
 

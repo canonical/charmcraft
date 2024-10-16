@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for store commands."""
+
 import argparse
 import datetime
 import pathlib
@@ -61,7 +62,14 @@ def test_login_basic_no_export(service_factory, mock_store_client):
 @pytest.mark.parametrize("permission", [None, [], ["package-manage"]])
 @pytest.mark.parametrize("ttl", [None, 0, 2**65])
 def test_login_export(
-    monkeypatch, service_factory, mock_store_client, charm, bundle, channel, permission, ttl
+    monkeypatch,
+    service_factory,
+    mock_store_client,
+    charm,
+    bundle,
+    channel,
+    permission,
+    ttl,
 ):
     mock_client_cls = mock.Mock(return_value=mock_store_client)
     monkeypatch.setattr(craft_store, "StoreClient", mock_client_cls)
@@ -95,7 +103,13 @@ def test_login_export(
                     bases=[models.ResponseCharmResourceBase()],
                 )
             ],
-            [{"revision": 123, "updated_at": "1900-01-01T00:00:00", "architectures": ["all"]}],
+            [
+                {
+                    "revision": 123,
+                    "updated_at": "1900-01-01T00:00:00",
+                    "architectures": ["all"],
+                }
+            ],
         ),
     ],
 )
@@ -213,9 +227,13 @@ def test_fetch_libs_missing_from_store(service_factory, libs, expected):
         ),
     ],
 )
-def test_fetch_libs_no_content(new_path, service_factory, libs, store_libs, dl_lib, expected):
+def test_fetch_libs_no_content(
+    new_path, service_factory, libs, store_libs, dl_lib, expected
+):
     service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
+        store_libs
+    )
     service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
@@ -258,7 +276,9 @@ def test_fetch_libs_success(
     new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
 ) -> None:
     service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
+        store_libs
+    )
     service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 

@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Extension registry."""
+
 from typing import Any
 
 from charmcraft import errors

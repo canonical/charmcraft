@@ -14,12 +14,16 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for store helpers."""
+
 from hypothesis import given, strategies
 
 from charmcraft import utils
 
 
-@given(charms=strategies.lists(strategies.text()), bundles=strategies.lists(strategies.text()))
+@given(
+    charms=strategies.lists(strategies.text()),
+    bundles=strategies.lists(strategies.text()),
+)
 def test_get_packages(charms, bundles):
     packages = utils.get_packages(charms=charms, bundles=bundles)
     result_names = [package.package_name for package in packages]

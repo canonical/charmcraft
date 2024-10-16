@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft error classes."""
+
 import io
 import pathlib
 import shlex
@@ -81,7 +82,9 @@ class DuplicateCharmsError(CraftError):
         "Files can be seen with --verbosity=debug"
     )
 
-    def __init__(self, charms: Mapping[str, Iterable[pathlib.Path]], source: bool = True):
+    def __init__(
+        self, charms: Mapping[str, Iterable[pathlib.Path]], source: bool = True
+    ):
         import charmcraft.utils
 
         charm_names = charmcraft.utils.humanize_list(charms.keys(), "and")
@@ -103,7 +106,10 @@ class DuplicateCharmsError(CraftError):
         print(path_tree_line_format.format(name="CHARM", path="PATHS"), file=details)
         for charm, paths in charms.items():
             path_iter = iter(paths)
-            print(path_tree_line_format.format(name=charm, path=next(path_iter)), file=details)
+            print(
+                path_tree_line_format.format(name=charm, path=next(path_iter)),
+                file=details,
+            )
             for path in path_iter:
                 print(path_tree_line_format.format(name="", path=path), file=details)
         return details.getvalue()

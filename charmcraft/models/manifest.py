@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Model for output charm's manifest.yaml file."""
+
 from typing import Any, Literal
 
 from craft_application import models

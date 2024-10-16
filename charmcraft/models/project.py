@@ -121,7 +121,9 @@ class CharmLib(models.CraftBaseModel):
         try:
             int(api)
         except ValueError:
-            raise ValueError(f"API version not valid. Expected an integer, got {api!r}") from None
+            raise ValueError(
+                f"API version not valid. Expected an integer, got {api!r}"
+            ) from None
         return str(value)
 
     @pydantic.field_validator("version", mode="before")
@@ -335,7 +337,9 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     platform=current_arch,
                     build_on=current_arch,
                     build_for=current_arch,
-                    base=bases.BaseName(name=current_base.system, version=current_base.release),
+                    base=bases.BaseName(
+                        name=current_base.system, version=current_base.release
+                    ),
                 )
             ]
         if not self.base:
@@ -507,7 +511,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     ) -> dict[str, dict[str, Any]]:
         """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
-            raise TypeError("'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec.")
+            raise TypeError(
+                "'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec."
+            )
         if not parts:
             if info.config and info.config.get("title") == "Bundle":
                 parts = {"bundle": {"plugin": "bundle"}}
@@ -1001,14 +1007,19 @@ def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
         and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
     ):
         return True
-    return base in ({"name": "centos", "channel": "7"}, {"name": "almalinux", "channel": "9"})
+    return base in (
+        {"name": "centos", "channel": "7"},
+        {"name": "almalinux", "channel": "9"},
+    )
 
 
 def _validate_base(
     base: charmcraft.BaseDict | charmcraft.LongFormBasesDict,
 ) -> charmcraft.LongFormBasesDict:
     if "name" in base:  # Convert short form to long form
-        base = cast(charmcraft.LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        base = cast(
+            charmcraft.LongFormBasesDict, {"build-on": [base], "run-on": [base]}
+        )
     else:  # Cast to long form since we know it is one.
         base = cast(charmcraft.LongFormBasesDict, base)
 
@@ -1038,9 +1049,9 @@ class BasesCharm(CharmProject):
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
     # solved with Pydantic 2.
-    bases: list[Annotated[BasesConfiguration, pydantic.BeforeValidator(_validate_base)]] = (
-        pydantic.Field(min_length=1)
-    )
+    bases: list[
+        Annotated[BasesConfiguration, pydantic.BeforeValidator(_validate_base)]
+    ] = pydantic.Field(min_length=1)
 
     base: None = None
 

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Platform-related Charmcraft utilities."""
+
 import dataclasses
 import pathlib
 import platform
@@ -35,7 +36,9 @@ class OSPlatform:
     machine: str
 
 
-def get_os_platform(filepath: pathlib.Path = pathlib.Path("/etc/os-release")) -> OSPlatform:
+def get_os_platform(
+    filepath: pathlib.Path = pathlib.Path("/etc/os-release"),
+) -> OSPlatform:
     """Determine a system/release combo for an OS using /etc/os-release if available."""
     system = platform.system()
     release = platform.release()
@@ -52,7 +55,9 @@ def get_os_platform(filepath: pathlib.Path = pathlib.Path("/etc/os-release")) ->
     return OSPlatform(system=system, release=release, machine=machine)
 
 
-def validate_architectures(architectures: Iterable[str], *, allow_all: bool = False) -> None:
+def validate_architectures(
+    architectures: Iterable[str], *, allow_all: bool = False
+) -> None:
     """Validate that all architectures provided are valid architecture names."""
     architectures = set(architectures)
     if allow_all and "all" in architectures:

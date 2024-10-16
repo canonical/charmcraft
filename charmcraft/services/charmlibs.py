@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Service class for interacting with charm libraries."""
+
 from __future__ import annotations
 
 import pathlib
@@ -60,7 +61,9 @@ class CharmLibsService(craft_application.ProjectService):
         lib_info = utils.get_lib_info(lib_path=self._project_dir / lib_path)
         return lib_info.patch == patch
 
-    def get_local_version(self, *, charm_name: str, lib_name: str) -> tuple[int, int] | None:
+    def get_local_version(
+        self, *, charm_name: str, lib_name: str
+    ) -> tuple[int, int] | None:
         """Get the version of the library on the machine, or None.
 
         :param charm_name: The name of the charm where the lib is published

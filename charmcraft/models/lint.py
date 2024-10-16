@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Models for linters."""
+
 import enum
 from typing import final
 

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for the store service."""
+
 import platform
 from typing import cast
 from unittest import mock
@@ -34,7 +35,9 @@ from tests import get_fake_revision
 
 @pytest.fixture
 def store(service_factory) -> services.StoreService:
-    store = services.StoreService(app=application.APP_METADATA, services=service_factory)
+    store = services.StoreService(
+        app=application.APP_METADATA, services=service_factory
+    )
     store.client = mock.Mock(spec_set=client.Client)
     store.anonymous_client = mock.Mock(spec_set=client.AnonymousClient)
     return store
@@ -48,7 +51,10 @@ def reusable_store():
 
 
 def test_user_agent(store):
-    assert store._user_agent == f"Charmcraft/{charmcraft.__version__} ({store._ua_system_info})"
+    assert (
+        store._user_agent
+        == f"Charmcraft/{charmcraft.__version__} ({store._ua_system_info})"
+    )
 
 
 @pytest.mark.parametrize("system", ["Windows", "Macos"])
@@ -65,7 +71,10 @@ def test_ua_system_info_non_linux(
     monkeypatch.setattr(platform, "python_implementation", lambda: python)
     monkeypatch.setattr(platform, "python_version", lambda: python_version)
 
-    assert store._ua_system_info == f"{system} {release}; {machine}; {python} {python_version}"
+    assert (
+        store._ua_system_info
+        == f"{system} {release}; {machine}; {python} {python_version}"
+    )
 
 
 @pytest.mark.parametrize("machine", ["x86_64", "arm64", "riscv64"])
@@ -91,7 +100,9 @@ def test_ua_system_info_linux(
 
 
 def test_setup_with_error(emitter: RecordingEmitter, store):
-    store.ClientClass = mock.Mock(side_effect=[craft_store.errors.NoKeyringError, "I am a store!"])
+    store.ClientClass = mock.Mock(
+        side_effect=[craft_store.errors.NoKeyringError, "I am a store!"]
+    )
 
     store.setup()
 
@@ -129,15 +140,23 @@ def test_login(reusable_store, permissions, description, ttl, channels):
     )
 
     client.login.assert_called_once_with(
-        permissions=permissions, description=description, ttl=ttl, packages=None, channels=channels
+        permissions=permissions,
+        description=description,
+        ttl=ttl,
+        packages=None,
+        channels=channels,
     )
 
 
 def test_login_failure(store):
     client = cast(mock.Mock, store.client)
-    client.login.side_effect = craft_store.errors.CredentialsAlreadyAvailable("charmcraft", "host")
+    client.login.side_effect = craft_store.errors.CredentialsAlreadyAvailable(
+        "charmcraft", "host"
+    )
 
-    with pytest.raises(errors.CraftError, match="Cannot login because credentials were found"):
+    with pytest.raises(
+        errors.CraftError, match="Cannot login because credentials were found"
+    ):
         store.login()
 
 
@@ -158,7 +177,11 @@ def test_logout(store):
             [
                 models.CharmResourceRevisionUpdateRequest(
                     revision=123,
-                    bases=[models.RequestCharmResourceBase(architectures=["amd64", "riscv64"])],
+                    bases=[
+                        models.RequestCharmResourceBase(
+                            architectures=["amd64", "riscv64"]
+                        )
+                    ],
                 )
             ],
         ),
@@ -170,7 +193,11 @@ def test_logout(store):
             [
                 models.CharmResourceRevisionUpdateRequest(
                     revision=123,
-                    bases=[models.RequestCharmResourceBase(architectures=["amd64", "riscv64"])],
+                    bases=[
+                        models.RequestCharmResourceBase(
+                            architectures=["amd64", "riscv64"]
+                        )
+                    ],
                 ),
                 models.CharmResourceRevisionUpdateRequest(
                     revision=456,
@@ -180,7 +207,9 @@ def test_logout(store):
         ),
     ],
 )
-def test_set_resource_revisions_architectures_request_form(store, updates, expected_request):
+def test_set_resource_revisions_architectures_request_form(
+    store, updates, expected_request
+):
     store.client.list_resource_revisions.return_value = []
 
     store.set_resource_revisions_architectures("my-charm", "my-file", updates)
@@ -199,10 +228,18 @@ def test_set_resource_revisions_architectures_request_form(store, updates, expec
         (
             {123: ["all"]},
             [
-                get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=0),
-                get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=123),
+                get_fake_revision(
+                    bases=[models.ResponseCharmResourceBase()], revision=0
+                ),
+                get_fake_revision(
+                    bases=[models.ResponseCharmResourceBase()], revision=123
+                ),
             ],
-            [get_fake_revision(bases=[models.ResponseCharmResourceBase()], revision=123)],
+            [
+                get_fake_revision(
+                    bases=[models.ResponseCharmResourceBase()], revision=123
+                )
+            ],
         ),
     ],
 )
@@ -251,12 +288,20 @@ def test_get_credentials(monkeypatch, store):
         ),
         (
             [CharmLib(lib="my_charm.my_lib", version="1.0")],
-            [{"charm-name": "my-charm", "library-name": "my_lib", "api": 1, "patch": 0}],
+            [
+                {
+                    "charm-name": "my-charm",
+                    "library-name": "my_lib",
+                    "api": 1,
+                    "patch": 0,
+                }
+            ],
         ),
     ],
 )
 def test_fetch_libraries_metadata(monkeypatch, store, libs, expected_call):
-
     store.get_libraries_metadata(libs)
 
-    store.anonymous_client.fetch_libraries_metadata.assert_called_once_with(expected_call)
+    store.anonymous_client.fetch_libraries_metadata.assert_called_once_with(
+        expected_call
+    )

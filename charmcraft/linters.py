@@ -735,7 +735,9 @@ class PipCheck(Linter):
                 self.text = check.stdout
                 result = self.Result.WARNING
         except (FileNotFoundError, PermissionError) as e:
-            self.text = f"{e.strerror}: Could not run Python executable at {sys.executable}."
+            self.text = (
+                f"{e.strerror}: Could not run Python executable at {sys.executable}."
+            )
             result = self.Result.NONAPPLICABLE
         finally:
             if delete_python_exe:

@@ -16,13 +16,14 @@
 """Unit tests for linters."""
 
 import pathlib
-import sys
 import subprocess
+import sys
 
 import pytest
 
 from charmcraft import linters
 from charmcraft.models.lint import LintResult
+
 
 @pytest.fixture
 def valid_venv_path(fake_path) -> pathlib.Path:
@@ -69,6 +70,8 @@ def test_pip_check_warning(valid_venv_path: pathlib.Path, fp):
     assert lint.run(valid_venv_path) == LintResult.WARNING
     assert lint.text == "This error was sponsored by Raytheon Knife Missiles™"
 
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_exception(valid_venv_path: pathlib.Path, monkeypatch):
     def _raises_eperm(*args, **kwargs) -> None:
         raise PermissionError(13, "Permission denied")
@@ -77,14 +80,19 @@ def test_pip_check_exception(valid_venv_path: pathlib.Path, monkeypatch):
 
     lint = linters.PipCheck()
     assert lint.run(valid_venv_path) == LintResult.NONAPPLICABLE
-    assert lint.text == f"Permission denied: Could not run Python executable at {sys.executable}."
+    assert (
+        lint.text
+        == f"Permission denied: Could not run Python executable at {sys.executable}."
+    )
 
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_no_bin(valid_venv_path: pathlib.Path, fp):
     """Check that the bin directory is deleted if it was missing before"""
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
-        returncode = 0,
-        stdout = "Gosh, I sure hope I remember where everything went."
+        returncode=0,
+        stdout="Gosh, I sure hope I remember where everything went.",
     )
     lint = linters.PipCheck()
 
@@ -93,13 +101,15 @@ def test_pip_check_repair_no_bin(valid_venv_path: pathlib.Path, fp):
     assert lint.text == "Virtual environment is valid."
     assert not (valid_venv_path / "venv" / "bin").exists()
 
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_no_py(valid_venv_path: pathlib.Path, fp):
     """Check that the python symlink is deleted if it was missing before"""
     fp.register(
-            [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
-            returncode = 0,
-            stdout = "Gosh, I sure hope I remember where everything went."
-        )
+        [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
+        returncode=0,
+        stdout="Gosh, I sure hope I remember where everything went.",
+    )
     lint = linters.PipCheck()
 
     # Make sure it keeps "bin" if only the Python binary didn't exist
@@ -109,12 +119,14 @@ def test_pip_check_repair_no_py(valid_venv_path: pathlib.Path, fp):
     assert (valid_venv_path / "venv" / "bin").exists()
     assert not (valid_venv_path / "venv" / "bin" / "python").exists()
 
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_all(valid_venv_path: pathlib.Path, fp):
     """Check that nothing is changed if all components are present"""
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
-        returncode = 0,
-        stdout = "Gosh, I sure hope I remember where everything went."
+        returncode=0,
+        stdout="Gosh, I sure hope I remember where everything went.",
     )
     lint = linters.PipCheck()
 

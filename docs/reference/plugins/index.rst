@@ -12,6 +12,8 @@ potentially the addition of further files using the :ref:`craft_parts_dump_plugi
 
     /common/craft-parts/reference/plugins/dump_plugin
     /common/craft-parts/reference/plugins/nil_plugin
+    python_plugin
+    poetry_plugin
 
 .. warning::
    Other plugins are available from :external+craft-parts:ref:`craft-parts <plugins>`,

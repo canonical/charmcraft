@@ -1,0 +1,15 @@
+name: my-charm
+type: charm
+title: My Python charm
+summary: An operator charm that uses the python plugin
+description: |
+  An operator charm using the Python plugin.
+base: ubuntu@24.04
+platforms:
+  amd64:
+parts:
+  my-charm:
+    source: .
+    plugin: python
+    python-requirements:
+      - requirements.txt

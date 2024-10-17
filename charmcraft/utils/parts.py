@@ -17,6 +17,7 @@
 
 import pathlib
 import shlex
+import textwrap
 from collections.abc import Collection
 
 
@@ -54,3 +55,22 @@ def get_charm_copy_commands(
         )
 
     return commands
+
+
+def get_venv_cleanup_commands(venv_path: pathlib.Path, *, keep_bins: bool) -> list[str]:
+    """Get a script do Charmcraft-specific venv cleanup.
+
+    :param venv_path: The path to the venv.
+    :param keep_bins: Whether to keep the bin directory of the venv.
+    :returns: A shell script to do this, as a string.
+    """
+    venv_bin = venv_path / "bin"
+    venv_lib64 = venv_path / "lib64"
+    delete_bins = [] if keep_bins else [f"rm -rf {venv_bin}"]
+    delete_lib64 = textwrap.dedent(f"""
+        if [ -L '{venv_lib64}' ]; then
+          rm -f '{venv_lib64}'
+        fi
+    """)
+
+    return [*delete_bins, delete_lib64]

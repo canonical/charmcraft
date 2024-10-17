@@ -729,7 +729,7 @@ class PipCheck(Linter):
                 capture_output=True,
                 check=False,
             )
-            if check.returncode == 0:
+            if check.returncode == os.EX_OK:
                 result = self.Result.OK
             else:
                 self.text = check.stdout

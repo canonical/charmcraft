@@ -722,21 +722,26 @@ class PipCheck(Linter):
             delete_python_exe = False
 
         pip_cmd = [sys.executable, "-m", "pip", "--python", str(python_exe), "check"]
-        check = subprocess.run(
-            pip_cmd,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        if check.returncode == 0:
-            result = self.Result.OK
-        else:
-            self.text = check.stdout
-            result = self.Result.WARNING
-        if delete_python_exe:
-            python_exe.unlink()
-        if delete_parent:
-            python_exe.parent.rmdir()
+        try:
+            check = subprocess.run(
+                pip_cmd,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if check.returncode == 0:
+                result = self.Result.OK
+            else:
+                self.text = check.stdout
+                result = self.Result.WARNING
+        except (FileNotFoundError, PermissionError) as e:
+            self.text = f"{e.strerror}: Could not run Python executable at {sys.executable}."
+            result = self.Result.NONAPPLICABLE
+        finally:
+            if delete_python_exe:
+                python_exe.unlink()
+            if delete_parent:
+                python_exe.parent.rmdir()
 
         return result
 

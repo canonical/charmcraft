@@ -17,11 +17,18 @@
 
 import pathlib
 import sys
+import subprocess
 
 import pytest
 
 from charmcraft import linters
 from charmcraft.models.lint import LintResult
+
+@pytest.fixture
+def valid_venv_path(fake_path) -> pathlib.Path:
+    """Create and return a fakefs path that contains a valid venv structure"""
+    (fake_path / "venv" / "lib").mkdir(parents=True)
+    return fake_path
 
 
 def test_pip_check_not_venv(fake_path: pathlib.Path):
@@ -38,8 +45,7 @@ def test_pip_invalid_venv(fake_path: pathlib.Path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
-def test_pip_check_success(fake_path: pathlib.Path, fp):
-    (fake_path / "venv" / "lib").mkdir(parents=True)
+def test_pip_check_success(valid_venv_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=0,
@@ -47,13 +53,12 @@ def test_pip_check_success(fake_path: pathlib.Path, fp):
     )
 
     lint = linters.PipCheck()
-    assert lint.run(fake_path) == LintResult.OK
+    assert lint.run(valid_venv_path) == LintResult.OK
     assert lint.text == linters.PipCheck.text
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
-def test_pip_check_warning(fake_path: pathlib.Path, fp):
-    (fake_path / "venv" / "lib").mkdir(parents=True)
+def test_pip_check_warning(valid_venv_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
         returncode=1,
@@ -61,5 +66,61 @@ def test_pip_check_warning(fake_path: pathlib.Path, fp):
     )
 
     lint = linters.PipCheck()
-    assert lint.run(fake_path) == LintResult.WARNING
+    assert lint.run(valid_venv_path) == LintResult.WARNING
     assert lint.text == "This error was sponsored by Raytheon Knife Missiles™"
+
+def test_pip_check_exception(valid_venv_path: pathlib.Path, monkeypatch):
+    def _raises_eperm(*args, **kwargs) -> None:
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(subprocess, "run", _raises_eperm)
+
+    lint = linters.PipCheck()
+    assert lint.run(valid_venv_path) == LintResult.NONAPPLICABLE
+    assert lint.text == f"Permission denied: Could not run Python executable at {sys.executable}."
+
+def test_pip_check_repair_no_bin(valid_venv_path: pathlib.Path, fp):
+    """Check that the bin directory is deleted if it was missing before"""
+    fp.register(
+        [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
+        returncode = 0,
+        stdout = "Gosh, I sure hope I remember where everything went."
+    )
+    lint = linters.PipCheck()
+
+    # Make sure it doesn't leave behind "bin" if it didn't exist
+    assert lint.run(valid_venv_path) == LintResult.OK
+    assert lint.text == "Virtual environment is valid."
+    assert not (valid_venv_path / "venv" / "bin").exists()
+
+def test_pip_check_repair_no_py(valid_venv_path: pathlib.Path, fp):
+    """Check that the python symlink is deleted if it was missing before"""
+    fp.register(
+            [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
+            returncode = 0,
+            stdout = "Gosh, I sure hope I remember where everything went."
+        )
+    lint = linters.PipCheck()
+
+    # Make sure it keeps "bin" if only the Python binary didn't exist
+    (valid_venv_path / "venv" / "bin").mkdir()
+    assert lint.run(valid_venv_path) == LintResult.OK
+    assert lint.text == "Virtual environment is valid."
+    assert (valid_venv_path / "venv" / "bin").exists()
+    assert not (valid_venv_path / "venv" / "bin" / "python").exists()
+
+def test_pip_check_repair_all(valid_venv_path: pathlib.Path, fp):
+    """Check that nothing is changed if all components are present"""
+    fp.register(
+        [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
+        returncode = 0,
+        stdout = "Gosh, I sure hope I remember where everything went."
+    )
+    lint = linters.PipCheck()
+
+    (valid_venv_path / "venv" / "bin").mkdir()
+    (valid_venv_path / "venv" / "bin" / "python").touch()
+
+    assert lint.run(valid_venv_path) == LintResult.OK
+    assert lint.text == "Virtual environment is valid."
+    assert (valid_venv_path / "venv" / "bin" / "python").is_file()

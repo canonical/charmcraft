@@ -24,13 +24,20 @@ import re
 import shlex
 import typing
 from collections.abc import Generator
+from dataclasses import dataclass
 from typing import final
+from humanize import natural_list
 
 import yaml
+from packaging.metadata import ExceptionGroup, InvalidMetadata, Metadata
+from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 
 from charmcraft import const, utils
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
 from charmcraft.models.metadata import CharmMetadataLegacy
+from charmcraft.utils import get_lib_internals
 
 # the documentation page for "Analyzers and linters"
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
@@ -688,6 +695,105 @@ class AdditionalFiles(Linter):
 
         return self._check_additional_files(stage_dir, basedir)
 
+class PydepsInstalled(Linter):
+    """Check that dependencies listed in a charm's PYDEPS are actually installed to its venv."""
+
+    name = "pydeps-installed"
+    text = "All PYDEPS are installed."
+    url = "https://discourse.charmhub.io/t/library/5484#heading--pydeps"
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run this checker."""
+        @dataclass
+        class Package:
+            name: str
+            version: Version | None = None
+
+        lib_dir = basedir / "lib"
+        if not lib_dir.is_dir():
+            self.text = "Charm does not contain a lib directory."
+            return self.Result.NONAPPLICABLE
+        charms_dir = lib_dir / "charms"
+        if not (charms_dir).is_dir():
+            self.text = "Charm does not contain a valid lib directory."
+            return self.Result.NONAPPLICABLE
+
+        venv_dir = basedir / "venv"
+        if not venv_dir.is_dir():
+            self.text = "Charm does not contain a Python venv."
+            return self.Result.NONAPPLICABLE
+
+        # Collect the metadata of all installed packages
+        packages: list[Package] = []
+        for entry in venv_dir.iterdir():
+            if entry.is_dir() and entry.name.endswith(".dist-info"):
+                metadata_file = entry / "METADATA"
+                if not metadata_file.is_file():
+                    # If there's no package metadata, save just the package's name for a later warning
+                    name = entry.name.split("-", maxsplit=1)[0]
+                    packages.append(Package(name))
+                    continue
+
+                with open(metadata_file) as fin:
+                    try:
+                        metadata = Metadata.from_email(fin.read())
+                        packages.append(Package(metadata.name, metadata.version))
+                    except ExceptionGroup as e:
+                        # Save with unknown version number if the only error was invalid keys
+                        if all(isinstance(exc, InvalidMetadata) for exc in e.exceptions):
+                            name = entry.name.split("-", maxsplit=1)[0]
+                            packages.append(Package(name))
+
+        # Packages that are in PYDEPS but not installed
+        not_installed: list[str] = []
+        # Packages that are installed but do not satisfy the version range
+        bad_version: list[str] = []
+        # Packages that are installed but whose version cannot be determined
+        uncheckable_range: list[str] = []
+        for pydeps in self._get_charm_deps(charms_dir):
+            for pydep_raw in pydeps:
+                pydep = Requirement(pydep_raw)
+                installed: Package | None = next(filter(lambda pkg: pkg.name == pydep.name, packages), None)
+                if installed is not None:
+                    if installed.version is None and pydep.specifier is not SpecifierSet(""):
+                        uncheckable_range.append(pydep_raw)
+                    elif installed.version is not None and installed.version not in pydep.specifier:
+                        # It is installed and used, but it is not within the specified version range
+                        bad_version.append(f"{pydep_raw} (have {installed.version})")
+                else:
+                    # One of the packages listed in PYDEPS was not found installed at all in the venv
+                    not_installed.append(pydep_raw)
+
+        level = self.Result.OK
+        self.text = ""
+        if len(uncheckable_range) != 0:
+            level = self.Result.UNKNOWN
+            self.text += f"The following packages could not have their versions verified: {natural_list(uncheckable_range)}. "
+        if len(not_installed) != 0:
+            level = self.Result.WARNING
+            self.text += f"The following packages were specified, but not installed: {natural_list(not_installed)}. "
+        if len(bad_version) != 0:
+            level = self.Result.WARNING
+            self.text += f"The following packages have the wrong version installed: {natural_list(bad_version)}. "
+
+        # Snip off extra whitespace if needed
+        if len(self.text) != 0:
+            self.text = self.text[:-1]
+        else:
+            self.text = "All PYDEPS are installed and valid."
+
+        return level
+
+    def _get_charm_deps(self, charms_dir: pathlib.Path) -> Generator[dict[str, list[str]], None, None]:
+        """Return a mapping of dependency -> libs that require that dependency, per lib in a charm."""
+        for charm in charms_dir.iterdir():
+            for version in charm.iterdir():
+                pydeps: dict[str, list[str]] = {}
+                for lib in version.iterdir():
+                    for dep in get_lib_internals(lib).pydeps:
+                        pydeps.setdefault(dep, []).append(lib.name)
+                    yield pydeps
+
 
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
@@ -701,4 +807,5 @@ CHECKERS: list[type[BaseChecker]] = [
     Entrypoint,
     OpsMainCall,
     AdditionalFiles,
+    PydepsInstalled,
 ]

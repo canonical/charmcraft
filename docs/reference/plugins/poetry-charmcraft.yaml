@@ -1,0 +1,13 @@
+name: my-charm
+type: charm
+title: My poetry charm
+summary: An operator charm using Poetry.
+description: |
+  An operator charm that uses Poetry for its project.
+base: ubuntu@24.04
+platforms:
+  amd64:
+parts:
+  my-charm:
+    source: .
+    plugin: poetry

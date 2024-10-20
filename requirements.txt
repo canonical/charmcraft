@@ -12,7 +12,7 @@ craft-parts==2.1.2
 craft-platforms==0.3.1
 craft-providers==2.0.4
 craft-store==3.0.2
-cryptography==43.0.1
+cryptography==43.0.3
 distro==1.9.0
 docker==7.1.0
 httplib2==0.22.0

@@ -66,6 +66,7 @@ from charmcraft.utils.package import (
 from charmcraft.utils.parts import (
     extend_python_build_environment,
     get_charm_copy_commands,
+    get_venv_cleanup_commands,
 )
 from charmcraft.utils.project import (
     find_charm_sources,
@@ -116,6 +117,7 @@ __all__ = [
     "humanize_list",
     "extend_python_build_environment",
     "get_charm_copy_commands",
+    "get_venv_cleanup_commands",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",

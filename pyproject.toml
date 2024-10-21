@@ -24,6 +24,7 @@ dependencies = [
     "requests-toolbelt",
     "snap-helpers",
     "tabulate",
+    "pip>=24.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

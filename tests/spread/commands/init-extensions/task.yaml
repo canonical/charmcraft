@@ -14,6 +14,7 @@ environment:
 prepare: |
   tests.pkgs install pipx python3-venv
   pipx install --force tox
+  pipx ensurepath
 
 restore: |
   pushd test-init
@@ -39,4 +40,4 @@ execute: |
   # expand charmcraft.yaml for the scenario tests to work
   charmcraft expand-extensions > charmcraft-expanded.yaml
   mv charmcraft-expanded.yaml charmcraft.yaml
-  ~/.local/bin/tox -c ../tox.ini -e unit
+  tox -c ../tox.ini -e unit

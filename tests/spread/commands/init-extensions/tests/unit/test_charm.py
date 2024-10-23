@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Smoke scenario test for Flask."""
+"""Smoke scenario test for paas-charm based init templates."""
 
 import os
 import pathlib
@@ -12,7 +12,7 @@ import scenario.errors
 
 
 def test_smoke():
-    """The only goal of this test is a smoke test, that is, that the charm does not raise."""
+    """The purpose of this test is that the charm does not raise on a handled event."""
     os.chdir(pathlib.Path(charm.__file__).parent.parent)
     ctx = scenario.Context(charm.HelloWorldCharm)
     container_name = next(iter(ctx.charm_spec.meta["containers"].keys()))

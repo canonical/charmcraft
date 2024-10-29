@@ -12,6 +12,7 @@ Most of Charmcraft's documentation is available there.
 
    reference/index
    explanation/index
+   tutorial/flask
 
 .. grid:: 1 1 2 2
    :reverse:

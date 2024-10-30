@@ -1,8 +1,8 @@
 ###########################################
 # IMPORTANT
 # Comments matter!
-# The docs use the wrapping comments as 
-# markers for including said instructions 
+# The docs use the wrapping comments as
+# markers for including said instructions
 # as snippets in the docs.
 ###########################################
 summary: Getting started with Flask tutorial
@@ -36,14 +36,14 @@ execute: |
   # [docs:pack-end]
 
   # [docs:ls-rock]
-  ls *.rock -l 
+  ls *.rock -l
   # [docs:ls-rock-end]
 
   # [docs:skopeo-copy]
   sudo rockcraft.skopeo --insecure-policy \
     copy oci-archive:flask-hello-world_0.1_amd64.rock \
     docker-daemon:flask-hello-world:0.1
-  # [docs:skopeo-copy-end]  
+  # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
   mkdir charm
@@ -120,7 +120,6 @@ execute: |
  # [docs:docker-run-2nd-update-end]
 
  cd charm
- 
  charmcraft pack
 
  # [docs:refresh-2nd-deployment]

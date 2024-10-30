@@ -15,7 +15,7 @@ def index():
     with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
         user_agent = flask.request.headers.get('User-Agent')
         timestamp = datetime.datetime.now()
-        
+
         cur.execute(
             "INSERT INTO visitors (timestamp, user_agent) VALUES (%s, %s)",
             (timestamp, user_agent)

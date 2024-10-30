@@ -57,78 +57,7 @@ application up and running with Juju in about 90 minutes.
 Set things up
 =============
 
-Install Multipass.
-
-.. seealso::
-
-   See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
-
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev`` from the 24.04 blueprint:
-
-.. code-block:: bash
-
-    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 24.04
-
-Once the VM is up, open a shell into it:
-
-.. code-block:: bash
-
-    multipass shell charm-dev
-
-In order to create the rock, you'll need to install Rockcraft:
-
-.. code-block:: bash
-
-    sudo snap install rockcraft --classic
-
-``LXD`` will be required for building the rock. Make sure it is installed and initialised:
-
-.. code-block:: bash
-
-    sudo snap install lxd
-    lxd init --auto
-
-In order to create the charm, you'll need to install Charmcraft:
-
-.. code-block:: bash
-
-    sudo snap install charmcraft --channel latest/edge --classic
-
-.. warning::
-
-    This tutorial requires version ``3.0.0`` or later of Charmcraft. Check the
-    version of Charmcraft using ``charmcraft --version`` If you have an older
-    version of Charmcraft installed, use
-    ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest
-    edge version of Charmcraft.
-
-MicroK8s is required to deploy the Flask application on Kubernetes. Install MicroK8s:
-
-.. code-block:: bash
-
-    sudo snap install microk8s --channel 1.31-strict/stable
-    sudo adduser $USER snap_microk8s
-    newgrp snap_microk8s
-
-Wait for MicroK8s to be ready using ``sudo microk8s status --wait-ready``.
-Several MicroK8s add-ons are required for deployment:
-
-.. code-block:: bash
-
-    sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the Flask application
-    sudo microk8s enable registry
-    # Required to expose the Flask application
-    sudo microk8s enable ingress
-
-Juju is required to deploy the Flask application.
-Install Juju and bootstrap a development controller:
-
-.. code-block:: bash
-
-    sudo snap install juju --channel 3.5/stable
-    mkdir -p ~/.local/share
-    juju bootstrap microk8s dev-controller
+.. include:: /reuse/tutorial/setup.rst
 
 Finally, create a new directory for this tutorial and go inside it:
 
@@ -230,7 +159,8 @@ Pack the rock:
 
 .. note::
 
-    Depending on your system and network, this step can take a couple of minutes to finish.
+    Depending on your system and network, this step can take a couple of
+    minutes to finish.
 
 Once Rockcraft has finished packing the Flask rock, you'll find a new file
 in your working directory with the ``.rock`` extension:
@@ -286,7 +216,8 @@ Pack the charm:
 
 .. note::
 
-    Depending on your system and network, this step can take a couple of minutes to finish.
+    Depending on your system and network, this step can take a couple
+    of minutes to finish.
 
 Once Charmcraft has finished packing the charm, you'll find a new file in your
 working directory with the ``.charm`` extension:
@@ -481,8 +412,10 @@ This will require integration with a database to keep the visitor count.
 This will require a few changes:
 
 * We will need to create a database migration that creates the ``visitors`` table
-* We will need to keep track how many times the root endpoint has been called in the database
-* We will need to add a new endpoint to retrieve the number of visitors from the database
+* We will need to keep track how many times the root endpoint has been called
+in the database
+* We will need to add a new endpoint to retrieve the number of visitors from the
+database
 
 The charm created by the ``flask-framework`` extension will execute the
 ``migrate.py`` script if it exists. This script should ensure that the

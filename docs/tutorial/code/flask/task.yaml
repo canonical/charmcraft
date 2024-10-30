@@ -87,6 +87,7 @@ execute: |
   # [docs:curl-init-deployment-end]
 
   cd ..
+  cat greeting_app.py > app.py
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
   rockcraft pack
   
@@ -144,9 +145,3 @@ execute: |
  # Remove the juju model
  juju destroy-model flask-hello-world --destroy-storage
  # [docs:clean-environment-end]
-
- # [docs:destroy-multipass]
- exit
- multipass delete charm-dev
- multipass purge
- # [docs:destroy-multipass-end]

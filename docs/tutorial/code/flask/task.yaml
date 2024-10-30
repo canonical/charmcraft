@@ -44,3 +44,110 @@ execute: |
     copy oci-archive:flask-hello-world_0.1_amd64.rock \
     docker-daemon:flask-hello-world:0.1
   # [docs:skopeo-copy-end]  
+
+  # [docs:create-charm-dir]
+  mkdir charm
+  cd charm
+  # [docs:create-charm-dir-end]
+
+  # [docs:charm-init]
+  charmcraft init --profile flask-framework --name flask-hello-world
+  # [docs:charm-init-end]
+
+  # [docs:charm-pack]
+  charmcraft pack
+  # [docs:charm-pack-end]
+
+  # [docs:ls-charm]
+  ls *.charm -l
+  # [docs:ls-charm-end]
+
+  # [docs:add-juju-model]
+  juju add-model flask-hello-world
+  # [docs:add-juju-model-end]
+
+  # [docs:deploy-juju-model]
+  juju deploy ./flask-hello-world_ubuntu-22.04-amd64.charm \
+   flask-hello-world --resource \
+   flask-app-image=localhost:32000/flask-hello-world:0.1
+  # [docs:deploy-juju-model-end]
+
+  # [docs:deploy-nginx]
+  juju deploy nginx-ingress-integrator --channel=latest/edge
+  juju integrate nginx-ingress-integrator flask-hello-world
+  # [docs:deploy-nginx-end]
+
+  # [docs:config-nginx]
+  juju config nginx-ingress-integrator \
+   service-hostname=flask-hello-world path-routes=/
+  # [docs:config-nginx-end]
+
+  # [docs:curl-init-deployment]
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  # [docs:curl-init-deployment-end]
+
+  cd ..
+  sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
+
+  # [docs:docker-run-update]
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+   oci-archive:flask-hello-world_0.2_amd64.rock \
+   docker://localhost:32000/flask-hello-world:0.2
+ # [docs:docker-run-update-end]
+
+ cd charm
+ charmcraft pack
+
+ # [docs:refresh-deployment]
+ juju refresh flask-hello-world \
+   --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
+   --resource flask-app-image=localhost:32000/flask-hello-world:0.2
+ # [docs:refresh-deployment-end]
+
+ # [docs:change-config]
+ juju config flask-hello-world greeting='Hi!'
+ # [docs:change-config-end]
+
+ cd ..
+ sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
+
+ # [docs:docker-run-2nd-update]
+ rockcraft pack
+ rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+   oci-archive:flask-hello-world_0.3_amd64.rock \
+   docker://localhost:32000/flask-hello-world:0.3
+ # [docs:docker-run-2nd-update-end]
+
+ cd charm
+ 
+ charmcraft pack
+
+ # [docs:refresh-2nd-deployment]
+ juju refresh flask-hello-world \
+   --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
+   --resource flask-app-image=localhost:32000/flask-hello-world:0.3
+ # [docs:refresh-2nd-deployment-end]
+
+ # [docs:deploy-postgres]
+ juju deploy postgresql-k8s --trust
+ juju integrate flask-hello-world postgresql-k8s
+ # [docs:deploy-postgres-end]
+
+ # [docs:clean-environment]
+ # exit and delete the virtual environment
+ deactivate
+ rm -rf charm .venv __pycache__
+ # delete all the files created during the tutorial
+ rm flask-hello-world_0.1_amd64.rock flask-hello-world_0.2_amd64.rock \
+   flask-hello-world_0.3_amd64.rock rockcraft.yaml app.py \
+   requirements.txt migrate.py
+ # Remove the juju model
+ juju destroy-model flask-hello-world --destroy-storage
+ # [docs:clean-environment-end]
+
+ # [docs:destroy-multipass]
+ exit
+ multipass delete charm-dev
+ multipass purge
+ # [docs:destroy-multipass-end]

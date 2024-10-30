@@ -75,37 +75,24 @@ used for this tutorial.
 Create a ``requirements.txt`` file, copy the following text into it
 and then save it:
 
-.. code-block::
-
-    Flask
+.. literalinclude:: code/flask/requirements.txt
 
 In the same directory, copy and save the following into a text file
 called ``app.py``:
 
-.. code-block:: python
-
-    import flask
-
-    app = flask.Flask(__name__)
-
-    @app.route("/")
-    def index():
-        return "Hello, world!\n"
-
-    if __name__ == "__main__":
-        app.run()
+.. literalinclude:: code/flask/app.py
+    :language: python
 
 Run the Flask application locally
 =================================
 
 Install ``python3-venv`` and create a virtual environment:
 
-.. code-block:: bash
-
-    sudo apt-get update && sudo apt-get install python3-venv -y
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -r requirements.txt
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:create-venv]
+    :end-before: [docs:create-venv-end]
+    :dedent: 2
 
 Now that we have a virtual environment with all the dependencies, let's
 run the Flask application to verify that it works:
@@ -118,9 +105,11 @@ Test the Flask application by using ``curl`` to send a request to the root
 endpoint. You may need a new terminal for this; if you are using Multipass
 use ``multipass shell charm-dev`` to get another terminal:
 
-.. code-block:: bash
-
-    curl localhost:8000
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:curl-flask]
+    :end-before: [docs:curl-flask-end]
+    :dedent: 2
 
 The Flask application should respond with ``Hello, world!``. The Flask
 application looks good, so we can stop for now using
@@ -133,9 +122,11 @@ First, we'll need a ``rockcraft.yaml`` file. Rockcraft will automate its
 creation and tailoring for a Flask application by using the
 ``flask-framework`` profile:
 
-.. code-block:: bash
-
-    rockcraft init --profile flask-framework
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:create-rockcraft-yaml]
+    :end-before: [docs:create-rockcraft-yaml-end]
+    :dedent: 2
 
 The ``rockcraft.yaml`` file will automatically be created and set the name
 based on your working directory. Open the file in a text editor and check
@@ -153,9 +144,11 @@ ARM architecture, include ``arm64`` in ``platforms``.
 
 Pack the rock:
 
-.. code-block:: bash
-
-    rockcraft pack
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -165,9 +158,11 @@ Pack the rock:
 Once Rockcraft has finished packing the Flask rock, you'll find a new file
 in your working directory with the ``.rock`` extension:
 
-.. code-block:: bash
-
-    ls *.rock -l
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:ls-rock]
+    :end-before: [docs:ls-rock-end]
+    :dedent: 2
 
 .. note::
 
@@ -175,14 +170,14 @@ in your working directory with the ``.rock`` extension:
     not on an ``amd64`` platform, the name of the ``.rock`` file will be
     different for you.
 
-The rock needs to be copied to the Microk8s registry so that it can be
+The rock needs to be copied to the MicroK8s registry so that it can be
 deployed in the Kubernetes cluster:
 
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-       oci-archive:flask-hello-world_0.1_amd64.rock \
-       docker://localhost:32000/flask-hello-world:0.1
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
 
 .. seealso::
 
@@ -193,26 +188,31 @@ Create the charm
 
 Create a new directory for the charm and go inside it:
 
-.. code-block:: bash
-
-    mkdir charm
-    cd charm
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
 
 We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code for
 the charm. The source code contains the logic required to operate the Flask
 application. Charmcraft will automate the creation of these files by using
 the ``flask-framework`` profile:
 
-.. code-block:: bash
-
-    charmcraft init --profile flask-framework --name flask-hello-world
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
 
 The files will automatically be created in your working directory.
 Pack the charm:
 
-.. code-block:: bash
-
-    charmcraft pack
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -222,9 +222,11 @@ Pack the charm:
 Once Charmcraft has finished packing the charm, you'll find a new file in your
 working directory with the ``.charm`` extension:
 
-.. code-block:: bash
-
-    ls *.charm -l
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:ls-charm]
+    :end-before: [docs:ls-charm-end]
+    :dedent: 2
 
 .. note::
 
@@ -236,9 +238,11 @@ Deploy the Flask application
 
 A Juju model is needed to deploy the application. Let's create a new model:
 
-.. code-block:: bash
-
-    juju add-model flask-hello-world
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
 
 .. warning::
 
@@ -250,11 +254,11 @@ A Juju model is needed to deploy the application. Let's create a new model:
 
 Now the Flask application can be deployed using `Juju <https://juju.is/docs/juju>`_:
 
-.. code-block:: bash
-
-    juju deploy ./flask-hello-world_ubuntu-22.04-amd64.charm \
-       flask-hello-world --resource \
-       flask-app-image=localhost:32000/flask-hello-world:0.1
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-juju-model]
+    :end-before: [docs:deploy-juju-model-end]
+    :dedent: 2
 
 .. note::
 
@@ -282,19 +286,20 @@ The deployment is finished when the status shows ``active``. Let's expose the
 application using ingress. Deploy the ``nginx-ingress-integrator`` charm and integrate
 it with the Flask app:
 
-.. code-block:: bash
-
-    juju deploy nginx-ingress-integrator --channel=latest/edge
-    juju integrate nginx-ingress-integrator flask-hello-world
-
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via the ingress.
 We will also set the default route to be the root endpoint:
 
-.. code-block:: bash
-
-    juju config nginx-ingress-integrator \
-       service-hostname=flask-hello-world path-routes=/
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
 
 Monitor ``juju status`` until everything has a status of ``active``. Test the
 deployment using
@@ -316,31 +321,17 @@ configuration option to be available in the Flask app configuration under the
 keyword ``GREETING``. Go back out to the root directory of the project using
 ``cd ..`` and copy the following code into ``app.py``:
 
-.. code-block:: python
-
-    import flask
-
-    app = flask.Flask(__name__)
-    app.config.from_prefixed_env()
-
-
-    @app.route("/")
-    def index():
-        greeting = app.config.get("GREETING", "Hello, world!")
-        return f"{greeting}\n"
-
-
-    if __name__ == "__main__":
-        app.run()
+.. literalinclude:: code/flask/greeting_app.py
+    :language: python
 
 Open ``rockcraft.yaml`` and update the version to ``0.2``. Run ``rockcraft pack``
 again, then upload the new OCI image to the MicroK8s registry:
 
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-       oci-archive:flask-hello-world_0.2_amd64.rock \
-       docker://localhost:32000/flask-hello-world:0.2
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:docker-update]
+    :end-before: [docs:docker-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``. The ``flask-framework``
 Charmcraft extension supports adding configurations to ``charmcraft.yaml`` which
@@ -367,11 +358,11 @@ following to the end of the ``charmcraft.yaml`` file:
 Run ``charmcraft pack`` again. The deployment can now be refreshed to
 make use of the new code:
 
-.. code-block:: bash
-
-    juju refresh flask-hello-world \
-       --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
-       --resource flask-app-image=localhost:32000/flask-hello-world:0.2
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
 
 .. note::
 
@@ -393,9 +384,11 @@ Using ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
 shows that the response is still ``Hello, world!`` as expected.
 The greeting can be changed using Juju:
 
-.. code-block:: bash
-
-    juju config flask-hello-world greeting='Hi!'
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
 
 ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
 now returns the updated ``Hi!`` greeting.
@@ -508,11 +501,11 @@ a text editor and replace its contents with the following code:
 
 Run ``rockcraft pack`` and upload the newly created rock to the MicroK8s registry:
 
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-       oci-archive:flask-hello-world_0.3_amd64.rock \
-       docker://localhost:32000/flask-hello-world:0.3
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:docker-2nd-update]
+    :end-before: [docs:docker-2nd-update-end]
+    :dedent: 2
 
 Go back into the charm directory using ``cd charm``. The Flask app now requires
 a database which needs to be declared in the ``charmcraft.yaml`` file. Open
@@ -527,18 +520,19 @@ a database which needs to be declared in the ``charmcraft.yaml`` file. Open
 
 Pack the charm using ``charmcraft pack`` and refresh the deployment using Juju:
 
-.. code-block:: bash
-
-    juju refresh flask-hello-world \
-       --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
-       --resource flask-app-image=localhost:32000/flask-hello-world:0.3
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-2nd-deployment]
+    :end-before: [docs:refresh-2nd-deployment-end]
+    :dedent: 2
 
 Deploy ``postgresql-k8s`` using Juju and integrate it with ``flask-hello-world``:
 
-.. code-block:: bash
-
-    juju deploy postgresql-k8s --trust
-    juju integrate flask-hello-world postgresql-k8s
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
 Running ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
@@ -560,17 +554,11 @@ deployed it locally, exposed it via ingress and integrated it with a database!
 If you'd like to reset your working environment, you can run the following
 in the root directory for the tutorial:
 
-.. code-block:: bash
-
-    # exit and delete the virtual environment
-    deactivate
-    rm -rf charm .venv __pycache__
-    # delete all the files created during the tutorial
-    rm flask-hello-world_0.1_amd64.rock flask-hello-world_0.2_amd64.rock \
-       flask-hello-world_0.3_amd64.rock rockcraft.yaml app.py \
-       requirements.txt migrate.py
-    # Remove the juju model
-    juju destroy-model flask-hello-world --destroy-storage
+.. literalinclude:: code/flask/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
 
 If you created an instance using Multipass, you can also clean it up.
 Start by exiting it:

@@ -418,29 +418,8 @@ create a ``migrate.py`` file containing this logic.
 Go back out to the tutorial root directory using ``cd ..``. Open the ``migrate.py``
 file using a text editor and paste the following code into it:
 
-.. code-block:: python
-
-    import os
-
-    import psycopg2
-
-
-    DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
-
-
-    def migrate():
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS visitors (
-                    timestamp TIMESTAMP NOT NULL,
-                    user_agent TEXT NOT NULL
-                );
-            """)
-            conn.commit()
-
-
-    if __name__ == "__main__":
-        migrate()
+.. literalinclude:: code/flask/migrate.py
+    :language: python
 
 .. note::
 
@@ -456,48 +435,8 @@ to be updated to keep track of the number of visitors and to include a new
 endpoint to retrieve the number of visitors to the app. Open ``app.py`` in
 a text editor and replace its contents with the following code:
 
-.. code-block:: python
-
-    import datetime
-    import os
-
-    import flask
-    import psycopg2
-
-    app = flask.Flask(__name__)
-    app.config.from_prefixed_env()
-
-    DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
-
-
-    @app.route("/")
-    def index():
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            user_agent = flask.request.headers.get('User-Agent')
-            timestamp = datetime.datetime.now()
-
-            cur.execute(
-                "INSERT INTO visitors (timestamp, user_agent) VALUES (%s, %s)",
-                (timestamp, user_agent)
-            )
-            conn.commit()
-
-
-        greeting = app.config.get("GREETING", "Hello, world!")
-        return f"{greeting}\n"
-
-
-    @app.route("/visitors")
-    def visitors():
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM visitors")
-            total_visitors = cur.fetchone()[0]
-
-        return f"{total_visitors}\n"
-
-
-    if __name__ == "__main__":
-        app.run()
+.. literalinclude:: code/flask/visitors_app.py
+    :language: python
 
 Run ``rockcraft pack`` and upload the newly created rock to the MicroK8s registry:
 

@@ -129,6 +129,24 @@ prepare: |
   install_charmcraft
 
 suites:
+  docs/tutorial/code/:
+    summary: tests tutorial from the docs
+    systems:
+    - ubuntu-22.04-64
+    prepare: |
+      sudo snap install rockcraft --classic
+      sudo snap install lxd
+      lxd init --auto
+      sudo snap install charmcraft --channel latest/edge --classic
+      sudo snap install microk8s --channel 1.31-strict/stable
+      sudo adduser $USER snap_microk8s
+      newgrp snap_microk8s
+      sudo microk8s enable hostpath-storage
+      sudo microk8s enable registry
+      sudo microk8s enable ingress
+      sudo snap install juju --channel 3.5/stable
+      mkdir -p ~/.local/share
+      juju bootstrap microk8s dev-controller
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

@@ -111,6 +111,7 @@ execute: |
  # [docs:change-config-end]
 
  cd ..
+ cat visitors_app.py > app.py
  sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
  rockcraft pack
  

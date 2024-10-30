@@ -88,13 +88,13 @@ execute: |
 
   cd ..
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
-
-  # [docs:docker-run-update]
   rockcraft pack
+  
+  # [docs:docker-update]
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
    oci-archive:flask-hello-world_0.2_amd64.rock \
    docker://localhost:32000/flask-hello-world:0.2
- # [docs:docker-run-update-end]
+ # [docs:docker-update-end]
 
  cd charm
  charmcraft pack

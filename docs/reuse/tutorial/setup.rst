@@ -2,9 +2,11 @@ Install Multipass.
 
 .. seealso::
 
-   See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
+   See more: `Multipass | How to install Multipass
+   <https://multipass.run/docs/install-multipass>`_
 
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev`` from the 24.04 blueprint:
+Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
+from the 24.04 blueprint:
 
 .. code-block:: bash
 
@@ -22,7 +24,8 @@ In order to create the rock, you'll need to install Rockcraft:
 
     sudo snap install rockcraft --classic
 
-``LXD`` will be required for building the rock. Make sure it is installed and initialised:
+``LXD`` will be required for building the rock.
+Make sure it is installed and initialised:
 
 .. code-block:: bash
 

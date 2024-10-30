@@ -68,8 +68,8 @@ execute: |
 
   # [docs:deploy-juju-model]
   juju deploy ./flask-hello-world_ubuntu-22.04-amd64.charm \
-   flask-hello-world --resource \
-   flask-app-image=localhost:32000/flask-hello-world:0.1
+    flask-hello-world --resource \
+    flask-app-image=localhost:32000/flask-hello-world:0.1
   # [docs:deploy-juju-model-end]
 
   # [docs:deploy-nginx]
@@ -79,7 +79,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-   service-hostname=flask-hello-world path-routes=/
+    service-hostname=flask-hello-world path-routes=/
   # [docs:config-nginx-end]
 
   # [docs:curl-init-deployment]
@@ -93,56 +93,56 @@ execute: |
 
   # [docs:docker-update]
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-   oci-archive:flask-hello-world_0.2_amd64.rock \
-   docker://localhost:32000/flask-hello-world:0.2
- # [docs:docker-update-end]
+    oci-archive:flask-hello-world_0.2_amd64.rock \
+    docker://localhost:32000/flask-hello-world:0.2
+  # [docs:docker-update-end]
 
- cd charm
- charmcraft pack
+  cd charm
+  charmcraft pack
 
- # [docs:refresh-deployment]
- juju refresh flask-hello-world \
-   --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
-   --resource flask-app-image=localhost:32000/flask-hello-world:0.2
- # [docs:refresh-deployment-end]
+  # [docs:refresh-deployment]
+  juju refresh flask-hello-world \
+    --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
+    --resource flask-app-image=localhost:32000/flask-hello-world:0.2
+  # [docs:refresh-deployment-end]
 
- # [docs:change-config]
- juju config flask-hello-world greeting='Hi!'
- # [docs:change-config-end]
+  # [docs:change-config]
+  juju config flask-hello-world greeting='Hi!'
+  # [docs:change-config-end]
 
- cd ..
- cat visitors_app.py > app.py
- sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
- rockcraft pack
+  cd ..
+  cat visitors_app.py > app.py
+  sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
+  rockcraft pack
 
- # [docs:docker-2nd-update]
- rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-   oci-archive:flask-hello-world_0.3_amd64.rock \
-   docker://localhost:32000/flask-hello-world:0.3
- # [docs:docker-2nd-update-end]
+  # [docs:docker-2nd-update]
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:flask-hello-world_0.3_amd64.rock \
+    docker://localhost:32000/flask-hello-world:0.3
+  # [docs:docker-2nd-update-end]
 
- cd charm
- charmcraft pack
+  cd charm
+  charmcraft pack
 
- # [docs:refresh-2nd-deployment]
- juju refresh flask-hello-world \
-   --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
-   --resource flask-app-image=localhost:32000/flask-hello-world:0.3
- # [docs:refresh-2nd-deployment-end]
+  # [docs:refresh-2nd-deployment]
+  juju refresh flask-hello-world \
+    --path=./flask-hello-world_ubuntu-22.04-amd64.charm \
+    --resource flask-app-image=localhost:32000/flask-hello-world:0.3
+  # [docs:refresh-2nd-deployment-end]
 
- # [docs:deploy-postgres]
- juju deploy postgresql-k8s --trust
- juju integrate flask-hello-world postgresql-k8s
- # [docs:deploy-postgres-end]
+  # [docs:deploy-postgres]
+  juju deploy postgresql-k8s --trust
+  juju integrate flask-hello-world postgresql-k8s
+  # [docs:deploy-postgres-end]
 
- # [docs:clean-environment]
- # exit and delete the virtual environment
- deactivate
- rm -rf charm .venv __pycache__
- # delete all the files created during the tutorial
- rm flask-hello-world_0.1_amd64.rock flask-hello-world_0.2_amd64.rock \
-   flask-hello-world_0.3_amd64.rock rockcraft.yaml app.py \
-   requirements.txt migrate.py
- # Remove the juju model
- juju destroy-model flask-hello-world --destroy-storage
- # [docs:clean-environment-end]
+  # [docs:clean-environment]
+  # exit and delete the virtual environment
+  deactivate
+  rm -rf charm .venv __pycache__
+  # delete all the files created during the tutorial
+  rm flask-hello-world_0.1_amd64.rock flask-hello-world_0.2_amd64.rock \
+    flask-hello-world_0.3_amd64.rock rockcraft.yaml app.py \
+    requirements.txt migrate.py
+  # Remove the juju model
+  juju destroy-model flask-hello-world --destroy-storage
+  # [docs:clean-environment-end]

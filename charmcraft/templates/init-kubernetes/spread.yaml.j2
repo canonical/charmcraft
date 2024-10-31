@@ -59,6 +59,11 @@ backends:
       multipass delete --purge "${instance_name}"
 
     systems:
+      - ubuntu-24.04:
+          username: spread
+          password: spread
+          workers: 1
+
       - ubuntu-22.04:
           username: spread
           password: spread
@@ -97,6 +102,7 @@ suites:
 
     systems:
       - ubuntu-22.04*
+      - ubuntu-24.04*
 
     environment:
       CHARMCRAFT_CHANNEL/charmcraft_current: latest/stable

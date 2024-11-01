@@ -27,7 +27,7 @@ can be created as follows:
 Select a compatible version of ``pip``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Python plugin requires at least pip 22.3, released in October 2022. If the
+The Python plugin requires at least `pip 22.3`_, released in October 2022. If the
 charm's base uses an older version of pip, a newer version can be installed in the
 build environment using a dependency part. The following ``parts`` section can be
 used in place of the section above to upgrade pip for charms that build on Ubuntu
@@ -124,3 +124,6 @@ from the main directory, they can be included again using the
         source: .
         stage:
           - charm_version
+
+
+.. _pip 22.3: https://pip.pypa.io/en/stable/news/#v22-3

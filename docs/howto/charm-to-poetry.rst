@@ -25,13 +25,13 @@ can be created as follows:
         plugin: poetry
         source: .
 
-Ensure a recent enough version of ``pip`` and ``poetry``
+Select compatible versions of ``pip`` and ``poetry``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``poetry`` plugin requires at least pip 22.3, released in October 2022. If the
 charm's base uses an older version of pip, a newer version can be installed in the
 build environment using a dependency part. Likewise, a charm may require a newer
-version of poetry than is available in the distribution's repositories. The following
+version of Poetry than is available in the distribution's repositories. The following
 ``parts`` section can be used in place of the section above to upgrade pip and Poetry
 for charms that build on Ubuntu 22.04 or earlier:
 
@@ -61,7 +61,7 @@ when creating the virtual environment.
 
 .. note::
     This is useful and encouraged, though not mandatory, for keeping track of
-    library dependencies (see below). For an example, see
+    library dependencies, as covered in the next section. For an example, see
     `postgresql-operator`_.
 
 Include charm library dependencies

@@ -24,7 +24,7 @@ can be created as follows:
         python-requirements:
           - requirements.txt  # Or whatever your requirements file is called.
 
-Ensure a recent enough version of ``pip``
+Select a compatible version of ``pip``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``python`` plugin requires at least pip 22.3, released in October 2022. If the

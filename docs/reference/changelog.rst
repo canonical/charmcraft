@@ -86,6 +86,13 @@ Command line
 The pack command now updates charm the libs in the project directory if they don't meet
 the requirements in the ``charm-libs`` key of ``charmcraft.yaml``.
 
+3.2.2 (2024-10-16)
+------------------
+
+- The ``whoami`` command now works with charm-scoped credentials.
+
+For a complete list of commits, see the `3.2.2`_ release on GitHub.
+
 3.2.1 (2024-09-16)
 ------------------
 

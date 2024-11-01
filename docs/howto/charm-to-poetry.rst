@@ -1,10 +1,10 @@
 .. _howto-migrate-to-poetry:
 
-Migrate from the ``charm`` plugin to Poetry
-===========================================
+Migrate from the Charm plugin to the Poetry plugin
+==================================================
 
 Many charms use `Poetry`_ to manage their Python projects. For these charms, Charmcraft
-has a :ref:`craft_parts_poetry_plugin`. Migrating from the charm plugin provides some
+has a :ref:`craft_parts_poetry_plugin`. Migrating from the Charm plugin provides some
 benefits, such as no longer having to maintain a ``requirements.txt`` file. If the
 charm to be migrated does not currently use poetry, refer to the
 `Poetry documentation <https://python-poetry.org/docs/basic-usage/>`_ for instructions
@@ -67,10 +67,10 @@ when creating the virtual environment.
 Include charm library dependencies
 ----------------------------------
 
-Unlike the ``charm`` plugin, the ``poetry`` plugin does not install the dependencies
-for included charmlibs. If any of the charm libraries used have PYDEPS, these will
+Unlike the Charm plugin, the Poetry plugin does not install the dependencies for
+included charmlibs. If any of the charm libraries used have PYDEPS, these will
 need to be added to the charm's dependencies, potentially as their own
-`dependency group <dependency groups>`_.
+`dependency group <dependency groups_>`_.
 
 To find these dependencies, check each library file for its ``PYDEPS``. A command
 that can find these is::

@@ -1,11 +1,11 @@
 .. _howto-migrate-to-python:
 
-Migrate from the ``charm`` plugin to the ``python`` plugin
-==========================================================
+Migrate from the Charm plugin to the Python plugin
+==================================================
 
-The ``python`` Charmcraft plugin offers a faster, stricter means of packing an operator
+The Python Charmcraft plugin offers a faster, stricter means of packing an operator
 charm with a virtual environment. This guide shows how to migrate from a charm using
-the default ``charm`` plugin to using the ``python`` plugin.
+the default Charm plugin to using the Python plugin.
 
 Update ``charmcraft.yaml``
 --------------------------
@@ -27,7 +27,7 @@ can be created as follows:
 Select a compatible version of ``pip``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``python`` plugin requires at least pip 22.3, released in October 2022. If the
+The Python plugin requires at least pip 22.3, released in October 2022. If the
 charm's base uses an older version of pip, a newer version can be installed in the
 build environment using a dependency part. The following ``parts`` section can be
 used in place of the section above to upgrade pip for charms that build on Ubuntu
@@ -51,9 +51,9 @@ used in place of the section above to upgrade pip for charms that build on Ubunt
 Flatten ``requirements.txt``
 ----------------------------
 
-One difference between the ``python`` plugin and the ``charm`` plugin is that the
-``python`` plugin does not install dependencies, so the ``requirements.txt`` file
-must be a complete set of packages needed in the charm's virtual environment.
+One difference between the Python plugin and the Charm plugin is that the Python
+plugin does not install dependencies, so the ``requirements.txt`` file must be a
+complete set of packages needed in the charm's virtual environment.
 
 .. note::
     There are several tools for creating an exhaustive ``requirements.txt`` file.
@@ -83,7 +83,7 @@ empty virtual environment and then run::
 Include charm library dependencies
 ----------------------------------
 
-Unlike the ``charm`` plugin, the ``python`` plugin does not install the dependencies
+Unlike the Charm plugin, the Python plugin does not install the dependencies
 for included charmlibs. If any of the charm libraries used have PYDEPS, these will
 need to be added to a requirements file as well.
 
@@ -105,7 +105,7 @@ that generates ``requirements.txt``.
 Include extra files
 -------------------
 
-A ``python`` plugin only includes the contents of the ``src`` and ``lib`` directories
+The Python plugin only includes the contents of the ``src`` and ``lib`` directories
 as well as the generated virtual environment. If other files were previously included
 from the main directory, they can be included again using the
 :ref:`craft_parts_dump_plugin`:

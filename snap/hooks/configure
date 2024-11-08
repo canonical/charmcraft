@@ -17,13 +17,11 @@ remote image version: core22 -----------------------------------------------
 """
 
 import json
-import platform
 import re
 import subprocess
 import sys
 
 from datetime import datetime
-from pathlib import Path
 
 from charmcraft import snap
 
@@ -76,21 +74,7 @@ def _delete_lxd_instance(instance: dict) -> None:
 
 
 def _has_lxd() -> bool:
-    try:
-        lxc_binary = subprocess.check_output(["which", "lxc"])
-    except subprocess.CalledProcessError:
-        return False
-
-    if lxc_binary == b"/usr/sbin/lxc":
-        # In Ubuntu, /usr/sbin/lxc is a wrapper that might install LXD, which we
-        # *don't* want to do
-        is_ubuntu = "ubuntu" in platform.uname().version.lower()
-        if is_ubuntu:
-            # /usr/sbin/lxc will only install LXD if /snap/bin/lxc doesn't exist
-            return Path("/snap/bin/lxc").exists()
-
-    # In all other cases the result of "which lxc" should be valid
-    return True
+    return subprocess.run(["snap", "list", "lxd"]).returncode == 0
 
 
 def configure_hook_main():

@@ -45,7 +45,7 @@ pluggy==1.4.0
 protobuf==3.20.3
 pycodestyle==2.11.1
 pycparser==2.21
-pydantic==1.10.14
+pydantic==1.10.19
 pydantic-yaml==0.11.2
 pydocstyle==6.3.0
 pyfakefs==5.3.4

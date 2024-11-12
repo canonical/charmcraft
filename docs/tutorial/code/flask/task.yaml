@@ -10,6 +10,10 @@ summary: Getting started with Flask tutorial
 environment:
 
 execute: |
+  #move everything to $HOME so that Juju deployment works
+  mv *.yaml *.py *.txt $HOME
+  cd $HOME
+
   # [docs:create-venv]
   sudo apt-get update && sudo apt-get install python3-venv -y
   python3 -m venv .venv
@@ -35,7 +39,6 @@ execute: |
   # [docs:pack]
   rockcraft pack
   # [docs:pack-end]
-  ls -la
 
   # [docs:ls-rock]
   ls *.rock -l
@@ -86,9 +89,15 @@ execute: |
     service-hostname=flask-hello-world path-routes=/
   # [docs:config-nginx-end]
 
+  # give Juju some time to deploy the apps
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
+
+  juju status
 
   cd ..
   cat greeting_app.py > app.py
@@ -101,6 +110,7 @@ execute: |
     docker://localhost:32000/flask-hello-world:0.2
   # [docs:docker-update-end]
 
+  cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
   charmcraft pack
 
@@ -110,13 +120,23 @@ execute: |
     --resource flask-app-image=localhost:32000/flask-hello-world:0.2
   # [docs:refresh-deployment-end]
 
+  # give Juju some time to refresh the app
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
   cd ..
+  cat visitors_migrate.py >> migrate.py
   cat visitors_app.py > app.py
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
+  echo "psycopg2-binary" >> requirements.txt
   rockcraft pack
 
   # [docs:docker-2nd-update]
@@ -125,6 +145,7 @@ execute: |
     docker://localhost:32000/flask-hello-world:0.3
   # [docs:docker-2nd-update-end]
 
+  cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
   charmcraft pack
 
@@ -139,6 +160,19 @@ execute: |
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
+  # give Juju some time to deploy and refresh the apps
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+
+  juju status
+
+  curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+
+  cd ..
+
   # [docs:clean-environment]
   # exit and delete the virtual environment
   deactivate
@@ -148,5 +182,5 @@ execute: |
     flask-hello-world_0.3_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
     requirements.txt migrate.py
   # Remove the juju model
-  juju destroy-model flask-hello-world --destroy-storage
+  juju destroy-model flask-hello-world --destroy-storage --no-prompt
   # [docs:clean-environment-end]

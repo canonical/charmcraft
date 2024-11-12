@@ -52,7 +52,7 @@ backends:
       system=$(echo "${SPREAD_SYSTEM}" | tr . -)
       instance_name="spread-${SPREAD_BACKEND}-${instance_num}-${system}"
 
-      multipass launch --cpus 2 --disk 20G --memory 2G --name "${instance_name}" "${multipass_image}"
+      multipass launch --cpus 4 --disk 50G --memory 4G --name "${instance_name}" "${multipass_image}"
 
       # Enable PasswordAuthentication for root over SSH.
       multipass exec "$instance_name" -- \
@@ -134,18 +134,19 @@ suites:
     systems:
     - ubuntu-22.04-64
     prepare: |
-      sudo snap install rockcraft --classic
-      sudo snap install lxd
+      snap install rockcraft --classic
+      snap install lxd
       lxd init --auto
-      sudo snap install charmcraft --channel latest/edge --classic
-      sudo snap install microk8s --channel 1.31-strict/stable
-      sudo adduser $USER snap_microk8s
-      newgrp snap_microk8s
-      sudo microk8s enable hostpath-storage
-      sudo microk8s enable registry
-      sudo microk8s enable ingress
-      sudo snap install juju --channel 3.5/stable
+      snap refresh charmcraft --channel=latest/edge --amend
+      snap install microk8s --channel=1.31-strict/stable
+      #adduser $USER snap_microk8s
+      #newgrp snap_microk8s
+      snap install juju --channel=3.5/stable
+      lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share
+      microk8s enable hostpath-storage
+      microk8s enable registry
+      microk8s enable ingress
       juju bootstrap microk8s dev-controller
   tests/spread/commands/:
     summary: simple charmcraft commands

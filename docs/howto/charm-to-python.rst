@@ -3,7 +3,7 @@
 Migrate from the Charm plugin to the Python plugin
 ==================================================
 
-The Python Charmcraft plugin offers a faster, stricter means of packing an operator
+The Python plugin in Charmcraft offers a faster, stricter means of packing an operator
 charm with a virtual environment. This guide shows how to migrate from a charm using
 the default Charm plugin to using the Python plugin.
 

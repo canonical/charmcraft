@@ -28,7 +28,8 @@ can be created as follows:
 Select compatible versions of ``pip`` and ``poetry``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``poetry`` plugin requires at least pip 22.3, released in October 2022. If the
+The Poetry plugin requires at least `pip 22.3
+<https://pypi.org/project/pip/22.3>`_, released in October 2022. If the
 charm's base uses an older version of pip, a newer version can be installed in the
 build environment using a dependency part. Likewise, a charm may require a newer
 version of Poetry than is available in the distribution's repositories. The following
@@ -83,7 +84,7 @@ from all loaded charm libs.
 Include extra files
 -------------------
 
-A ``poetry`` plugin only includes the contents of the ``src`` and ``lib`` directories
+A Poetry plugin only includes the contents of the ``src`` and ``lib`` directories
 as well as the generated virtual environment. If other files were previously included
 from the main directory, they can be included again using the
 :ref:`craft_parts_dump_plugin`:

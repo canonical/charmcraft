@@ -148,6 +148,10 @@ suites:
       microk8s enable registry
       microk8s enable ingress
       juju bootstrap microk8s dev-controller
+      # Don't use the staging store for this spread test
+      unset CHARMCRAFT_STORE_API_URL
+      unset CHARMCRAFT_UPLOAD_URL
+      unset CHARMCRAFT_REGISTRY_URL
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

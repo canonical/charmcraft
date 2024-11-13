@@ -34,10 +34,10 @@ information, see the spread documentation: https://github.com/snapcore/spread
 
 
 class TestCommand(base.CharmcraftCommand):
-    """Initialize a directory to be a charm project."""
+    """Run charm tests with spread."""
 
     name = "test"
-    help_msg = "Execute charm test suites"
+    help_msg = "Execute charm test suites with spread"
     overview = _overview
     common = True
 
@@ -68,6 +68,12 @@ class TestCommand(base.CharmcraftCommand):
         )
 
         parser.add_argument(
+            "--verbose",
+            action="store_true",
+            help="Run spread in verbose mode.",
+        )
+
+        parser.add_argument(
             "spread_tasks",
             metavar="tasks",
             nargs=argparse.REMAINDER,
@@ -83,6 +89,9 @@ class TestCommand(base.CharmcraftCommand):
             cmd = [f"{os.environ['SNAP']}/bin/spread"]
         else:
             cmd = ["spread"]
+
+        if vars(parsed_args).get("verbose"):
+            cmd.append("-vv")
 
         for arg in ("shell", "shell-after", "debug", "list"):
             if vars(parsed_args).get(arg):

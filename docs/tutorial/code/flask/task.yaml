@@ -94,8 +94,8 @@ execute: |
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
-  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m | juju status
 
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1

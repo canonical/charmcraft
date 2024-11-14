@@ -8,3 +8,4 @@ How-To
 
    charm-to-poetry
    charm-to-python
+   shared-cache

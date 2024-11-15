@@ -88,3 +88,4 @@ def test_poetry_plugin(
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
+    assert not (stage_path / "venv" / "lib64").is_symlink()

@@ -127,7 +127,7 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
 
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
@@ -135,7 +135,7 @@ execute: |
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
   cd ..
@@ -162,13 +162,13 @@ execute: |
   # [docs:refresh-2nd-deployment-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
+  juju deploy postgresql-k8s --trust --channel=14/beta
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
 
   juju status
 

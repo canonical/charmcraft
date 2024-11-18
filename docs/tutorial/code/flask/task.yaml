@@ -19,6 +19,8 @@ execute: |
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
+  #make sure that Juju version is correct
+  snap refresh juju --channel=3.5/stable --amend
 
   # [docs:create-venv]
   sudo apt-get update && sudo apt-get install python3-venv -y
@@ -162,7 +164,7 @@ execute: |
   # [docs:refresh-2nd-deployment-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust --channel=14/beta
+  juju deploy postgresql-k8s --trust
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

@@ -91,7 +91,9 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
     @override
     def get_build_commands(self) -> list[str]:
         """Get the build commands for the Python plugin."""
-        if self._options.poetry_keep_bins:
-            return super().get_build_commands()
-        venv_bin = self._get_venv_directory() / "bin"
-        return [*super().get_build_commands(), f"rm -rf {venv_bin}"]
+        return [
+            *super().get_build_commands(),
+            *utils.get_venv_cleanup_commands(
+                self._get_venv_directory(), keep_bins=self._options.poetry_keep_bins
+            ),
+        ]

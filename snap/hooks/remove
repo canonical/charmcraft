@@ -9,7 +9,15 @@ import sys
 PROJECT_NAME = "charmcraft"
 
 
+def _has_lxd() -> bool:
+    return subprocess.run(["snap", "list", "lxd"]).returncode == 0
+
+
 def remove_hook_main():
+    if not _has_lxd():
+        print("LXD is not installed.", file=sys.stderr)
+        return
+
     # Remove all images in LXD related project
     try:
         lxd_images_json = subprocess.check_output(

@@ -49,7 +49,6 @@ During the build step, the plugin performs the following actions:
 4. It copies any existing ``src`` and ``lib`` directories from your charm project into
    the final charm.
 
-
 Example
 -------
 

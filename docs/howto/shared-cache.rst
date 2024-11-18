@@ -5,48 +5,31 @@ Cache intermediate build artefacts
 
 Because Charmcraft builds Python packages from source rather than using pre-built
 wheels, the initial builds of charms can take a while. However, future builds of
-the same charm are sped up significantly by reusing the built wheels. When installed
-as a snap, Charmcraft automatically caches these wheels in the
+the same charm are sped up significantly by reusing the built wheels.
+
+When installed  as a snap, Charmcraft automatically caches these wheels in the
 ``~/snap/charmcraft/common/cache`` directory. However, in some cases, it may be
-beneficial to change this directory. This can be done by setting the
-``CRAFT_SHARED_CACHE`` environment variable to the path of an existing directory to
-use instead.
+beneficial to change this directory.
 
 This can be especially useful in CI, where you may wish to specify a directory that
-gets cached between CI runs. This is done automatically when using the
-``charmcraft/pack`` action in Canonical's `craft-actions`_ repository for GitHub,
-but it can also be done manually in any CI.
+gets cached between CI runs.
 
-CI examples
+Local usage
 -----------
 
-On GitLab
-~~~~~~~~~
+When packing locally, you can change where Charmcraft caches build artefacts by setting
+the ``CRAFT_SHARED_CACHE`` environment variable to the path of an existing directory to
+use instead::
 
-The following example ``gitlab-ci.yml`` will install and run Charmcraft to pack your
-charm, caching the intermediate artefacts:
-
-.. code-block:: yaml
-
-    pack-charm:
-      cache:
-        - key:
-            files:
-              - requirements.txt
-          paths:
-            - .charmcraft_cache/
-      variables:
-        CRAFT_SHARED_CACHE: .charmcraft_cache/
-      script:
-        - mkdir -p .charmcraft_cache
-        - snap install charmcraft
-        - charmcraft pack
+  mkdir -p /tmp/charmcraft
+  CRAFT_SHARED_CACHE=/tmp/charmcraft charmcraft pack
 
 On GitHub
-~~~~~~~~~
+---------
 
-While it's recommended that you use `craft-actions`_ where possible, the following
-workflow will manually pack a charm, caching the intermediate files:
+While it's recommended that you use the ``charmcraft/pack`` action from
+`craft-actions`_ where possible, the following workflow will manually pack a charm,
+caching the intermediate files:
 
 .. code-block:: yaml
 
@@ -69,5 +52,27 @@ workflow will manually pack a charm, caching the intermediate files:
             CRAFT_SHARED_CACHE: ${{ runner.temp }
           run: |
             charmcraft pack
+
+On GitLab
+---------
+
+The following example ``gitlab-ci.yml`` will install and run Charmcraft to pack your
+charm, caching the intermediate artefacts:
+
+.. code-block:: yaml
+
+    pack-charm:
+      cache:
+        - key:
+            files:
+              - requirements.txt
+          paths:
+            - .charmcraft_cache/
+      variables:
+        CRAFT_SHARED_CACHE: .charmcraft_cache/
+      script:
+        - mkdir -p .charmcraft_cache
+        - snap install charmcraft
+        - charmcraft pack
 
 .. _craft-actions: https://github.com/canonical/craft-actions

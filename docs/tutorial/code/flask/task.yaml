@@ -20,7 +20,21 @@ execute: |
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
   #make sure that Juju version is correct
-  snap refresh juju --channel=3.5/stable --amend
+  snap install rockcraft --classic
+  snap install lxd
+  lxd init --auto
+  snap refresh charmcraft --channel=latest/edge --amend
+  snap install microk8s --channel=1.31-strict/stable
+  #adduser $USER snap_microk8s
+  #newgrp snap_microk8s
+  snap install juju --channel=3.5/stable
+  lxc network set lxdbr0 ipv6.address none
+  mkdir -p ~/.local/share
+  microk8s status --wait-ready
+  microk8s enable hostpath-storage
+  microk8s enable registry
+  microk8s enable ingress
+  juju bootstrap microk8s dev-controller
 
   # [docs:create-venv]
   sudo apt-get update && sudo apt-get install python3-venv -y

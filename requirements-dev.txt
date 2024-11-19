@@ -6,12 +6,12 @@ certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==3.3.2
 coverage==7.6.1
-craft-application==4.2.6
+git+https://github.com/canonical/craft-application@work/CRAFT-3668/multibase-prototype#egg=craft-application
 craft-archives==2.0.0
-craft-cli==2.7.0
+craft-cli==2.10.1
 craft-grammar==2.0.1
 craft-parts==2.1.2
-craft-platforms==0.3.1
+git+https://github.com/canonical/craft-platforms@work/CRAFT-3668/multibase-prototype#egg=craft-platforms
 craft-providers==2.0.4
 craft-store==3.0.2
 cryptography==43.0.1

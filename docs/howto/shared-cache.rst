@@ -4,8 +4,8 @@ Cache intermediate build artefacts
 ==================================
 
 Because Charmcraft builds Python packages from source rather than using pre-built
-wheels, the initial builds of charms can take a while. However, future builds of
-the same charm are sped up significantly by reusing the built wheels.
+wheels, the initial builds of charms can take a while. The intermediate artefacts
+get cached, which significantly speeds up subsequent builds.
 
 When installed  as a snap, Charmcraft automatically caches these wheels in the
 ``~/snap/charmcraft/common/cache`` directory. However, in some cases, it may be

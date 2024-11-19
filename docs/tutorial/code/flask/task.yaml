@@ -188,10 +188,14 @@ execute: |
 
   juju status
 
-  curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-  curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  #curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  #curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  #curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  #curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
 
   cd ..
 

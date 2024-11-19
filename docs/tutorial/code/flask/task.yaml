@@ -27,7 +27,7 @@ execute: |
   snap install microk8s --channel=1.31-strict/stable
   #adduser $USER snap_microk8s
   #newgrp snap_microk8s
-  snap install juju --channel=3.5/stable
+  snap refresh juju --channel=3.5/stable --amend
   lxc network set lxdbr0 ipv6.address none
   mkdir -p ~/.local/share
   microk8s status --wait-ready

@@ -10,19 +10,15 @@ summary: Getting started with Flask tutorial
 kill-timeout: 90m
 
 environment:
-  CHARMCRAFT_STORE_API_URL: https://api.charmhub.io
-  CHARMCRAFT_UPLOAD_URL: https://storage.snapcraftcontent.com
-  CHARMCRAFT_REGISTRY_URL: https://registry.jujucharms.com
-  CHARMCRAFT_AUTH: null
 
 execute: |
   #move everything to $HOME so that Juju deployment works
   mv *.yaml *.py *.txt $HOME
   cd $HOME
   #don't use the staging store for this test
-  #unset CHARMCRAFT_STORE_API_URL
-  #unset CHARMCRAFT_UPLOAD_URL
-  #unset CHARMCRAFT_REGISTRY_URL
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
   #make sure that Juju version is correct
   snap install rockcraft --classic
   snap install lxd
@@ -106,7 +102,7 @@ execute: |
   # [docs:deploy-juju-model-end]
 
   # [docs:deploy-nginx]
-  juju deploy nginx-ingress-integrator --channel=latest/edge
+  juju deploy nginx-ingress-integrator --channel=latest/edge --base ubuntu@20.04
   juju integrate nginx-ingress-integrator flask-hello-world
   # [docs:deploy-nginx-end]
 

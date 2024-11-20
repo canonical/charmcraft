@@ -208,5 +208,5 @@ execute: |
     flask-hello-world_0.3_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
     requirements.txt migrate.py
   # Remove the juju model
-  juju destroy-model flask-hello-world --destroy-storage --no-prompt --force --no-wait
+  juju destroy-model flask-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]

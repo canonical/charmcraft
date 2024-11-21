@@ -102,7 +102,7 @@ execute: |
   # [docs:deploy-juju-model-end]
 
   # [docs:deploy-nginx]
-  juju deploy nginx-ingress-integrator --channel=latest/edge --base ubuntu@20.04
+  juju deploy nginx-ingress-integrator --channel=latest/edge --revision 122
   juju integrate nginx-ingress-integrator flask-hello-world
   # [docs:deploy-nginx-end]
 

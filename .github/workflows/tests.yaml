@@ -327,7 +327,7 @@ jobs:
           cache: 'pip'
       - name: Build and install Charmcraft
         run: |
-          pipx install .
+          pip install -r requirements.txt .
       - name: Check for fully-configured multipass
         run: |
           while ! multipass version; do

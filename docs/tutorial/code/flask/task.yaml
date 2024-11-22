@@ -152,14 +152,14 @@ execute: |
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hi
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | Hello
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | Hi
 
   cd ..
   cat visitors_migrate.py >> migrate.py

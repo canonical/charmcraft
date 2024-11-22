@@ -12,28 +12,35 @@ kill-timeout: 90m
 environment:
 
 execute: |
-  #move everything to $HOME so that Juju deployment works
+  # Move everything to $HOME so that Juju deployment works
   mv *.yaml *.py *.txt $HOME
   cd $HOME
-  #don't use the staging store for this test
+
+  # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-  #make sure that Juju version is correct
+  
+  # Add setup instructions here 
+  # (Ran into issues in prepare section)
   snap install rockcraft --classic
   snap install lxd
   lxd init --auto
   snap refresh charmcraft --channel=latest/edge --amend
   snap install microk8s --channel=1.31-strict/stable
-  #adduser $USER snap_microk8s
-  #newgrp snap_microk8s
   snap refresh juju --channel=3.5/stable --amend
+
+  # Juju config setup
   lxc network set lxdbr0 ipv6.address none
   mkdir -p ~/.local/share
+
+  # MicroK8s config setup
   microk8s status --wait-ready
   microk8s enable hostpath-storage
   microk8s enable registry
   microk8s enable ingress
+
+  # Bootstrap controller
   juju bootstrap microk8s dev-controller
 
   # [docs:create-venv]
@@ -55,6 +62,7 @@ execute: |
   # [docs:create-rockcraft-yaml]
   rockcraft init --profile flask-framework
   # [docs:create-rockcraft-yaml-end]
+
   sed -i "s/name: .*/name: flask-hello-world/g" rockcraft.yaml
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
@@ -112,14 +120,12 @@ execute: |
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
-  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
-
-  juju status
 
   cd ..
   cat greeting_app.py > app.py
@@ -143,15 +149,16 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  # curl and check that the response is Hi
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
   cd ..
@@ -183,20 +190,15 @@ execute: |
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m | juju status
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  juju status
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 1
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 2
 
-  #curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  #curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-  #curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  #curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-
+  # Back out to main directory for clean-up
   cd ..
 
   # [docs:clean-environment]

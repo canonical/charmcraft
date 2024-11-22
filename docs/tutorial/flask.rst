@@ -531,8 +531,5 @@ Next steps
     * - "Why...?", "So what?"
       - `SDK Explanation docs <https://juju.is/docs/sdk/explanation>`_
 
-
-**Contributors:** @econley, @jdkandersson , @tmihoc, @weii-wang
-
 -------------------------
 

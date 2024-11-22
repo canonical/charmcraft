@@ -314,8 +314,9 @@ jobs:
       - name: Install Homebrew Bundler RubyGems
         if: steps.cache.outputs.cache-hit != 'true'
         run: brew install-bundler-gems
-      - name: Install Multipass
+      - name: Install dependencies with homebrew
         run: |
+          brew install libgit2@1.7  # For building pygit2
           brew install multipass
       - name: Checkout code
         uses: actions/checkout@v4

@@ -20,8 +20,8 @@ execute: |
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-  
-  # Add setup instructions here 
+ 
+  # Add setup instructions
   # (Ran into issues in prepare section)
   snap install rockcraft --classic
   snap install lxd

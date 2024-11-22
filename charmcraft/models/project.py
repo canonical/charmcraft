@@ -342,12 +342,13 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     ),
                 )
             ]
-        if not self.base:
+        if not self.base and not self.platforms:
             return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
 
-        build_base = self.build_base or self.base
-        base_name, _, base_version = build_base.partition("@")
-        base = bases.BaseName(name=base_name, version=base_version)
+        if self.base or self.build_base:
+            build_base = self.build_base or self.base
+            base_name, _, base_version = build_base.partition("@")
+            base = bases.BaseName(name=base_name, version=base_version)
 
         if self.platforms is None:
             raise CraftError("Must define at least one platform.")
@@ -364,15 +365,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
             build_base=self.build_base,
             platforms=platforms,
         )
-        return [
-            models.BuildInfo(
-                platform=info.platform,
-                build_on=str(info.build_on),
-                build_for=str(info.build_for),
-                base=base,
-            )
-            for info in build_infos
-        ]
+        return [models.BuildInfo.from_platforms(info) for info in build_infos]
 
 
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
@@ -1060,7 +1053,7 @@ class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
 
     # Silencing pyright because it complains about missing default value
-    base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
+    base: BaseStr | None = None  # pyright: ignore[reportGeneralTypeIssues]
     build_base: BuildBaseStr | None = None
     platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
 

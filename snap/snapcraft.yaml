@@ -132,7 +132,7 @@ parts:
       - CFLAGS: "$(pkg-config python-3.10 yaml-0.1 --cflags)"
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
-      - PIP_NO_BINARY: ":all:"
+      #- PIP_NO_BINARY: ":all:"
       - CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
     build-attributes:
       - enable-patchelf

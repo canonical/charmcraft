@@ -26,6 +26,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
 import craft_application
+import craft_platforms
 import yaml
 from craft_application import services, util
 from craft_cli import emit
@@ -215,18 +216,18 @@ class PackageService(services.PackageService):
         if isinstance(self._project, PlatformCharm):
             if not self._platform:
                 architectures = [util.get_host_architecture()]
-            elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
+            elif craft_platforms.get_base_and_name(platform_name=self._platform)[1] in (*const.SUPPORTED_ARCHITECTURES, "all"):
                 architectures = [self._platform]
             elif platform := self._project.platforms.get(self._platform):
                 if platform.build_for:
-                    architectures = [str(arch) for arch in platform.build_for]
+                    architectures = [str(craft_platforms.get_base_and_architecture(architecture=arch)[1]) for arch in platform.build_for]
                 else:
                     raise ValueError(
                         f"Platform {self._platform} contains unknown build-for."
                     )
             else:
                 architectures = [util.get_host_architecture()]
-            return [models.Base.from_str_and_arch(self._project.base, architectures)]
+            return [models.Base.from_str_and_arch(self._project.base or str(self._build_plan[0]), architectures)]
         raise TypeError(
             f"Unknown charm type {self._project.__class__}, cannot get bases."
         )

@@ -32,6 +32,7 @@ from craft_application import models, util
 from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
+import craft_platforms
 from craft_providers import bases
 from hypothesis import strategies
 
@@ -559,12 +560,274 @@ def test_build_info_generator(given, expected):
             ],
             id="arch-base",
         ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="noble",
+                    build_on=craft_platforms.DebianArchitecture("amd64"),
+                    build_for=craft_platforms.DebianArchitecture("amd64"),
+                    base=bases.BaseName("ubuntu", "24.04"),
+                )
+            ],
+            id="multi-base-simple",
+        ),
+        pytest.param(
+            {
+                "platforms": {"ubuntu@24.04:amd64": None},
+            },
+            [
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on=craft_platforms.DebianArchitecture("amd64"),
+                    build_for=craft_platforms.DebianArchitecture("amd64"),
+                    base=bases.BaseName("ubuntu", "24.04"),
+                )
+            ],
+            id="multi-base-shorthand",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "ubuntu@22.04:amd64": None,
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on=craft_platforms.DebianArchitecture("amd64"),
+                    build_for=craft_platforms.DebianArchitecture("amd64"),
+                    base=bases.BaseName("ubuntu", "22.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="noble",
+                    build_on=craft_platforms.DebianArchitecture("amd64"),
+                    build_for=craft_platforms.DebianArchitecture("amd64"),
+                    base=bases.BaseName("ubuntu", "24.04"),
+                )
+            ],
+            id="multi-base-mixed-notation",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:all"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="noble",
+                    build_on=craft_platforms.DebianArchitecture("amd64"),
+                    build_for="all",
+                    base=bases.BaseName("ubuntu", "24.04"),
+                )
+            ],
+            id="multi-base-all",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "ubuntu@20.04:amd64": None,
+                    "jammy": {
+                        "build-on": ["ubuntu@22.04:amd64"],
+                        "build-for": ["ubuntu@22.04:amd64"],
+                    },
+                    "noble": {
+                        "build-on": ["ubuntu@22.04:amd64"],
+                        "build-for": ["ubuntu@22.04:amd64"],
+                    },
+                    "noble-cross": {
+                        "build-on": ["ubuntu@24.04:amd64", "ubuntu@24.04:riscv64"],
+                        "build-for": ["ubuntu@24.04:riscv64"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform='amd64',
+                    build_on=craft_platforms.DebianArchitecture('amd64'),
+                    build_for=craft_platforms.DebianArchitecture('amd64'),
+                    base=bases.BaseName(name='ubuntu', version='20.04'),
+                ),
+                project.models.BuildInfo(
+                    platform='jammy',
+                    build_on=craft_platforms.DebianArchitecture('amd64'),
+                    build_for=craft_platforms.DebianArchitecture('amd64'),
+                    base=bases.BaseName(name='ubuntu', version='22.04'),
+                ),
+                project.models.BuildInfo(
+                    platform='noble',
+                    build_on=craft_platforms.DebianArchitecture('amd64'),
+                    build_for=craft_platforms.DebianArchitecture('amd64'),
+                    base=bases.BaseName(name='ubuntu', version='22.04'),
+                ),
+                project.models.BuildInfo(
+                    platform='noble-cross',
+                    build_on=craft_platforms.DebianArchitecture('amd64'),
+                    build_for=craft_platforms.DebianArchitecture('riscv64'),
+                    base=bases.BaseName(name='ubuntu', version='24.04'),
+                ),
+                project.models.BuildInfo(
+                    platform='noble-cross',
+                    build_on=craft_platforms.DebianArchitecture('riscv64'),
+                    build_for=craft_platforms.DebianArchitecture('riscv64'),
+                    base=bases.BaseName(name='ubuntu', version='24.04'),
+                ),
+            ],
+            id="multi-base-complex",
+        ),
     ],
 )
 def test_build_planner_correct(data, expected):
     planner = project.CharmcraftBuildPlanner.model_validate(data)
 
     assert planner.get_build_plan() == expected
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(
+            {
+                "platforms": {
+                    "ubuntu@24.04:amd64": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="base-in-platform-and-arch",
+        ),
+        pytest.param(
+            {
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "ubuntu@24.04:amd64": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="base-in-platform-and-arch-and-top-level-base",
+        ),
+        pytest.param(
+            {
+                "build-base": "ubuntu@24.04",
+                "platforms": {
+                    "ubuntu@24.04:amd64": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="base-in-platform-and-arch-and-top-level-build-base",
+        ),
+        pytest.param(
+            {
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@24.04",
+                "platforms": {
+                    "ubuntu@24.04:amd64": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="base-in-platform-and-arch-and-top-level-base-and-build-base",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["amd64"],
+                        "build-for": ["amd64"],
+                    },
+                },
+            },
+            id="no-base",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["amd64"],
+                    },
+                },
+            },
+            id="partial-base-definition-1",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="partial-base-definition-2",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64", "riscv64"],
+                        "build-for": ["ubuntu@24.04:riscv64"],
+                    },
+                },
+            },
+            id="partial-base-definition-3",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@22.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                },
+            },
+            id="base-mismatch",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:unknown"],
+                        "build-for": ["ubuntu@24.04:unknown"],
+                    },
+                },
+            },
+            id="invalid-arch-1",
+        ),
+        pytest.param(
+            {"platforms": {"ubuntu@24.04:unknown": None}},
+            id="invalid-arch-2",
+        ),
+        pytest.param(
+            {"platforms": {"ubuntu@24.04:all": None}},
+            id="all-shorthand",
+        ),
+    ],
+)
+def test_build_planner_incorrect(data):
+    with pytest.raises((pydantic.ValidationError, ValueError,)):
+        planner = project.CharmcraftBuildPlanner.model_validate(data)
+        planner.get_build_plan()
 
 
 @pytest.mark.parametrize("base", ["ubuntu@20.04", "ubuntu@22.04", "ubuntu@24.04"])

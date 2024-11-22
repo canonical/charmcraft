@@ -9,7 +9,7 @@ requirements_fixups() {
 
 venv_dir="$(mktemp -d)"
 
-uv venv "$venv_dir"
+uv venv --python=3.10 "$venv_dir"
 # shellcheck source=/dev/null
 . "$venv_dir/bin/activate"
 

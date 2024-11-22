@@ -151,14 +151,18 @@ execute: |
   # give Juju some time to refresh the app
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  # curl and check that the response is Hi
+  # curl and check that the response is Hello
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | Hello
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
+  # make sure that the application updates
+  juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+
+  # curl and check that the response is now Hi
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | Hi
 
   cd ..

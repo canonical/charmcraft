@@ -43,8 +43,8 @@ pip==24.3.1
 platformdirs==4.3.6
 protobuf==5.28.3
 pycparser==2.22
-pydantic==2.10.1
-pydantic-core==2.27.1
+pydantic==2.9.2
+pydantic-core==2.23.4
 pygit2==1.14.1
 pymacaroons==0.13.0
 pynacl==1.5.0

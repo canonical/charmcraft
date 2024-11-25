@@ -344,7 +344,7 @@ following to the end of the ``charmcraft.yaml`` file:
       options:
         greeting:
           description: |
-              The greeting to be returned by the Flask application.
+                The greeting to be returned by the Flask application.
           default: "Hello, world!"
           type: string
 

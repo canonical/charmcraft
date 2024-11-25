@@ -410,7 +410,7 @@ The charm created by the ``flask-framework`` extension will execute the
 database is initialised and ready to be used by the application. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the tutorial root directory using ``cd ..``. Open the ``migrate.py``
+Go back out to the tutorial root directory using ``cd ..``, open the ``migrate.py``
 file using a text editor and paste the following code into it:
 
 .. literalinclude:: code/flask/visitors_migrate.py

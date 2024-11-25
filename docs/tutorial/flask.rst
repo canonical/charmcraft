@@ -344,7 +344,7 @@ following to the end of the ``charmcraft.yaml`` file:
       options:
         greeting:
           description: |
-            The greeting to be returned by the Flask application.
+              The greeting to be returned by the Flask application.
           default: "Hello, world!"
           type: string
 
@@ -400,9 +400,9 @@ This will require a few changes:
 
 * We will need to create a database migration that creates the ``visitors`` table
 * We will need to keep track how many times the root endpoint has been called
-in the database
+  in the database
 * We will need to add a new endpoint to retrieve the number of visitors from the
-database
+  database
 
 The charm created by the ``flask-framework`` extension will execute the
 ``migrate.py`` script if it exists. This script should ensure that the

@@ -404,6 +404,7 @@ This will require a few changes:
 * We will need to add a new endpoint to retrieve the number of visitors from the
   database
 
+Let's start with the database migration to create the required tables.
 The charm created by the ``flask-framework`` extension will execute the
 ``migrate.py`` script if it exists. This script should ensure that the
 database is initialised and ready to be used by the application. We will

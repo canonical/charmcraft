@@ -413,7 +413,7 @@ create a ``migrate.py`` file containing this logic.
 Go back out to the tutorial root directory using ``cd ..``. Open the ``migrate.py``
 file using a text editor and paste the following code into it:
 
-.. literalinclude:: code/flask/migrate.py
+.. literalinclude:: code/flask/visitors_migrate.py
     :language: python
 
 .. note::

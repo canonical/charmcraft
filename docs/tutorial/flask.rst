@@ -364,12 +364,6 @@ make use of the new code:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-.. note::
-
-    For the refresh command, the ``--constraints`` option is not required if
-    you are not running on an ``amd64`` host as Juju will remember the
-    constraint for the life of the application deployment.
-
 Wait for ``juju status`` to show that the App is ``active`` again. Verify that
 the new configuration has been added using
 ``juju config flask-hello-world | grep -A 6 greeting:`` which should show

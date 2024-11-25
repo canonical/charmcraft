@@ -11,6 +11,17 @@ environment:
   PROFILE/fastapi: fastapi-framework
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
 
+prepare: |
+  tests.pkgs install pipx python3-venv
+  pipx install --force tox
+
+restore: |
+  pushd test-init
+  charmcraft clean
+  popd
+
+  rm -rf test-init
+
 execute: |
   # Required for fetch-libs to succeed since the libraries are not available on
   # the staging environment
@@ -20,14 +31,12 @@ execute: |
 
   mkdir -p test-init
   cd test-init
-  charmcraft init --profile "${PROFILE}"
+  charmcraft init --profile "${PROFILE}" --name hello-world
   charmcraft fetch-libs
   charmcraft pack --verbose
   test -f *.charm
 
-restore: |
-  pushd test-init
-  charmcraft clean
-  popd
-
-  rm -rf test-init
+  # expand charmcraft.yaml for the scenario tests to work
+  charmcraft expand-extensions > charmcraft-expanded.yaml
+  mv charmcraft-expanded.yaml charmcraft.yaml
+  ~/.local/bin/tox -c ../tox.ini -e unit

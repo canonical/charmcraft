@@ -1,7 +1,7 @@
 .. _plugins:
 
-Parts plugins
-*************
+List of part plugins
+********************
 
 Most charms only need one, maybe two parts, typically consisting of one of Charmcraft's
 application-specific plugins such as the `charm plugin`_ or the `reactive plugin`_ and
@@ -11,6 +11,7 @@ potentially the addition of further files using the :ref:`craft_parts_dump_plugi
     :maxdepth: 1
 
     /common/craft-parts/reference/plugins/dump_plugin
+    /common/craft-parts/explanation/dump_plugin
     /common/craft-parts/reference/plugins/nil_plugin
     python_plugin
     poetry_plugin

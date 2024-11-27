@@ -1,8 +1,9 @@
 ## Development environment
 
-It's recommended to use `uv` for setting up your development environment, but
-this is not required. `uv` is available [as a snap](https://snapcraft.io/astral-uv)
-and from [official sources](https://docs.astral.sh/uv/getting-started/installation/).
+We recommend uv for setting up your local development environment:
+
+- [uv snap](https://snapcraft.io/astral-uv)
+- [Official uv binary](https://docs.astral.sh/uv/getting-started/installation/)
 
 To set up an initial development environment:
 

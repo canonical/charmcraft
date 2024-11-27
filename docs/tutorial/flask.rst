@@ -57,7 +57,7 @@ application up and running with Juju in about 90 minutes.
 Set things up
 =============
 
-.. include:: /reuse/tutorial/setup.rst
+.. include:: /reuse/tutorial/setup_stable.rst
 
 Finally, create a new directory for this tutorial and go inside it:
 

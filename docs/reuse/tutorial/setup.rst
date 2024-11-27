@@ -36,7 +36,7 @@ In order to create the charm, you'll need to install Charmcraft:
 
 .. code-block:: bash
 
-    sudo snap install charmcraft --channel latest/edge --classic
+    sudo snap install charmcraft --channel latest/stable --classic
 
 .. warning::
 

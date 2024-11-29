@@ -23,11 +23,11 @@ import pathlib
 from dataclasses import dataclass
 from typing import overload
 
-import yaml
 from craft_cli import CraftError
 from typing_extensions import Self
 
 from charmcraft import const, errors
+from charmcraft.utils.yaml import load_yaml
 
 
 @dataclass(frozen=True)
@@ -76,15 +76,15 @@ class QualifiedLibraryName:
         return f"{create_charm_name_from_importable(self.charm_name)}.{self.lib_name}"
 
 
-def get_name_from_metadata() -> str | None:
+def get_name_from_yaml() -> str | None:
     """Return the name if present and plausible in metadata.yaml."""
-    try:
-        with open(const.METADATA_FILENAME, "rb") as fh:
-            metadata = yaml.safe_load(fh)
-        charm_name = metadata["name"]
-    except (yaml.error.YAMLError, OSError, KeyError):
-        return None
-    return charm_name
+    charmcraft_yaml = load_yaml(pathlib.Path(const.CHARMCRAFT_FILENAME))
+    if charmcraft_yaml and "name" in charmcraft_yaml:
+        return charmcraft_yaml.get("name")
+    metadata_yaml = load_yaml(pathlib.Path(const.METADATA_FILENAME))
+    if metadata_yaml:
+        return metadata_yaml.get("name")
+    return None
 
 
 def create_importable_name(charm_name: str) -> str:

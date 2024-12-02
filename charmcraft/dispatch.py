@@ -24,8 +24,10 @@ from charmcraft import const
 DISPATCH_SCRIPT_TEMPLATE = """\
 #!/bin/sh
 dispatch_path="$(dirname $(realpath $0))"
-python_path="${{dispatch_path}}/venv/bin/python"
+venv_bin_path="${{dispatch_path}}/venv/bin"
+python_path="${{venv_bin_path}}/python"
 if [ ! -e "${{python_path}}" ]; then
+    mkdir -p "{{venv_bin_path}}"
     ln -s $(which python3) "${{python_path}}"
 fi
 

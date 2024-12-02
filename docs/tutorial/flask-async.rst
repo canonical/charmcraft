@@ -333,11 +333,11 @@ Configure the Flask application
 ===============================
 
 Now let's enable async Gunicorn workers using a configuration option. We will
-expect this configuration option to be available in the Flask app configuration under the
-keyword ``webserver-worker-class``. Verify that
-the new configuration has been added using
-``juju config flask-async-app | grep -A 6 webserver-worker-class:`` which should show
-the configuration option.
+expect this configuration option to be available in the Flask app configuration
+under the keyword ``webserver-worker-class``. Verify that the new configuration
+has been added using
+``juju config flask-async-app | grep -A 6 webserver-worker-class:`` which should
+show the configuration option.
 
 .. note::
 
@@ -355,7 +355,7 @@ The worker class can be changed using Juju:
 Now you can run
 ``curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
 http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
-http://flask-async-app/io http://flask-async-app/io ``
+http://flask-async-app/io http://flask-async-app/io``
 in they will all return at the same time.
 
 .. note::

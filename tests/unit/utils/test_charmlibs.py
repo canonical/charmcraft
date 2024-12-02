@@ -33,7 +33,7 @@ from charmcraft.utils.charmlibs import (
     get_lib_module_name,
     get_lib_path,
     get_libs_from_tree,
-    get_name_from_metadata,
+    get_name_from_yaml,
 )
 
 
@@ -64,49 +64,77 @@ def test_qualified_library_name_from_string_error(value: str):
 
 
 # region Name-related tests
-def test_get_name_from_metadata_ok(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("file_name"),
+    [const.METADATA_FILENAME, const.CHARMCRAFT_FILENAME],
+)
+def test_get_name_from_yaml_ok(tmp_path, monkeypatch, file_name):
     """The metadata file is valid yaml, but there is no name."""
     monkeypatch.chdir(tmp_path)
 
-    # put a valid metadata
+    # put a valid yaml
+    yaml_file = tmp_path / file_name
+    with yaml_file.open("wb") as fh:
+        fh.write(b"name: test-name")
+
+    result = get_name_from_yaml()
+    assert result == "test-name"
+
+
+def test_get_name_from_yaml_both_exist_metadata_has_name(tmp_path, monkeypatch):
+    """The metadata file is valid yaml, but there is no name."""
+    monkeypatch.chdir(tmp_path)
+
+    # put a valid yaml, but name is in metadata.yaml
+    charmcraft_file = tmp_path / const.CHARMCRAFT_FILENAME
+    with charmcraft_file.open("wb") as fh:
+        fh.write(b"notname: test-name")
     metadata_file = tmp_path / const.METADATA_FILENAME
     with metadata_file.open("wb") as fh:
         fh.write(b"name: test-name")
 
-    result = get_name_from_metadata()
+    result = get_name_from_yaml()
     assert result == "test-name"
 
 
-def test_get_name_from_metadata_no_file(tmp_path, monkeypatch):
+def test_get_name_from_yaml_no_file(tmp_path, monkeypatch):
     """No metadata file to get info."""
     monkeypatch.chdir(tmp_path)
-    result = get_name_from_metadata()
+    result = get_name_from_yaml()
     assert result is None
 
 
-def test_get_name_from_metadata_bad_content_garbage(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("file_name"),
+    [const.METADATA_FILENAME, const.CHARMCRAFT_FILENAME],
+)
+def test_get_name_from_yaml_bad_content_garbage(tmp_path, monkeypatch, file_name):
     """The metadata file is broken."""
     monkeypatch.chdir(tmp_path)
 
-    # put a broken metadata
-    metadata_file = tmp_path / const.METADATA_FILENAME
+    # put a broken yaml
+    metadata_file = tmp_path / file_name
     with metadata_file.open("wb") as fh:
         fh.write(b"\b00\bff -- not a really yaml stuff")
 
-    result = get_name_from_metadata()
+    result = get_name_from_yaml()
     assert result is None
 
 
-def test_get_name_from_metadata_bad_content_no_name(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("file_name"),
+    [const.METADATA_FILENAME, const.CHARMCRAFT_FILENAME],
+)
+def test_get_name_from_yaml_bad_content_no_name(tmp_path, monkeypatch, file_name):
     """The metadata file is valid yaml, but there is no name."""
     monkeypatch.chdir(tmp_path)
 
-    # put a broken metadata
-    metadata_file = tmp_path / const.METADATA_FILENAME
+    # put a broken yaml
+    metadata_file = tmp_path / file_name
     with metadata_file.open("wb") as fh:
         fh.write(b"{}")
 
-    result = get_name_from_metadata()
+    result = get_name_from_yaml()
     assert result is None
 
 

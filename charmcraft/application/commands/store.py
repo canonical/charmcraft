@@ -1381,7 +1381,7 @@ class CreateLibCommand(CharmcraftCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = self._services.project.name or utils.get_name_from_metadata()
+        charm_name = self._services.project.name or utils.get_name_from_yaml()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1460,7 +1460,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = self._services.project.name or utils.get_name_from_metadata()
+        charm_name = self._services.project.name or utils.get_name_from_yaml()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1873,7 +1873,7 @@ class ListLibCommand(CharmcraftCommand):
         if parsed_args.name:
             charm_name = parsed_args.name
         else:
-            charm_name = utils.get_name_from_metadata()
+            charm_name = utils.get_name_from_yaml()
             if charm_name is None:
                 raise CraftError(
                     "Can't access name in 'metadata.yaml' file. The 'list-lib' command must "

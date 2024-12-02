@@ -1,0 +1,227 @@
+###########################################
+# IMPORTANT
+# Comments matter!
+# The docs use the wrapping comments as
+# markers for including said instructions
+# as snippets in the docs.
+###########################################
+summary: Getting started with Flask tutorial
+
+kill-timeout: 90m
+
+environment:
+
+execute: |
+  # Move everything to $HOME so that Juju deployment works
+  mv *.yaml *.py *.txt $HOME
+  cd $HOME
+
+  # Don't use the staging store for this test
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+
+  # Add setup instructions
+  # (Ran into issues in prepare section)
+  # snap install rockcraft --channel=latest/edge --classic
+
+  # Install the latest rockcraft snap
+  # (This can be removed after the Rockcraft PR is merged)
+  # The PR: https://github.com/canonical/rockcraft/pull/747
+  snap install snapcraft --channel=latest/edge --classic
+  # Download rockcraft async-workers branch and alithethird fork
+  git clone -b flask-django-extention-async-workers https://github.com/alithethird/rockcraft
+  cd rockcraft
+  snapcraft pack
+  snap install --dangerous --classic rockcraft_*
+
+
+  snap install lxd
+  lxd init --auto
+  snap refresh charmcraft --channel=latest/edge --amend
+  snap install microk8s --channel=1.31-strict/stable
+  snap install juju --channel=3.5/stable
+
+  # Juju config setup
+  lxc network set lxdbr0 ipv6.address none
+  mkdir -p ~/.local/share
+
+  # MicroK8s config setup
+  microk8s status --wait-ready
+  microk8s enable hostpath-storage
+  microk8s enable registry
+  microk8s enable ingress
+
+  # Bootstrap controller
+  juju bootstrap microk8s dev-controller
+
+  # [docs:create-venv]
+  sudo apt-get update && sudo apt-get install python3-venv -y
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
+  # [docs:create-venv-end]
+
+  flask run -p 8000 &
+  retry -n 5 --wait 2 curl --fail localhost:8000
+
+  # [docs:curl-flask]
+  curl localhost:8000
+  # [docs:curl-flask-end]
+
+  # [docs:curl-flask-async-app]
+  curl localhost:8000/io
+  # [docs:curl-flask-async-app-end]
+
+  kill $!
+
+  # [docs:create-rockcraft-yaml]
+  rockcraft init --profile flask-framework
+  # [docs:create-rockcraft-yaml-end]
+
+  sed -i "s/name: .*/name: flask-async-app/g" rockcraft.yaml
+  sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
+
+  # uncomment the parts main section
+  sed -i "s/# parts:/parts:/g" rockcraft.yaml
+  # uncomment the async-dependencies part
+  awk -i inplace -v block_key="flask-framework/async-dependencies" '
+  BEGIN {
+    in_block = 0;
+    comment_pattern = "^#[[:space:]]";
+    uncommented_line = "";
+  }
+
+  /^#[[:space:]]/ {
+    # Check if the line contains the block key
+    if (in_block == 0 && $0 ~ block_key) {
+      in_block = 1;
+    }
+  }
+
+  {
+    # If in_block is active, uncomment lines
+    if (in_block == 1) {
+      uncommented_line = gensub(comment_pattern, "", 1, $0);
+      if (uncommented_line == $0) {
+        in_block = 0;
+      }
+      print uncommented_line;
+    } else {
+      print $0;
+    }
+  }' rockcraft.yaml
+
+  # [docs:pack]
+  rockcraft pack
+  # [docs:pack-end]
+
+  # [docs:ls-rock]
+  ls *.rock -l
+  # [docs:ls-rock-end]
+
+  # [docs:skopeo-copy]
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:flask-async-app_0.1_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/flask-async-app:0.1
+  # [docs:skopeo-copy-end]
+
+  # [docs:create-charm-dir]
+  mkdir charm
+  cd charm
+  # [docs:create-charm-dir-end]
+
+  # [docs:charm-init]
+  charmcraft init --profile flask-framework --name flask-async-app
+  # [docs:charm-init-end]
+
+  sed -i "s/paas-charm.*/https:\/\/github.com\/canonical\/paas-charm\/archive\/async-workers.tar.gz/g" requirements.txt
+
+  # [docs:charm-pack]
+  charmcraft pack
+  # [docs:charm-pack-end]
+
+  # [docs:ls-charm]
+  ls *.charm -l
+  # [docs:ls-charm-end]
+
+  # [docs:add-juju-model]
+  juju add-model flask-async-app
+  # [docs:add-juju-model-end]
+
+  juju set-model-constraints -m flask-async-app arch=$(dpkg --print-architecture)
+
+  # [docs:deploy-juju-model]
+  juju deploy ./flask-async-app_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    flask-async-app --resource \
+    flask-app-image=localhost:32000/flask-async-app:0.1
+  # [docs:deploy-juju-model-end]
+
+  # [docs:deploy-nginx]
+  juju deploy nginx-ingress-integrator --channel=latest/edge --revision 122
+  juju integrate nginx-ingress-integrator flask-async-app
+  # [docs:deploy-nginx-end]
+
+  # [docs:config-nginx]
+  juju config nginx-ingress-integrator \
+    service-hostname=flask-async-app path-routes=/
+  # [docs:config-nginx-end]
+
+  # give Juju some time to deploy the apps
+  juju wait-for application flask-async-app --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+
+  # [docs:curl-init-deployment]
+  curl http://flask-async-app --resolve flask-async-app:80:127.0.0.1
+  # [docs:curl-init-deployment-end]
+
+  # [docs:config-async]
+  juju config flask-async-app webserver-worker-class=gevent
+  # [docs:config-async-end]
+
+  # test the async flask service
+  NUM_REQUESTS=15
+  ASYNC_RESULT='TRUE'
+
+  echo "Firing $NUM_REQUESTS requests to $URL..."
+
+  overall_start_time=$(date +%s)
+
+  for i in $(seq 1 $NUM_REQUESTS); do
+    (
+      start_time=$(date +%s)
+      echo "Request $i start time: $start_time"
+
+      curl -s http://flask-async-app/io --resolve flask-async-app:80:127.0.0.1
+
+      end_time=$(date +%s)
+      pass_time=$((end_time - start_time))
+      echo "Request $i end time: $end_time == $pass_time"
+    ) &
+  done
+
+  wait
+  end_time=$(date +%s)
+  overall_passtime=$((end_time - overall_start_time))
+  echo "Total pass time: $overall_passtime"
+  if [ $((3 < overall_passtime)) -eq 1 ]; then
+    echo "Error!"
+    ASYNC_RESULT='FALSE'
+    exit 2
+  fi
+  [ "$ASYNC_RESULT" == 'TRUE' ]
+
+  # Back out to main directory for clean-up
+  cd ..
+
+  # [docs:clean-environment]
+  # exit and delete the virtual environment
+  deactivate
+  rm -rf charm .venv __pycache__
+  # delete all the files created during the tutorial
+  rm flask-async-app_0.1_$(dpkg --print-architecture).rock flask-async-app_0.2_$(dpkg --print-architecture).rock \
+    flask-async-app_0.3_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
+    requirements.txt migrate.py
+  # Remove the juju model
+  juju destroy-model flask-async-app --destroy-storage --no-prompt --force
+  # [docs:clean-environment-end]

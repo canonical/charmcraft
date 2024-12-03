@@ -195,7 +195,9 @@ execute: |
 
   # give Juju some time to deploy and refresh the apps
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 30m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 30m | juju status --relations
+
+  juju status --relations
 
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
   curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 1

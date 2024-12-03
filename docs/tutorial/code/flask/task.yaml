@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with Flask tutorial
 
-kill-timeout: 90m
+kill-timeout: 150m
 
 environment:
 

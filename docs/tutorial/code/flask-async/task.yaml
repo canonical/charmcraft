@@ -38,7 +38,7 @@ execute: |
 
   snap install lxd
   lxd init --auto
-  snap refresh charmcraft --channel=latest/edge --amend
+  # snap refresh charmcraft --channel=latest/edge --amend
   snap install microk8s --channel=1.31-strict/stable
   snap install juju --channel=3.5/stable
 

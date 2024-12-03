@@ -23,10 +23,10 @@ execute: |
 
   # Add setup instructions
   # (Ran into issues in prepare section)
+  # (don't install charmcraft)
   snap install rockcraft --classic
   snap install lxd
   lxd init --auto
-  snap refresh charmcraft --channel=latest/edge --amend
   snap install microk8s --channel=1.31-strict/stable
   snap refresh juju --channel=3.5/stable --amend
 

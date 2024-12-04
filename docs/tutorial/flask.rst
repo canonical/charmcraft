@@ -476,11 +476,14 @@ Deploy ``postgresql-k8s`` using Juju and integrate it with ``flask-hello-world``
 
 Wait for ``juju status`` to show that the App is ``active`` again.
 Running ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-should still return the ``Hi!`` greeting. To check the total visitors, use
+should still return the ``Hi!`` greeting. 
+
+To check the total visitors, use
 ``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
 which should return ``1`` after the previous request to the root endpoint and
-should be incremented each time the root endpoint is requested. If we perform
-another request to
+should be incremented each time the root endpoint is requested.
+
+If we perform another request to
 ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``,
 ``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
 will return ``2``.

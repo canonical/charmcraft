@@ -491,9 +491,6 @@ will return ``2``.
 Clean up environment
 ====================
 
-We've reached the end of this tutorial. We have created a Flask application,
-deployed it locally, exposed it via ingress and integrated it with a database!
-
 If you'd like to reset your working environment, you can run the following
 in the root directory for the tutorial:
 
@@ -516,6 +513,9 @@ And then you can proceed with its deletion:
 
     multipass delete charm-dev
     multipass purge
+
+We've reached the end of this tutorial. We have created a Flask application,
+deployed it locally, exposed it via ingress and integrated it with a database!
 
 Next steps
 ==========

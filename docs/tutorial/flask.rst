@@ -479,8 +479,8 @@ another request to
 ``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
 will return ``2``.
 
-Clean up environment
-====================
+Clean up the environment
+========================
 
 We've reached the end of this tutorial. We have created a Flask application,
 deployed it locally, exposed it via ingress and integrated it with a database!

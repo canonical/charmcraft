@@ -277,7 +277,7 @@ to ``active``, you can stop watching using :kbd:`Ctrl` + :kbd:`C`.
 The Flask application should now be running. We can monitor the status of the deployment
 using ``juju status`` which should be similar to the following output:
 
-.. code-block::
+.. terminal::
 
     Model              Controller      Cloud/Region        Version  SLA          Timestamp
     flask-hello-world  dev-controller  microk8s/localhost  3.1.8    unsupported  17:04:11+10:00

@@ -488,8 +488,8 @@ If we perform another request to
 ``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
 will return ``2``.
 
-Clean up environment
-====================
+Clean up the environment
+========================
 
 If you'd like to reset your working environment, you can run the following
 in the root directory for the tutorial:

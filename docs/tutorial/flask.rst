@@ -10,7 +10,9 @@ your Flask application in no time. Let’s get started!
 
 In this tutorial we will build a rock and Kubernetes charm for a
 Flask application using the charm SDK, so we can have a Flask
-application up and running with Juju in about 90 minutes.
+application up and running with Juju.
+
+This tutorial should take 90 minutes for you to complete.
 
 .. note::
 

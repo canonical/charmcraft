@@ -247,13 +247,15 @@ A Juju model is needed to deploy the application. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-.. warning::
+If you are not on a host with the ``amd64`` architecture, you will need to include
+a constraint to the Juju model to specify your architecture. Check the
+architecture of your system using ``dpkg --print-architecture``.
 
-    If you are not on a host with the amd64 architecture, you will need to include
-    a constraint to the Juju model to specify your architecture. For example, for
-    the arm64 architecture, use
-    ``juju set-model-constraints -m flask-hello-world arch=arm64``.
-    Check the architecture of your system using ``dpkg --print-architecture``.
+For the ``arm64`` architecture, set the model constraints using
+
+.. code-block::
+
+    juju set-model-constraints -m flask-hello-world arch=arm64
 
 Now the Flask application can be deployed using `Juju <https://juju.is/docs/juju>`_:
 

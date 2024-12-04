@@ -266,11 +266,11 @@ Now the Flask application can be deployed using Juju:
     :end-before: [docs:deploy-juju-model-end]
     :dedent: 2
 
-.. note::
+It will take a few minutes to deploy the Flask application. You can monitor the
+progress using ``juju status --watch 5s``. Once the status of the App has gone
+to ``active``, you can stop watching using :kbd:`Ctrl` + :kbd:`C`.
 
-    It will take a few minutes to deploy the Flask application. You can monitor the
-    progress using ``juju status --watch 5s``. Once the status of the App has gone
-    to ``active``, you can stop watching using :kbd:`Ctrl` + :kbd:`C`.
+.. seealso::
 
     See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
 

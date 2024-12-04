@@ -4,7 +4,8 @@ Write your first Kubernetes charm for a Flask app
 
 Imagine you have a Flask application backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
-this can be quite a challenge, but with Juju you’ll find yourself
+this can be quite a challenge, but with
+`Juju <https://juju.is/docs/juju>`_ you’ll find yourself
 deploying, configuring, scaling, integrating, monitoring, etc.,
 your Flask application in no time. Let’s get started!
 
@@ -257,7 +258,7 @@ For the ``arm64`` architecture, set the model constraints using
 
     juju set-model-constraints -m flask-hello-world arch=arm64
 
-Now the Flask application can be deployed using `Juju <https://juju.is/docs/juju>`_:
+Now the Flask application can be deployed using Juju:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

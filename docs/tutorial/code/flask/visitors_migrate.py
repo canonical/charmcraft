@@ -1,3 +1,5 @@
+# Adds database to Flask application
+
 import os
 
 import psycopg2

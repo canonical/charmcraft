@@ -1,3 +1,5 @@
+# configuration snippet for Flask application with a configuration
+
 config:
   options:
     greeting:

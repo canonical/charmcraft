@@ -1,3 +1,5 @@
+# Flask application that keeps track of visitors using a database
+
 import datetime
 import os
 

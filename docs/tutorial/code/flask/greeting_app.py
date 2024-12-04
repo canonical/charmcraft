@@ -1,3 +1,5 @@
+# Flask app with a greeting configuration
+
 import flask
 
 app = flask.Flask(__name__)

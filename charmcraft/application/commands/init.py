@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Infrastructure for the 'init' command."""
+
 import argparse
 import os
 import pathlib
@@ -39,6 +40,7 @@ PROFILES = {
     "flask-framework": "init-flask-framework",
     "django-framework": "init-django-framework",
     "go-framework": "init-go-framework",
+    "fastapi-framework": "init-fastapi-framework",
 }
 DEFAULT_PROFILE = "simple"
 
@@ -129,7 +131,9 @@ class InitCommand(base.CharmcraftCommand):
 
     def fill_parser(self, parser):
         """Specify command's specific parameters."""
-        parser.add_argument("--name", help="The name of the charm; defaults to the directory name")
+        parser.add_argument(
+            "--name", help="The name of the charm; defaults to the directory name"
+        )
         parser.add_argument(
             "--author",
             help="The charm author; defaults to the current user name per GECOS",

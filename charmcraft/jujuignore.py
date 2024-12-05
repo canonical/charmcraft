@@ -232,6 +232,4 @@ default_juju_ignore = """
 /venv
 
 .jujuignore
-""".split(
-    "\n"
-)
+""".split("\n")

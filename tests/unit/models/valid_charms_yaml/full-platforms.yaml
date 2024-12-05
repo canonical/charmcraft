@@ -10,9 +10,6 @@ analysis:
     - framework
     linters:
     - entrypoint
-charmhub:
-  api-url: https://api.staging.charmhub.io/
-  storage-url: https://storage.staging.snapcraftcontent.com/
 parts:
   im-not-calling-this-what-you-expect:
     plugin: charm

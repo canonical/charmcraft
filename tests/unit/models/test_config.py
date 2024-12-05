@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for the config model."""
+
 import math
 
 import pydantic
@@ -36,7 +37,10 @@ from charmcraft.models.config import (
         {
             "favourite integer": {"type": "int"},
             "favourite number": {"type": "float", "default": math.pi},
-            "catchphrase": {"type": "string", "description": "What's your catchphrase?"},
+            "catchphrase": {
+                "type": "string",
+                "description": "What's your catchphrase?",
+            },
             "default_answer": {
                 "type": "boolean",
                 "description": "Yes/no true or false",
@@ -46,7 +50,9 @@ from charmcraft.models.config import (
     ],
 )
 def test_valid_config(options):
-    assert JujuConfig.model_validate({"options": options}) == JujuConfig(options=options)
+    assert JujuConfig.model_validate({"options": options}) == JujuConfig(
+        options=options
+    )
 
 
 def test_empty_config():

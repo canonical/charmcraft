@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """craft-application based lifecycle commands."""
+
 from __future__ import annotations
 
 import pathlib
@@ -171,9 +172,45 @@ class PackCommand(lifecycle.PackCommand):
         # Always use a runner on non-Linux platforms.
         # Craft-parts is not designed to work on non-posix platforms, and most
         # notably here, the bundle plugin doesn't work on Windows.
-        if sys.platform == "linux" and charmcraft_yaml and charmcraft_yaml.get("type") == "bundle":
+        if (
+            sys.platform == "linux"
+            and charmcraft_yaml
+            and charmcraft_yaml.get("type") == "bundle"
+        ):
             return False
+
         return super().run_managed(parsed_args)
+
+    def _update_charm_libs(self) -> None:
+        """Update charm libs attached to the project."""
+        craft_cli.emit.progress(
+            "Checking that charmlibs match 'charmcraft.yaml' values"
+        )
+        project = cast(models.CharmcraftProject, self._services.project)
+        libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
+        installable_libs: list[models.CharmLib] = []
+        for lib in project.charm_libs:
+            library_name = utils.QualifiedLibraryName.from_string(lib.lib)
+            if not libs_svc.get_local_version(
+                charm_name=library_name.charm_name, lib_name=library_name.lib_name
+            ):
+                installable_libs.append(lib)
+        if installable_libs:
+            store = cast(services.StoreService, self._services.store)
+            libraries_md = store.get_libraries_metadata(installable_libs)
+            with craft_cli.emit.progress_bar(
+                "Downloading charmlibs...", len(installable_libs)
+            ) as progress:
+                for library in libraries_md:
+                    craft_cli.emit.debug(repr(library))
+                    lib_contents = store.get_library(
+                        library.charm_name,
+                        library_id=library.lib_id,
+                        api=library.api,
+                        patch=library.patch,
+                    )
+                    libs_svc.write(lib_contents)
+                    progress.advance(1)
 
     def _run(
         self,
@@ -182,4 +219,9 @@ class PackCommand(lifecycle.PackCommand):
         **kwargs: Any,  # noqa: ANN401 (allow dynamic typing)
     ) -> None:
         self._validate_args(parsed_args)
+
+        project = cast(models.CharmcraftProject, self._services.project)
+        if project.charm_libs:
+            self._update_charm_libs()
+
         return super()._run(parsed_args, step_name, **kwargs)

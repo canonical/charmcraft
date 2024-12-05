@@ -18,6 +18,7 @@
 These functions are called from the Application class's `_extra_yaml_transform`
 to do pre-processing on a charmcraft.yaml file before applying extensions.
 """
+
 import pathlib
 from typing import Any
 

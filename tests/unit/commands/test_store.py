@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for store commands."""
+
 import argparse
 import datetime
 import pathlib
@@ -22,10 +23,12 @@ from unittest import mock
 
 import craft_cli.pytest_plugin
 import craft_store
+import freezegun
 import pytest
 from craft_store import models
 
 from charmcraft import errors, store
+from charmcraft.application import commands
 from charmcraft.application.commands import SetResourceArchitecturesCommand
 from charmcraft.application.commands.store import FetchLibs, LoginCommand
 from charmcraft.application.main import APP_METADATA
@@ -59,7 +62,14 @@ def test_login_basic_no_export(service_factory, mock_store_client):
 @pytest.mark.parametrize("permission", [None, [], ["package-manage"]])
 @pytest.mark.parametrize("ttl", [None, 0, 2**65])
 def test_login_export(
-    monkeypatch, service_factory, mock_store_client, charm, bundle, channel, permission, ttl
+    monkeypatch,
+    service_factory,
+    mock_store_client,
+    charm,
+    bundle,
+    channel,
+    permission,
+    ttl,
 ):
     mock_client_cls = mock.Mock(return_value=mock_store_client)
     monkeypatch.setattr(craft_store, "StoreClient", mock_client_cls)
@@ -93,7 +103,13 @@ def test_login_export(
                     bases=[models.ResponseCharmResourceBase()],
                 )
             ],
-            [{"revision": 123, "updated_at": "1900-01-01T00:00:00", "architectures": ["all"]}],
+            [
+                {
+                    "revision": 123,
+                    "updated_at": "1900-01-01T00:00:00",
+                    "architectures": ["all"],
+                }
+            ],
         ),
     ],
 )
@@ -211,9 +227,13 @@ def test_fetch_libs_missing_from_store(service_factory, libs, expected):
         ),
     ],
 )
-def test_fetch_libs_no_content(new_path, service_factory, libs, store_libs, dl_lib, expected):
+def test_fetch_libs_no_content(
+    new_path, service_factory, libs, store_libs, dl_lib, expected
+):
     service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
+        store_libs
+    )
     service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
@@ -256,7 +276,9 @@ def test_fetch_libs_success(
     new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
 ) -> None:
     service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = store_libs
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
+        store_libs
+    )
     service_factory.store.anonymous_client.get_library.return_value = dl_lib
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
@@ -264,3 +286,37 @@ def test_fetch_libs_success(
 
     emitter.assert_progress("Getting library metadata from charmhub")
     emitter.assert_message("Downloaded 1 charm libraries.")
+
+
+@freezegun.freeze_time("2024-10-31")
+def test_register_bundle_warning(monkeypatch: pytest.MonkeyPatch, emitter):
+    mock_store = mock.Mock()
+    monkeypatch.setattr("charmcraft.application.commands.store.Store", mock_store)
+
+    parsed_args = argparse.Namespace(name="name")
+    cmd = commands.RegisterBundleNameCommand(None)
+    cmd.run(parsed_args)
+
+    emitter.assert_progress(
+        "\u001b[31mWARNING:\u001b[0m New bundle registration will stop working on 2024-11-01. For "
+        f"more information, see: {commands.store.BUNDLE_REGISTRATION_REMOVAL_URL}",
+        permanent=True,
+    )
+    mock_store.assert_called()
+
+
+@freezegun.freeze_time("2024-11-01")
+def test_register_bundle_error(monkeypatch: pytest.MonkeyPatch, emitter):
+    mock_store = mock.Mock()
+    monkeypatch.setattr("charmcraft.application.commands.store.Store", mock_store)
+
+    parsed_args = argparse.Namespace(name="name")
+    cmd = commands.RegisterBundleNameCommand(None)
+
+    assert cmd.run(parsed_args) == 1
+
+    emitter.assert_message(
+        "\u001b[31mERROR:\u001b[0m New bundle registration is discontinued as of 2024-11-01.  For "
+        f"more information, see: {commands.store.BUNDLE_REGISTRATION_REMOVAL_URL}",
+    )
+    mock_store.assert_not_called()

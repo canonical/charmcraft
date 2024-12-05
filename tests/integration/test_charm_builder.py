@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for CharmBuilder."""
 
-
 import pathlib
 import sys
 

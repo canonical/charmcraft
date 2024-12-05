@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Charmcraft configuration pydantic model."""
+
 from typing import TypedDict, cast
 
 import pydantic
@@ -45,8 +46,12 @@ class Charmhub(CraftBaseModel):
     """Definition of Charmhub endpoint configuration."""
 
     api_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://api.charmhub.io")
-    storage_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://storage.snapcraftcontent.com")
-    registry_url: pydantic.HttpUrl = cast(pydantic.HttpUrl, "https://registry.jujucharms.com")
+    storage_url: pydantic.HttpUrl = cast(
+        pydantic.HttpUrl, "https://storage.snapcraftcontent.com"
+    )
+    registry_url: pydantic.HttpUrl = cast(
+        pydantic.HttpUrl, "https://registry.jujucharms.com"
+    )
 
 
 class Base(CraftBaseModel):

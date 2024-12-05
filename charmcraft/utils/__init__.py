@@ -19,11 +19,13 @@
 from charmcraft.utils.charmlibs import (
     LibData,
     LibInternals,
-    get_name_from_metadata,
+    QualifiedLibraryName,
+    get_name_from_yaml,
     create_charm_name_from_importable,
     create_importable_name,
     get_lib_internals,
     get_lib_path,
+    get_lib_charm_path,
     get_lib_module_name,
     get_lib_info,
     get_libs_from_tree,
@@ -44,7 +46,13 @@ from charmcraft.utils.platform import (
     get_os_platform,
     validate_architectures,
 )
-from charmcraft.utils.file import S_IRALL, S_IXALL, make_executable, useful_filepath, build_zip
+from charmcraft.utils.file import (
+    S_IRALL,
+    S_IXALL,
+    make_executable,
+    useful_filepath,
+    build_zip,
+)
 from charmcraft.utils.package import (
     get_pypi_packages,
     PACKAGE_LINE_REGEX,
@@ -54,6 +62,11 @@ from charmcraft.utils.package import (
     get_pip_version,
     get_requirements_file_package_names,
     validate_strict_dependencies,
+)
+from charmcraft.utils.parts import (
+    extend_python_build_environment,
+    get_charm_copy_commands,
+    get_venv_cleanup_commands,
 )
 from charmcraft.utils.project import (
     find_charm_sources,
@@ -67,11 +80,13 @@ from charmcraft.utils.yaml import dump_yaml, load_yaml
 __all__ = [
     "LibData",
     "LibInternals",
-    "get_name_from_metadata",
+    "QualifiedLibraryName",
+    "get_name_from_yaml",
     "create_charm_name_from_importable",
     "create_importable_name",
     "get_lib_internals",
     "get_lib_path",
+    "get_lib_charm_path",
     "get_lib_module_name",
     "get_lib_info",
     "get_libs_from_tree",
@@ -100,6 +115,9 @@ __all__ = [
     "confirm_with_user",
     "format_content",
     "humanize_list",
+    "extend_python_build_environment",
+    "get_charm_copy_commands",
+    "get_venv_cleanup_commands",
     "find_charm_sources",
     "get_charm_name_from_path",
     "get_templates_environment",

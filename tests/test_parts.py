@@ -21,7 +21,9 @@ import pytest
 
 from charmcraft import parts
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows not [yet] supported"
+)
 # -- tests for part config processing
 
 

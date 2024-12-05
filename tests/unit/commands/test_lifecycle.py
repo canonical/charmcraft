@@ -14,14 +14,18 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for lifecycle commands."""
+
 import argparse
 import pathlib
 
 import craft_cli
 import pytest
+import pytest_check
+from craft_cli.pytest_plugin import RecordingEmitter
 
-from charmcraft import application, services
+from charmcraft import application, models, services, utils
 from charmcraft.application.commands import lifecycle
+from charmcraft.store.models import Library
 
 
 def get_namespace(
@@ -60,7 +64,9 @@ def get_namespace(
 
 @pytest.fixture
 def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
-    return lifecycle.PackCommand({"app": application.APP_METADATA, "services": service_factory})
+    return lifecycle.PackCommand(
+        {"app": application.APP_METADATA, "services": service_factory}
+    )
 
 
 @pytest.mark.parametrize(
@@ -119,3 +125,76 @@ def test_pack_invalid_arguments(
         pack.run(command_args)
 
     assert exc_info.value.args[0].startswith(message_start)
+
+
+def test_pack_update_charm_libs_empty(
+    fake_project_dir: pathlib.Path,
+    pack: lifecycle.PackCommand,
+    simple_charm,
+    emitter: RecordingEmitter,
+    service_factory: services.ServiceFactory,
+):
+    simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
+    store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
+    service_factory.store.anonymous_client.get_library.return_value = store_lib
+
+    pack._update_charm_libs()
+
+    with pytest_check.check():
+        emitter.assert_debug(repr(store_lib))
+
+    path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
+    assert path.read_text() == "Lib contents"
+
+
+def test_pack_update_charm_libs_no_update(
+    fake_project_dir: pathlib.Path,
+    pack: lifecycle.PackCommand,
+    simple_charm,
+    emitter: RecordingEmitter,
+    service_factory: services.ServiceFactory,
+):
+    simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
+    store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
+    path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
+    path.parent.mkdir(parents=True)
+    path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
+    service_factory.store.anonymous_client.get_library.return_value = store_lib
+
+    pack._update_charm_libs()
+
+    with pytest.raises(AssertionError):
+        emitter.assert_debug(repr(store_lib))
+
+    assert path.read_text() != "Lib contents"
+
+
+def test_pack_update_charm_libs_needs_update(
+    fake_project_dir: pathlib.Path,
+    pack: lifecycle.PackCommand,
+    simple_charm,
+    emitter: RecordingEmitter,
+    service_factory: services.ServiceFactory,
+):
+    simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.2")]
+    store_lib = Library("lib_id", "my_lib", "my_charm", 0, 2, "Lib contents", "hash")
+    path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
+    path.parent.mkdir(parents=True)
+    path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
+    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
+        store_lib
+    ]
+    service_factory.store.anonymous_client.get_library.return_value = store_lib
+
+    pack._update_charm_libs()
+
+    with pytest.raises(AssertionError):
+        emitter.assert_debug(repr(store_lib))
+
+    assert path.read_text() != "Lib contents"

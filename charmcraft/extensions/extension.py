@@ -106,7 +106,9 @@ class Extension(abc.ABC):
                     )
 
         invalid_parts = [
-            p for p in self.get_parts_snippet() if not p.startswith(f"{extension_name}/")
+            p
+            for p in self.get_parts_snippet()
+            if not p.startswith(f"{extension_name}/")
         ]
         if invalid_parts:
             raise ValueError(
@@ -134,7 +136,9 @@ def append_to_env(env_variable: str, paths: Sequence[str], separator: str = ":")
     return f"${{{env_variable}:+${env_variable}{separator}}}" + separator.join(paths)
 
 
-def prepend_to_env(env_variable: str, paths: Sequence[str], separator: str = ":") -> str:
+def prepend_to_env(
+    env_variable: str, paths: Sequence[str], separator: str = ":"
+) -> str:
     """Return a string for env_variable with one of more paths prepended.
 
     :param env_variable: the variable to operate on.

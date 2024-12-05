@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for init command."""
+
 import argparse
 import contextlib
 import os
@@ -24,7 +25,6 @@ import subprocess
 import sys
 from unittest import mock
 
-import pydocstyle
 import pytest
 import pytest_check
 
@@ -97,7 +97,9 @@ VALID_AUTHORS = [
 
 @pytest.fixture
 def init_command():
-    return commands.InitCommand({"app": charmcraft.application.APP_METADATA, "services": None})
+    return commands.InitCommand(
+        {"app": charmcraft.application.APP_METADATA, "services": None}
+    )
 
 
 def create_namespace(
@@ -148,7 +150,9 @@ def test_files_created_correct(
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
-    pytest_check.is_true(re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE))
+    pytest_check.is_true(
+        re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
+    )
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
 
@@ -204,7 +208,9 @@ def test_gecos_valid_author(monkeypatch, new_path, init_command, author):
         ),
     ],
 )
-def test_gecos_user_not_found(monkeypatch, new_path, init_command, mock_getpwuid, error_msg):
+def test_gecos_user_not_found(
+    monkeypatch, new_path, init_command, mock_getpwuid, error_msg
+):
     monkeypatch.setattr(pwd, "getpwuid", mock_getpwuid)
 
     with pytest.raises(errors.CraftError, match=error_msg):
@@ -284,34 +290,14 @@ def test_tox_success(new_path, init_command, profile):
     if not (new_path / "tox.ini").exists():
         pytest.skip("init template doesn't contain tox.ini file")
 
-    result = subprocess.run(
-        ["tox", "-v"],
-        cwd=new_path,
-        env=env,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-    assert result.returncode == 0, "Tox run failed:\n" + result.stdout
-
-
-@pytest.mark.parametrize("profile", list(commands.init.PROFILES))
-def test_pep257(new_path, init_command, profile):
-    to_ignore = {
-        "D105",  # Missing docstring in magic method
-        "D107",  # Missing docstring in __init__
-    }
-    to_include = pydocstyle.violations.conventions.pep257 - to_ignore
-
-    init_command.run(create_namespace(profile=profile))
-
-    python_paths = (str(path) for path in new_path.rglob("*.py"))
-    python_paths = (path for path in python_paths if "tests" not in path)
-    errors = list(pydocstyle.check(python_paths, select=to_include))
-
-    if errors:
-        report = [f"Please fix files as suggested by pydocstyle ({len(errors):d} issues):"]
-        report.extend(str(e) for e in errors)
-        msg = "\n".join(report)
-        pytest.fail(msg, pytrace=False)
+    if list((new_path / "tests").glob("*.py")):  # If any tests exist
+        result = subprocess.run(
+            ["tox", "-v", "run", "-e", "unit"],
+            cwd=new_path,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        assert result.returncode == 0, "Tox run failed:\n" + result.stdout

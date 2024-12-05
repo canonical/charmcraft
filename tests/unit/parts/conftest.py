@@ -13,8 +13,23 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import pathlib
 import sys
 
 import pytest
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
+
+
+@pytest.fixture
+def build_path(tmp_path: pathlib.Path) -> pathlib.Path:
+    path = tmp_path / "parts" / "foo" / "build"
+    path.mkdir(parents=True)
+    return path
+
+
+@pytest.fixture
+def install_path(tmp_path: pathlib.Path) -> pathlib.Path:
+    path = tmp_path / "parts" / "foo" / "install"
+    path.mkdir(parents=True)
+    return path

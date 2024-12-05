@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """CLI-related utilities for Charmcraft."""
+
 import datetime
 import enum
 import json
@@ -80,9 +81,7 @@ class ResourceOption:
             else:
                 if revision >= 0:
                     return ResourceOption(name, revision)
-        msg = (
-            "the resource format must be <name>:<revision> (revision being a non-negative integer)"
-        )
+        msg = "the resource format must be <name>:<revision> (revision being a non-negative integer)"
         raise ValueError(msg)
 
 
@@ -182,7 +181,9 @@ class OutputFormat(enum.Enum):
 
 
 @overload
-def format_content(content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]) -> str: ...
+def format_content(
+    content: dict[str, str], fmt: Literal[OutputFormat.TABLE, "table"]
+) -> str: ...
 
 
 @overload

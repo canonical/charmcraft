@@ -28,7 +28,8 @@ from charmcraft.utils.skopeo import Skopeo
 
 pytestmark = [
     pytest.mark.skipif(
-        "CI" not in os.environ and not shutil.which("skopeo"), reason="skopeo not found in PATH"
+        "CI" not in os.environ and not shutil.which("skopeo"),
+        reason="skopeo not found in PATH",
     ),
     pytest.mark.xfail(
         platform.system().lower() not in ("linux", "darwin"),
@@ -43,7 +44,11 @@ pytestmark = [
     [
         ("alpine", "docker://ghcr.io/containerd/alpine", "3.14.0"),
         ("debian12", "docker://gcr.io/distroless/base-debian12", "nonroot"),
-        ("mock-rock", "docker://ghcr.io/canonical/oci-factory/mock-rock", "1.2-22.04_279"),
+        (
+            "mock-rock",
+            "docker://ghcr.io/canonical/oci-factory/mock-rock",
+            "1.2-22.04_279",
+        ),
         ("nanoserver", "docker://ghcr.io/containerd/nanoserver", "1809"),
     ],
 )

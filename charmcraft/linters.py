@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Canonical Ltd.
+# Copyright 2021-2024 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 """Analyze and lint charm structures and files."""
+
 import abc
 import ast
 import os
 import pathlib
+import re
 import shlex
+import subprocess
+import sys
 import typing
 from collections.abc import Generator
 from typing import final
@@ -244,7 +248,9 @@ class Framework(AttributeChecker):
     def _check_reactive(self, basedir: pathlib.Path) -> bool:
         """Detect if the Reactive Framework is used."""
         try:
-            metadata = CharmMetadataLegacy.from_yaml_file(basedir / const.METADATA_FILENAME)
+            metadata = CharmMetadataLegacy.from_yaml_file(
+                basedir / const.METADATA_FILENAME
+            )
         except Exception:
             # file not found, corrupted, or mandatory "name" not present
             return False
@@ -252,7 +258,9 @@ class Framework(AttributeChecker):
         wheelhouse_dir = basedir / "wheelhouse"
         if not wheelhouse_dir.exists():
             return False
-        if not any(f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()):
+        if not any(
+            f.name.startswith("charms.reactive-") for f in wheelhouse_dir.iterdir()
+        ):
             return False
 
         module_basename = metadata.name.replace("-", "_")
@@ -432,9 +440,13 @@ class NamingConventions(Linter):
             return warnings
 
         with config_file.open("rt", encoding="utf8") as fh:
-            options = content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+            options = (
+                content.get("options", {}) if (content := yaml.safe_load(fh)) else {}
+            )
 
-        if check := NamingConventions.check_naming_convention(options.keys(), "config-options"):
+        if check := NamingConventions.check_naming_convention(
+            options.keys(), "config-options"
+        ):
             warnings.append(check)
 
         return warnings
@@ -464,7 +476,9 @@ class NamingConventions(Linter):
             for param in content.get(action_name, {}).get("params", [])
         ]
 
-        if check := NamingConventions.check_naming_convention(actions_params, "action params"):
+        if check := NamingConventions.check_naming_convention(
+            actions_params, "action params"
+        ):
             warnings.append(check)
 
         return warnings
@@ -505,7 +519,9 @@ class Entrypoint(Linter):
         """Run the proper verifications."""
         entrypoint = get_entrypoint_from_dispatch(basedir)
         if entrypoint is None:
-            self.text = "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            self.text = (
+                "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            )
             return self.Result.NONAPPLICABLE
 
         if not entrypoint.exists():
@@ -521,6 +537,101 @@ class Entrypoint(Linter):
             return self.Result.ERROR
 
         return self.Result.OK
+
+
+class OpsMainCall(Linter):
+    """Check that the entrypoint contains call to ops.main()."""
+
+    name = "ops-main-call"
+    url = f"{BASE_DOCS_URL}#heading--ops-main-call"
+    text = ""
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Check preconditions and validate there's an ops.main() call."""
+        if Framework().run(basedir) != Framework.Result.OPERATOR:
+            self.text = "The charm is not based on the operator framework"
+            return self.Result.NONAPPLICABLE
+
+        entrypoint = get_entrypoint_from_dispatch(basedir)
+        if entrypoint is None:
+            self.text = (
+                "Cannot find a proper 'dispatch' script pointing to an entrypoint."
+            )
+            return self.Result.NONAPPLICABLE
+
+        if not entrypoint.exists():
+            self.text = f"Cannot find the entrypoint file: {str(entrypoint)!r}"
+            return self.Result.NONAPPLICABLE
+
+        if not self._check_main_calls(entrypoint.read_text()):
+            self.text = f"The ops.main() call missing from {str(entrypoint)!r}."
+            return self.Result.ERROR
+
+        return self.Result.OK
+
+    def _check_main_calls(self, code: str):
+        tree = ast.parse(code)
+        imports = self._ops_main_imports(tree)
+        return self._detect_main_calls(tree, imports=imports)
+
+    def _ops_main_imports(self, tree: ast.AST) -> dict[str, str]:
+        """Analyze imports and return a mapping {local_name: imported thing}."""
+        rv = {}
+
+        class ImportVisitor(ast.NodeVisitor):
+            def visit_Import(self, node: ast.Import):  # noqa: N802
+                for alias in node.names:
+                    # Detect statements like `import ops`
+                    if alias.name == "ops":
+                        rv[alias.asname or alias.name] = "ops"
+                    if alias.name == "ops.main" and alias.asname:
+                        rv[alias.asname] = "ops.main"
+                    elif alias.name.startswith("ops.") and not alias.asname:
+                        rv["ops"] = "ops"
+
+            def visit_ImportFrom(self, node: ast.ImportFrom):  # noqa: N802
+                for alias in node.names:
+                    # Detect statements like `from ops import main [as ops_main]`
+                    if node.module in ("ops", "ops.main") and alias.name == "main":
+                        rv[alias.asname or alias.name] = f"{node.module}.main"
+
+        ImportVisitor().visit(tree)
+        return rv
+
+    def _detect_main_calls(self, tree: ast.AST, *, imports: dict[str, str]) -> bool:
+        main_call_sites = []
+
+        class OpsMainFinder(ast.NodeVisitor):
+            def visit_Call(self, node: ast.Call):  # noqa: N802
+                match node.func:
+                    # Matches statements like `ops.main.main(...)`
+                    case ast.Attribute(
+                        value=ast.Attribute(value=ast.Name(id=first), attr=second),
+                        attr=third,
+                    ):
+                        call_site = f"{first}.{second}.{third}(...)"
+                    # Matches statements like `ops.main(...)`
+                    case ast.Attribute(value=ast.Name(id=first), attr=second):
+                        call_site = f"{first}.{second}(...)"
+                    # Matches statements like `main(...)`
+                    case ast.Name(id=first):
+                        call_site = f"{first}(...)"
+                    case _:
+                        call_site = "_dummy()"
+
+                match = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*)(.*)", call_site)
+                if not match:
+                    raise ValueError("impossible")
+                alias, rest = match.groups()
+                resolved = f"{imports.get(alias, '_dummy')}{rest}"
+
+                if resolved in ("ops.main(...)", "ops.main.main(...)"):
+                    main_call_sites.append(call_site)
+
+                self.generic_visit(node)
+
+        OpsMainFinder().visit(tree)
+        return any(main_call_sites)
 
 
 class AdditionalFiles(Linter):
@@ -542,7 +653,9 @@ class AdditionalFiles(Linter):
         )
     }
 
-    def _check_additional_files(self, stage_dir: pathlib.Path, prime_dir: pathlib.Path) -> str:
+    def _check_additional_files(
+        self, stage_dir: pathlib.Path, prime_dir: pathlib.Path
+    ) -> str:
         """Compare the staged files with the prime files."""
         errors: list[str] = []
         stage_dir = stage_dir.absolute()
@@ -558,7 +671,9 @@ class AdditionalFiles(Linter):
                 errors.append(f"File '{prime_file}' is not staged but in the charm.")
 
         if errors:
-            self.text = "Error: Additional files found in the charm:\n" + "\n".join(errors)
+            self.text = "Error: Additional files found in the charm:\n" + "\n".join(
+                errors
+            )
             return self.Result.ERROR
 
         return self.Result.OK
@@ -568,10 +683,69 @@ class AdditionalFiles(Linter):
         stage_dir = basedir.parent / "stage"
         if not stage_dir.exists() or not stage_dir.is_dir():
             # Does not work without the build environment
-            self.text = "Additional files check not applicable without a build environment."
+            self.text = (
+                "Additional files check not applicable without a build environment."
+            )
             return self.Result.NONAPPLICABLE
 
         return self._check_additional_files(stage_dir, basedir)
+
+
+class PipCheck(Linter):
+    """Check that the pip virtual environment is valid."""
+
+    name = "pip-check"
+    text = "Virtual environment is valid."
+    url = "https://pip.pypa.io/en/stable/cli/pip_check/"
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run pip check."""
+        venv_dir = basedir / "venv"
+        if not venv_dir.is_dir():
+            self.text = "Charm does not contain a Python venv."
+            return self.Result.NONAPPLICABLE
+        if not (venv_dir / "lib").is_dir():
+            self.text = "Python venv is not valid."
+            return self.Result.NONAPPLICABLE
+        if sys.platform == "win32":
+            self.text = "Linter does not work on Windows."
+            return self.Result.NONAPPLICABLE
+        python_exe = venv_dir / "bin" / "python"
+        delete_parent = False
+        if not python_exe.parent.exists():
+            delete_parent = True
+            python_exe.parent.mkdir()
+        if not python_exe.exists():
+            delete_python_exe = True
+            python_exe.symlink_to(sys.executable)
+        else:
+            delete_python_exe = False
+
+        pip_cmd = [sys.executable, "-m", "pip", "--python", str(python_exe), "check"]
+        try:
+            check = subprocess.run(
+                pip_cmd,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if check.returncode == os.EX_OK:
+                result = self.Result.OK
+            else:
+                self.text = check.stdout
+                result = self.Result.WARNING
+        except (FileNotFoundError, PermissionError) as e:
+            self.text = (
+                f"{e.strerror}: Could not run Python executable at {sys.executable}."
+            )
+            result = self.Result.NONAPPLICABLE
+        finally:
+            if delete_python_exe:
+                python_exe.unlink()
+            if delete_parent:
+                python_exe.parent.rmdir()
+
+        return result
 
 
 # all checkers to run; the order here is important, as some checkers depend on the
@@ -584,5 +758,7 @@ CHECKERS: list[type[BaseChecker]] = [
     NamingConventions,
     Framework,
     Entrypoint,
+    OpsMainCall,
     AdditionalFiles,
+    PipCheck,
 ]

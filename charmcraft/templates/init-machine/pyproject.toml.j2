@@ -14,6 +14,8 @@ log_cli_level = "INFO"
 line-length = 99
 lint.select = ["E", "W", "F", "C", "N", "D", "I001"]
 lint.extend-ignore = [
+    "D105",
+    "D107",
     "D203",
     "D204",
     "D213",
@@ -26,7 +28,6 @@ lint.extend-ignore = [
     "D409",
     "D413",
 ]
-lint.ignore = ["E501", "D107"]
 extend-exclude = ["__pycache__", "*.egg_info"]
 lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
 

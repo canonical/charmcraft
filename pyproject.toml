@@ -4,12 +4,12 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=4.1",
+    "craft-application~=4.2",
     "craft-cli>=2.3.0",
     "craft-grammar>=2.0.0",
-    "craft-parts>=2.0.0",
+    "craft-parts>=2.1.0",
     "craft-providers>=2.0.0",
-    "craft-platforms~=0.1",
+    "craft-platforms~=0.3",
     "craft-providers>=2.0.0",
     "craft-store>=3.0.0",
     "distro>=1.3.0",
@@ -22,13 +22,9 @@ dependencies = [
     "pyyaml",
     "requests",
     "requests-toolbelt",
-    "requests-unixsocket",
     "snap-helpers",
     "tabulate",
-    # Needed until requests-unixsocket supports urllib3 v2
-    # https://github.com/msabramo/requests-unixsocket/pull/69
-    # When updating, remove the urllib3 constraint from renovate config.
-    "urllib3<2.0",
+    "pip>=24.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -48,10 +44,8 @@ charmcraft = "charmcraft.application.main:main"
 [project.optional-dependencies]
 dev = [  # When updating these, also update the dev/lint/types groups in renovate.
     "coverage",
-    "flake8",
     "freezegun",
     "hypothesis",
-    "pydocstyle",
     "pyfakefs",
     "pylint",
     "pytest",
@@ -62,13 +56,12 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "black~=24.0",
     "codespell[tomli]",
     "yamllint",
 ]
 types = [
-    "mypy[reports]~=1.5",
-    "pyright==1.1.366",
+    "mypy[reports]~=1.11",
+    "pyright==1.1.383",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests<2.31.0.20240312",  # Frozen until we can get urllib3 v2
@@ -80,7 +73,7 @@ apt = [
     "python-apt>=2.4.0;sys_platform=='linux'"
 ]
 docs = [
-    "canonical-sphinx~=0.1",
+    "canonical-sphinx[full]~=0.2",
     "pyspelling",
     "autodoc-pydantic~=2.0",
     "sphinx-autobuild~=2024.2",
@@ -117,10 +110,6 @@ git_describe_command = "git describe --long --match '[0-9]*.[0-9]*.[0-9]*' --exc
 [tool.setuptools.packages.find]
 include = ["*craft*"]
 namespaces = false
-
-[tool.black]
-target-version = ["py310", "py311"]
-line-length = 99
 
 [tool.codespell]
 ignore-words-list = "buildd,crate,keyserver,comandos,ro,dedent,dedented,tread,socio-economic"
@@ -329,6 +318,17 @@ lint.ignore = [
 [tool.ruff.lint.pep8-naming]
 # Allow Pydantic's `@validator` decorator to trigger class method treatment.
 classmethod-decorators = ["pydantic.validator"]
+
+[tool.ruff.lint.pydocstyle]
+ignore-decorators = [  # Functions with these decorators don't have to have docstrings.
+    "typing.overload",  # Default configuration
+    # The next four are all variations on override, so child classes don't have to
+    # repeat parent classes' docstrings.
+    "overrides.override",
+    "overrides.overrides",
+    "typing.override",
+    "typing_extensions.override",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [  # Some things we want for the moin project are unnecessary in tests.

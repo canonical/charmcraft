@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for set-resource-architectures command."""
+
 import argparse
 import textwrap
 
@@ -50,7 +51,11 @@ def cmd(service_factory):
             [
                 get_fake_revision(
                     revision=1,
-                    bases=[models.ResponseCharmResourceBase(architectures=["amd64", "arm64"])],
+                    bases=[
+                        models.ResponseCharmResourceBase(
+                            architectures=["amd64", "arm64"]
+                        )
+                    ],
                 ),
                 get_fake_revision(
                     revision=2,
@@ -69,7 +74,11 @@ def cmd(service_factory):
             [
                 get_fake_revision(
                     revision=1,
-                    bases=[models.ResponseCharmResourceBase(architectures=["amd64", "arm64"])],
+                    bases=[
+                        models.ResponseCharmResourceBase(
+                            architectures=["amd64", "arm64"]
+                        )
+                    ],
                 ),
                 get_fake_revision(
                     revision=2,

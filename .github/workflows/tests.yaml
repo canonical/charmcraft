@@ -45,7 +45,7 @@ jobs:
   run-tests:
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, macos-12, macos-13, windows-2019, windows-2022]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14-large, windows-2019, windows-2022]
         include:
           - os: windows-2019
             python-version: |
@@ -55,14 +55,16 @@ jobs:
             python-version: |
               3.11
               3.12
-          - os: macos-12
-            python_version: |
+          - os: macos-14-large
+            python-version: |
               3.10
               3.12
+              3.13
           - os: macos-13
-            python_version: |
+            python-version: |
               3.10
               3.12
+              3.13
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -80,6 +82,14 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip python3-setuptools python3-wheel python3-venv libapt-pkg-dev
+          pipx install poetry
+          # Jammy runners have too old a version of pip.
+          if [[ $(lsb_release --codename --short) == 'jammy' ]]; then
+            python3 -m pip install -U pip
+          fi
+      - name: Setup LXD
+        uses: canonical/setup-lxd@v0.1.1
+        if: ${{ runner.os == 'Linux' }}
       - name: Install skopeo (mac)
         # This is only necessary for Linux until skopeo >= 1.11 is in repos.
         # Once we're running on Noble, we can get skopeo from apt.
@@ -122,7 +132,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build snap
-        uses: snapcore/action-build@v1
+        uses: canonical/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
         uses: actions/upload-artifact@v4
@@ -147,7 +157,7 @@ jobs:
           fi
       - name: Publish feature branch to edge/${{ steps.vars.outputs.branch }}
         if: ${{ env.SNAPCRAFT_STORE_CREDENTIALS != '' }}
-        uses: snapcore/action-publish@v1
+        uses: canonical/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         with:
@@ -288,7 +298,7 @@ jobs:
   macos-smoke-test:
     strategy:
       matrix:
-        os: [macos-12, macos-13]
+        os: [macos-13, macos-14-large]
     runs-on: ${{ matrix.os }}
     steps:
       # Installing and caching homebrew using the action should speed up subsequent CI:
@@ -306,8 +316,9 @@ jobs:
       - name: Install Homebrew Bundler RubyGems
         if: steps.cache.outputs.cache-hit != 'true'
         run: brew install-bundler-gems
-      - name: Install Multipass
+      - name: Install dependencies with homebrew
         run: |
+          brew install libgit2@1.7  # For building pygit2
           brew install multipass
       - name: Checkout code
         uses: actions/checkout@v4
@@ -318,7 +329,7 @@ jobs:
           cache: 'pip'
       - name: Build and install Charmcraft
         run: |
-          pipx install .
+          pip install -r requirements.txt .
       - name: Check for fully-configured multipass
         run: |
           while ! multipass version; do

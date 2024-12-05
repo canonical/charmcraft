@@ -23,10 +23,11 @@ import pathlib
 from dataclasses import dataclass
 from typing import overload
 
-import yaml
 from craft_cli import CraftError
+from typing_extensions import Self
 
 from charmcraft import const, errors
+from charmcraft.utils.yaml import load_yaml
 
 
 @dataclass(frozen=True)
@@ -56,15 +57,34 @@ class LibInternals:
     content: str
 
 
-def get_name_from_metadata() -> str | None:
+@dataclass
+class QualifiedLibraryName:
+    """The parts of a library's name."""
+
+    charm_name: str
+    lib_name: str
+
+    @classmethod
+    def from_string(cls, value: str) -> Self:
+        """Convert a string of <charm-name>.<lib_name> to a LibraryName."""
+        charm_name, _, lib_name = value.partition(".")
+        if not charm_name or not lib_name or "." in lib_name:
+            raise ValueError(f"Not a valid library name: {value!r}")
+        return cls(create_importable_name(charm_name), lib_name)
+
+    def __str__(self) -> str:
+        return f"{create_charm_name_from_importable(self.charm_name)}.{self.lib_name}"
+
+
+def get_name_from_yaml() -> str | None:
     """Return the name if present and plausible in metadata.yaml."""
-    try:
-        with open(const.METADATA_FILENAME, "rb") as fh:
-            metadata = yaml.safe_load(fh)
-        charm_name = metadata["name"]
-    except (yaml.error.YAMLError, OSError, KeyError):
-        return None
-    return charm_name
+    charmcraft_yaml = load_yaml(pathlib.Path(const.CHARMCRAFT_FILENAME))
+    if charmcraft_yaml and "name" in charmcraft_yaml:
+        return charmcraft_yaml.get("name")
+    metadata_yaml = load_yaml(pathlib.Path(const.METADATA_FILENAME))
+    if metadata_yaml:
+        return metadata_yaml.get("name")
+    return None
 
 
 def create_importable_name(charm_name: str) -> str:
@@ -97,15 +117,18 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     simple_fields = {
         "LIBAPI": (
             _api_patch_validator,
-            _msg_prefix + "LIBAPI must be a constant assignment of zero or a positive integer.",
+            _msg_prefix
+            + "LIBAPI must be a constant assignment of zero or a positive integer.",
         ),
         "LIBPATCH": (
             _api_patch_validator,
-            _msg_prefix + "LIBPATCH must be a constant assignment of zero or a positive integer.",
+            _msg_prefix
+            + "LIBPATCH must be a constant assignment of zero or a positive integer.",
         ),
         "LIBID": (
             lambda value: isinstance(value, str) and value and value.isascii(),
-            _msg_prefix + "LIBID must be a constant assignment of a non-empty ASCII string.",
+            _msg_prefix
+            + "LIBID must be a constant assignment of a non-empty ASCII string.",
         ),
     }
     pydeps_error = _msg_prefix + "PYDEPS must be a constant list of non-empty strings"
@@ -177,9 +200,16 @@ def get_lib_path(charm: str, lib_name: str, api: int) -> pathlib.Path:
     :param api: The API version of the library
     :returns: A relative path to the library python file.
     """
-    return (
-        pathlib.Path("lib/charms") / create_importable_name(charm) / f"v{api}" / f"{lib_name}.py"
-    )
+    return get_lib_charm_path(charm) / f"v{api}" / f"{lib_name}.py"
+
+
+def get_lib_charm_path(charm: str) -> pathlib.Path:
+    """Get a relative path where the libraries for a charm would be stored.
+
+    :param charm: the name of the charm
+    :returns: A relative path to the charm's libraries directory.
+    """
+    return pathlib.Path("lib/charms") / create_importable_name(charm)
 
 
 def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
@@ -197,7 +227,9 @@ def get_lib_module_name(charm: str, lib_name: str, api: int) -> str:
 def get_lib_info(*, full_name: str) -> LibData: ...
 @overload
 def get_lib_info(*, lib_path: pathlib.Path) -> LibData: ...
-def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None = None) -> LibData:
+def get_lib_info(
+    *, full_name: str | None = None, lib_path: pathlib.Path | None = None
+) -> LibData:
     """Get the whole lib info from the path/file.
 
     This will perform mutation of the charm name to create importable paths.
@@ -210,7 +242,7 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     if lib_path:
         # get it from the lib_path
         try:
-            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[:-1]
+            libsdir, charmsdir, importable_charm_name, v_api = lib_path.parts[-5:-1]
         except ValueError:
             raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
@@ -240,7 +272,9 @@ def get_lib_info(*, full_name: str | None = None, lib_path: pathlib.Path | None 
     charm_name = create_charm_name_from_importable(importable_charm_name)
 
     if v_api[0] != "v" or not v_api[1:].isdigit():
-        raise CraftError("The API version in the library path must be 'vN' where N is an integer.")
+        raise CraftError(
+            "The API version in the library path must be 'vN' where N is an integer."
+        )
     api_from_path = int(v_api[1:])
 
     lib_name = lib_path.stem

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 """New entrypoint for charmcraft."""
+
 from __future__ import annotations
 
 import pathlib
@@ -23,12 +24,11 @@ from typing import Any
 import craft_application
 import craft_cli
 from craft_application import util
-from craft_parts.plugins import plugins
+from craft_parts.plugins.plugins import PluginType
 from overrides import override
 
-from charmcraft import extensions, models, preprocess, services
+from charmcraft import extensions, models, parts, preprocess, services
 from charmcraft.application import commands
-from charmcraft.parts import BundlePlugin, CharmPlugin, ReactivePlugin
 from charmcraft.services import CharmcraftServiceFactory
 
 GENERAL_SUMMARY = """
@@ -98,7 +98,6 @@ class Charmcraft(craft_application.Application):
     def _extra_yaml_transform(
         self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
     ) -> dict[str, Any]:
-
         # Extensions get applied on as close as possible to what the user provided.
         yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
 
@@ -119,6 +118,10 @@ class Charmcraft(craft_application.Application):
             project_dir=self.project_dir,
             build_plan=self._build_plan,
         )
+        self.services.update_kwargs(
+            "charm_libs",
+            project_dir=self.project_dir,
+        )
 
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""
@@ -131,14 +134,16 @@ class Charmcraft(craft_application.Application):
         return self._dispatcher
 
     @override
-    def _get_app_plugins(self) -> dict[str, plugins.PluginType]:
-        return {"charm": CharmPlugin, "bundle": BundlePlugin, "reactive": ReactivePlugin}
+    def _get_app_plugins(self) -> dict[str, PluginType]:
+        return parts.get_app_plugins()
 
     @override
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
         """Override to get project_dir early."""
         super()._pre_run(dispatcher)
-        if not self.is_managed() and not getattr(dispatcher.parsed_args(), "project_dir", None):
+        if not self.is_managed() and not getattr(
+            dispatcher.parsed_args(), "project_dir", None
+        ):
             self.project_dir = pathlib.Path().expanduser().resolve()
 
     def run_managed(self, platform: str | None, build_for: str | None) -> None:
@@ -159,10 +164,14 @@ class Charmcraft(craft_application.Application):
                 output_path.mkdir(parents=True, exist_ok=True)
                 package_file_path = self._work_dir / ".charmcraft_output_packages.txt"
                 if package_file_path.exists():
-                    package_files = package_file_path.read_text().splitlines(keepends=False)
+                    package_files = package_file_path.read_text().splitlines(
+                        keepends=False
+                    )
                     package_file_path.unlink(missing_ok=True)
                     for filename in package_files:
-                        shutil.move(str(self._work_dir / filename), output_path / filename)
+                        shutil.move(
+                            str(self._work_dir / filename), output_path / filename
+                        )
 
     def _expand_environment(self, yaml_data: dict[str, Any], build_for: str) -> None:
         """Perform expansion of project environment variables.

@@ -19,6 +19,8 @@ import pytest
 
 from charmcraft import models, services
 
+pytestmark = [pytest.mark.slow]
+
 
 @pytest.fixture
 def store_service(service_factory):

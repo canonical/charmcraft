@@ -39,6 +39,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ("name", "image", "tag"),
     [

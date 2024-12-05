@@ -46,7 +46,7 @@ setup: install-uv setup-precommit ## Set up a development environment
 
 .PHONY: setup-tests
 setup-tests: install-uv install-build-deps ##- Set up a testing environment without linters
-	uv sync --frozen
+	uv sync --frozen $(SETUP_TESTS_EXTRA_ARGS)
 
 .PHONY: setup-lint
 setup-lint: install-uv install-shellcheck install-lint-build-deps  ##- Set up a linting-only environment
@@ -123,7 +123,7 @@ ifneq ($(shell which pyright),) # Prefer the system pyright
 else
 	# Fix for a bug in npm
 	[ -d "/home/ubuntu/.npm/_cacache" ] && chown -R 1000:1000 "/home/ubuntu/.npm" || true
-	uv run pyright
+	uv run pyright --pythonpath .venv/bin/python
 endif
 ifneq ($(CI),)
 	@echo ::endgroup::

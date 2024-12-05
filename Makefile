@@ -33,13 +33,43 @@ setup: install-uv setup-precommit ## Set up a development environment
 
 # Used for installing build dependencies in CI.
 .PHONY: install-build-deps
-install-build-deps:
+install-build-deps: install-linux-build-deps install-macos-build-deps install-lint-build-deps
+	# Ensure the system pip is new enough. If we get an error about breaking system packages, it is.
+	sudo pip install 'pip>=22.2' || true
+
+.PHONY: install-lint-build-deps
+install-lint-build-deps:
 ifeq ($(shell which apt-get),)
-	$(warning Cannot install build dependencies without apt.)
-else ifeq ($(wildcard /usr/include/libxml2/libxml/xpath.h),)
-	sudo $(APT) install libxml2-dev libxslt1-dev python3-venv
-else ifeq ($(wildcard /usr/include/libxslt/xslt.h),)
-	sudo $(APT) install libxslt1-dev python3-venv
-else ifeq ($(wildcard /usr/share/doc/python3-venv/copyright),)
-	sudo $(APT) install python3-venv
+	$(warning apt-get not found. Please install lint dependencies yourself.)
+else
+	sudo $(APT) install python-apt-dev libapt-pkg-dev clang
+endif
+
+.PHONY: install-linux-build-deps
+install-linux-build-deps:
+ifneq ($(OS),Linux)
+else ifeq ($(shell which apt-get),)
+	$(warning apt-get not found. Please install dependencies yourself.)
+else
+	sudo $(APT) install skopeo
+	# Needed for integration testing the charm plugin.
+	sudo $(APT) install libyaml-dev python3-dev python3-pip python3-setuptools python3-venv python3-wheel
+endif
+ifneq ($(shell which snap),)
+	sudo snap install lxd
+endif
+ifneq ($(shell which lxd),)
+	sudo lxd init --auto
+endif
+
+.PHONY: install-macos-build-deps
+install-macos-build-deps:
+ifneq ($(OS),Darwin)
+else ifeq ($(shell which brew),)
+	$(warning brew not installed. Please install dependencies yourself.)
+else
+	brew install libgit2@1.7  # For building pygit2
+	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
+	brew install multipass
+	brew install skopeo
 endif

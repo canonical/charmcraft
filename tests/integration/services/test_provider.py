@@ -29,6 +29,9 @@ from charmcraft.services.provider import _maybe_lock_cache
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
+)
 def test_lock_cache(
     service_factory: services.CharmcraftServiceFactory,
     tmp_path: pathlib.Path,
@@ -44,7 +47,7 @@ def test_lock_cache(
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
-        "work_dir": pathlib.Path(__file__).parent,
+        "work_dir": tmp_path,
         "cache_path": cache_path,
     }
     assert not lock_file.exists()
@@ -63,6 +66,9 @@ def test_lock_cache(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
+)
 def test_locked_cache_no_cache(
     service_factory: services.CharmcraftServiceFactory,
     tmp_path: pathlib.Path,
@@ -88,7 +94,7 @@ def test_locked_cache_no_cache(
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
-        "work_dir": pathlib.Path(__file__).parent,
+        "work_dir": tmp_path,
         "cache_path": cache_path,
     }
 

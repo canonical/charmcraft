@@ -17,7 +17,7 @@ dependencies = [
     "humanize>=2.6.0",
     "jsonschema~=4.0",
     "jinja2",
-    "pydantic~=2.0",
+    "pydantic~=2.0,<2.10",
     "python-dateutil",
     "pyyaml",
     "requests",
@@ -56,7 +56,7 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "codespell[tomli]",
+    "codespell[toml]",
     "yamllint",
 ]
 types = [

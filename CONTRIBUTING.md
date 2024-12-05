@@ -9,9 +9,10 @@ To set up an initial development environment:
 
     git clone https://github.com/canonical/charmcraft.git
     cd charmcraft
-    uv venv
-    . .venv/bin/activate
-    uv pip install -r requirements-dev.txt -e .
+    uv sync --all-extras
+
+If you need `python-apt`, add `https://people.canonical.com/~lengau/pypi/` as an
+extra index URL.
 
 You will need a copy of `ruff` installed. On many Linux distributions, you
 can install ruff with:
@@ -36,7 +37,7 @@ When you're done, make sure you run the tests.
 
 You can do so with
 
-    uv pip install -r requirements-dev.txt
-    ./run_tests
+    uv sync
+    uv run pytest
 
 Contributions welcome!

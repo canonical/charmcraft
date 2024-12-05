@@ -119,7 +119,8 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          if [[ $(uname --kernel-name) == "Linux" ]]; then
+          # -s == --kernel-name, but the long form isn't available on Mac OSX
+          if [[ $(uname -s) == "Linux" ]]; then
             export XDG_RUNTIME_DIR=/run/user/$(id -u)
           fi
           tox run --skip-pkg-install --no-list-dependencies --result-json results/tox-${{ matrix.platform }}.json --colored yes -m tests

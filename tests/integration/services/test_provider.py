@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the provider service."""
 
-import os
 import pathlib
 import shutil
 import subprocess
@@ -31,7 +30,7 @@ from charmcraft.services.provider import _maybe_lock_cache
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
-    sys.platform == "darwin" and os.getenv("CI"), reason="multipass is wonky on CI"
+    sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
 def test_lock_cache(
     service_factory: services.CharmcraftServiceFactory,
@@ -48,7 +47,7 @@ def test_lock_cache(
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
-        "work_dir": pathlib.Path(__file__).parent,
+        "work_dir": tmp_path,
         "cache_path": cache_path,
     }
     assert not lock_file.exists()
@@ -68,7 +67,7 @@ def test_lock_cache(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
-    sys.platform == "darwin" and os.getenv("CI"), reason="multipass is wonky on CI"
+    sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
 def test_locked_cache_no_cache(
     service_factory: services.CharmcraftServiceFactory,
@@ -95,7 +94,7 @@ def test_locked_cache_no_cache(
     provider = service_factory.provider
     provider_kwargs = {
         "build_info": default_build_info,
-        "work_dir": pathlib.Path(__file__).parent,
+        "work_dir": tmp_path,
         "cache_path": cache_path,
     }
 

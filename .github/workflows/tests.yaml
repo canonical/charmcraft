@@ -298,7 +298,7 @@ jobs:
   macos-smoke-test:
     strategy:
       matrix:
-        os: [macos-12, macos-13]
+        os: [macos-13, macos-14-large]
     runs-on: ${{ matrix.os }}
     steps:
       # Installing and caching homebrew using the action should speed up subsequent CI:

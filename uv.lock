@@ -345,7 +345,7 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post84+g0b5d5c7c"
+version = "3.2.2.post86+g2b944eaa"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },

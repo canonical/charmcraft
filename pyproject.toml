@@ -135,7 +135,6 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-parallel = true
 omit = ["tests/**"]
 
 [tool.coverage.report]

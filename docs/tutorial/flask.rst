@@ -48,15 +48,6 @@ This tutorial should take 90 minutes for you to complete.
 - Integrate with a database
 - Clean up environment
 
-.. hint::
-
-    Don't hesitate to get in touch on
-    `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
-    `Discourse <https://discourse.charmhub.io/>`_ (or follow the
-    "Edit this page on GitHub" on the bottom of
-    this document to comment directly on the document).
-
-
 Set things up
 =============
 
@@ -530,6 +521,8 @@ Next steps
       - `SDK How-to docs <https://juju.is/docs/sdk/how-to>`_
     * - "How do I debug?"
       - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+    * - "How do I get in touch?"
+      - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - `SDK Reference docs <https://juju.is/docs/sdk/reference>`_
     * - "Why...?", "So what?"

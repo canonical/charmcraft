@@ -423,8 +423,10 @@ to be updated to keep track of the number of visitors and to include a new
 endpoint to retrieve the number of visitors to the app. Open ``app.py`` in
 a text editor and replace its contents with the following code:
 
-.. literalinclude:: code/flask/visitors_app.py
-    :language: python
+.. collapse:: visitors_app.py
+
+  .. literalinclude:: code/flask/visitors_app.py
+      :language: python
 
 Run ``rockcraft pack`` and upload the newly created rock to the MicroK8s registry:
 

@@ -10,6 +10,7 @@ Most of Charmcraft's documentation is available there.
    :maxdepth: 1
    :hidden:
 
+   tutorial/index
    howto/index
    reference/index
    explanation/index

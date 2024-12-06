@@ -149,10 +149,8 @@ Now let's pack the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    Depending on your system and network, this step can take a couple of
-    minutes to finish.
+Depending on your system and network, this step can take a couple of
+minutes to finish.
 
 Once Rockcraft has finished packing the Flask rock, you'll find a new file
 in your working directory with the ``.rock`` extension:
@@ -162,12 +160,6 @@ in your working directory with the ``.rock`` extension:
     :start-after: [docs:ls-rock]
     :end-before: [docs:ls-rock-end]
     :dedent: 2
-
-.. note::
-
-    If you changed the ``name`` or ``version`` in ``rockcraft.yaml`` or are
-    not on an ``amd64`` platform, the name of the ``.rock`` file will be
-    different for you.
 
 The rock needs to be copied to the MicroK8s registry so that it can be
 deployed in the Kubernetes cluster:

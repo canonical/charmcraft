@@ -194,6 +194,7 @@ class CharmPlugin(plugins.Plugin):
                 "python3-venv",
                 "python3-wheel",
                 "libyaml-dev",
+                "cargo",
             }
         elif platform.is_yum_based():
             try:

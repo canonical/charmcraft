@@ -205,10 +205,8 @@ Let's pack the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    Depending on your system and network, this step can take a couple
-    of minutes to finish.
+Depending on your system and network, this step can take a couple
+of minutes to finish.
 
 Once Charmcraft has finished packing the charm, you'll find a new file in your
 working directory with the ``.charm`` extension:

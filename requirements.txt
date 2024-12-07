@@ -1,6 +1,6 @@
 attrs==23.1.0
 certifi==2023.7.22
-cffi==1.16.0
+cffi==1.17.1
 charset-normalizer==3.3.2
 craft-cli==2.4.0
 craft-parts==1.25.3

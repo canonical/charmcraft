@@ -126,17 +126,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up uv with caching
+        id: setup-uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.11'
+          enable-cache: true
       - name: Install dependencies
         run: |
-          pip install -U pyinstaller -r requirements.txt
-          pip install .
+          uv sync --no-dev
+          uv pip install pyinstaller
       - name: Build
         run: |
-          pyinstaller charmcraft.spec
+          uv run pyinstaller charmcraft.spec
       - name: Upload unsigned exe
         uses: actions/upload-artifact@v4
         with:
@@ -207,10 +208,15 @@ jobs:
         run: brew install-bundler-gems
       - name: Install dependencies with homebrew
         run: |
-          brew install libgit2@1.7  # For building pygit2
           brew install multipass
+          brew install libgit2@1.7  # For building pygit2
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up uv with caching
+        id: setup-uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -218,7 +224,7 @@ jobs:
           cache: 'pip'
       - name: Build and install Charmcraft
         run: |
-          pip install -r requirements.txt .
+          uv sync --no-dev
       - name: Check for fully-configured multipass
         run: |
           while ! multipass version; do
@@ -226,6 +232,7 @@ jobs:
           done
       - name: Init and pack
         run: |
+          source .venv/bin/activate
           mkdir test-charm
           cd test-charm
           export CRAFT_VERBOSITY_LEVEL=trace

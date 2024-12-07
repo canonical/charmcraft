@@ -2,6 +2,12 @@ PROJECT=charmcraft
 
 include common.mk
 
+ifeq ($(OS),Darwin)
+# Set LDFLAGS and CPPFLAGS so compilers can find libgit2
+LDFLAGS += -L/usr/local/opt/libgit2@1.7/lib
+CPPFLAGS += -I/usr/local/libgit2@1.7/include
+endif
+
 .PHONY: format
 format: format-ruff format-codespell  ## Run all automatic formatters
 
@@ -62,8 +68,7 @@ ifneq ($(OS),Darwin)
 else ifeq ($(shell which brew),)
 	$(warning brew not installed. Please install dependencies yourself.)
 else
-	brew install libgit2@1.7  # For building pygit2
-	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
 	brew install multipass
 	brew install skopeo
+	brew install libgit2@1.7  # For building pygit2
 endif

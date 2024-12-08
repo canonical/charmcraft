@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """Clean all related obsoleted and outdated LXD base images and instances.
 
 This hook ensures only base instances exist for the latest

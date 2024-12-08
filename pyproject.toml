@@ -362,7 +362,7 @@ ignore-decorators = [  # Functions with these decorators don't have to have docs
 
 [[tool.uv.index]]
 name = "python-apt-wheels"
-url = "https://people.canonical.com/~lengau/python-apt-pypi/"
+url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/"
 
 [tool.uv]
 constraint-dependencies = [
@@ -420,6 +420,4 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-subprocess>=1.5.2",
     "responses>=0.25.3",
-    # Repeating the apt extra so dev environments on Linux always get python-apt.
-    "python-apt>=2.4.0;sys_platform=='linux'"
 ]

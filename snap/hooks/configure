@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#!/bin/sh
+'''exec' "$(dirname -- "$(realpath -- "$0")")"/../../bin/'python3' "$0" "$@"
+' '''
 
 """Clean all related obsoleted and outdated LXD base images and instances.
 

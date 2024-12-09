@@ -232,9 +232,10 @@ jobs:
           done
       - name: Init and pack
         run: |
+          source .venv/bin/activate
           mkdir test-charm
           cd test-charm
           export CRAFT_VERBOSITY_LEVEL=trace
-          uv run charmcraft init --profile=machine
-          uv run charmcraft pack
+          charmcraft init --profile=machine
+          charmcraft pack
           test -f *.charm

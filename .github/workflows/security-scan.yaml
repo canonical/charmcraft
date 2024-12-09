@@ -10,7 +10,8 @@ on:
 jobs:
   python-scans:
     name: Scan Python project
-    uses: canonical/starflow/.github/workflows/scan-python.yaml@main
+    # uses: canonical/starflow/.github/workflows/scan-python.yaml@main
+    uses: lengau/starflow/.github/workflows/scan-python.yaml@work/CRAFT-3707/uv
     with:
       packages: python-apt-dev
       # 1. requirements-noble.txt can't build on jammy
@@ -18,3 +19,5 @@ jobs:
       #    contain vulnerable versions.
       requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*"'
       osv-extra-args: '--config=source/osv-scanner.toml'
+      uv-export: false
+      uv-sync-extra-args: --no-dev

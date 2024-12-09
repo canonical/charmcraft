@@ -27,6 +27,8 @@ from craft_cli.pytest_plugin import RecordingEmitter
 from charmcraft import services
 from charmcraft.services.provider import _maybe_lock_cache
 
+pytestmark = [pytest.mark.slow]
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(

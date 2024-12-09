@@ -38,7 +38,7 @@ help: ## Show this help.
 			$$3=sprintf(" └ %s", $$3);
 			print $$0;
 		}
-	}'
+	}' | uniq
 
 .PHONY: setup
 setup: install-uv setup-precommit ## Set up a development environment
@@ -49,7 +49,7 @@ setup-tests: install-uv install-build-deps ##- Set up a testing environment with
 	uv sync --frozen $(SETUP_TESTS_EXTRA_ARGS)
 
 .PHONY: setup-lint
-setup-lint: install-uv install-shellcheck install-lint-build-deps  ##- Set up a linting-only environment
+setup-lint: install-uv install-shellcheck  ##- Set up a linting-only environment
 	uv sync --frozen --no-install-workspace --extra lint --extra types
 
 .PHONY: setup-docs

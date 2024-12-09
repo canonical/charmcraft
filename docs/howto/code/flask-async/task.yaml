@@ -151,7 +151,7 @@ execute: |
   NUM_REQUESTS=15
   ASYNC_RESULT='TRUE'
 
-  echo "Firing $NUM_REQUESTS requests to $URL..."
+  echo "Firing $NUM_REQUESTS requests to http://flask-async-app/io..."
 
   overall_start_time=$(date +%s)
 

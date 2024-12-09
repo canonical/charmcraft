@@ -18,3 +18,5 @@ jobs:
       #    contain vulnerable versions.
       requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*"'
       osv-extra-args: '--config=source/osv-scanner.toml'
+      uv-export: false
+      uv-sync-extra-args: --no-dev

@@ -69,8 +69,21 @@ types = [
     "types-tabulate",
     "types-urllib3",
 ]
-apt = [
-    "python-apt>=2.4.0;sys_platform=='linux'"
+apt-jammy = [
+    # Stay on 2.4 for Jammy
+    "python-apt~=2.4.0;sys_platform=='linux'",
+]
+apt-noble = [
+    # 2.7 for Noble
+    "python-apt~=2.7.0;sys_platform=='linux'",
+]
+apt-oracular = [
+    # 2.9 for Oracular+
+    "python-apt>=2.9.0;sys_platform=='linux'",
+]
+apt-plucky = [
+    # 2.9 for Oracular+
+    "python-apt>=2.9.0;sys_platform=='linux'",
 ]
 docs = [
     "canonical-sphinx[full]~=0.2",
@@ -383,6 +396,14 @@ constraint-dependencies = [
     "protobuf>=5.0",
     "overrides>=7.3",
     "requests-unixsocket>=0.3",
+]
+conflicts = [
+    [
+        { extra = "apt-jammy" },
+        { extra = "apt-noble" },
+        { extra = "apt-oracular" },
+        { extra = "apt-plucky" },
+    ]
 ]
 
 [dependency-groups]

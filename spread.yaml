@@ -82,6 +82,8 @@ backends:
           workers: 1
       - ubuntu-22.04-64:
           workers: 4
+      - ubuntu-24.04-64:
+          workers: 4
 prepare: |
   set -e
 
@@ -129,10 +131,10 @@ prepare: |
   install_charmcraft
 
 suites:
-  docs/tutorial/code/:
-    summary: tests tutorial from the docs
+  docs/howto/code/:
+    summary: tests howto from the docs
     systems:
-    - ubuntu-22.04-64
+      - ubuntu-24.04-64
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

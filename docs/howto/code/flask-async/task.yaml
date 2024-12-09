@@ -5,7 +5,7 @@
 # markers for including said instructions
 # as snippets in the docs.
 ###########################################
-summary: Getting started with Flask tutorial
+summary: How to create async Flask Charm
 
 kill-timeout: 90m
 
@@ -35,15 +35,10 @@ execute: |
   snapcraft pack
   snap install --dangerous --classic rockcraft_*
 
-
-  snap install lxd
-  lxd init --auto
   # snap refresh charmcraft --channel=latest/edge --amend
-  snap install microk8s --channel=1.31-strict/stable
-  snap install juju --channel=3.5/stable
+  snap install microk8s --channel=1.32-strict/stable
+  snap install juju --channel=3/stable
 
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
   mkdir -p ~/.local/share
 
   # MicroK8s config setup
@@ -61,7 +56,6 @@ execute: |
   python3 -m venv .venv
   source .venv/bin/activate
   pip install -r requirements.txt
-  pip install Flask
   # [docs:create-venv-end]
 
   flask run -p 8000 &
@@ -83,36 +77,6 @@ execute: |
 
   sed -i "s/name: .*/name: flask-async-app/g" rockcraft.yaml
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
-
-  # uncomment the parts main section
-  sed -i "s/# parts:/parts:/g" rockcraft.yaml
-  # uncomment the async-dependencies part
-  awk -i inplace -v block_key="flask-framework/async-dependencies" '
-  BEGIN {
-    in_block = 0;
-    comment_pattern = "^#[[:space:]]";
-    uncommented_line = "";
-  }
-
-  /^#[[:space:]]/ {
-    # Check if the line contains the block key
-    if (in_block == 0 && $0 ~ block_key) {
-      in_block = 1;
-    }
-  }
-
-  {
-    # If in_block is active, uncomment lines
-    if (in_block == 1) {
-      uncommented_line = gensub(comment_pattern, "", 1, $0);
-      if (uncommented_line == $0) {
-        in_block = 0;
-      }
-      print uncommented_line;
-    } else {
-      print $0;
-    }
-  }' rockcraft.yaml
 
   # [docs:pack]
   rockcraft pack
@@ -181,6 +145,8 @@ execute: |
   juju config flask-async-app webserver-worker-class=gevent
   # [docs:config-async-end]
 
+  juju wait-for application flask-async-app --query='status=="active"' --timeout 10m
+
   # test the async flask service
   NUM_REQUESTS=15
   ASYNC_RESULT='TRUE'
@@ -221,8 +187,7 @@ execute: |
   deactivate
   rm -rf charm .venv __pycache__
   # delete all the files created during the tutorial
-  rm flask-async-app_0.1_$(dpkg --print-architecture).rock flask-async-app_0.2_$(dpkg --print-architecture).rock \
-    flask-async-app_0.3_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
+  rm flask-async-app_0.1_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
     requirements.txt migrate.py
   # Remove the juju model
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force

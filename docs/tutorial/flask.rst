@@ -22,14 +22,16 @@ This tutorial should take 90 minutes for you to complete.
     to be deployed, integrated and operated on a Kubernetes
     cluster with the Juju orchestration engine.
 
-**What you’ll need:**
+What you’ll need
+================
 
 - A workstation, e.g., a laptop, with amd64 or arm64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
   4 GB RAM, and a 50 GB disk
 - Familiarity with Linux
 
-**What you’ll do:**
+What you’ll do
+==============
 
 - Set things up
 - Create the Flask application

@@ -36,7 +36,7 @@ execute: |
   snap install --dangerous --classic rockcraft_*
 
   # snap refresh charmcraft --channel=latest/edge --amend
-  snap install microk8s --channel=1.32-strict/stable
+  snap install microk8s --channel=1.31-strict/stable
   snap install juju --channel=3/stable
 
   mkdir -p ~/.local/share

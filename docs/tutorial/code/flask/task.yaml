@@ -189,7 +189,7 @@ execute: |
   # [docs:refresh-2nd-deployment-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
+  juju deploy postgresql-k8s --channel=14/stable --trust
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

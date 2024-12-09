@@ -59,9 +59,9 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@18.04",
     "ubuntu@20.04",
     "ubuntu@22.04",
-    "ubuntu@23.10",
     "ubuntu@24.04",
     "ubuntu@24.10",
+    "ubuntu@25.04",
     "centos@7",
     "almalinux@9",
 ]

@@ -1,5 +1,7 @@
 PROJECT=charmcraft
 
+UV_FROZEN=true
+
 include common.mk
 
 .PHONY: format
@@ -27,7 +29,7 @@ publish-pypi: clean package-pip lint-twine  ##- Publish Python packages to pypi
 
 .PHONY: setup
 setup: install-uv setup-precommit ## Set up a development environment
-	uv sync --frozen --extra apt --extra docs --extra lint --extra types
+	uv sync --frozen $(SETUP_TESTS_EXTRA_ARGS) --extra docs --extra lint --extra types
 
 # Used for installing build dependencies in CI.
 .PHONY: install-build-deps

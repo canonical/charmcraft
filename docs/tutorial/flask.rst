@@ -4,30 +4,23 @@ Write your first Kubernetes charm for a Flask app
 
 Imagine you have a Flask application backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
-this can be quite a challenge, but with
-`Juju <https://juju.is/docs/juju>`_ you’ll find yourself
-deploying, configuring, scaling, integrating, monitoring, etc.,
-your Flask application in no time. Let’s get started!
+this can be quite a challenge, but with Charmcraft you’ll find
+yourself packaging and deploying your Flask application in no time.
+Let’s get started!
 
-In this tutorial we will build a rock and Kubernetes charm for a
-Flask application using the charm SDK, so we can have a Flask
-application up and running with Juju.
+In this tutorial we will build a Kubernetes charm for a Flask
+application using Charmcraft, so we can have a Flask application
+up and running with Juju.
 
-This tutorial should take 90 minutes for you to complete.
+This tutorial should take 90 minutes for you to complete. 
 
 .. note::
-
-    **rock**: An Ubuntu LTS-based OCI compatible
-    container image designed to meet security, stability, and
-    reliability requirements for cloud-native software.
-
-    **charm**: A package consisting of YAML files + Python code that will
-    automate every aspect of an application's lifecycle so it can
-    be easily orchestrated with Juju.
-
-    **Juju**: An orchestration engine for software
-    operators that enables the deployment, integration and lifecycle
-    management of applications using charms.
+    If you're new to the charming world: Flask applications are
+    specifically supported with a coordinated pair of profiles
+    for an OCI container image (**rock**) and corresponding
+    packaged software (**charm**) that allow for the application
+    to be deployed, integrated and operated on a Kubernetes
+    cluster with the Juju orchestration engine.
 
 **What you’ll need:**
 

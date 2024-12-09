@@ -12,7 +12,7 @@ In this tutorial we will build a Kubernetes charm for a Flask
 application using Charmcraft, so we can have a Flask application
 up and running with Juju.
 
-This tutorial should take 90 minutes for you to complete. 
+This tutorial should take 90 minutes for you to complete.
 
 .. note::
     If you're new to the charming world: Flask applications are

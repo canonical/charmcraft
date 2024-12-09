@@ -52,7 +52,7 @@ backends:
       system=$(echo "${SPREAD_SYSTEM}" | tr . -)
       instance_name="spread-${SPREAD_BACKEND}-${instance_num}-${system}"
 
-      multipass launch --cpus 4 --disk 50G --memory 4G --name "${instance_name}" "${multipass_image}"
+      multipass launch --cpus 4 --disk 40G --memory 4G --name "${instance_name}" "${multipass_image}"
 
       # Enable PasswordAuthentication for root over SSH.
       multipass exec "$instance_name" -- \

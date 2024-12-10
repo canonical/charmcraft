@@ -12,12 +12,12 @@ dependencies = [
     "craft-platforms~=0.3",
     "craft-providers>=2.0.0",
     "craft-store>=3.0.0",
-    "distro>=1.3.0",
+    "distro>=1.7.0",
     "docker>=7.0.0",
     "humanize>=2.6.0",
-    "jsonschema",
+    "jsonschema~=4.0",
     "jinja2",
-    "pydantic~=2.0",
+    "pydantic~=2.0,<2.10",
     "python-dateutil",
     "pyyaml",
     "requests",
@@ -56,7 +56,7 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
     "responses",
 ]
 lint = [
-    "codespell[tomli]",
+    "codespell[toml]",
     "yamllint",
 ]
 types = [
@@ -69,8 +69,21 @@ types = [
     "types-tabulate",
     "types-urllib3",
 ]
-apt = [
-    "python-apt>=2.4.0;sys_platform=='linux'"
+apt-jammy = [
+    # Stay on 2.4 for Jammy
+    "python-apt~=2.4.0;sys_platform=='linux'",
+]
+apt-noble = [
+    # 2.7 for Noble
+    "python-apt~=2.7.0;sys_platform=='linux'",
+]
+apt-oracular = [
+    # 2.9 for Oracular+
+    "python-apt>=2.9.0;sys_platform=='linux'",
+]
+apt-plucky = [
+    # 2.9 for Oracular+
+    "python-apt>=2.9.0;sys_platform=='linux'",
 ]
 docs = [
     "canonical-sphinx[full]~=0.2",
@@ -135,7 +148,6 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-parallel = true
 omit = ["tests/**"]
 
 [tool.coverage.report]
@@ -347,3 +359,65 @@ ignore-decorators = [  # Functions with these decorators don't have to have docs
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.
 "__init__.py" = ["I001"]
+
+[[tool.uv.index]]
+name = "python-apt-wheels"
+url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/"
+
+[tool.uv]
+constraint-dependencies = [
+    "tabulate>=0.8.8",
+    "matplotlib>=3.7.0",
+    "lxml>=5.0.0",
+    "numpy>=1.22.0",
+    "build>=0.1.0",
+    "iniconfig>=1.1.0",
+    "lxml>=5.0",
+    "pyparsing>=3.0.0",
+    "pyproject-hooks>=1.0.0",
+    "pyyaml>=5.0",
+    "markdown>=3.0",
+    "markupsafe>=2.0",
+    "regex>=2021.11.10",
+    "sphinx-basic-ng>=1.0.0b1",
+    "tornado>=4.0",
+    "webencodings>=0.4.0",
+    "launchpadlib>=1.11",
+    "lazr-uri>=1.0.6",
+    "libnacl>=2.0",
+    "oauthlib>=3.0",
+    "setuptools>=65",
+    "cffi>=1.15",
+    "pynacl>=1.4.0",
+    "keyring>=24",
+    "jaraco-classes>=3.2",
+    "pyxdg>=0.27",
+    "pytz>=2020",
+    "protobuf>=5.0",
+    "overrides>=7.3",
+    "requests-unixsocket>=0.3",
+]
+conflicts = [
+    [
+        { extra = "apt-jammy" },
+        { extra = "apt-noble" },
+        { extra = "apt-oracular" },
+        { extra = "apt-plucky" },
+    ]
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.8",
+    "freezegun>=1.5.1",
+    "hypothesis>=6.122.1",
+    "poetry>=1.8.5",  # Needed for testing the poetry plugin.
+    "pyfakefs>=5.7.2",
+    "pylint>=3.3.2",
+    "pytest>=8.3.4",
+    "pytest-check>=2.4.1",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-subprocess>=1.5.2",
+    "responses>=0.25.3",
+]

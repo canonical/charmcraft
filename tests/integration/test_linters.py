@@ -27,6 +27,7 @@ from charmcraft.models.lint import LintResult
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "pip_cmd",
     [
@@ -45,6 +46,7 @@ def test_pip_check_success(tmp_path: pathlib.Path, pip_cmd: list[str]):
     assert lint.text == linters.PipCheck.text
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "pip_cmd",
     [

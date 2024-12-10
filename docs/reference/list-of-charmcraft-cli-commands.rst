@@ -1,7 +1,7 @@
 .. _commands:
 
-Commands
-********
+List of ``charmcraft`` CLI commands
+*********************************
 
 .. Use a hidden table of contents to ensure that documentation is read.
 
@@ -48,3 +48,4 @@ Other Commands
 ==============
 
 .. include:: commands/other-commands.rst
+

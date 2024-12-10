@@ -180,6 +180,71 @@ def fake_run():
     patcher.stop()
 
 
+@pytest.mark.parametrize(
+    ("arguments", "build_dir", "expected"),
+    [
+        pytest.param(
+            [],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--verbose", "-o", "some-install-dir"],
+            id="default",
+        ),
+        pytest.param(
+            ["-c"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--verbose", "-c", "-o", "some-install-dir"],
+            id="unrelated-param",
+        ),
+        pytest.param(
+            ["--verbose"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--verbose", "-o", "some-install-dir"],
+            id="--verbose",
+        ),
+        pytest.param(
+            ["-v"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "-v", "-o", "some-install-dir"],
+            id="-v",
+        ),
+        pytest.param(
+            ["--debug"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--debug", "-o", "some-install-dir"],
+            id="--debug",
+        ),
+        pytest.param(
+            ["-l", "debug"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "-l", "debug", "-o", "some-install-dir"],
+            id="-l debug",
+        ),
+        pytest.param(
+            ["--log-level", "debug"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--log-level", "debug", "-o", "some-install-dir"],
+            id="--log-level debug",
+        ),
+        pytest.param(
+            ["-ldebug"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "-ldebug", "-o", "some-install-dir"],
+            id="-ldebug",
+        ),
+        pytest.param(
+            ["--log-level=debug"],
+            pathlib.Path("some-install-dir"),
+            ["charm", "build", "--log-level=debug", "-o", "some-install-dir"],
+            id="--log-level=debug",
+        ),
+    ],
+)
+def test_get_charm_build_command(
+    arguments: list[str], build_dir: pathlib.Path, expected: list[str]
+):
+    assert _reactive._get_charm_build_command(arguments, build_dir) == expected
+
+
 def test_build(build_dir, install_dir, fake_run):
     fake_run.return_value = CompletedProcess(("charm", "build"), 0)
     returncode = _reactive.build(
@@ -197,6 +262,7 @@ def test_build(build_dir, install_dir, fake_run):
             [
                 "charm",
                 "build",
+                "--verbose",
                 "--charm-argument",
                 "--charm-argument-with",
                 "argument",
@@ -245,6 +311,7 @@ def test_build_charm_proof_raises_warning_messages_does_not_raise(
             [
                 "charm",
                 "build",
+                "--verbose",
                 "--charm-argument",
                 "--charm-argument-with",
                 "argument",
@@ -285,6 +352,7 @@ def test_build_charm_build_raises_error_messages(build_dir, install_dir, fake_ru
             [
                 "charm",
                 "build",
+                "--verbose",
                 "--charm-argument",
                 "--charm-argument-with",
                 "argument",
@@ -334,6 +402,7 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
             [
                 "charm",
                 "build",
+                "--verbose",
                 "--charm-argument",
                 "--charm-argument-with",
                 "argument",

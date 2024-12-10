@@ -25,6 +25,8 @@ import overrides
 from craft_parts import plugins
 from craft_parts.errors import PluginEnvironmentValidationError
 
+VERBOSITY_PARAMS = frozenset({"-v", "--verbose", "--debug", "-l", "--log-level"})
+
 
 class ReactivePluginProperties(plugins.PluginProperties, frozen=True):
     """Properties used to pack reactive charms using charm-tools."""
@@ -156,6 +158,27 @@ def run_charm_tool(args: list[str]):
         )
 
 
+def _get_charm_build_command(charm_build_arguments: list[str], build_dir: Path):
+    """Get a charm build command based on arguments."""
+    cmd = ["charm", "build"]
+
+    # If the user doesn't pass a verbosity, we want to make it verbose.
+    if not VERBOSITY_PARAMS & set(charm_build_arguments):
+        # Check for things like -ldebug or --log-level=debug
+        for argument in charm_build_arguments:
+            if argument.startswith("-l") or argument.startswith("--log-level"):
+                break
+        else:
+            cmd.append("--verbose")
+
+    if charm_build_arguments:
+        cmd.extend(charm_build_arguments)
+
+    cmd.extend(["-o", str(build_dir)])
+
+    return cmd
+
+
 def build(
     *,
     charm_name: str,
@@ -193,10 +216,7 @@ def build(
     if not charm_build_dir.exists():
         charm_build_dir.symlink_to(install_dir, target_is_directory=True)
 
-    cmd = ["charm", "build"]
-    if charm_build_arguments:
-        cmd.extend(charm_build_arguments)
-    cmd.extend(["-o", str(build_dir)])
+    cmd = _get_charm_build_command(charm_build_arguments, build_dir)
 
     try:
         run_charm_tool(cmd)

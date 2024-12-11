@@ -256,7 +256,7 @@ class StoreService(BaseStoreService):
             ):
                 raise errors.LibraryError(
                     "One or more declared charm-libs could not be found in the store.",
-                    details="Declared charm-libs:" + ", ".join(lib_names),
+                    details="Declared charm-libs: " + ", ".join(lib_names),
                     resolution="Check the charm and library names in charmcraft.yaml",
                 ) from exc
             raise

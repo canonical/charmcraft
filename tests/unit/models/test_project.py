@@ -359,6 +359,15 @@ def test_invalid_patch_version(version: str):
         project.CharmLib(lib="charm_name.lib_name", version=version)
 
 
+@pytest.mark.parametrize("version", [1, 1.1])
+def test_bad_version_type(version: str):
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="1 validation error for CharmLib\nversion\n  Input should be a valid string",
+    ):
+        project.CharmLib(lib="charm_name.lib_name", version=version)
+
+
 @pytest.mark.parametrize(
     ("run_on", "expected"),
     [

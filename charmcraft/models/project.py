@@ -91,6 +91,7 @@ class CharmLib(models.CraftBaseModel):
     version: str = pydantic.Field(
         title="Version filter for the charm. Either an API version or a specific [api].[patch].",
         pattern=r"[0-9]+(\.[0-9]+)?",
+        coerce_numbers_to_str=False,
     )
 
     @pydantic.field_validator("lib", mode="before")
@@ -129,7 +130,7 @@ class CharmLib(models.CraftBaseModel):
     @pydantic.field_validator("version", mode="before")
     def _validate_patch_version(cls, value: str) -> str:
         """Validate the optional patch version, providing a useful error message."""
-        api, separator, patch = value.partition(".")
+        api, separator, patch = str(value).partition(".")
         if not separator:
             return value
         try:

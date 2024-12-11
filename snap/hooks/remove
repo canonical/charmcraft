@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """Remove all related LXD images and instances when removing the snap."""
 
 import json

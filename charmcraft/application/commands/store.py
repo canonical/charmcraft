@@ -2374,3 +2374,70 @@ def _get_architectures_from_bases(
         for architecture in base.architectures:
             architectures.add(architecture)
     return sorted(architectures)
+
+
+class CreateTrack(CharmcraftCommand):
+    """Create one or more tracks."""
+
+    name = "create-track"
+    help_msg = "Create one or more tracks for a charm on Charmhub"
+    overview = textwrap.dedent(
+        """
+        Create one or more tracks for a charm on Charmhub. Returns
+        the full list of tracks for that charm.
+
+        For example:
+
+           $ charmcraft create-track my-charm track-1 track-2
+           Name       Created at              Automatic phasing percentage
+           ---------  --------------------  ------------------------------
+           track-1    2024-12-10T23:48:40Z
+           track-2    2024-12-11T00:14:24Z
+           latest     2023-04-17T23:55:07Z
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
+        """Add own parameters to the general parser."""
+        super().fill_parser(parser=parser)
+        parser.add_argument(
+            "name",
+            help="The store name onto which to create the track",
+        )
+        parser.add_argument(
+            "track",
+            nargs="+",
+            help="The track name to create",
+        )
+        parser.add_argument(
+            "--automatic-phasing-percentage",
+            type=int,
+            default=None,
+            help="Automatic phasing percentage",
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> int | None:
+        """Run the command."""
+        emit.progress(f"Creating {len(parsed_args.track)} tracks on the store")
+        pct = parsed_args.automatic_phasing_percentage
+        tracks = [
+            {"name": track, "automatic-phasing-percentage": pct}
+            for track in parsed_args.track
+        ]
+        tracks = self._services.store.create_tracks(parsed_args.name, *tracks)
+
+        if fmt := parsed_args.format:
+            emit.message(cli.format_content(tracks, fmt))
+            return
+        data = [
+            {
+                "Name": track["name"],
+                "Created at": utils.format_timestamp(
+                    datetime.datetime.fromisoformat(track["created-at"])
+                ),
+                "Automatic phasing percentage": track["automatic-phasing-percentage"],
+            }
+            for track in tracks
+        ]
+        emit.message(tabulate(data, headers="keys"))

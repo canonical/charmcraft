@@ -10,6 +10,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/spread-large.yaml
+      - tests/spread/charms/**
+      - tests/spread/smoketests/parallel-build/*
+      - tests/spread/smoketests/remote-build/*
 
 # Only ever run one of this test at a time.
 concurrency:

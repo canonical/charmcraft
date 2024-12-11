@@ -2,9 +2,9 @@
 How to write a Kubernetes charm for an Async Flask app
 ======================================================
 
-In this how to we will configure 12 Factor Flask application
-to use asynchronous Gunicorn workers to be able to serve
-to multiple users easily.
+In this how-to guide we will configure a 12-factor Flask
+application to use asynchronous Gunicorn workers to be
+able to serve to multiple users easily.
 
 Make the rock async
 ===================
@@ -24,11 +24,6 @@ has been added using
 ``juju config flask-async-app | grep -A 6 webserver-worker-class:`` which should
 show the configuration option.
 
-.. note::
-
-    The ``grep`` command extracts a portion of the configuration to make
-    it easier to check whether the configuration option has been added.
-
 The worker class can be changed using Juju:
 
 .. literalinclude:: code/flask-async/task.yaml
@@ -42,6 +37,16 @@ Now you can run
 http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
 http://flask-async-app/io http://flask-async-app/io``
 in they will all return at the same time.
+
+Output will be similar to following:
+
+.. code-block:: bash
+
+   ok
+   ok
+   ok
+   ok
+   ok
 
 .. note::
 

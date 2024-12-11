@@ -124,7 +124,7 @@ execute: |
   # [docs:deploy-juju-model-end]
 
   # [docs:deploy-nginx]
-  juju deploy nginx-ingress-integrator --channel=latest/edge --revision 122
+  juju deploy nginx-ingress-integrator --channel=latest/edge --base ubuntu@20.04
   juju integrate nginx-ingress-integrator flask-async-app
   # [docs:deploy-nginx-end]
 

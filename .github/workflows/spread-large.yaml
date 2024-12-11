@@ -6,31 +6,19 @@ on:
 
   workflow_dispatch:
 
+  # If we're editing this file, run it on the pull request.
+  pull_request:
+    paths:
+      - .github/workflows/spread-large.yaml
+
 # Only ever run one of this test at a time.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  snap-build:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Build snap
-        uses: snapcore/action-build@v1
-        id: charmcraft
-      - name: Upload snap artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: snap
-          path: ${{ steps.charmcraft.outputs.snap }}
-
-  pack-charm:
+  spread:
     runs-on: spread-installed
-    needs: [snap-build]
     strategy:
       fail-fast: false
       # Each of these tasks can spin up several machines in spread.
@@ -54,10 +42,9 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - name: Download snap artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: snap
+      - name: Download charmcraft snap
+        run: |
+          snap download --channel=latest/edge charmcraft
       - name: Spread k8s operator
         env:
           LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

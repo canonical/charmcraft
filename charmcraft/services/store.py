@@ -211,7 +211,8 @@ class StoreService(BaseStoreService):
         self._publisher.create_tracks(name, *tracks)
 
         metadata = self._publisher.get_package_metadata(name)
-        return metadata["tracks"]
+        # "or []" here because tracks could be None.
+        return metadata["tracks"] or []
 
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]

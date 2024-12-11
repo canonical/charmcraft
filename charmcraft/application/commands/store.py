@@ -2417,7 +2417,7 @@ class CreateTrack(CharmcraftCommand):
             help="Automatic phasing percentage",
         )
 
-    def run(self, parsed_args: argparse.Namespace) -> int | None:
+    def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         emit.progress(f"Creating {len(parsed_args.track)} tracks on the store")
         pct = parsed_args.automatic_phasing_percentage
@@ -2425,7 +2425,10 @@ class CreateTrack(CharmcraftCommand):
             {"name": track, "automatic-phasing-percentage": pct}
             for track in parsed_args.track
         ]
-        tracks = self._services.store.create_tracks(parsed_args.name, *tracks)
+        output_tracks = self._services.store.create_tracks(
+            parsed_args.name,
+            *tracks,  # type: ignore[arg-type] # false positive in mypy
+        )
 
         if fmt := parsed_args.format:
             emit.message(cli.format_content(tracks, fmt))
@@ -2438,6 +2441,6 @@ class CreateTrack(CharmcraftCommand):
                 ),
                 "Automatic phasing percentage": track["automatic-phasing-percentage"],
             }
-            for track in tracks
+            for track in output_tracks
         ]
         emit.message(tabulate(data, headers="keys"))

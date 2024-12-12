@@ -66,11 +66,25 @@ def get_venv_cleanup_commands(venv_path: pathlib.Path, *, keep_bins: bool) -> li
     """
     venv_bin = venv_path / "bin"
     venv_lib64 = venv_path / "lib64"
-    delete_bins = [] if keep_bins else [f"rm -rf {venv_bin}"]
+    if keep_bins:
+        delete_bins = []
+    else:
+        delete_bins = [
+            # Remove all files in venv_bin except `activate`
+            "shopt -s extglob",
+            f"rm -rf {venv_bin}/!(activate)",
+            "shopt -u extglob",
+        ]
+    update_activate = [
+        # Replace hard-coded path in `activate` with portable path
+        # "\&" is escape for sed
+        'sed -i \'s#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \\&> /dev/null \\&\\& pwd )"#\' '
+        + str(venv_bin / "activate"),
+    ]
     delete_lib64 = textwrap.dedent(f"""
         if [ -L '{venv_lib64}' ]; then
           rm -f '{venv_lib64}'
         fi
     """)
 
-    return [*delete_bins, delete_lib64]
+    return [*delete_bins, *update_activate, delete_lib64]

@@ -23,7 +23,7 @@ from collections.abc import Collection, Mapping, Sequence
 import craft_application
 import craft_store
 from craft_cli import emit
-from craft_store import models, publishergateway
+from craft_store import models, publisher
 from overrides import override
 
 from charmcraft import const, env, errors, store
@@ -198,15 +198,15 @@ class StoreService(BaseStoreService):
             host=self._base_url,
             environment_auth=self._environment_auth,
         )
-        self._publisher = craft_store.publishergateway.PublisherGateway(
+        self._publisher = craft_store.publisher.PublisherGateway(
             base_url=self._base_url,
             namespace="charm",
             auth=self._auth,
         )
 
     def create_tracks(
-        self, name: str, *tracks: publishergateway.CreateTrackRequest
-    ) -> Sequence[publishergateway.TrackMetadata]:
+        self, name: str, *tracks: publisher.CreateTrackRequest
+    ) -> Sequence[publisher.TrackMetadata]:
         """Create tracks in the store."""
         self._publisher.create_tracks(name, *tracks)
 

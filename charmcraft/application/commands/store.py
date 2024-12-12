@@ -38,7 +38,7 @@ from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
-from craft_store import attenuations, models
+from craft_store import attenuations, models, publisher
 from craft_store.errors import CredentialsUnavailable
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
@@ -2382,18 +2382,12 @@ class CreateTrack(CharmcraftCommand):
     name = "create-track"
     help_msg = "Create one or more tracks for a charm on Charmhub"
     overview = textwrap.dedent(
-        """
-        Create one or more tracks for a charm on Charmhub. Returns
-        the full list of tracks for that charm.
+        """\
+        Create one or more tracks for a charm on Charmhub.
 
-        For example:
-
-           $ charmcraft create-track my-charm track-1 track-2
-           Name       Created at              Automatic phasing percentage
-           ---------  --------------------  ------------------------------
-           track-1    2024-12-10T23:48:40Z
-           track-2    2024-12-11T00:14:24Z
-           latest     2023-04-17T23:55:07Z
+        Returns the full list of tracks for that charm. Tracks must match an existing
+        guardrail for this charm. Guardrails can be requested in the charmhub requests
+        category at https://discourse.charmhub.io.
         """
     )
     format_option = True
@@ -2421,13 +2415,13 @@ class CreateTrack(CharmcraftCommand):
         """Run the command."""
         emit.progress(f"Creating {len(parsed_args.track)} tracks on the store")
         pct = parsed_args.automatic_phasing_percentage
-        tracks = [
+        tracks: list[publisher.CreateTrackRequest] = [
             {"name": track, "automatic-phasing-percentage": pct}
             for track in parsed_args.track
         ]
         output_tracks = self._services.store.create_tracks(
             parsed_args.name,
-            *tracks,  # type: ignore[arg-type] # false positive in mypy
+            *tracks,
         )
 
         if fmt := parsed_args.format:

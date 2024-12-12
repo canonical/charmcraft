@@ -2385,9 +2385,9 @@ class CreateTrack(CharmcraftCommand):
         """\
         Create one or more tracks for a charm on Charmhub.
 
-        Returns the full list of tracks for that charm. Tracks must match an existing
-        guardrail for this charm. Guardrails can be requested in the charmhub requests
-        category at https://discourse.charmhub.io.
+        Returns the list of created tracks. Tracks must match an existing guardrail
+        for this charm. Guardrails can be requested in the charmhub requests category
+        at https://discourse.charmhub.io.
         """
     )
     format_option = True

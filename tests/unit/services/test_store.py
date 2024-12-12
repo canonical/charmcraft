@@ -29,6 +29,7 @@ from hypothesis import given, strategies
 import charmcraft
 from charmcraft import application, errors, services
 from charmcraft.models.project import CharmLib
+from charmcraft.services.store import StoreService
 from charmcraft.store import client
 from tests import get_fake_revision
 
@@ -47,6 +48,7 @@ def store(service_factory) -> services.StoreService:
 def reusable_store():
     store = services.StoreService(app=application.APP_METADATA, services=None)
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     return store
 
 
@@ -166,6 +168,27 @@ def test_logout(store):
     store.logout()
 
     client.logout.assert_called_once_with()
+
+
+def test_create_tracks(reusable_store: StoreService):
+    mock_create = cast(mock.Mock, reusable_store._publisher.create_tracks)
+    mock_md = cast(mock.Mock, reusable_store._publisher.get_package_metadata)
+    user_track = {
+        "name": "my-track",
+        "automatic-phasing-percentage": None,
+    }
+    mock_md.return_value = {
+        "tracks": [
+            user_track,
+            {
+                "name": "latest",
+                "automatic-phasing-percentage": None,
+            },
+        ]
+    }
+
+    assert reusable_store.create_tracks("my-name", user_track) == [user_track]
+    mock_create.assert_called_once_with("my-name", user_track)
 
 
 @pytest.mark.parametrize(

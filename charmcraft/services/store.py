@@ -207,12 +207,22 @@ class StoreService(BaseStoreService):
     def create_tracks(
         self, name: str, *tracks: publisher.CreateTrackRequest
     ) -> Sequence[publisher.TrackMetadata]:
-        """Create tracks in the store."""
+        """Create tracks in the store.
+
+        :param name: The package name to which the tracks should be attached.
+        :param tracks: Each item is a dictionary of the track request.
+        :returns: A sequence of the created tracks as dictionaries.
+        """
+        track_names = {track.get("name") for track in tracks}
         self._publisher.create_tracks(name, *tracks)
 
         metadata = self._publisher.get_package_metadata(name)
         # "or []" here because tracks could be None.
-        return metadata["tracks"] or []
+        return [
+            track
+            for track in metadata["tracks"] or []
+            if track.get("name") in track_names
+        ]
 
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]

@@ -97,7 +97,10 @@ def test_get_package_install_commands(
 def test_get_rm_command(
     poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
 ):
-    assert f"rm -rf {install_path / 'venv/bin'}" in poetry_plugin.get_build_commands()
+    assert (
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        in poetry_plugin.get_build_commands()
+    )
 
 
 def test_no_get_rm_command(
@@ -110,5 +113,6 @@ def test_no_get_rm_command(
     }
     poetry_plugin._options = plugins.PoetryPluginProperties.unmarshal(spec)
     assert (
-        f"rm -rf {install_path / 'venv/bin'}" not in poetry_plugin.get_build_commands()
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        not in poetry_plugin.get_build_commands()
     )

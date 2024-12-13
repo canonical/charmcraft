@@ -24,6 +24,7 @@ import craft_application
 import craft_store
 from craft_cli import emit
 from craft_store import models, publisher
+from craft_store.errors import StoreServerError
 from overrides import override
 
 from charmcraft import const, env, errors, store
@@ -274,7 +275,22 @@ class StoreService(BaseStoreService):
                 store_lib["patch"] = patch_version
             store_libs.append(store_lib)
 
-        return self.anonymous_client.fetch_libraries_metadata(store_libs)
+        try:
+            return self.anonymous_client.fetch_libraries_metadata(store_libs)
+        except StoreServerError as exc:
+            lib_names = [lib.lib for lib in libraries]
+            # Type ignore here because error_list is supposed to have string keys, but
+            # for whatever reason the store returns a null code for this one.
+            # https://bugs.launchpad.net/snapstore-server/+bug/1925065
+            if exc.error_list[None]["message"] == (  # type: ignore[index]
+                "Items need to include 'library_id' or 'package_id'"
+            ):
+                raise errors.LibraryError(
+                    "One or more declared charm-libs could not be found in the store.",
+                    details="Declared charm-libs: " + ", ".join(lib_names),
+                    resolution="Check the charm and library names in charmcraft.yaml",
+                ) from exc
+            raise
 
     def get_libraries_metadata_by_name(
         self, libraries: Sequence[CharmLib]

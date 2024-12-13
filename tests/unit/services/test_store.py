@@ -20,8 +20,10 @@ from typing import cast
 from unittest import mock
 
 import craft_store
+import craft_store.errors
 import distro
 import pytest
+import requests
 from craft_cli.pytest_plugin import RecordingEmitter
 from craft_store import models
 from hypothesis import given, strategies
@@ -35,12 +37,12 @@ from tests import get_fake_revision
 
 
 @pytest.fixture
-def store(service_factory) -> services.StoreService:
+def store(service_factory, mock_store_anonymous_client) -> services.StoreService:
     store = services.StoreService(
         app=application.APP_METADATA, services=service_factory
     )
     store.client = mock.Mock(spec_set=client.Client)
-    store.anonymous_client = mock.Mock(spec_set=client.AnonymousClient)
+    store.anonymous_client = mock_store_anonymous_client
     return store
 
 
@@ -328,3 +330,17 @@ def test_fetch_libraries_metadata(monkeypatch, store, libs, expected_call):
     store.anonymous_client.fetch_libraries_metadata.assert_called_once_with(
         expected_call
     )
+
+
+def test_get_libraries_metadata_name_error(
+    monkeypatch, store: services.StoreService, mock_store_anonymous_client: mock.Mock
+) -> None:
+    bad_response = requests.Response()
+    bad_response.status_code = 400
+    bad_response._content = b'{"error-list": [{"code": null, "message": "Items need to include \'library_id\' or \'package_id\'"}]}'
+    mock_store_anonymous_client.fetch_libraries_metadata.side_effect = (
+        craft_store.errors.StoreServerError(bad_response)
+    )
+
+    with pytest.raises(errors.LibraryError, match="One or more declared"):
+        store.get_libraries_metadata([CharmLib(lib="boop.snoot", version="-1")])

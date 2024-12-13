@@ -1,0 +1,9 @@
+# configuration snippet for Flask application with a configuration
+
+config:
+  options:
+    greeting:
+      description: |
+        The greeting to be returned by the Flask application.
+      default: "Hello, world!"
+      type: string

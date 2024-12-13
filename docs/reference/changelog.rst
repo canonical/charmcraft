@@ -375,3 +375,4 @@ page.
 .. _3.1.2: https://github.com/canonical/charmcraft/releases/tag/3.1.2
 .. _3.2.0: https://github.com/canonical/charmcraft/releases/tag/3.2.0
 .. _3.2.1: https://github.com/canonical/charmcraft/releases/tag/3.2.1
+.. _3.2.2: https://github.com/canonical/charmcraft/releases/tag/3.2.2

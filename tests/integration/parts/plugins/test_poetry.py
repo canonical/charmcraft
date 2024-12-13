@@ -16,6 +16,7 @@
 """Integration tests for the Charmcraft-specific poetry plugin."""
 
 import pathlib
+import platform
 import subprocess
 import sys
 from typing import Any
@@ -59,16 +60,18 @@ def poetry_project(project_path: pathlib.Path) -> None:
             "poetry",
             "init",
             "--name=test-charm",
+            f"--python={platform.python_version()}",
             f"--directory={project_path}",
             "--no-interaction",
         ],
-        check=False,
+        check=True,
     )
     source_dir = project_path / "src"
     source_dir.mkdir()
     (source_dir / "charm.py").write_text("# Charm file")
 
 
+@pytest.mark.slow
 @pytest.mark.usefixtures("poetry_project")
 def test_poetry_plugin(
     build_plan,
@@ -88,3 +91,4 @@ def test_poetry_plugin(
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
+    assert not (stage_path / "venv" / "lib64").is_symlink()

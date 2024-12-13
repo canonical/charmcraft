@@ -45,7 +45,7 @@ execute: |
   # Create a track and release it to that, too.
   track_name=$(date +%s)
   charmcraft create-track $CHARM_DEFAULT_NAME $track_name
-  charmcraft release $CHARM_DEFAULT_NAME -r $uploaded_revno -c ${track_name}/edge
+  charmcraft release $CHARM_DEFAULT_NAME -r $uploaded_revno -c ${track_name}/edge/testing
 
   # Releases may have some delay in the craft store, so sleep for a bit before trying and try up to 10 times.
   sleep 10

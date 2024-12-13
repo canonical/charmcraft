@@ -214,8 +214,8 @@ class StoreService(BaseStoreService):
         :param tracks: Each item is a dictionary of the track request.
         :returns: A sequence of the created tracks as dictionaries.
         """
-        track_names = {track.get("name") for track in tracks}
         self._publisher.create_tracks(name, *tracks)
+        track_names = {track["name"] for track in tracks}
 
         return [
             track

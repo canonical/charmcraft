@@ -409,6 +409,7 @@ conflicts = [
 
 [dependency-groups]
 dev = [
+    "charmcraft[lint,types]",
     "coverage>=7.6.8",
     "freezegun>=1.5.1",
     "hypothesis>=6.122.1",

@@ -2429,11 +2429,9 @@ class CreateTrack(CharmcraftCommand):
             return
         data = [
             {
-                "Name": track["name"],
-                "Created at": utils.format_timestamp(
-                    datetime.datetime.fromisoformat(track["created-at"])
-                ),
-                "Automatic phasing percentage": track["automatic-phasing-percentage"],
+                "Name": track.name,
+                "Created at": track.created_at,
+                "Automatic phasing percentage": track.automatic_phasing_percentage,
             }
             for track in output_tracks
         ]

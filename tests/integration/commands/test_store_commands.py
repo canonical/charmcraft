@@ -16,10 +16,12 @@
 """Integration tests for store commands."""
 
 import argparse
+import datetime
 import sys
 from unittest import mock
 
 import pytest
+from craft_store import publisher
 
 from charmcraft import env
 from charmcraft.application.commands import FetchLibCommand
@@ -522,8 +524,34 @@ def test_create_track(emitter, service_factory, config):
         format="json",
     )
     mock_create_tracks = mock.Mock()
+    track = publisher.Track.unmarshal(
+        {
+            "name": "my-track",
+            "automatic-phasing-percentage": None,
+            "created-at": datetime.datetime.now(),
+        }
+    )
     mock_get_package_metadata = mock.Mock(
-        return_value={"tracks": [{"name": "latest"}, {"name": "my-track"}]}
+        return_value=publisher.RegisteredName.unmarshal(
+            {
+                "id": "mentalism",
+                "private": False,
+                "publisher": {"id": "EliBosnick"},
+                "status": "hungry",
+                "store": "charmhub",
+                "type": "charm",
+                "tracks": [
+                    track,
+                    publisher.Track.unmarshal(
+                        {
+                            "name": "latest",
+                            "automatic-phasing-percentage": None,
+                            "created-at": datetime.datetime.now(),
+                        }
+                    ),
+                ],
+            }
+        )
     )
 
     service_factory.store._publisher.create_tracks = mock_create_tracks

@@ -199,7 +199,7 @@ class StoreService(BaseStoreService):
             host=self._base_url,
             environment_auth=self._environment_auth,
         )
-        self._publisher = craft_store.publisher.PublisherGateway(
+        self._publisher = craft_store.PublisherGateway(
             base_url=self._base_url,
             namespace="charm",
             auth=self._auth,
@@ -207,7 +207,7 @@ class StoreService(BaseStoreService):
 
     def create_tracks(
         self, name: str, *tracks: publisher.CreateTrackRequest
-    ) -> Sequence[publisher.TrackMetadata]:
+    ) -> Sequence[publisher.Track]:
         """Create tracks in the store.
 
         :param name: The package name to which the tracks should be attached.
@@ -217,12 +217,10 @@ class StoreService(BaseStoreService):
         track_names = {track.get("name") for track in tracks}
         self._publisher.create_tracks(name, *tracks)
 
-        metadata = self._publisher.get_package_metadata(name)
-        # "or []" here because tracks could be None.
         return [
             track
-            for track in metadata["tracks"] or []
-            if track.get("name") in track_names
+            for track in self._publisher.get_package_metadata(name).tracks
+            if track.name in track_names
         ]
 
     def set_resource_revisions_architectures(

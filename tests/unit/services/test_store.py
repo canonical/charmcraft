@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for the store service."""
 
+import datetime
 import platform
 from typing import cast
 from unittest import mock
@@ -25,7 +26,7 @@ import distro
 import pytest
 import requests
 from craft_cli.pytest_plugin import RecordingEmitter
-from craft_store import models
+from craft_store import models, publisher
 from hypothesis import given, strategies
 
 import charmcraft
@@ -179,17 +180,30 @@ def test_create_tracks(reusable_store: StoreService):
         "name": "my-track",
         "automatic-phasing-percentage": None,
     }
-    mock_md.return_value = {
-        "tracks": [
-            user_track,
-            {
-                "name": "latest",
-                "automatic-phasing-percentage": None,
-            },
-        ]
-    }
+    created_at = {"created-at": datetime.datetime.now()}
+    return_track = publisher.Track.unmarshal(user_track | created_at)
+    mock_md.return_value = publisher.RegisteredName.unmarshal(
+        {
+            "id": "mentalism",
+            "private": False,
+            "publisher": {"id": "EliBosnick"},
+            "status": "hungry",
+            "store": "charmhub",
+            "type": "charm",
+            "tracks": [
+                return_track,
+                publisher.Track.unmarshal(
+                    {
+                        "name": "latest",
+                        "automatic-phasing-percentage": None,
+                    }
+                    | created_at
+                ),
+            ],
+        }
+    )
 
-    assert reusable_store.create_tracks("my-name", user_track) == [user_track]
+    assert reusable_store.create_tracks("my-name", user_track) == [return_track]
     mock_create.assert_called_once_with("my-name", user_track)
 
 

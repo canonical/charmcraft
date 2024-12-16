@@ -86,8 +86,8 @@ Core
 Plugins
 #######
 
-- New :ref:`craft_parts_poetry_plugin`
-- New :ref:`craft_parts_python_plugin`
+- New :ref:`craft_parts_poetry_plugin`.
+- New :ref:`craft_parts_python_plugin`.
 
 Reactive
 """"""""
@@ -104,8 +104,9 @@ Extensions
 Command line
 ============
 
-- The ``pack`` command now updates charm the libs in the project directory if they
-  don't meet the requirements in the ``charm-libs`` key of ``charmcraft.yaml``.
+- The ``pack`` command now updates the charm libaries in the project directory
+  if they don't meet the requirements in the ``charm-libs`` key of
+  ``charmcraft.yaml``.
 - New :ref:`ref_commands_create-track` command.
 
 Linter

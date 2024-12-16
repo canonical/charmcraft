@@ -1539,6 +1539,7 @@ class PublishLibCommand(CharmcraftCommand):
             analysis.append((lib_data, error_message))
 
         # work on the analysis result, showing messages to the user if not programmatic output
+        return_code = 0
         for lib_data, error_message in analysis:
             if error_message is None:
                 store.create_library_revision(
@@ -1555,6 +1556,7 @@ class PublishLibCommand(CharmcraftCommand):
                 )
             else:
                 message = error_message
+                return_code = 1
             if not parsed_args.format:
                 emit.message(message)
 
@@ -1576,6 +1578,8 @@ class PublishLibCommand(CharmcraftCommand):
                     datum["error_message"] = error_message
                 output_data.append(datum)
             emit.message(cli.format_content(output_data, parsed_args.format))
+
+        return return_code
 
 
 class FetchLibCommand(CharmcraftCommand):

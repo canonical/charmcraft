@@ -11,7 +11,7 @@ dependencies = [
     "craft-providers>=2.0.0",
     "craft-platforms~=0.3",
     "craft-providers>=2.0.0",
-    "craft-store>=3.0.0",
+    "craft-store>=3.1.0",
     "distro>=1.7.0",
     "docker>=7.0.0",
     "humanize>=2.6.0",
@@ -408,6 +408,7 @@ conflicts = [
 
 [dependency-groups]
 dev = [
+    "charmcraft[lint,types]",
     "coverage>=7.6.8",
     "freezegun>=1.5.1",
     "hypothesis>=6.122.1",

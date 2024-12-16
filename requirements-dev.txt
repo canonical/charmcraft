@@ -15,7 +15,7 @@ craft-grammar==2.0.1
 craft-parts==2.1.4
 craft-platforms==0.4.0
 craft-providers==2.0.4
-craft-store @ git+https://github.com/canonical/craft-store@work/charmcraft-1901
+craft-store==3.1.0
 cryptography==43.0.3
 dill==0.3.9
 distro==1.9.0

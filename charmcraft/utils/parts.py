@@ -28,7 +28,6 @@ def extend_python_build_environment(environment: dict[str, str]) -> dict[str, st
     :returns: the environment dictionary with charmcraft-specific additions.
     """
     return environment | {
-        "PIP_NO_BINARY": ":all:",  # Build from source
         "PARTS_PYTHON_VENV_ARGS": "--without-pip",
     }
 

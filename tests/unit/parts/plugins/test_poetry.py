@@ -33,7 +33,7 @@ def test_get_build_environment(
 ):
     env = poetry_plugin.get_build_environment()
 
-    assert env["PIP_NO_BINARY"] == ":all:"
+    assert env["PARTS_PYTHON_VENV_ARGS"] == "--without-pip"
 
 
 def test_get_venv_directory(
@@ -48,7 +48,7 @@ def test_get_pip_install_commands(poetry_plugin: plugins.PoetryPlugin):
     assert poetry_plugin._get_pip_install_commands(
         pathlib.Path("/my dir/reqs.txt")
     ) == [
-        "/python -m pip install --no-deps '--requirement=/my dir/reqs.txt'",
+        "/python -m pip install --no-deps --no-binary=:all:  '--requirement=/my dir/reqs.txt'",
         "/python -m pip check",
     ]
 

@@ -351,7 +351,7 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post118+gf98c8013"
+version = "3.2.2.post113+g28880d8c"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },
@@ -454,10 +454,10 @@ requires-dist = [
     { name = "craft-application", specifier = "~=4.2" },
     { name = "craft-cli", specifier = ">=2.3.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
-    { name = "craft-parts", specifier = ">=2.1.0" },
+    { name = "craft-parts", specifier = ">=2.2.0" },
     { name = "craft-platforms", specifier = "~=0.3" },
     { name = "craft-providers", specifier = ">=2.0.0" },
-    { name = "craft-store", git = "https://github.com/canonical/craft-store?rev=work%2Fcharmcraft-1901" },
+    { name = "craft-store", specifier = ">=3.1.0" },
     { name = "distro", specifier = ">=1.7.0" },
     { name = "docker", specifier = ">=7.0.0" },
     { name = "freezegun", marker = "extra == 'dev'" },
@@ -839,7 +839,7 @@ wheels = [
 
 [[package]]
 name = "craft-parts"
-version = "2.1.4"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "overrides" },
@@ -849,9 +849,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-unixsocket2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/93/bf658a4d73c17bfe8b26055ebc3d9aa06c090d3a94b9ed58ff595d3530d2/craft_parts-2.1.4.tar.gz", hash = "sha256:953e5a9e89055e80826d0d81d169a725e5105ecb68dbf4a6a3816e35e8900336", size = 341297 }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/d8/47a791e7a6403a1824f2031f24e61f4e29ea196a50cd6a276bd1f5f0f452/craft_parts-2.2.0.tar.gz", hash = "sha256:4cc8dc3a79350fa7e96c0e0135001a1648cf8e2a9c236725a346236e62e82195", size = 564972 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/e7/7f93ed5000a9cc8a72f03d92a2dcd137c336a77c0c5a17808a18af54767e/craft_parts-2.1.4-py3-none-any.whl", hash = "sha256:4a26bb0fc6abddbacced13827e02d037390450a6395366084d56938a67997806", size = 435192 },
+    { url = "https://files.pythonhosted.org/packages/74/da/66ab5c19c971d6062d200c8e384d25f5ae69c718459d144fea62a8b1ce44/craft_parts-2.2.0-py3-none-any.whl", hash = "sha256:bf3a779c9c2db0a4a72907a99bd603716b31b275f822c467ec05fe4aaff565ab", size = 449019 },
 ]
 
 [[package]]
@@ -886,8 +886,8 @@ wheels = [
 
 [[package]]
 name = "craft-store"
-version = "3.0.2.post25+g63657b2"
-source = { git = "https://github.com/canonical/craft-store?rev=work%2Fcharmcraft-1901#63657b29d89de3bf890a3cc2b03154e4b8b1ffc7" }
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
     { name = "httpx" },
@@ -900,6 +900,10 @@ dependencies = [
     { name = "requests" },
     { name = "requests-toolbelt" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1c/61/fcf3ba6904609d859e1fd6645de03c046d59d004a127a543e3fcd9d710d6/craft_store-3.1.0.tar.gz", hash = "sha256:aaa5a88e4ae0da036ab0b630a90db25907f6cc22f2824f3a75c6a3498c00effb", size = 196772 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/dc/9045bc95138ef57524ee348aac58882f3f206f3eb8bbee383a2f50e978b6/craft_store-3.1.0-py3-none-any.whl", hash = "sha256:3c712a49565f8b6d67327b5443059ab696d89e2807500c04bc6cf5358b3b64b0", size = 49172 },
 ]
 
 [[package]]

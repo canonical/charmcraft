@@ -45,7 +45,7 @@ def provider_service(
     fake_cache_dir = fake_path / "cache"
     fake_cache_dir.mkdir(parents=True)
 
-    service_factory.set_kwargs(
+    service_factory.update_kwargs(
         "provider",
         work_dir=fake_path,
         build_plan=default_build_plan,

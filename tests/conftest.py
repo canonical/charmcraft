@@ -106,12 +106,12 @@ def service_factory(
     services.register_services()
     factory = craft_application.ServiceFactory(app=APP_METADATA)
 
-    factory.set_kwargs(
+    factory.update_kwargs(
         "package",
         project_dir=fake_project_dir,
         build_plan=default_build_plan,
     )
-    factory.set_kwargs(
+    factory.update_kwargs(
         "lifecycle",
         work_dir=pathlib.Path("/project"),
         cache_dir=pathlib.Path("/cache"),

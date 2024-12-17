@@ -64,7 +64,7 @@ def service_factory(
     factory = craft_application.ServiceFactory(app=application.APP_METADATA)
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
     factory.project = charm_project
-    factory.set_kwargs(
+    factory.update_kwargs(
         "lifecycle",
         work_dir=new_path,
         build_plan=default_build_plan,

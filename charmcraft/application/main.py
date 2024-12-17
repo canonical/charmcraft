@@ -112,7 +112,7 @@ class Charmcraft(craft_application.Application):
 
     def _configure_services(self, provider_name: str | None) -> None:
         super()._configure_services(provider_name)
-        self.services.set_kwargs(
+        self.services.update_kwargs(
             "package",
             project_dir=self.project_dir,
             build_plan=self._build_plan,

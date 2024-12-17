@@ -51,7 +51,7 @@ def package_service(fake_path, simple_charm, service_factory, default_build_plan
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)
 
-    service_factory.set_kwargs(
+    service_factory.update_kwargs(
         "lifecycle",
         work_dir=fake_path,
         cache_dir=fake_path / "cache",

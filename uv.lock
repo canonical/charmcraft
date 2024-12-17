@@ -351,7 +351,7 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post113+g28880d8c"
+version = "3.2.2.post116+g0c1b36b9"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },
@@ -451,7 +451,7 @@ requires-dist = [
     { name = "canonical-sphinx", extras = ["full"], marker = "extra == 'docs'", specifier = "~=0.2" },
     { name = "codespell", extras = ["toml"], marker = "extra == 'lint'" },
     { name = "coverage", marker = "extra == 'dev'" },
-    { name = "craft-application", specifier = "~=4.2" },
+    { name = "craft-application", specifier = "~=4.6" },
     { name = "craft-cli", specifier = ">=2.3.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
     { name = "craft-parts", specifier = ">=2.2.0" },

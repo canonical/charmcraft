@@ -74,6 +74,7 @@ docs/_build/
 # Auto-generated command reference
 /docs/reference/commands/
 /docs/reference/_autosummary/
+/docs/common/craft-parts
 
 # PyBuilder
 target/
@@ -145,3 +146,6 @@ dmypy.json
 
 # Spread files
 .spread-reuse*.yaml
+
+# `snapcraft try` can be very useful
+/prime/

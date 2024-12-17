@@ -23,7 +23,8 @@ from collections.abc import Collection, Mapping, Sequence
 import craft_application
 import craft_store
 from craft_cli import emit
-from craft_store import models
+from craft_store import models, publisher
+from craft_store.errors import StoreServerError
 from overrides import override
 
 from charmcraft import const, env, errors, store
@@ -193,6 +194,34 @@ class StoreService(BaseStoreService):
             api_base_url=self._base_url,
             storage_base_url=self._storage_url,
         )
+        self._auth = craft_store.Auth(
+            application_name=self._app.name,
+            host=self._base_url,
+            environment_auth=self._environment_auth,
+        )
+        self._publisher = craft_store.PublisherGateway(
+            base_url=self._base_url,
+            namespace="charm",
+            auth=self._auth,
+        )
+
+    def create_tracks(
+        self, name: str, *tracks: publisher.CreateTrackRequest
+    ) -> Sequence[publisher.Track]:
+        """Create tracks in the store.
+
+        :param name: The package name to which the tracks should be attached.
+        :param tracks: Each item is a dictionary of the track request.
+        :returns: A sequence of the created tracks as dictionaries.
+        """
+        self._publisher.create_tracks(name, *tracks)
+        track_names = {track["name"] for track in tracks}
+
+        return [
+            track
+            for track in self._publisher.get_package_metadata(name).tracks
+            if track.name in track_names
+        ]
 
     def set_resource_revisions_architectures(
         self, name: str, resource_name: str, updates: dict[int, list[str]]
@@ -244,7 +273,22 @@ class StoreService(BaseStoreService):
                 store_lib["patch"] = patch_version
             store_libs.append(store_lib)
 
-        return self.anonymous_client.fetch_libraries_metadata(store_libs)
+        try:
+            return self.anonymous_client.fetch_libraries_metadata(store_libs)
+        except StoreServerError as exc:
+            lib_names = [lib.lib for lib in libraries]
+            # Type ignore here because error_list is supposed to have string keys, but
+            # for whatever reason the store returns a null code for this one.
+            # https://bugs.launchpad.net/snapstore-server/+bug/1925065
+            if exc.error_list[None]["message"] == (  # type: ignore[index]
+                "Items need to include 'library_id' or 'package_id'"
+            ):
+                raise errors.LibraryError(
+                    "One or more declared charm-libs could not be found in the store.",
+                    details="Declared charm-libs: " + ", ".join(lib_names),
+                    resolution="Check the charm and library names in charmcraft.yaml",
+                ) from exc
+            raise
 
     def get_libraries_metadata_by_name(
         self, libraries: Sequence[CharmLib]

@@ -2396,7 +2396,7 @@ class CreateTrack(CharmcraftCommand):
     )
     format_option = True
 
-    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
+    def fill_parser(self, parser) -> None:
         """Add own parameters to the general parser."""
         super().fill_parser(parser=parser)
         parser.add_argument(

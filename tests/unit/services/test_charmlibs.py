@@ -122,7 +122,7 @@ def test_get_local_version(
             charm_name, lib_name, expected[0]
         )
         (fake_project_dir / lib_path).parent.mkdir(parents=True)
-        (fake_project_dir / lib_path).write_text(lib_contents)
+        (fake_project_dir / lib_path).write_text(str(lib_contents))
 
     assert (
         service.get_local_version(charm_name=charm_name, lib_name=lib_name) == expected

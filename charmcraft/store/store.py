@@ -86,7 +86,7 @@ def _build_errors(item):
 
 def _build_revision(item: dict[str, Any]) -> Revision:
     """Build a Revision from a response item."""
-    bases = [Base(**base) for base in item["bases"] if base is not None]
+    bases = [(None if base is None else Base(**base)) for base in item["bases"]]
     return Revision(
         revision=item["revision"],
         version=item["version"],
@@ -401,7 +401,7 @@ class Store:
                 # `datetime.datetime.fromisoformat` is available only since Py3.7
                 expires_at = parser.parse(expires_at)
             resources = [_build_resource(r) for r in item["resources"]]
-            base = Base(**item["base"])
+            base = None if item["base"] is None else Base(**item["base"])
             channel_map.append(
                 Release(
                     revision=item["revision"],

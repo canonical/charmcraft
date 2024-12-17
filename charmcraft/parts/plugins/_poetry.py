@@ -16,6 +16,7 @@
 """Charmcraft-specific poetry plugin."""
 
 import pathlib
+import shlex
 from pathlib import Path
 
 from craft_parts.plugins import poetry_plugin
@@ -55,10 +56,11 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
         :returns: A list of strings forming the install script.
         """
         pip = self._get_pip()
+        pip_extra_args = shlex.join(self._options.poetry_pip_extra_args)
         return [
             # These steps need to be separate because poetry export defaults to including
             # hashes, which don't work with installing from a directory.
-            f"{pip} install --no-deps '--requirement={requirements_path}'",
+            f"{pip} install --no-deps --no-binary=:all: {pip_extra_args} '--requirement={requirements_path}'",
             # Check that the virtualenv is consistent.
             f"{pip} check",
         ]

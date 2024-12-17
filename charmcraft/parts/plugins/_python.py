@@ -38,7 +38,9 @@ class PythonPlugin(python_plugin.PythonPlugin):
 
     @override
     def get_build_environment(self) -> dict[str, str]:
-        return utils.extend_python_build_environment(super().get_build_environment())
+        return {
+            "PIP_NO_BINARY": ":all:",
+        } | utils.extend_python_build_environment(super().get_build_environment())
 
     @override
     def _get_venv_directory(self) -> Path:

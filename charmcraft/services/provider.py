@@ -124,6 +124,13 @@ class ProviderService(services.ProviderService):
             **kwargs,  # type: ignore[arg-type]
         ) as instance:
             try:
+                # Use /root/.cache even if we're in the snap.
+                instance.execute_run(
+                    ["rm", "-rf", "/root/snap/charmcraft/common/cache"]
+                )
+                instance.execute_run(
+                    ["ln", "-s", "/root/.cache", "/root/snap/charmcraft/common/cache"]
+                )
                 yield instance
             finally:
                 if fcntl is not None and self._lock:

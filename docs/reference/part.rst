@@ -1,7 +1,7 @@
-.. _parts:
+.. _part:
 
-Parts
-*****
+Part
+****
 
 Parts, powered by :external+craft-parts:ref:`craft-parts <reference>`, power the build
 system that charmcraft uses.
@@ -12,3 +12,4 @@ system that charmcraft uses.
    /common/craft-parts/reference/part_properties
    /common/craft-parts/reference/parts_steps
    /common/craft-parts/reference/step_execution_environment
+   plugins/index

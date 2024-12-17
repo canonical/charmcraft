@@ -12,6 +12,5 @@ data can be found in the `Charm SDK docs <https://juju.is/docs/sdk/reference>`_.
 
     commands
     models/index
-    parts
-    plugins/index
+    part
     changelog

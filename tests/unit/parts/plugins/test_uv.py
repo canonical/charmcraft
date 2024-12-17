@@ -14,7 +14,7 @@ pytestmark = [
 def test_get_build_environment(uv_plugin: plugins.UvPlugin):
     env = uv_plugin.get_build_environment()
 
-    assert env["PIP_NO_BINARY"] == ":all:"
+    assert env["PARTS_PYTHON_VENV_ARGS"] == "--without-pip"
 
 
 def test_get_venv_directory(uv_plugin: plugins.UvPlugin, install_path: Path):

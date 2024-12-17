@@ -71,3 +71,11 @@ def test_get_package_install_commands(
     pytest_check.equal(
         uv_plugin._get_package_install_commands(), [*default_commands, copy_lib_cmd]
     )
+
+
+def test_do_not_install_project(uv_plugin: plugins.UvPlugin) -> None:
+    for command in uv_plugin._get_package_install_commands():
+        if command.startswith("uv sync") and "--no-install-project" in command:
+            break
+    else:
+        pytest.fail(reason="Charms should not be installed as projects.")

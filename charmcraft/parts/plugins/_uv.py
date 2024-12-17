@@ -38,8 +38,15 @@ class UvPlugin(uv_plugin.UvPlugin):
 
     @override
     def _get_package_install_commands(self) -> list[str]:
+        # Find the `uv sync` command and modify it to not install the project
+        orig_cmds = super()._get_package_install_commands()
+        for idx, cmd in enumerate(orig_cmds):
+            if cmd.startswith("uv sync"):
+                orig_cmds[idx] += " --no-install-project"
+                break
+
         return [
-            *super()._get_package_install_commands(),
+            *orig_cmds,
             *utils.get_charm_copy_commands(
                 self._part_info.part_build_dir, self._part_info.part_install_dir
             ),

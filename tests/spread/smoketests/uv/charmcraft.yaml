@@ -1,0 +1,20 @@
+type: charm
+name: test-charm
+summary: test-charm
+description: test-charm
+
+base: ubuntu@24.04
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+
+parts:
+#   uv-deps:
+#     plugin: nil
+#     override-build: |
+#       curl -LsSf https://astral.sh/uv/install.sh | sh
+  my-part:
+    plugin: uv
+    source: .
+    build-snaps: [astral-uv]

@@ -44,22 +44,19 @@ from charmcraft.models.project import (
 )
 
 if TYPE_CHECKING:
-    from charmcraft.services import CharmcraftServiceFactory
-else:
-    CharmcraftServiceFactory = "CharmcraftServiceFactory"
+    from .analysis import AnalysisService
 
 
 class PackageService(services.PackageService):
     """Business logic for creating packages."""
 
     _project: models.CharmcraftProject  # type: ignore[assignment]
-    _services: CharmcraftServiceFactory
 
     def __init__(
         self,
         app: craft_application.AppMetadata,
         project: CharmcraftProject,
-        services: CharmcraftServiceFactory,
+        services: craft_application.ServiceFactory,
         *,
         project_dir: pathlib.Path,
         build_plan: list[craft_application.models.BuildInfo],
@@ -245,7 +242,8 @@ class PackageService(services.PackageService):
                 }
             else:
                 ignore_checkers = set()
-            lint_results = self._services.analysis.lint_directory(
+            analysis = cast("AnalysisService", self._services.analysis)
+            lint_results = analysis.lint_directory(
                 self._services.lifecycle.prime_dir, ignore=ignore_checkers
             )
             manifest = self.get_manifest(lint_results)

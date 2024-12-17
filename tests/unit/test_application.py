@@ -24,7 +24,7 @@ import pyfakefs.fake_filesystem
 import pytest
 from craft_application import util
 
-from charmcraft import application, errors, services
+from charmcraft import application, errors
 from charmcraft.application.main import PRIME_BEHAVIOUR_CHANGE_MESSAGE
 
 
@@ -247,7 +247,7 @@ def test_deprecated_prime_warning(
 )
 def test_deprecated_prime_warning_not_raised(
     emitter,
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     base_charm: dict[str, str],
     parts: dict[str, dict[str, str]],
 ):
@@ -272,7 +272,7 @@ def test_deprecated_prime_warning_not_raised(
     ],
 )
 def test_deprecated_prime_warning_not_raised_in_managed_mode(
-    monkeypatch, emitter, service_factory: services.CharmcraftServiceFactory, charm_yaml
+    monkeypatch, emitter, service_factory: craft_application.ServiceFactory, charm_yaml
 ):
     monkeypatch.setenv("CRAFT_MANAGED_MODE", "1")
 
@@ -291,7 +291,7 @@ def test_deprecated_prime_warning_not_raised_in_managed_mode(
 def test_expand_environment_multi_arch(
     monkeypatch: pytest.MonkeyPatch,
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     build_for,
 ) -> None:
     mock_parent_expand_environment = mock.Mock()

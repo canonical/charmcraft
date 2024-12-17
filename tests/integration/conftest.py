@@ -19,6 +19,7 @@ import pathlib
 from typing import Any
 from unittest import mock
 
+import craft_application
 import craft_platforms
 import craft_store
 import distro
@@ -59,7 +60,8 @@ def charm_project(
 def service_factory(
     new_path: pathlib.Path, charm_project, default_build_plan, project_path
 ):
-    factory = services.CharmcraftServiceFactory(app=application.APP_METADATA)
+    services.register_services()
+    factory = craft_application.ServiceFactory(app=application.APP_METADATA)
     factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
     factory.project = charm_project
     factory.set_kwargs(

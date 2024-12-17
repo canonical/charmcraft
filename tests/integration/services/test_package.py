@@ -23,14 +23,15 @@ import pytest
 import pytest_check
 
 import charmcraft
-from charmcraft import const, models, services
+from charmcraft import const, models
 from charmcraft.application.main import APP_METADATA
+from charmcraft.services.package import PackageService
 
 
 @pytest.fixture
 def package_service(new_path: pathlib.Path, service_factory, default_build_plan):
     fake_project_dir = new_path
-    svc = services.PackageService(
+    svc = PackageService(
         app=APP_METADATA,
         project=service_factory.project,
         services=service_factory,

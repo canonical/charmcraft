@@ -17,13 +17,14 @@
 
 import pytest
 
-from charmcraft import models, services
+from charmcraft import models
+from charmcraft.services.store import StoreService
 
 pytestmark = [pytest.mark.slow]
 
 
 @pytest.fixture
-def store_service(service_factory):
+def store_service(service_factory) -> StoreService:
     return service_factory.store
 
 
@@ -34,7 +35,7 @@ def store_service(service_factory):
         [models.CharmLib(lib="observability-libs.cert_handler", version="1.8")],
     ],
 )
-def test_get_libraries(store_service: services.StoreService, libraries):
+def test_get_libraries(store_service: StoreService, libraries):
     libraries_response = store_service.get_libraries_metadata(libraries)
     assert len(libraries_response) == len(libraries)
     for lib in libraries_response:

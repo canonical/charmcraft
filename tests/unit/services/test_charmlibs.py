@@ -19,7 +19,8 @@ import pathlib
 
 import pytest
 
-from charmcraft import services, utils
+from charmcraft import utils
+from charmcraft.services.charmlibs import CharmLibsService
 from charmcraft.store.models import Library
 
 
@@ -50,7 +51,7 @@ def patch(request) -> int | None:
 
 def test_is_downloaded_no_file(
     fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     api: int,
@@ -64,7 +65,7 @@ def test_is_downloaded_no_file(
 @pytest.mark.parametrize(("patch", "expected"), [(None, True), (1, True), (2, False)])
 def test_is_downloaded_with_file(
     fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     patch: int | None,
@@ -111,7 +112,7 @@ def test_is_downloaded_with_file(
 )
 def test_get_local_version(
     fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     lib_contents: str | None,
@@ -136,7 +137,7 @@ def test_get_local_version(
     ],
 )
 def test_write_success(
-    fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
+    fake_project_dir: pathlib.Path, service: CharmLibsService, lib: Library
 ):
     service.write(lib)
 
@@ -154,7 +155,7 @@ def test_write_success(
     ],
 )
 def test_write_error(
-    fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
+    fake_project_dir: pathlib.Path, service: CharmLibsService, lib: Library
 ):
     with pytest.raises(ValueError, match="Library has no content"):
         service.write(lib)

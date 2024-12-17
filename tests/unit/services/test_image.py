@@ -25,6 +25,7 @@ import docker.models.images
 import pytest
 
 from charmcraft import application, const, services, utils
+from charmcraft.services.image import ImageService
 
 
 @pytest.fixture
@@ -39,10 +40,8 @@ def mock_skopeo(fake_process) -> mock.Mock:
 
 
 @pytest.fixture
-def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageService:
-    service = services.ImageService(
-        app=application.APP_METADATA, services=service_factory
-    )
+def image_service(service_factory, mock_skopeo, mock_docker) -> ImageService:
+    service = ImageService(app=application.APP_METADATA, services=service_factory)
     service._skopeo = mock_skopeo
     service._docker = mock_docker
     return service
@@ -74,7 +73,7 @@ def image_service(service_factory, mock_skopeo, mock_docker) -> services.ImageSe
     ],
 )
 def test_get_name_from_url(url: str, name: str):
-    assert services.ImageService.get_name_from_url(url) == name
+    assert ImageService.get_name_from_url(url) == name
 
 
 @pytest.mark.parametrize(
@@ -91,12 +90,10 @@ def test_get_name_from_url(url: str, name: str):
     ],
 )
 def test_convert_go_acrh_to_charm_arch(go_arch: str, charm_arch: const.CharmArch):
-    assert services.ImageService.convert_go_arch_to_charm_arch(go_arch) == charm_arch
+    assert ImageService.convert_go_arch_to_charm_arch(go_arch) == charm_arch
 
 
-def test_get_maybe_id_from_docker_success(
-    image_service: services.ImageService, mock_docker
-):
+def test_get_maybe_id_from_docker_success(image_service: ImageService, mock_docker):
     expected = "sha256:some-sha-hash"
     mock_docker.images.get.return_value = docker.models.images.Image(
         attrs={"Id": expected}
@@ -108,15 +105,13 @@ def test_get_maybe_id_from_docker_success(
     assert result == expected
 
 
-def test_get_maybe_id_from_docker_failure(
-    image_service: services.ImageService, mock_docker
-):
+def test_get_maybe_id_from_docker_failure(image_service: ImageService, mock_docker):
     mock_docker.images.get.side_effect = docker.errors.ImageNotFound("womp womp")
 
     assert image_service.get_maybe_id_from_docker("some-image") is None
 
 
-def test_get_maybe_id_from_docker_no_docker(image_service: services.ImageService):
+def test_get_maybe_id_from_docker_no_docker(image_service: ImageService):
     image_service._docker = None
 
     assert image_service.get_maybe_id_from_docker("some-image") is None
@@ -126,7 +121,7 @@ def test_get_maybe_id_from_docker_no_docker(image_service: services.ImageService
 @pytest.mark.parametrize("architecture", const.CharmArch)
 def test_inspect_single_arch(
     fake_process,
-    image_service: services.ImageService,
+    image_service: ImageService,
     mock_skopeo,
     image: str,
     architecture,
@@ -151,7 +146,7 @@ def test_inspect_single_arch(
 @pytest.mark.parametrize("architectures", itertools.product(const.CharmArch, repeat=2))
 def test_inspect_two_arch(
     fake_process,
-    image_service: services.ImageService,
+    image_service: ImageService,
     mock_skopeo,
     image: str,
     architectures,

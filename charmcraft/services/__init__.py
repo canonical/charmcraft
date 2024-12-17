@@ -17,53 +17,28 @@
 
 from __future__ import annotations
 
-import dataclasses
-from typing import TYPE_CHECKING
-from charmcraft.services.remotebuild import RemoteBuildService
-
 from craft_application import ServiceFactory
 
-from .analysis import AnalysisService
-from .charmlibs import CharmLibsService
-from .image import ImageService
-from .lifecycle import LifecycleService
-from .package import PackageService
-from .provider import ProviderService
-from .store import StoreService
-from .. import models
 
-
-@dataclasses.dataclass
-class CharmcraftServiceFactory(ServiceFactory):
-    """Factory class for lazy-loading Charmcraft services."""
-
-    PackageClass: type[PackageService] = PackageService
-    LifecycleClass: type[LifecycleService] = LifecycleService
-    ProviderClass: type[ProviderService] = ProviderService
-    AnalysisClass: type[AnalysisService] = AnalysisService
-    CharmLibsClass: type[CharmLibsService] = CharmLibsService
-    StoreClass: type[StoreService] = StoreService
-    RemoteBuildClass: type[RemoteBuildService] = RemoteBuildService
-    ImageClass: type[ImageService] = ImageService
-
-    if TYPE_CHECKING:
-        # Cheeky hack that lets static type checkers report the correct types.
-        # Any apps that add their own services should do this too.
-        analysis: AnalysisService = None  # type: ignore[assignment]
-        charm_libs: CharmLibsService = None  # type: ignore[assignment]
-        image: ImageService = None  # type: ignore[assignment]
-        lifecycle: LifecycleService = None  # type: ignore[assignment]
-        package: PackageService = None  # type: ignore[assignment]
-        project: models.CharmcraftProject = None  # type: ignore[assignment]
-        provider: ProviderService = None  # type: ignore[assignment]
-        store: StoreService = None  # type: ignore[assignment]
-
-
-__all__ = [
-    "AnalysisService",
-    "ImageService",
-    "LifecycleService",
-    "PackageService",
-    "ProviderService",
-    "CharmcraftServiceFactory",
-]
+def register_services() -> None:
+    """Register charmcraft-specific services."""
+    ServiceFactory.register(
+        "package", "PackageService", module="charmcraft.services.package"
+    )
+    ServiceFactory.register(
+        "lifecycle", "LifecycleService", module="charmcraft.services.lifecycle"
+    )
+    ServiceFactory.register(
+        "provider", "ProviderService", module="charmcraft.services.provider"
+    )
+    ServiceFactory.register(
+        "analysis", "AnalysisService", module="charmcraft.services.analysis"
+    )
+    ServiceFactory.register(
+        "charm_libs", "CharmLibsService", module="charmcraft.services.charmlibs"
+    )
+    ServiceFactory.register("store", "StoreService", module="charmcraft.services.store")
+    ServiceFactory.register(
+        "remote_build", "RemoteBuildService", module="charmcraft.services.remotebuild"
+    )
+    ServiceFactory.register("image", "ImageService", module="charmcraft.services.image")

@@ -31,7 +31,7 @@ import typing
 import zipfile
 from collections.abc import Collection
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import yaml
 from craft_application import util
@@ -54,6 +54,10 @@ from charmcraft.utils import cli
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
+
+    from charmcraft.services.image import ImageService
+    from charmcraft.services.package import PackageService
+    from charmcraft.services.store import StoreService
 
 
 # some types
@@ -204,17 +208,17 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
+        store = cast("StoreService", self._services.store)
+
         if parsed_args.export:
-            credentials = self._services.store.get_credentials(
-                packages=packages, **kwargs
-            )
+            credentials = store.get_credentials(packages=packages, **kwargs)
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            store.login(packages=packages, **kwargs)
+            username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -239,7 +243,8 @@ class LogoutCommand(CharmcraftCommand):
     def run(self, parsed_args):
         """Run the command."""
         try:
-            self._services.store.logout()
+            store = cast("StoreService", self._services.store)
+            store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -262,7 +267,8 @@ class WhoamiCommand(CharmcraftCommand):
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
         try:
-            macaroon_info = self._services.store.client.whoami()
+            store = cast("StoreService", self._services.store)
+            macaroon_info = store.client.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -933,7 +939,8 @@ class PromoteBundleCommand(CharmcraftCommand):
 
         # Load bundle
         # TODO: When this goes into the StoreService, use the service's own project_path
-        bundle_path = self._services.package.project_dir / "bundle.yaml"
+        package_service = cast("PackageService", self._services.package)
+        bundle_path = package_service.project_dir / "bundle.yaml"
         bundle_config = utils.load_yaml(bundle_path)
         if bundle_config is None:
             raise CraftError(
@@ -1043,7 +1050,7 @@ class PromoteBundleCommand(CharmcraftCommand):
         # Export a temporary bundle file with the charms in the target channel
         with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
             bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
-            shutil.copytree(self._services.package.project_dir, bundle_dir_path)
+            shutil.copytree(package_service.project_dir, bundle_dir_path)
             bundle_path = bundle_dir_path / "bundle.yaml"
             with bundle_path.open("w+") as bundle_file:
                 yaml.dump(bundle_config, bundle_file)
@@ -1763,8 +1770,8 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
-        store = self._services.store
-        charm_libs = self._services.project.charm_libs
+        store = cast("StoreService", self._services.store)
+        charm_libs = cast(project.CharmcraftProject, self._services.project).charm_libs
         if not charm_libs:
             raise errors.LibraryError(
                 message="No dependent libraries declared in charmcraft.yaml.",
@@ -2065,7 +2072,7 @@ class UploadResourceCommand(CharmcraftCommand):
         elif parsed_args.image:
             emit.progress("Getting image")
             emit.debug("Trying to get image from Docker")
-            image_service = self._services.image
+            image_service = cast("ImageService", self._services.image)
             # Check Docker first for backwards compatibility - prefer to get from
             # Docker than from a local path if Docker contains the image.
             if digest := image_service.get_maybe_id_from_docker(parsed_args.image):
@@ -2232,7 +2239,7 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
-        store = self._services.store
+        store = cast("StoreService", self._services.store)
 
         updates = store.set_resource_revisions_architectures(
             name=parsed_args.charm_name,
@@ -2419,7 +2426,8 @@ class CreateTrack(CharmcraftCommand):
             {"name": track, "automatic-phasing-percentage": pct}
             for track in parsed_args.track
         ]
-        output_tracks = self._services.store.create_tracks(
+        store = cast("StoreService", self._services.store)
+        output_tracks = store.create_tracks(
             parsed_args.name,
             *tracks,
         )

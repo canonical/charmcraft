@@ -30,7 +30,7 @@ from craft_store import models, publisher
 from hypothesis import given, strategies
 
 import charmcraft
-from charmcraft import application, errors, services
+from charmcraft import application, errors
 from charmcraft.models.project import CharmLib
 from charmcraft.services.store import StoreService
 from charmcraft.store import client
@@ -38,10 +38,8 @@ from tests import get_fake_revision
 
 
 @pytest.fixture
-def store(service_factory, mock_store_anonymous_client) -> services.StoreService:
-    store = services.StoreService(
-        app=application.APP_METADATA, services=service_factory
-    )
+def store(service_factory, mock_store_anonymous_client) -> StoreService:
+    store = StoreService(app=application.APP_METADATA, services=service_factory)
     store.client = mock.Mock(spec_set=client.Client)
     store.anonymous_client = mock_store_anonymous_client
     return store
@@ -49,7 +47,7 @@ def store(service_factory, mock_store_anonymous_client) -> services.StoreService
 
 @pytest.fixture(scope="module")
 def reusable_store():
-    store = services.StoreService(app=application.APP_METADATA, services=None)
+    store = StoreService(app=application.APP_METADATA, services=None)
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
     store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     return store
@@ -347,7 +345,7 @@ def test_fetch_libraries_metadata(monkeypatch, store, libs, expected_call):
 
 
 def test_get_libraries_metadata_name_error(
-    monkeypatch, store: services.StoreService, mock_store_anonymous_client: mock.Mock
+    monkeypatch, store: StoreService, mock_store_anonymous_client: mock.Mock
 ) -> None:
     bad_response = requests.Response()
     bad_response.status_code = 400

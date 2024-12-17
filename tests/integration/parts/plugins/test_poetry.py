@@ -21,11 +21,11 @@ import subprocess
 import sys
 from typing import Any
 
+import craft_application
 import distro
 import pytest
 from craft_application import util
 
-from charmcraft import services
 from charmcraft.models import project
 
 pytestmark = [
@@ -75,7 +75,7 @@ def poetry_project(project_path: pathlib.Path) -> None:
 @pytest.mark.usefixtures("poetry_project")
 def test_poetry_plugin(
     build_plan,
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     tmp_path: pathlib.Path,
 ):
     install_path = tmp_path / "parts" / "my-charm" / "install"

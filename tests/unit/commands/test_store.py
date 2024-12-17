@@ -30,9 +30,16 @@ from craft_store import models
 from charmcraft import errors, store
 from charmcraft.application import commands
 from charmcraft.application.commands import SetResourceArchitecturesCommand
-from charmcraft.application.commands.store import FetchLibs, LoginCommand
+from charmcraft.application.commands import store as store_commands
+from charmcraft.application.commands.store import (
+    FetchLibs,
+    LoginCommand,
+    PublishLibCommand,
+)
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
+from charmcraft.services import CharmcraftServiceFactory
+from charmcraft.store.models import Library
 from charmcraft.utils import cli
 from tests import get_fake_revision
 
@@ -117,6 +124,40 @@ def test_set_resource_architectures_output_json(emitter, updates, expected):
     SetResourceArchitecturesCommand.write_output(cli.OutputFormat.JSON, updates)
 
     emitter.assert_json_output(expected)
+
+
+def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
+    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
+    mock_service_factory.project.name = "test-project"
+    lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
+    lib_path.parent.mkdir(parents=True)
+    lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
+
+    mock_store = mock.Mock()
+    mock_store.return_value.get_libraries_tips.return_value = {
+        ("blah", 0): Library(
+            charm_name="test-project",
+            lib_id="blah",
+            lib_name="my_lib",
+            api=0,
+            patch=2,
+            content=None,
+            content_hash="",
+        ),
+    }
+    monkeypatch.setattr(store_commands, "Store", mock_store)
+
+    cmd = PublishLibCommand({"app": APP_METADATA, "services": mock_service_factory})
+
+    assert (
+        cmd.run(
+            argparse.Namespace(
+                library="charms.test-project.v0.my_lib",
+                format=False,
+            )
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize(

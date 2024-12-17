@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for the store service."""
 
+import datetime
 import platform
 from typing import cast
 from unittest import mock
@@ -25,12 +26,13 @@ import distro
 import pytest
 import requests
 from craft_cli.pytest_plugin import RecordingEmitter
-from craft_store import models
+from craft_store import models, publisher
 from hypothesis import given, strategies
 
 import charmcraft
 from charmcraft import application, errors, services
 from charmcraft.models.project import CharmLib
+from charmcraft.services.store import StoreService
 from charmcraft.store import client
 from tests import get_fake_revision
 
@@ -49,6 +51,7 @@ def store(service_factory, mock_store_anonymous_client) -> services.StoreService
 def reusable_store():
     store = services.StoreService(app=application.APP_METADATA, services=None)
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     return store
 
 
@@ -168,6 +171,40 @@ def test_logout(store):
     store.logout()
 
     client.logout.assert_called_once_with()
+
+
+def test_create_tracks(reusable_store: StoreService):
+    mock_create = cast(mock.Mock, reusable_store._publisher.create_tracks)
+    mock_md = cast(mock.Mock, reusable_store._publisher.get_package_metadata)
+    user_track = {
+        "name": "my-track",
+        "automatic-phasing-percentage": None,
+    }
+    created_at = {"created-at": datetime.datetime.now()}
+    return_track = publisher.Track.unmarshal(user_track | created_at)
+    mock_md.return_value = publisher.RegisteredName.unmarshal(
+        {
+            "id": "mentalism",
+            "private": False,
+            "publisher": {"id": "EliBosnick"},
+            "status": "hungry",
+            "store": "charmhub",
+            "type": "charm",
+            "tracks": [
+                return_track,
+                publisher.Track.unmarshal(
+                    {
+                        "name": "latest",
+                        "automatic-phasing-percentage": None,
+                    }
+                    | created_at
+                ),
+            ],
+        }
+    )
+
+    assert reusable_store.create_tracks("my-name", user_track) == [return_track]
+    mock_create.assert_called_once_with("my-name", user_track)
 
 
 @pytest.mark.parametrize(

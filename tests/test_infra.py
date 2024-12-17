@@ -15,33 +15,47 @@
 # For further info, check https://github.com/canonical/charmcraft
 
 import itertools
-import os
-import pathlib
 import re
+from pathlib import Path
 
 import pytest
 
+# A list of bash file globs to not check for
+IGNORE_GLOBS: set[str] = {"tests/spread/**/*.py"}
 
-def get_python_filepaths(*, roots=None, python_paths=None):
+
+def get_python_filepaths() -> list[str]:
     """Helper to retrieve paths of Python files."""
-    if python_paths is None:
-        python_paths = ["setup.py"]
-    if roots is None:
-        roots = ["charmcraft", "tests"]
-    for root in roots:
-        for dirpath, _, filenames in os.walk(root):
-            for filename in filenames:
-                if filename.endswith(".py"):
-                    python_paths.append(os.path.join(dirpath, filename))
-    return python_paths
+    # list of directories to scan
+    source_dirs = ["charmcraft", "tests"]
+    # list of source directories - always return setup.py to be safe
+    source_files = ["setup.py"]
+
+    # Parse the globs into their matching files
+    cwd = Path.cwd()
+    ignore_files: list[Path] = []
+    for glob in IGNORE_GLOBS:
+        ignore_files.extend(cwd.glob(glob))
+
+    for source_dir in source_dirs:
+        # Loop over the source_dir recursively
+        # This is done instead of os.walk() to take advantage of Path.resolve()
+        for file in Path(source_dir).resolve().glob("**/*"):
+            if file in ignore_files:
+                continue
+
+            if file.name.endswith(".py"):
+                source_files.append(str(file))
+
+    return source_files
 
 
-def test_ensure_copyright():
+def test_ensure_copyright() -> None:
     """Check that all non-empty Python files have copyright somewhere in the first 5 lines."""
     issues = []
     regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
     for filepath in get_python_filepaths():
-        if pathlib.Path(filepath).stat().st_size == 0:
+        if Path(filepath).stat().st_size == 0:
             continue
         if filepath.endswith("charmcraft/_version.py") or filepath.endswith(
             "charmcraft\\_version.py"

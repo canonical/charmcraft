@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 # A list of bash file globs to not check for
-IGNORE_GLOBS: set[str] = {"tests/spread/**/*.py"}
+IGNORE_GLOBS = frozenset({"tests/spread/**/*.py"})
 
 
 def get_python_filepaths() -> list[str]:
@@ -40,12 +40,11 @@ def get_python_filepaths() -> list[str]:
     for source_dir in source_dirs:
         # Loop over the source_dir recursively
         # This is done instead of os.walk() to take advantage of Path.resolve()
-        for file in Path(source_dir).resolve().glob("**/*"):
+        for file in Path(source_dir).resolve().glob("**/*.py"):
             if file in ignore_files:
                 continue
 
-            if file.name.endswith(".py"):
-                source_files.append(str(file))
+            source_files.append(str(file))
 
     return source_files
 

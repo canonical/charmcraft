@@ -51,7 +51,8 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: Path, request)
 
 
 @pytest.fixture
-def uv_project(project_path: Path) -> None:
+def uv_project(project_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(project_path)
     subprocess.run(
         [
             "uv",
@@ -59,7 +60,6 @@ def uv_project(project_path: Path) -> None:
             "--name=test-charm",
             f"--python={platform.python_version()}",
             "--no-progress",
-            str(project_path),
         ],
         check=True,
     )
@@ -68,7 +68,6 @@ def uv_project(project_path: Path) -> None:
             "uv",
             "lock",
         ],
-        cwd=project_path,
         check=True,
     )
     source_dir = project_path / "src"

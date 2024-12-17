@@ -38,7 +38,7 @@ from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_parts import Step
-from craft_store import attenuations, models
+from craft_store import attenuations, models, publisher
 from craft_store.errors import CredentialsUnavailable
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
@@ -2374,3 +2374,65 @@ def _get_architectures_from_bases(
         for architecture in base.architectures:
             architectures.add(architecture)
     return sorted(architectures)
+
+
+class CreateTrack(CharmcraftCommand):
+    """Create one or more tracks."""
+
+    name = "create-track"
+    help_msg = "Create one or more tracks for a charm on Charmhub"
+    overview = textwrap.dedent(
+        """\
+        Create one or more tracks for a charm on Charmhub.
+
+        Returns the list of created tracks. Tracks must match an existing guardrail
+        for this charm. Guardrails can be requested in the charmhub requests category
+        at https://discourse.charmhub.io.
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
+        """Add own parameters to the general parser."""
+        super().fill_parser(parser=parser)
+        parser.add_argument(
+            "name",
+            help="The store name onto which to create the track",
+        )
+        parser.add_argument(
+            "track",
+            nargs="+",
+            help="The track name to create",
+        )
+        parser.add_argument(
+            "--automatic-phasing-percentage",
+            type=int,
+            default=None,
+            help="Automatic phasing percentage",
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        emit.progress(f"Creating {len(parsed_args.track)} tracks on the store")
+        pct = parsed_args.automatic_phasing_percentage
+        tracks: list[publisher.CreateTrackRequest] = [
+            {"name": track, "automatic-phasing-percentage": pct}
+            for track in parsed_args.track
+        ]
+        output_tracks = self._services.store.create_tracks(
+            parsed_args.name,
+            *tracks,
+        )
+
+        if fmt := parsed_args.format:
+            emit.message(cli.format_content(tracks, fmt))
+            return
+        data = [
+            {
+                "Name": track.name,
+                "Created at": track.created_at,
+                "Automatic phasing percentage": track.automatic_phasing_percentage,
+            }
+            for track in output_tracks
+        ]
+        emit.message(tabulate(data, headers="keys"))

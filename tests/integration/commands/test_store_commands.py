@@ -16,13 +16,16 @@
 """Integration tests for store commands."""
 
 import argparse
+import datetime
 import sys
 from unittest import mock
 
 import pytest
+from craft_store import publisher
 
 from charmcraft import env
 from charmcraft.application.commands import FetchLibCommand
+from charmcraft.application.commands.store import CreateTrack
 from charmcraft.store.models import Library
 from tests import factory
 
@@ -510,3 +513,52 @@ def test_fetchlib_store_same_versions_different_hash(
 
 
 # endregion
+
+
+def test_create_track(emitter, service_factory, config):
+    cmd = CreateTrack(config)
+    args = argparse.Namespace(
+        name="my-charm",
+        track=["my-track"],
+        automatic_phasing_percentage=None,
+        format="json",
+    )
+    mock_create_tracks = mock.Mock()
+    track = publisher.Track.unmarshal(
+        {
+            "name": "my-track",
+            "automatic-phasing-percentage": None,
+            "created-at": datetime.datetime.now(),
+        }
+    )
+    mock_get_package_metadata = mock.Mock(
+        return_value=publisher.RegisteredName.unmarshal(
+            {
+                "id": "mentalism",
+                "private": False,
+                "publisher": {"id": "EliBosnick"},
+                "status": "hungry",
+                "store": "charmhub",
+                "type": "charm",
+                "tracks": [
+                    track,
+                    publisher.Track.unmarshal(
+                        {
+                            "name": "latest",
+                            "automatic-phasing-percentage": None,
+                            "created-at": datetime.datetime.now(),
+                        }
+                    ),
+                ],
+            }
+        )
+    )
+
+    service_factory.store._publisher.create_tracks = mock_create_tracks
+    service_factory.store._publisher.get_package_metadata = mock_get_package_metadata
+
+    cmd.run(args)
+
+    emitter.assert_json_output(
+        [{"name": "my-track", "automatic-phasing-percentage": None}]
+    )

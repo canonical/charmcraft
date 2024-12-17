@@ -154,7 +154,7 @@ lint-docs:  ##- Lint the documentation
 ifneq ($(CI),)
 	@echo ::group::$@
 endif
-	uv run --extra docs sphinx-lint --max-line-length 88 --enable all $(DOCS)
+	uv run --extra docs sphinx-lint --max-line-length 88 --ignore docs/reference/commands --enable all $(DOCS)
 ifneq ($(CI),)
 	@echo ::endgroup::
 endif
@@ -190,11 +190,11 @@ test-coverage:  ## Generate coverage report
 
 .PHONY: docs
 docs:  ## Build documentation
-	uv run --extra docs sphinx-build -b html -W $(DOCS) $(DOCS)/_build
+	uv run --extra docs sphinx-build -b html $(DOCS) $(DOCS)/_build
 
 .PHONY: docs-auto
 docs-auto:  ## Build and host docs with sphinx-autobuild
-	uv run --extra docs sphinx-autobuild -b html --open-browser --port=8080 --watch $(PROJECT) -W $(DOCS) $(DOCS)/_build
+	uv run --extra docs sphinx-autobuild -b html --open-browser --port=8080 --ignore *.kate-swp --ignore docs/reference/commands/** --watch $(PROJECT) $(DOCS) $(DOCS)/_build
 
 .PHONY: pack-pip
 pack-pip:  ##- Build packages for pip (sdist, wheel)

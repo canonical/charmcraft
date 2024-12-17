@@ -77,14 +77,52 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
-X.Y.Z (2024-MM-DD)
+3.3.0 (2025-01-13)
 ------------------
+
+Core
+====
+
+Plugins
+#######
+
+- New :ref:`craft_parts_poetry_plugin`.
+- New :ref:`craft_parts_python_plugin`.
+
+Reactive
+""""""""
+
+Extensions
+##########
+
+- New `fastapi-framework extension
+  <https://juju.is/docs/sdk/charmcraft-extension-fastapi-framework>`_
+- The Django extension is no longer considered experimental.
+
+- The ``charm`` command is now run in verbose mode by default.
 
 Command line
 ============
 
-The pack command now updates charm the libs in the project directory if they don't meet
-the requirements in the ``charm-libs`` key of ``charmcraft.yaml``.
+- The ``pack`` command now updates the charm libaries in the project directory
+  if they don't meet the requirements in the ``charm-libs`` key of
+  ``charmcraft.yaml``.
+- New :ref:`ref_commands_create-track` command.
+
+Linter
+======
+
+- New linter to check that the entrypoint contains a call to ``ops.main()``
+
+Documentation
+=============
+
+How-to guides for migrating to the new plugins:
+
+- :ref:`howto-migrate-to-poetry`
+- :ref:`howto-migrate-to-python`
+
+For a complete list of commits, see the `3.3.0`_ release on GitHub.
 
 3.2.2 (2024-10-16)
 ------------------
@@ -223,7 +261,7 @@ New Features
   Charmcraft 3.1. Please have a go with it. Documentation is fairly minimal
   right now, as the implementation is still in flux.
 * The :ref:`ref_commands_upload-resource` command now uses
-  `skopeo <https://github.com/containers/skopeo>`_ to upload images. Most notably,
+  `skopeo`_ to upload images. Most notably,
   this means you can enter
   `any skopeo-supported containers-transports URL
   <https://manpages.ubuntu.com/manpages/noble/man5/containers-transports.5.html>`_
@@ -376,3 +414,4 @@ page.
 .. _3.2.0: https://github.com/canonical/charmcraft/releases/tag/3.2.0
 .. _3.2.1: https://github.com/canonical/charmcraft/releases/tag/3.2.1
 .. _3.2.2: https://github.com/canonical/charmcraft/releases/tag/3.2.2
+.. _3.3.0: https://github.com/canonical/charmcraft/releases/tag/3.3.0

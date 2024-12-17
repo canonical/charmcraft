@@ -10,10 +10,6 @@ platforms:
   riscv64:
 
 parts:
-#   uv-deps:
-#     plugin: nil
-#     override-build: |
-#       curl -LsSf https://astral.sh/uv/install.sh | sh
   my-part:
     plugin: uv
     source: .

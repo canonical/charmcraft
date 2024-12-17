@@ -125,7 +125,7 @@ class Revision:
     created_at: datetime.datetime
     status: str
     errors: list[Error]
-    bases: list[Base]
+    bases: list[Base | None]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -152,7 +152,7 @@ class Release:
     channel: str
     expires_at: datetime.datetime
     resources: list[Resource]
-    base: Base
+    base: Base | None
 
 
 @dataclasses.dataclass(frozen=True)

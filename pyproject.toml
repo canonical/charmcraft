@@ -166,7 +166,6 @@ include = [
     "tests/integration",
 ]
 analyzeUnannotatedFunctions = false
-reportAttributeAccessIssue = "warning"
 reportIncompatibleVariableOverride = "warning"
 reportOptionalMemberAccess = "warning"
 

@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import pydantic
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 
@@ -84,7 +85,7 @@ def test_partconfig_strict_dependencies_failure(
 
     part_config.update(MINIMAL_STRICT_CHARM)
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(pydantic.ValidationError) as exc_info:
         parts.process_part_config(part_config)
 
     assert message in {e["msg"] for e in exc_info.value.errors()}

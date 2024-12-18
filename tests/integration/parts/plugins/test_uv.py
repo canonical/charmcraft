@@ -52,7 +52,6 @@ def charm_project(basic_charm_dict: dict[str, Any], project_path: Path, request)
 
 @pytest.fixture
 def uv_project(project_path: Path, monkeypatch) -> None:
-    monkeypatch.chdir(project_path)
     subprocess.run(
         [
             "uv",
@@ -66,6 +65,7 @@ def uv_project(project_path: Path, monkeypatch) -> None:
         check=True,
     )
     subprocess.run(["uv", "add", "ops"], cwd=project_path, check=True)
+    monkeypatch.delenv("UV_FROZEN", raising=False)
     subprocess.run(
         [
             "uv",

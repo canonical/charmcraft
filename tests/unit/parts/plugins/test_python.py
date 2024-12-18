@@ -106,7 +106,10 @@ def test_get_package_install_commands(
 def test_get_rm_command(
     python_plugin: plugins.PythonPlugin, install_path: pathlib.Path
 ):
-    assert f"rm -rf {install_path / 'venv/bin'}" in python_plugin.get_build_commands()
+    assert (
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        in python_plugin.get_build_commands()
+    )
 
 
 def test_no_get_rm_command(
@@ -119,5 +122,6 @@ def test_no_get_rm_command(
     }
     python_plugin._options = plugins.PythonPluginProperties.unmarshal(spec)
     assert (
-        f"rm -rf {install_path / 'venv/bin'}" not in python_plugin.get_build_commands()
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        not in python_plugin.get_build_commands()
     )

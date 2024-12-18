@@ -4,7 +4,7 @@ uv plugin
 =========
 
 The uv plugin is designed for Python charms that use `uv`_ as the build system
-and written with the `Operator framework`_.
+and are written with the `Operator framework`_.
 
 .. include:: /common/craft-parts/reference/plugins/uv_plugin.rst
     :start-after: .. _craft_parts_uv_plugin-keywords:

@@ -213,20 +213,13 @@ class PackageService(services.PackageService):
                 raise RuntimeError("Could not determine run-on bases.")
             return run_on_bases
         if isinstance(self._project, PlatformCharm):
-            if not self._platform:
-                architectures = [util.get_host_architecture()]
-            elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
-                architectures = [self._platform]
-            elif platform := self._project.platforms.get(self._platform):
-                if platform.build_for:
-                    architectures = [str(arch) for arch in platform.build_for]
-                else:
-                    raise ValueError(
-                        f"Platform {self._platform} contains unknown build-for."
-                    )
-            else:
-                architectures = [util.get_host_architecture()]
-            return [models.Base.from_str_and_arch(self._project.base, architectures)]
+            return [
+                models.Base(
+                    name=self._build_plan[0].base.name,
+                    channel=self._build_plan[0].base.version,
+                    architectures=[self._build_plan[0].build_for],
+                )
+            ]
         raise TypeError(
             f"Unknown charm type {self._project.__class__}, cannot get bases."
         )

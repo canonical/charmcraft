@@ -1,0 +1,52 @@
+summary: pack charm using multi-base notation
+kill-timeout: 30m  # These sometimes take a while to download bases.
+priority: 50  # Because these can take a while, run them early.
+
+environment:
+  CHARM/all: all
+  CHARM/basic: basic
+  CHARM/one_platform: one-platform
+
+# test only on amd64
+systems:
+  - ubuntu-22.04-64
+  - ubuntu-22.04-amd64
+
+include:
+  - tests/
+
+prepare: |
+  # '--force' because charmcraft.yaml already exists
+  charmcraft init --force --project-dir="$CHARM"
+
+restore: |
+  cd $CHARM
+  charmcraft clean
+
+execute: |
+  cd $CHARM
+
+  if [[ -e "arguments.txt" ]]; then
+    call_args=$(cat "arguments.txt")
+  else
+    call_args=""
+  fi
+
+  # shellcheck disable=SC2046 (quote to prevent word splitting)
+  charmcraft pack $call_args
+
+  # assert charms were built
+  while read -r charm_file; do
+    if [[ ! -e ${charm_file} ]]; then
+      echo "Could not find charm '${charm_file}'"
+      exit 1
+    fi
+  done < "expected-charms.txt"
+
+  # assert no other charms were built
+  expected_num=$(wc -l < "expected-charms.txt")
+  actual_num=$(find . -wholename "./*.charm" | wc -l)
+  if [[ $expected_num -ne $actual_num ]]; then
+    echo "Expected $expected_num charms, but found $actual_num."
+    exit 1
+  fi

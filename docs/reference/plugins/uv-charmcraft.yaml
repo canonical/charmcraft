@@ -1,0 +1,13 @@
+name: my-charm
+type: charm
+title: My uv charm
+summary: An operator charm using uv.
+description: |
+  An operator charm that uses uv for its project.
+base: ubuntu@24.04
+platforms:
+  amd64:
+parts:
+  my-charm:
+    source: .
+    plugin: uv

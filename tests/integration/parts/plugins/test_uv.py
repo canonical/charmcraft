@@ -60,7 +60,9 @@ def uv_project(project_path: Path, monkeypatch) -> None:
             "--name=test-charm",
             f"--python={platform.python_version()}",
             "--no-progress",
+            "--no-workspace",
         ],
+        capture_output=True,
         check=True,
     )
     subprocess.run(
@@ -78,10 +80,10 @@ def uv_project(project_path: Path, monkeypatch) -> None:
 @pytest.mark.slow
 @pytest.mark.usefixtures("uv_project")
 def test_uv_plugin(
-    build_plan, service_factory: services.CharmcraftServiceFactory, tmp_path: Path
+    build_plan, service_factory: services.CharmcraftServiceFactory, new_path: Path
 ):
-    install_path = tmp_path / "parts" / "my-charm" / "install"
-    stage_path = tmp_path / "stage"
+    install_path = new_path / "parts" / "my-charm" / "install"
+    stage_path = new_path / "stage"
     service_factory.lifecycle._build_plan = build_plan
 
     service_factory.lifecycle.run("stage")

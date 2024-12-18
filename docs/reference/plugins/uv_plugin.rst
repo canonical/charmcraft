@@ -3,10 +3,10 @@
 uv plugin
 =========
 
-The uv plugin can be used for Python charms written using `uv`_ and the
-`Operator framework`_.
+The uv plugin is designed for Python charms that use `uv`_ as the build system
+and written with the `Operator framework`_.
 
-.. include:: /common/craft-parts/reference/plugins/poetry_plugin.rst
+.. include:: /common/craft-parts/reference/plugins/uv_plugin.rst
     :start-after: .. _craft_parts_uv_plugin-keywords:
     :end-before: .. _craft_parts_uv_plugin-environment_variables:
 
@@ -30,7 +30,7 @@ During the build step, the plugin performs the following actions:
 #. It creates a virtual environment in the
    :ref:`${CRAFT_PART_INSTALL}/venv <craft_parts_step_execution_environment>`
    directory.
-#. It uses :command:`uv sync` to install the packages referenced in the
+#. It runs :command:`uv sync` to install the packages referenced in the
    :file:`pyproject.toml` and :file:`uv.lock` files, along with any optional
    groups or extras specified.
 #. It copies any existing :file:`src` and :file:`lib` directories from your
@@ -40,7 +40,7 @@ Example
 -------
 
 The following :file:`charmcraft.yaml` file can be used with a uv project to
-build the charm for Ubuntu 24.04:
+craft a charm with Ubuntu 24.04 as its base:
 
 .. literalinclude:: uv-charmcraft.yaml
     :language: yaml

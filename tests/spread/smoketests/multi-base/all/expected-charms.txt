@@ -1,0 +1,2 @@
+test-charm_jammy.charm
+test-charm_noble.charm

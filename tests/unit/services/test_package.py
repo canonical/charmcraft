@@ -289,62 +289,41 @@ def test_get_manifest_bases_from_bases(
     ]
 
 
-@pytest.mark.parametrize("base", ["ubuntu@22.04", "almalinux@9"])
-@pytest.mark.parametrize(
-    ("platforms", "selected_platform", "expected_architectures"),
-    [
-        ({"armhf": None}, "armhf", ["armhf"]),
-        (
-            {
-                "anything": {
-                    "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": ["all"],
-                }
-            },
-            "anything",
-            ["all"],
-        ),
-        (
-            {
-                "anything": {
-                    "build-on": [*const.SUPPORTED_ARCHITECTURES],
-                    "build-for": ["all"],
-                },
-                "amd64": None,
-                "riscy": {
-                    "build-on": ["arm64", "ppc64el", "riscv64"],
-                    "build-for": ["all"],
-                },
-            },
-            "anything",
-            ["all"],
-        ),
-        ({util.get_host_architecture(): None}, None, [util.get_host_architecture()]),
-    ],
-)
-def test_get_manifest_bases_from_platforms(
-    package_service, base, platforms, selected_platform, expected_architectures
-):
+def test_get_manifest_bases_from_platforms(package_service):
     charm = models.PlatformCharm.model_validate(
         {
             "name": "my-charm",
             "description": "",
             "summary": "",
             "type": "charm",
-            "base": base,
-            "platforms": platforms,
+            # base and platform in the project aren't used
+            # instead, the manifest bases are derived from the build plan
+            "base": "almalinux@9",
+            "platforms": {"amd64": None},
             "parts": {},
         }
     )
+    build_item = BuildInfo(
+        platform="riscv64",
+        build_on="riscv64",
+        build_for="riscv64",
+        base=BaseName("ubuntu", "24.04"),
+    )
     package_service._project = charm
-    package_service._platform = selected_platform
+    package_service._build_plan = [build_item]
 
     bases = package_service.get_manifest_bases()
 
     pytest_check.equal(len(bases), 1)
     actual_base = bases[0]
-    pytest_check.equal(f"{actual_base.name}@{actual_base.channel}", base)
-    pytest_check.equal(actual_base.architectures, expected_architectures)
+    pytest_check.equal(
+        models.Base(
+            name=build_item.base.name,
+            channel=build_item.base.version,
+            architectures=[build_item.build_for],
+        ),
+        actual_base,
+    )
 
 
 # endregion

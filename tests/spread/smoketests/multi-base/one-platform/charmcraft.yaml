@@ -1,0 +1,29 @@
+name: test-charm
+type: charm
+title: test
+summary: test
+description: |
+  A charm recipe that uses a multi-base platform syntax to define
+  6 charms across different bases and architectures.
+  This test builds one of the charms using the `--platform` argument.
+
+platforms:
+  # shorthand syntax
+  ubuntu@20.04:amd64:
+  ubuntu@20.04:riscv64:
+
+  ubuntu@22.04:amd64:
+  ubuntu@22.04:riscv64:
+
+  # standard syntax
+  noble-amd64:
+    build-on: [ubuntu@24.04:amd64]
+    build-for: [ubuntu@24.04:amd64]
+  noble-riscv64:
+    build-on: [ubuntu@24.04:riscv64]
+    build-for: [ubuntu@24.04:riscv64]
+
+parts:
+  my-charm:
+    plugin: charm
+    source: .

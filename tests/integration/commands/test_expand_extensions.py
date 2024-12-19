@@ -69,11 +69,7 @@ def fake_extensions(stub_extensions):
                 description: test-description
                 base: ubuntu@22.04
                 platforms:
-                  amd64:
-                    build-on:
-                    - amd64
-                    build-for:
-                    - amd64
+                  amd64: null
                 parts: {}
                 type: charm
                 terms:

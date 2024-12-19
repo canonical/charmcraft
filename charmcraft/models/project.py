@@ -326,7 +326,7 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
     @override
     @pydantic.field_validator("platforms", mode="before")
     @classmethod
-    def _expand_shorthand_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
+    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
         """Overrides the validator to prevent platforms from being modified.
 
         Modifying the platforms field can break multi-base builds."""
@@ -1086,7 +1086,7 @@ class PlatformCharm(CharmProject):
     @override
     @pydantic.field_validator("platforms", mode="before")
     @classmethod
-    def _expand_shorthand_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
+    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
         """Overrides the validator to prevent platforms from being modified.
 
         Modifying the platforms field can break multi-base builds."""

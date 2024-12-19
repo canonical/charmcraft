@@ -16,5 +16,5 @@ platforms:
 
 parts:
   my-charm:
-    plugin: charm
+    plugin: dump
     source: .

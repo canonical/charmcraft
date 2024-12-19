@@ -56,9 +56,9 @@ for charms that build on Ubuntu 22.04 or earlier:
 Add optional dependency groups
 ------------------------------
 
-If the charm has optional `dependency groups`_ that should be included when creating
-the virtual environment, the ``poetry-with`` key can be used to include those groups
-when creating the virtual environment.
+If the charm has `dependency groups`_ that should be included when creating the virtual
+environment, the ``poetry-with`` key can be used to include those groups when creating
+the virtual environment.
 
 .. note::
     This is useful and encouraged, though not mandatory, for keeping track of

@@ -36,7 +36,7 @@ Now you can run
 ``curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
 http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
 http://flask-async-app/io http://flask-async-app/io``
-in they will all return at the same time.
+and they will all return at the same time.
 
 Output will be similar to following:
 
@@ -50,4 +50,5 @@ Output will be similar to following:
 
 .. note::
 
+    When the configuration is done the charm will be in ``active`` state.
     It might take a short time for the configuration to take effect.

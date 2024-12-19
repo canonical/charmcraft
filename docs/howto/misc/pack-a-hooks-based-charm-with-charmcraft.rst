@@ -1,19 +1,25 @@
 .. _pack-a-hooks-based-charm-with-charmcraft:
+
 How to pack a hooks-based charm with Charmcraft
 ===============================================
 
   Introduced in Charmcraft 1.4
 
-  See first: `Ops \| Turn a hooks-based charm into an Ops charm <https://ops.readthedocs.io/en/latest/howto/turn-a-hooks-based-charm-into-an-ops-charm.html>`_
-     
-Suppose you have a legacy hooks-only charm, for example, [tiny-bash](https://github.com/erik78se/tiny-bash), which you can obtain as follows:
+  See first:
+  :external+ops:doc:`Ops | Turn a hooks-based charm into an Ops charm
+  <howto/turn-a-hooks-based-charm-into-an-ops-charm>`
+
+Suppose you have a legacy hooks-only charm, for example,
+`tiny-bash <https://github.com/erik78se/tiny-bash>`_, which you can obtain as follows:
 
 .. code:: text
 
    $ git clone https://github.com/erik78se/tiny-bash
 
 
-To make it packable by Charmcraft, all you need to do is navigate inside the charm directory and create a ``charmcraft.yaml`` file with the part definition for a hooks-based charm, as shown below:
+To make it packable by Charmcraft, all you need to do is navigate inside the charm
+directory and create a ``charmcraft.yaml`` file with the part definition for a
+hooks-based charm, as shown below:
 
 .. code:: yaml
 
@@ -87,7 +93,8 @@ And you can also deploy your application with ``juju deploy``, as usual:
    Located local charm "tiny-bash", revision 0
    Deploying "tiny-bash" from local charm "tiny-bash", revision 0
 
-If successful, the result should look as below, i.e., with the application status active.
+If successful, the result should look as below, i.e., with the application status
+active.
 
 .. code:: text
 
@@ -103,4 +110,3 @@ If successful, the result should look as below, i.e., with the application statu
 
    Machine  State    DNS         Inst id        Series  AZ  Message
    0        started  10.2.17.31  juju-55481c-0  focal       Running
-

@@ -1,11 +1,14 @@
 .. _manage-channels:
+
 How to manage channels
 ======================
 
 Create a channel
 ----------------
 
-When you register a name on Charmhub, that automatically creates 4 channels, all with track ``latest`` but with different risk levels, namely, ``edge``, ``beta``, ``candidate``, ``stable``, respectively.
+When you register a name on Charmhub, that automatically creates 4 channels, all
+with track ``latest`` but with different risk levels, namely, ``edge``, ``beta``,
+``candidate``, ``stable``, respectively.
 
    See more: :ref:`register-a-name`
 

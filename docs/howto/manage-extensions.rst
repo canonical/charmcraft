@@ -1,4 +1,5 @@
 .. _manage-extensions:
+
 How to manage extensions
 ========================
 
@@ -7,14 +8,15 @@ How to manage extensions
 View all the available extensions
 ---------------------------------
 
-To view all the available Rockcraft / Charmcraft extensions, run the ``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
+To view all the available Rockcraft / Charmcraft extensions, run the
+``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
 
 .. code:: text
 
    $ charmcraft list-extensions
    Extension name    Supported bases    Experimental bases
    ----------------  -----------------  --------------------
-   flask-framework                      ubuntu@22.04    
+   flask-framework                      ubuntu@22.04
 
 ..
 
@@ -31,34 +33,34 @@ extension.
 .. dropdown:: Example
 
    .. code:: text
-   
+
       $ mkdir my-flask-app-k8s
       $ cd my-flask-app-k8s/
       $ charmcraft init --profile flask-framework
-      Charmed operator package file and directory tree initialised.                                                                                                                                
-                                                                                                                                                                                                   
-      Now edit the following package files to provide fundamental charm metadata                                                                                                                   
-      and other information:                                                                                                                                                                       
-                                                                                                                                                                                                   
-      charmcraft.yaml                                                                                                                                                                              
-      src/charm.py                                                                                                                                                                                 
-      README.md                                                                                                                                                                                    
-                                                                                                                                                                                                   
+      Charmed operator package file and directory tree initialised.
+
+      Now edit the following package files to provide fundamental charm metadata
+      and other information:
+
+      charmcraft.yaml
+      src/charm.py
+      README.md
+
       user@ubuntu:~/my-flask-app-k8s$ ls -R
       .:
       charmcraft.yaml  requirements.txt  src
-   
+
       ./src:
       charm.py
-       
-      $ cat charmcraft.yaml 
+
+      $ cat charmcraft.yaml
       # This file configures Charmcraft.
       # See https://juju.is/docs/sdk/charmcraft-config for guidance.
-   
+
       name: my-flask-app-k8s
-   
+
       type: charm
-   
+
       bases:
         - build-on:
           - name: ubuntu
@@ -66,17 +68,17 @@ extension.
           run-on:
           - name: ubuntu
             channel: "22.04"
-   
+
       # (Required)
       summary: A very short one-line summary of the flask application.
-   
+
       # (Required)
       description: |
         A comprehensive overview of your Flask application.
-   
+
       extensions:
         - flask-framework
-   
+
       # Uncomment the integrations used by your application
       # requires:
       #   mysql:
@@ -87,11 +89,13 @@ extension.
       #     limit: 1
 
 
-To view details about what that extension is adding to your charm, set the ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` to ``1``, then run  ``charmcraft expand-extensions``. For example:
+To view details about what that extension is adding to your charm, set the
+``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,
+then run  ``charmcraft expand-extensions``. For example:
 
 
 .. code:: text
-	  
+
    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
 
 
@@ -99,9 +103,9 @@ To view details about what that extension is adding to your charm, set the ``CHA
 
 
    .. code:: text
-      
+
       $ CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
-      *EXPERIMENTAL* extension 'flask-framework' enabled                                                                                                                                           
+      *EXPERIMENTAL* extension 'flask-framework' enabled
       name: my-flask-app-k8s
       summary: A very short one-line summary of the flask application.
       description: |
@@ -169,7 +173,7 @@ To view details about what that extension is adding to your charm, set the ``CHA
           flask-application-root:
             type: string
             description: Path in which the application / web server is mounted. This configuration
-              will set the FLASK_APPLICATION_ROOT environment variable. Run `app.config.from_prefixed_env()`
+              will set the FLASK_APPLICATION_ROOT environment variable. Run app.config.from_prefixed_env()
               in your Flask application in order to receive this configuration.
           flask-debug:
             type: boolean
@@ -181,27 +185,27 @@ To view details about what that extension is adding to your charm, set the ``CHA
             type: int
             description: Time in seconds for the cookie to expire in the Flask application
               permanent sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
-              environment variable. Run `app.config.from_prefixed_env()` in your Flask application
+              environment variable. Run app.config.from_prefixed_env() in your Flask application
               in order to receive this configuration.
           flask-preferred-url-scheme:
             type: string
             default: HTTPS
             description: Scheme for generating external URLs when not in a request context
               in the Flask application. By default, it's "HTTPS". This configuration will
-              set the FLASK_PREFERRED_URL_SCHEME environment variable. Run `app.config.from_prefixed_env()`
+              set the FLASK_PREFERRED_URL_SCHEME environment variable. Run app.config.from_prefixed_env()
               in your Flask application in order to receive this configuration.
           flask-secret-key:
             type: string
             description: The secret key used for securely signing the session cookie and
               for any other security related needs by your Flask application. This configuration
-              will set the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()`
+              will set the FLASK_SECRET_KEY environment variable. Run app.config.from_prefixed_env()
               in your Flask application in order to receive this configuration.
           flask-session-cookie-secure:
             type: boolean
             description: Set the secure attribute in the Flask application cookies. This
               configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
-              Run `app.config.from_prefixed_env()` in your Flask application in order to
-              receive this configuration.                                                 
+              Run app.config.from_prefixed_env() in your Flask application in order to
+              receive this configuration.
 
 ..
 

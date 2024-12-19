@@ -1,12 +1,15 @@
 .. _manage-names:
+
 How to manage names
 ===================
 
 .. _register-a-name:
+
 Register a name on Charmhub
 ---------------------------
 
-To register a name for your charm on Charmhub, use the ``chamrcraft register`` command followed by your desired name. E.g.,
+To register a name for your charm on Charmhub, use the ``charmcraft register``
+command followed by your desired name. E.g.,
 
 .. code:: text
 

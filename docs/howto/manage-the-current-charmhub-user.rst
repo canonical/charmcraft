@@ -1,8 +1,9 @@
 .. _manage-the-current-charmhub-user:
+
 How to manage the current Charmhub user
 =======================================
 
-  See first: `Charmhub <https://charmhub.io/>`_
+  See first: `Charmhub`_
 
 Log in to Charmhub
 ------------------
@@ -13,7 +14,7 @@ Local environments
 To log in to Charmhub, run ``charmcraft login``:
 
 .. code:: text
-	  
+
    $ charmcraft login
    Opening an authorization web page in your browser.
    If it does not open, please open this URL:
@@ -112,7 +113,7 @@ CI/CD system that will push and release a charm could be:
       ...
       charmcraft upload my-super-charm.charm --release edge
 
-      
+
 Check the currently logged in user
 ----------------------------------
 

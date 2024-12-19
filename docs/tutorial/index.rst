@@ -14,7 +14,7 @@ Our tutorial comes in multiple flavours -- pick your flavour of choice!
 .. toctree::
     :maxdepth: 2
 
-    Write your first Kubernetes charm for a Django app <write-your-first-kubernetes-charm-for-a-django-app>
+    write-your-first-kubernetes-charm-for-a-django-app
     flask
-    Write your first Kubernetes charm for a FastAPI app <write-your-first-kubernetes-charm-for-a-fastapi-app>
-    Write your first Kubernetes charm for a Go app <write-your-first-kubernetes-charm-for-a-go-app>
+    write-your-first-kubernetes-charm-for-a-fastapi-app
+    write-your-first-kubernetes-charm-for-a-go-app

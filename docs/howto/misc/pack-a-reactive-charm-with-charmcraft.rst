@@ -1,5 +1,6 @@
-.. _pack-a-reactive-based-charm-with-charmcraft:
-How to pack a reactive-based charm with Charmcraft
+.. _pack-a-reactive-charm-with-charmcraft:
+
+How to pack a reactive charm with Charmcraft
 ==================================================
 
   Introduced in Charmcraft 1.4.
@@ -11,7 +12,8 @@ How to pack a reactive-based charm with Charmcraft
 ..   {ref}\ ``How to pack your charm using Charmcraft <how-to-pack-a-charm>``
 ..   - {ref}\ ``About charm types, by creation type <charm-taxonomy>``
 
-To pack a legacy reactive-based charm with Charmcraft, in the charm directory create a ``charmcraft.yaml`` file with the part definition for a reactive-based charm:
+To pack a legacy reactive charm with Charmcraft, in the charm directory create a
+``charmcraft.yaml`` file with the part definition for a reactive-based charm:
 
 .. code:: yaml
 
@@ -29,5 +31,5 @@ To pack a legacy reactive-based charm with Charmcraft, in the charm directory cr
        plugin: reactive
        build-snaps: [charm]
 
-Done. Now you can go ahead and pack your reactive-based charm with Charmcraft in the usual way using ``charmcraft pack``.
-
+Done. Now you can go ahead and pack your reactive-based charm with Charmcraft
+in the usual way using ``charmcraft pack``.

@@ -1,4 +1,5 @@
 .. _manage-charm-revisions:
+
 How to manage charm revisions
 =============================
 
@@ -25,13 +26,14 @@ followed by the name of the charm.
 Promote a charm revision to a better risk level
 -----------------------------------------------
 
-To promote a charm revision to a higher-ranking risk level, use the GitHub ``promote-charm`` action.
+To promote a charm revision to a higher-ranking risk level, use the GitHub
+``promote-charm`` action.
 
-   See more: `GitHub \|
-   canonical/charming-actions/promote-charm <https://github.com/canonical/charming-actions/tree/2.6.0/promote-charm>`__
+   See more: `GitHub | canonical/charming-actions/promote-charm
+   <https://github.com/canonical/charming-actions/tree/2.6.0/promote-charm>`_
 
 .. dropdown:: Example outcome
-	      
+
    For example, in the (partial) output of juju info mongodb below,
    revision 100 has been promoted from ``3.6/edge`` through ``3.6/beta``
    and ``3.6/candidate`` all the way to ``3.6/stable``. (The up arrow next
@@ -39,9 +41,9 @@ To promote a charm revision to a higher-ranking risk level, use the GitHub ``pro
    try ``juju deploy --channel 3.6/beta``, what you’ll get is the next
    higher-ranking risk level of the same track, that is,
    ``3.6/candidate``.)
-   
+
    .. code:: text
-   
+
       channels: |
         5/stable:       117  2023-04-20  (117)  12MB  amd64  ubuntu@22.04
         5/candidate:    117  2023-04-20  (117)  12MB  amd64  ubuntu@22.04
@@ -55,11 +57,12 @@ To promote a charm revision to a higher-ranking risk level, use the GitHub ``pro
 
 
 .. _release-a-revision-into-a-channel:
+
 Release a charm revision into a channel
 ---------------------------------------
 
-To release a specific charm revision to a channel, run ``charmcraft release`` followed by the name of the charm and flags
-specifying the revision and its target channel. E.g.,
+To release a specific charm revision to a channel, run ``charmcraft release`` followed
+by the name of the charm and flags specifying the revision and its target channel. E.g.,
 
 .. code:: text
 
@@ -74,6 +77,11 @@ This opens the channel you’re releasing to.
 
    See more: :ref:`manage-channels`
 
-Following the release, Charmhub will display the charm’s information at ``charmhub.io/<charm-name>``. (The default information displayed is obtained from the most stable channel.) Your charm will also become available for download.
+Following the release, Charmhub will display the charm’s information at
+``charmhub.io/<charm-name>``. (The default information displayed is obtained from the
+most stable channel.) Your charm will also become available for download.
 
-   See more: `Juju \| Manage charms <https://juju.is/docs/juju/manage-charms-or-bundles>`_
+   See more: `Juju | Manage charms`_
+
+
+.. _`Juju | Manage charms`: https://juju.is/docs/juju/manage-charms-or-bundles

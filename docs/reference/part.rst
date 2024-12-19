@@ -1,4 +1,5 @@
 .. _part:
+.. _parts:
 
 ****
 Part
@@ -17,4 +18,3 @@ system that charmcraft uses.
    /common/craft-parts/explanation/filesets
    lifecycle
    plugins/index
-

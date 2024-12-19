@@ -3,6 +3,7 @@
 .. _Chisel: https://github.com/canonical/chisel
 .. _`Chisel releases`: https://github.com/canonical/chisel-releases
 .. _`Craft-parts`: https://canonical-craft-parts.readthedocs-hosted.com
+.. _Discourse: https://discourse.charmhub.io/
 .. _Docker: https://docs.docker.com/
 .. _Juju: https://juju.is/docs
 .. _`feature request`: https://github.com/canonical/charmcraft/issues/new?assignees=&labels=Enhancement&projects=&template=task.yaml

@@ -1,4 +1,5 @@
-.. manage-charm-bundles:
+.. _manage-charm-bundles:
+
 How to manage charm bundles
 ===========================
 
@@ -16,8 +17,13 @@ To create a bundle, create a ``<bundle>.yaml`` file with your desired configurat
   See more: :ref:`file-bundle-yaml`
 
 .. tip::
-   If you don't want to start from scratch, export the contents of your model to a ``<bundle>.yaml`` file via ``juju export-bundle --filename <bundle>.yaml`` or download the ``<bundle>.yaml`` of an existing bundle from Charmhub. See more: `Juju \| How to compare and export the contents of a model to a bundle <https://juju.is/docs/juju/manage-models#heading--compare-and-export-the-contents-of-a-model-to-a-bundle>`_.
- 
+   If you don't want to start from scratch, export the contents of your model to a
+   ``<bundle>.yaml`` file via ``juju export-bundle --filename <bundle>.yaml`` or
+   download the ``<bundle>.yaml`` of an existing bundle from Charmhub.
+   See more: `Juju \| How to compare and export the contents of a model to a bundle
+   <https://juju.is/docs/juju/manage-models#
+   heading--compare-and-export-the-contents-of-a-model-to-a-bundle>`_.
+
 
 Pack a bundle
 -------------

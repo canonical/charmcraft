@@ -124,7 +124,8 @@ virtual environment created in any charm that includes the library.
 
 Each string is a regular "pip installable" Python dependency that will be retrieved
 from PyPI in the usual way (subject to the user's system configuration) and which
-supports all dependency formats (just the package name, a link to a Github project, etc.).
+supports all dependency formats (just the package name, a link to a Github project,
+etc.).
 
 .. dropdown:: Examples
 
@@ -144,16 +145,17 @@ supports all dependency formats (just the package name, a link to a Github proje
             "requests",
         ]
 
-Note that when called to install all the dependencies from the charm and all the used
-libraries, `pip` may detect conflicts between the requested packages and their versions.
-This is a feature, because it's always better to detect incompatibilities between
-dependencies at this moment than when the charm is being deployed or run after
-deployment.
+Note that when called to install all the dependencies from the charm and all the
+used libraries, ``pip`` may detect conflicts between the requested packages and
+their versions. This is a feature, because it's always better to detect
+incompatibilities between dependencies at this moment than when the charm is being
+deployed or run after deployment.
 
 Code
 ^^^^
 
-After the docstring and the metadata, there's the library code. This is regular Python code.
+After the docstring and the metadata, there's the library code.
+This is regular Python code.
 
 Popular libraries
 -----------------
@@ -187,7 +189,8 @@ charm.
       -
       - Import RedisRequires from this lib to relate your charm to the
         `redis charm <https://charmhub.io/redis-k8s>`_
-    * - `grafana_dashboard <https://charmhub.io/grafana-k8s/libraries/grafana-dashboard>`_
+    * - `grafana_dashboard
+        <https://charmhub.io/grafana-k8s/libraries/grafana-dashboard>`_
       -
       - Defines a relation interface for charms that provide a dashboard to the
         `grafana-k8s charm <https://charmhub.io/grafana-k8s>`_
@@ -195,10 +198,11 @@ charm.
       -
       - Defines a relation interface for charms that serve as a data source for the
         `grafana-k8s charm <https://charmhub.io/grafana-k8s>`_
-    * - `prometheus_scrape <https://charmhub.io/prometheus-k8s/libraries/prometheus_scrape>`_
+    * - `prometheus_scrape
+        <https://charmhub.io/prometheus-k8s/libraries/prometheus_scrape>`_
       -
-      - Defines a relation interface for charms that want to expose metrics endpoints to the
-        `prometheus charm <https://charmhub.io/prometheus-k8s>`_.
+      - Defines a relation interface for charms that want to expose metrics endpoints
+        to the `prometheus charm <https://charmhub.io/prometheus-k8s>`_.
     * - `alertmanager_dispatch
         <https://charmhub.io/alertmanager-k8s/libraries/alertmanager_dispatch>`_
       -
@@ -206,13 +210,15 @@ charm.
         <https://charmhub.io/alertmanager-k8s>`_.
     * - `karma_dashboard <https://charmhub.io/karma-k8s/libraries/karma_dashboard>`_
       - - `karma-k8s <https://charmhub.io/karma-k8s>`_
-      - Defines an interface for charms wishing to consume or provide a karma-dashboard relation.
-    * - `loki_push_api <https://charmhub.io/loki-k8s/libraries/loki_push_api>`_
-      - - `loki-k8s <loki_push_api](https://charmhub.io/loki-k8s>`_
+      - Defines an interface for charms wishing to consume or provide a
+        karma-dashboard relation.
+    * - `loki_push_api
+        <https://charmhub.io/loki-k8s/libraries/loki_push_api>`_
+      - - `loki-k8s <https://charmhub.io/loki-k8s>`_
       - Defines a relation interface for charms wishing to provide or consume the
         Loki Push API---e.g., a charm that wants to send logs to Loki.
     * - `log_proxy <https://charmhub.io/loki-k8s/libraries/log_proxy>`_
-      - - `loki-k8s <loki_push_api](https://charmhub.io/loki-k8s>`_
+      - - `loki-k8s <https://charmhub.io/loki-k8s>`_
       - Defines a relation interface that allows a charm to act as a Log Proxy for
         Loki (via the Loki Push API).
     * - `guacd <https://charmhub.io/apache-guacd/libraries/guacd>`_
@@ -235,7 +241,8 @@ or to perform operations common to several charms.
     * - `cert <https://charmhub.io/kubernetes-dashboard/libraries/cert>`_
       - - `kubernetes-dashboard <https://charmhub.io/kubernetes-dashboard>`_
       - Generates a self signed certificate.
-    * - `capture_events <https://discourse.charmhub.io/t/harness-recipe-capture-events/6581>`_
+    * - `capture_events
+        <https://discourse.charmhub.io/t/harness-recipe-capture-events/6581>`_
       - - `traefik-k8s <https://charmhub.io/traefik-k8s>`_,
         - `data-platform-libs <https://github.com/canonical/data-platform-libs/>`_
       - Helper for unit testing events.
@@ -246,7 +253,8 @@ or to perform operations common to several charms.
       -
       - Provides utilities to track multiple independent statuses in charms.
     * - `resurrect <https://github.com/PietroPasotti/resurrect>`_
-      - - `github-runner-image-builder <https://github.com/canonical/github-runner-image-builder-operator>`_
+      - - `github-runner-image-builder
+          <https://github.com/canonical/github-runner-image-builder-operator>`_
       - Provides utilities to periodically trigger charm hooks
 
 
@@ -261,14 +269,16 @@ These libraries provide tooling for charms that run on top of Kubernetes clouds.
     * - Library
       - Used in
       - Description
-    * - `kubernetes_service_patch <https://charmhub.io/observability-libs/libraries/kubernetes_service_patch>`_
+    * - `kubernetes_service_patch
+        <https://charmhub.io/observability-libs/libraries/kubernetes_service_patch>`_
       - - `cos-configuration-k8s <https://charmhub.io/cos-configuration-k8s>`_
         - `alertmanager-k8s <https://charmhub.io/alertmanager-k8s>`_
         - `grafana-agent-k8s <https://charmhub.io/grafana-agent-k8s>`_
         - `prometheus-k8s <https://charmhub.io/prometheus-k8s>`_
         - `loki-k8s <https://charmhub.io/loki-k8s>`_
         - `traefik-k8s <https://charmhub.io/traefik-k8s>`_
-      - Allows charm authors to simply and elegantly define service overrides that persist through a charm upgrade.
+      - Allows charm authors to simply and elegantly define service overrides that
+        persist through a charm upgrade.
     * - `ingress <https://charmhub.io/nginx-ingress-integrator/libraries/ingress>`_
       - - `nginx-ingress-integrator <https://charmhub.io/nginx-ingress-integrator>`_
       - Configures nginx to use an existing Kubernetes Ingress.

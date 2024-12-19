@@ -167,7 +167,8 @@ deployed in the Kubernetes cluster:
 
 .. seealso::
 
-    See more: `skopeo <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
+    See more: `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
 
 Create the charm
 ================
@@ -520,4 +521,3 @@ Next steps
       - `SDK Explanation docs <https://juju.is/docs/sdk/explanation>`_
 
 -------------------------
-

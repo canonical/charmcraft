@@ -1,4 +1,5 @@
 .. _file-bundle-yaml:
+
 .. highlight:: yaml
 
 ``bundle.yaml``
@@ -8,19 +9,28 @@
 
     Source for the keys used by Juju:
     `Schema <https://github.com/juju/charm/blob/v12/bundledata.go>`_,
-    `Examples from test files <https://github.com/juju/charm/blob/v12/bundledata_test.go>`_
+    `Examples from test files
+    <https://github.com/juju/charm/blob/v12/bundledata_test.go>`_
 
-    (The metadata keys ``docs``, ``issues``, ``source``, and ``website`` are only used by Charmhub.
+    (The metadata keys ``docs``, ``issues``, ``source``, and ``website`` are
+    only used by Charmhub.
 
-File ``<bundle>.yaml`` is the file in your bundle directory where you define your bundle.
+File ``<bundle>.yaml`` is the file in your bundle directory where you define
+your bundle.
 
 .. important::
 
-    ``bundle.yaml`` is typically generated using `Juju's export-bundle command <juju-export-bundle>`_.
+    ``bundle.yaml`` is typically generated using
+    `Juju's export-bundle command <juju-export-bundle>`_.
 
 **For overlay bundles:**
 
-- Instead of providing overlays as external files, you may alternatively leverage Juju's support for multi-document YAML files and provide both the base overlay and any required overlays as a *single file*, appending the contents of the overlay after the base bundle using the special YAML document separator token `---` as the delimiter. Juju will treat the first document as the base bundle and any subsequent document as an overlay.
+- Instead of providing overlays as external files, you may alternatively leverage
+  Juju's support for multi-document YAML files and provide both the base overlay
+  and any required overlays as a *single file*, appending the contents of the
+  overlay after the base bundle using the special YAML document separator token
+  ``---`` as the delimiter. Juju will treat the first document as the base bundle
+  and any subsequent document as an overlay.
 
 
   .. dropdown:: Example base and overlay in the same file
@@ -41,10 +51,18 @@ File ``<bundle>.yaml`` is the file in your bundle directory where you define you
             mysql:
               trust: true
 
-- Relative paths are resolved relative to the path of the entity that describes them. That is, relative to the overlay bundle file itself.
-- An application is removed from the base bundle by defining the application name in the application section, but omitting any values. Removing an application also removes all the relations for that application.
-- If a machines section is specified in an overlay bundle, it replaces the corresponding section of the base bundle. No merging of machine information is attempted. Multiple overlay bundles can be specified and they are processed in the order they appear on the command line.
-- Overlays can include new integrations, which are normally required for any new charms which have been added. Existing integrations cannot be removed however, except in the case where the referenced application is also removed by the overlay.
+- Relative paths are resolved relative to the path of the entity that describes them.
+  That is, relative to the overlay bundle file itself.
+- An application is removed from the base bundle by defining the application name
+  in the application section, but omitting any values. Removing an application also
+  removes all the relations for that application.
+- If a machines section is specified in an overlay bundle, it replaces the
+  corresponding section of the base bundle. No merging of machine information is
+  attempted. Multiple overlay bundles can be specified and they are processed in
+  the order they appear on the command line.
+- Overlays can include new integrations, which are normally required for any new
+  charms which have been added. Existing integrations cannot be removed however,
+  except in the case where the referenced application is also removed by the overlay.
 
 
 .. dropdown:: Example ``bundle.yaml`` file -- Kubernetes
@@ -175,13 +193,15 @@ The rest of this document describes each key in this file.
 
 .. note::
 
-    A bundle for deployment on Kubernetes differs from a standard bundle in the following ways:
+    A bundle for deployment on Kubernetes differs from a standard bundle in the
+    following ways:
 
     - key ``bundle`` is given the value of ``kubernetes``
     - key ``num_units`` is replaced by key ``scale``
     - key ``to`` is replaced by key ``placement``
 
-    The value of ``placement`` is a key=value pair and is used as a Kubernetes node selector.
+    The value of ``placement`` is a key=value pair and is used as a Kubernetes
+    node selector.
 
 
 ``applications``
@@ -196,7 +216,8 @@ The rest of this document describes each key in this file.
 
 **Purpose:** Holds an application definition.
 
-**Name:** The name of the application. User-defined, usually identical to `applications.<application>.charm`_
+**Name:** The name of the application. User-defined, usually identical to
+`applications.<application>.charm`_
 
 ``applications.<application>.annotations``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,9 +256,13 @@ that is not explicitly bound to a space.
 ``applications.<application>.channel``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Purpose:** States what the preferred channel should be used when deploying a non-local charm.
+**Purpose:** States what the preferred channel should be used when deploying a
+non-local charm.
 
-.. note:: Charmhub charms expect ``<track>/<risk>/<branch>`` format (e.g., ``latest/stable``).
+.. note::
+
+    Charmhub charms expect ``<track>/<risk>/<branch>`` format (e.g.,
+    ``latest/stable``).
 
 .. dropdown:: Example
 
@@ -248,7 +273,9 @@ that is not explicitly bound to a space.
 ``applications.<application>.charm``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Purpose:** States what charm to use for the application. **If you're defining a public bundle:** Use a fully qualified charm URI.
+**Purpose:** States what charm to use for the application.
+
+**If you're defining a public bundle:** Use a fully qualified charm URI.
 
 .. dropdown:: Example
 
@@ -412,7 +439,7 @@ permission levels.
               user1: read
 
 ``applications.<application>.options``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sets configuration options for the application. The keys are application-specific and
 are found within the corresponding charm's metadata.yaml file. An alias (a string
@@ -788,9 +815,10 @@ using rules of precedence (most preferred to least):
 
 - the series stated for a machine that an application unit has been assigned to (see
   `machines`_)
-- the series stated for an application (see `series` under the `<application name>` element)
-- the series given by the top level `series` element
-- the top-most series specified in a charm's `metadata.yaml` file
+- the series stated for an application (see ``series`` under the `<application name>`_
+  element)
+- the series given by the top level ``series`` element
+- the top-most series specified in a charm's ``metadata.yaml`` file
 - the most recent LTS release
 
 .. dropdown:: Example
@@ -805,7 +833,8 @@ using rules of precedence (most preferred to least):
 
 **Status:** Optional
 
-**Purpose:** A string or list of strings containing a link (or links) to the bundle source code.
+**Purpose:** A string or list of strings containing a link (or links) to the
+bundle source code.
 
 ``tags``
 ========

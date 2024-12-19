@@ -1,4 +1,5 @@
 .. _manage-the-charmcraft-cli:
+
 How to manage the ``charmcraft`` CLI
 ====================================
 
@@ -44,9 +45,11 @@ You can also install Charmcraft in an isolated environment.
 On macOS
 ~~~~~~~~
 
-Charmcraft is `available on homebrew <https://formulae.brew.sh/formula/charmcraft>`_.
+An unofficial Charmcraft package is
+`available on homebrew <https://formulae.brew.sh/formula/charmcraft>`_.
 
-Installation should be straightforward if using homebrew (if not already set up, refer to `these instructions <https://brew.sh/>`_).
+Installation should be straightforward if using homebrew (if not already set up,
+refer to `these instructions <https://brew.sh/>`_).
 
 .. code:: text
 
@@ -68,7 +71,9 @@ Charmhub commands work natively:
    username:  jdoe
    id:        xxxxxxxxxxxxxxxxxxxxxxxxx
 
-In macOS, Charmcraft defaults to Multipass to build the charms in a container matching the target base(s). Running pack asks to setup Multipass if not already installed, and continues with the packing process:
+In macOS, Charmcraft defaults to Multipass to build the charms in a container
+matching the target base(s). Running pack asks to setup Multipass if not already
+installed, and continues with the packing process:
 
 .. code:: text
 
@@ -98,15 +103,18 @@ please refer to how to install it in an `isolated
 environment <#heading--isolated>`_.
 
 .. _install-in-an-isolated-environment:
+
 In an isolated environment on Linux, macOS, or Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another way to install Charmcraft is via `Multipass <https://multipass.run/>`_. This is a good way to install it
-on any platform, as it will give you an isolated development environment.
+Another way to install Charmcraft is via `Multipass`_.
+This is a good way to install it on any platform, as it will give you an isolated
+development environment.
 
 First, `install Multipass <https://multipass.run/docs/how-to-install-multipass>`_.
 
-Second, use Multipass to provision a virtual machine. The following command will launch a fresh new VM with 4 cores, 8GB RAM and a 20GB disk and the name ‘charm-dev’:
+Second, use Multipass to provision a virtual machine. The following command will
+launch a fresh new VM with 4 cores, 8GB RAM and a 20GB disk and the name ‘charm-dev’:
 
 .. code:: text
 

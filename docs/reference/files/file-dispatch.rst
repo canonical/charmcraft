@@ -24,7 +24,7 @@ will be deployed.
 
 .. dropdown:: Example charm with an overridden ``dispatch`` script
 
-    The following `part`_ section added to any charm will replace the dispatch
+    The following :ref:`part` section added to any charm will replace the dispatch
     script with a script that does nothing (but successfully) upon any event.
 
     .. code:: yaml

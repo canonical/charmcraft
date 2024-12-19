@@ -1,21 +1,27 @@
 .. _manage-resources:
+
 How to manage resources
 =======================
 
-   See first: `Juju \| Charm resource <https://juju.is/docs/juju/charm-resource>`_, `Juju \|
-   Manage resources <https://juju.is/docs/juju/manage-charm-resources>`_
+   See first: `Juju \| Charm resource <https://juju.is/docs/juju/charm-resource>`_,
+   `Juju \| Manage resources <https://juju.is/docs/juju/manage-charm-resources>`_
 
 Declare a resource
 ------------------
 
-To declare a resource required by your charm, in your charm’s ``charmcraft.yaml file`` specify the ``resources`` key.
+To declare a resource required by your charm, in your charm’s
+:doc:`/reference/files/file-charmcraft-yaml` specify the ``resources`` key.
 
    See more: :ref:`file-charmcraft-yaml-resources`
 
-   See next: `Ops \| Manage resources <https://ops.readthedocs.io/en/latest/howto/manage-resources.html>`_
+   See next:
+   :external+ops:doc:`Ops \| How to manage resources <howto/manage-resources>`
 
 .. tip::
-   During development, it may be useful to specify the resource at deploy time to facilitate faster testing without the need to publish a new charm/resource in between minor fixes. For example, assuming the resource is a ``/tmp/somefile.txt`` file, you could pack and the deploy with ``juju deploy … –resource``:
+   During development, it may be useful to specify the resource at deploy time to
+   facilitate faster testing without the need to publish a new charm/resource in
+   between minor fixes. For example, assuming the resource is a ``/tmp/somefile.txt``
+   file, you could pack and the deploy with ``juju deploy … –-resource``:
 
 .. code:: text
 
@@ -25,15 +31,22 @@ To declare a resource required by your charm, in your charm’s ``charmcraft.yam
 
 
 .. _publish-a-resource:
+
 Publish a resource on Charmhub
 ------------------------------
 
-.. note: You must have already published the charm. See more: :ref:`publish-a-charm`.
+.. note:: You must have already published the charm. See more: :ref:`publish-a-charm`.
 
-To publish a resource on its charm's Charmhub page, run the ``charmcraft upload-resource`` command followed by the name of the charm, the name of the resource (cf. ``charmcraft.yaml``), and ``--filepath=<path to file resource>`` / ``--image=<OCI image>``. For example:
+To publish a resource on its charm's Charmhub page, run ``charmcraft upload-resource``
+followed by the name of the charm, the name of the resource (cf. ``charmcraft.yaml``),
+and ``--filepath=<path to file resource>`` / ``--image=<OCI image>``. For example:
 
 .. note::
-   The option ``--image`` must indicate an OCI image's digest, being it in the short or long form (e.g.: ``70aa8983ec5c`` or ``sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249``). When using the "short form" of the digest, the image needs to be present locally so its proper ID (the "long form") can be retrieved.
+   The option ``--image`` must indicate an OCI image's digest, being it in the
+   short or long form (e.g.: ``70aa8983ec5c`` or
+   ``sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249``).
+   When using the "short form" of the digest, the image needs to be present
+   locally so its proper ID (the "long form") can be retrieved.
 
 .. code:: text
 
@@ -45,9 +58,14 @@ To publish a resource on its charm's Charmhub page, run the ``charmcraft upload-
    $ charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
    Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
 
-Charmcraft will first check if that specific image is available in Canonical’s Registry, and just use it if that’s the case. If not, it will try to get it from the developer’s local OCI repository (needs ``dockerd`` to be installed and running), push it to the Canonical’s Registry, and then use it. Either way, when the upload has completed, you end up with a resource revision.
+Charmcraft will first check if that specific image is available in Canonical’s
+Registry, and just use it if that’s the case. If not, it will try to get it from
+the developer’s local OCI repository (needs ``dockerd`` to be installed and
+running), push it to the Canonical’s Registry, and then use it. Either way, when
+the upload has completed, you end up with a resource revision.
 
-To update a pre-uploaded resource, run the ``upload-resource`` command again. The result will be a new revision.
+To update a pre-uploaded resource, run the ``upload-resource`` command again.
+The result will be a new revision.
 
    See more: :ref:`ref_commands_upload-resource`
 
@@ -61,7 +79,7 @@ To view all the resources published on Charmhub for a charm, run
    The command will open up a browser window and ask you to log in.
 
 .. code:: text
-   
+
    $ charmcraft resources mycharm
 
 ..
@@ -69,6 +87,7 @@ To view all the resources published on Charmhub for a charm, run
    See more: :ref:`ref_commands_resources`
 
 .. _manage-resource-revisions:
+
 Manage resource revisions
 -------------------------
 

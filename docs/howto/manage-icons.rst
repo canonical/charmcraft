@@ -1,4 +1,5 @@
 .. _manage-icons:
+
 How to manage icons
 ===================
 
@@ -73,10 +74,16 @@ page checks the most basic issues that prevent icons working.
 Add an icon to its charm's Charmhub page
 ----------------------------------------
 
-To add the icon to the charm's Charmhub page, save it as ``icon.svg``,  place it in the root directory of the charm, and then publish the charm to a channel of the form ``<track>/stable`` (e.g., ``latest/stable``). 
+To add the icon to the charm's Charmhub page, save it as ``icon.svg``, place it
+in the root directory of the charm, and then publish the charm to a channel of the
+form ``<track>/stable`` (e.g., ``latest/stable``).
 
 .. note::
-   That is because Charmhub only updates the metadata for a charm on stable channel releases (`by design <https://snapcraft.io/blog/better-snap-metadata-handling-coming-your-way-soon>`_).    So either release the revision with the icon to a ``stable`` channel and then roll it back, or wait until your charm is ready for a "stable" ``stable`` release. 
+   That is because Charmhub only updates the metadata for a charm on stable channel
+   releases (`by design
+   <https://snapcraft.io/blog/better-snap-metadata-handling-coming-your-way-soon>`_).
+   So either release the revision with the icon to a ``stable`` channel and then
+   roll it back, or wait until your charm is ready for a "stable" ``stable`` release.
 
 ..
 

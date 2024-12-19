@@ -194,7 +194,7 @@ docs:  ## Build documentation
 
 .PHONY: docs-auto
 docs-auto:  ## Build and host docs with sphinx-autobuild
-	uv run --extra docs sphinx-autobuild -b html --open-browser --port=8080 --ignore *.kate-swp --ignore docs/reference/commands/** --watch $(PROJECT) $(DOCS) $(DOCS)/_build
+	uv run --extra docs sphinx-autobuild -b html --open-browser --port=8080 --ignore *.kate-swp --ignore docs/reference/commands/ --watch $(PROJECT) $(DOCS) $(DOCS)/_build
 
 .PHONY: pack-pip
 pack-pip:  ##- Build packages for pip (sdist, wheel)

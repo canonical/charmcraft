@@ -21,6 +21,8 @@ from ._charm import CharmPlugin, CharmPluginProperties
 from ._poetry import PoetryPlugin, PoetryPluginProperties
 from ._python import PythonPlugin, PythonPluginProperties
 from ._reactive import ReactivePlugin, ReactivePluginProperties
+from ._uv import UvPlugin
+from craft_parts.plugins.uv_plugin import UvPluginProperties
 
 __all__ = [
     "BundlePlugin",
@@ -33,4 +35,6 @@ __all__ = [
     "PythonPluginProperties",
     "ReactivePlugin",
     "ReactivePluginProperties",
+    "UvPlugin",
+    "UvPluginProperties",
 ]

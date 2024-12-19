@@ -16,7 +16,8 @@ environment:
   CHARM/kafka: https://github.com/canonical/kafka-k8s-operator
   CHARM/loki: https://github.com/canonical/loki-k8s-operator
   CHARM/mattermost: https://git.launchpad.net/charm-k8s-mattermost
-  CHARM/mongodb: https://github.com/canonical/mongodb-k8s-operator
+  # Uses tox, needs a different workflow right now.
+  # CHARM/mongodb: https://github.com/canonical/mongodb-k8s-operator
   # Uses tox, needs a different workflow right now.
   # CHARM/mysql: https://github.com/canonical/mysql-k8s-operator
   CHARM/pgbouncer: https://github.com/canonical/pgbouncer-k8s-operator

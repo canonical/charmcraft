@@ -3,7 +3,6 @@
 ``dispatch``
 ============
 
-
 The ``dispatch`` file in your charm the file `Juju`_ runs when an event occurs.
 
 In most cases, is an executable shell script whose responsibility is to execute
@@ -28,7 +27,7 @@ will be deployed.
     The following `part`_ section added to any charm will replace the dispatch
     script with a script that does nothing (but successfully) upon any event.
 
-    .. code::
+    .. code:: yaml
 
         parts:
           dispatch:

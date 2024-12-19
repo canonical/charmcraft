@@ -1,7 +1,8 @@
+.. _list-of-files-in-a-charmcraft-project:
 .. _list-of-files-in-a-charm-or-a-bundle:
 
-List of files in a charm or a bundle
-====================================
+List of files in a Charmcraft project
+=====================================
 
 
 .. toctree::

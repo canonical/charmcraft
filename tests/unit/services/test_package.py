@@ -289,25 +289,100 @@ def test_get_manifest_bases_from_bases(
     ]
 
 
-def test_get_manifest_bases_from_platforms(package_service):
+@pytest.mark.parametrize(
+    ("base", "build_base", "platforms", "build_item", "expected"),
+    [
+        pytest.param(
+            "ubuntu@24.04",
+            None,
+            {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
+            BuildInfo(
+                platform="test-platform",
+                build_on="amd64",
+                build_for="riscv64",
+                base=BaseName("not-to-be-used", "100"),
+            ),
+            models.Base(
+                # uses the project base
+                name="ubuntu",
+                channel="24.04",
+                architectures=["riscv64"],
+            ),
+            id="base-from-project",
+        ),
+        pytest.param(
+            "ubuntu@24.04",
+            "ubuntu@devel",
+            {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
+            BuildInfo(
+                platform="test-platform",
+                build_on="amd64",
+                build_for="riscv64",
+                # the BuildInfo will use the build-base, which shouldn't go in the manifest
+                base=BaseName("ubuntu", "devel"),
+            ),
+            models.Base(
+                name="ubuntu",
+                channel="24.04",
+                architectures=["riscv64"],
+            ),
+            id="ignore-build-base",
+        ),
+        pytest.param(
+            None,
+            None,
+            {"ubuntu@24.04:amd64": None},
+            BuildInfo(
+                platform="ubuntu@24.04:amd64",
+                build_on="amd64",
+                build_for="amd64",
+                base=BaseName("ubuntu", "24.04"),
+            ),
+            models.Base(
+                name="ubuntu",
+                channel="24.04",
+                architectures=["amd64"],
+            ),
+            id="multi-base-shorthand",
+        ),
+        pytest.param(
+            None,
+            None,
+            {
+                "test-platform": {
+                    "build-on": ["ubuntu@24.04:amd64"],
+                    "build-for": ["ubuntu@24.04:riscv64"],
+                }
+            },
+            BuildInfo(
+                platform="test-platform",
+                build_on="amd64",
+                build_for="riscv64",
+                base=BaseName("ubuntu", "24.04"),
+            ),
+            models.Base(
+                name="ubuntu",
+                channel="24.04",
+                architectures=["riscv64"],
+            ),
+            id="multi-base-standard",
+        ),
+    ],
+)
+def test_get_manifest_bases_from_platforms(
+    package_service, base, build_base, platforms, build_item, expected
+):
     charm = models.PlatformCharm.model_validate(
         {
             "name": "my-charm",
             "description": "",
             "summary": "",
             "type": "charm",
-            # base and platform in the project aren't used
-            # instead, the manifest bases are derived from the build plan
-            "base": "almalinux@9",
-            "platforms": {"amd64": None},
+            "base": base,
+            "build-base": build_base,
+            "platforms": platforms,
             "parts": {},
         }
-    )
-    build_item = BuildInfo(
-        platform="riscv64",
-        build_on="riscv64",
-        build_for="riscv64",
-        base=BaseName("ubuntu", "24.04"),
     )
     package_service._project = charm
     package_service._build_plan = [build_item]
@@ -316,14 +391,35 @@ def test_get_manifest_bases_from_platforms(package_service):
 
     pytest_check.equal(len(bases), 1)
     actual_base = bases[0]
-    pytest_check.equal(
-        models.Base(
-            name=build_item.base.name,
-            channel=build_item.base.version,
-            architectures=[build_item.build_for],
-        ),
-        actual_base,
+    pytest_check.equal(expected, actual_base)
+
+
+def test_get_manifest_bases_from_platforms_invalid(package_service):
+    charm = models.PlatformCharm.model_validate(
+        {
+            "name": "my-charm",
+            "description": "",
+            "summary": "",
+            "type": "charm",
+            "base": None,
+            "build-base": None,
+            "platforms": {"amd64": None},
+            "parts": {},
+        }
     )
+    package_service._project = charm
+    package_service._build_plan = [
+        BuildInfo(
+            platform="test-platform",
+            build_on="amd64",
+            build_for="riscv64",
+            base=BaseName("ubuntu", "24.04"),
+        )
+    ]
+
+    # this shouldn't happen, but make sure the error is friendly
+    with pytest.raises(TypeError, match=r"Unknown charm type .*, cannot get bases\."):
+        package_service.get_manifest_bases()
 
 
 # endregion

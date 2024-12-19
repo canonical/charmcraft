@@ -340,7 +340,7 @@ def test_register_bundle_warning(monkeypatch: pytest.MonkeyPatch, emitter):
 
     emitter.assert_progress(
         "\u001b[31mWARNING:\u001b[0m New bundle registration will stop working on 2024-11-01. For "
-        f"more information, see: {commands.store.BUNDLE_REGISTRATION_REMOVAL_URL}",
+        f"more information, see: {store_commands.BUNDLE_REGISTRATION_REMOVAL_URL}",
         permanent=True,
     )
     mock_store.assert_called()
@@ -358,6 +358,6 @@ def test_register_bundle_error(monkeypatch: pytest.MonkeyPatch, emitter):
 
     emitter.assert_message(
         "\u001b[31mERROR:\u001b[0m New bundle registration is discontinued as of 2024-11-01.  For "
-        f"more information, see: {commands.store.BUNDLE_REGISTRATION_REMOVAL_URL}",
+        f"more information, see: {store_commands.BUNDLE_REGISTRATION_REMOVAL_URL}",
     )
     mock_store.assert_not_called()

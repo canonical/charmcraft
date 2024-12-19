@@ -1019,6 +1019,7 @@ parts:
 ```
 
 
+(file-charmcraft-yaml-peers-provides-requires)=
 ## `peers`, `provides`, `requires`
 
 > See also: [Juju | Relation (integration)](https://juju.is/docs/juju/relation)

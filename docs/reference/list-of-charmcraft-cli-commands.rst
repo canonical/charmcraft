@@ -1,7 +1,7 @@
 .. _commands:
 
 List of ``charmcraft`` CLI commands
-*********************************
+***********************************
 
 .. Use a hidden table of contents to ensure that documentation is read.
 

@@ -34,7 +34,7 @@ class _Measurements:
         # ancestors list when a measure starts (last item is direct parent); the
         # first value is special, None, to reflect the "root", the rest are
         # measurement ids
-        self.parents = [None]  # start with a unique "root"
+        self.parents: list[None | str] = [None]  # start with a unique "root"
 
         # simple dict to hold measurements information; the key is the measurement
         # id and each value holds all it info

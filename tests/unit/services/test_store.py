@@ -174,7 +174,7 @@ def test_logout(store):
 def test_create_tracks(reusable_store: StoreService):
     mock_create = cast(mock.Mock, reusable_store._publisher.create_tracks)
     mock_md = cast(mock.Mock, reusable_store._publisher.get_package_metadata)
-    user_track = {
+    user_track: publisher.CreateTrackRequest = {
         "name": "my-track",
         "automatic-phasing-percentage": None,
     }

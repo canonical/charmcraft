@@ -74,7 +74,7 @@ class Analyse(base.CharmcraftCommand):
             return self._run_formatted(parsed_args.filepath, ignore=ignore)
         return self._run_streaming(parsed_args.filepath, ignore=ignore)
 
-    def _run_formatted(self, filepath: pathlib.Path, *, ignore=Container[str]) -> int:
+    def _run_formatted(self, filepath: pathlib.Path, *, ignore: Container[str]) -> int:
         """Run the command, formatting the output into JSON or similar at the end."""
         analysis = cast("AnalysisService", self._services.analysis)
 
@@ -82,7 +82,7 @@ class Analyse(base.CharmcraftCommand):
         emit.message(json.dumps(results, indent=4, default=pydantic_encoder))
         return max(r.level for r in results).return_code
 
-    def _run_streaming(self, filepath: pathlib.Path, *, ignore=Container[str]) -> int:
+    def _run_streaming(self, filepath: pathlib.Path, *, ignore: Container[str]) -> int:
         """Run the command, printing linter results as we get them."""
         analysis = cast("AnalysisService", self._services.analysis)
 

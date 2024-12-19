@@ -57,7 +57,7 @@ def _apply_extension(
     root_extension = extension.get_root_snippet()
     for property_name, property_value in root_extension.items():
         yaml_data[property_name] = _apply_extension_property(
-            yaml_data.get(property_name), property_value
+            cast(dict, yaml_data.get(property_name)), property_value
         )
 
     # Next, apply the part-specific components
@@ -96,7 +96,7 @@ def _apply_extension_property(
         if isinstance(existing_property, dict) and isinstance(extension_property, dict):
             for key, value in extension_property.items():
                 existing_property[key] = _apply_extension_property(
-                    existing_property.get(key), value
+                    cast(dict, existing_property.get(key)), value
                 )
             return existing_property
         return existing_property

@@ -26,6 +26,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
 import craft_application
+import craft_platforms
 import yaml
 from craft_application import services, util
 from craft_cli import emit
@@ -213,20 +214,39 @@ class PackageService(services.PackageService):
                 raise RuntimeError("Could not determine run-on bases.")
             return run_on_bases
         if isinstance(self._project, PlatformCharm):
-            if not self._platform:
-                architectures = [util.get_host_architecture()]
-            elif self._platform in (*const.SUPPORTED_ARCHITECTURES, "all"):
-                architectures = [self._platform]
-            elif platform := self._project.platforms.get(self._platform):
-                if platform.build_for:
-                    architectures = [str(arch) for arch in platform.build_for]
-                else:
-                    raise ValueError(
-                        f"Platform {self._platform} contains unknown build-for."
+            archs = [self._build_plan[0].build_for]
+
+            # single base recipes will have a base
+            if self._project.base:
+                return [models.Base.from_str_and_arch(self._project.base, archs)]
+
+            # multi-base recipes may have the base in the platform name
+            platform_label = self._build_plan[0].platform
+            if base := craft_platforms.parse_base_and_name(platform_label)[0]:
+                return [
+                    models.Base(
+                        name=base.distribution,
+                        channel=base.series,
+                        architectures=archs,
                     )
-            else:
-                architectures = [util.get_host_architecture()]
-            return [models.Base.from_str_and_arch(self._project.base, architectures)]
+                ]
+
+            # Otherwise, retrieve the build-for base from the platform in the project.
+            # This complexity arises from building on devel bases - the BuildInfo
+            # contains the devel base and not the compatibility base.
+            platform = self._project.platforms.get(platform_label)
+            if platform and platform.build_for:
+                if base := craft_platforms.parse_base_and_architecture(
+                    platform.build_for[0]
+                )[0]:
+                    return [
+                        models.Base(
+                            name=base.distribution,
+                            channel=base.series,
+                            architectures=archs,
+                        )
+                    ]
+
         raise TypeError(
             f"Unknown charm type {self._project.__class__}, cannot get bases."
         )

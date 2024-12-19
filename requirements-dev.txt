@@ -8,12 +8,12 @@ cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.0
 coverage==7.6.9
-craft-application==4.4.0
+craft-application==4.7.0
 craft-archives==2.0.2
-craft-cli==2.10.1
+craft-cli==2.13.0
 craft-grammar==2.0.1
 craft-parts==2.2.0
-craft-platforms==0.4.0
+craft-platforms==0.5.0
 craft-providers==2.0.4
 craft-store==3.1.0
 cryptography==43.0.3

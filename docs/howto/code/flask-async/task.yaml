@@ -22,20 +22,8 @@ execute: |
   unset CHARMCRAFT_REGISTRY_URL
 
   # Add setup instructions
-  # (Ran into issues in prepare section)
-  # snap install rockcraft --channel=latest/edge --classic
+  snap install rockcraft --channel=latest/edge --classic
 
-  # Install the latest rockcraft snap
-  # (This can be removed after the Rockcraft PR is merged)
-  # The PR: https://github.com/canonical/rockcraft/pull/747
-  snap install snapcraft --channel=latest/edge --classic
-  # Download rockcraft async-workers branch and alithethird fork
-  git clone -b flask-django-extention-async-workers https://github.com/alithethird/rockcraft
-  cd rockcraft
-  snapcraft pack
-  snap install --dangerous --classic rockcraft_*
-
-  # snap refresh charmcraft --channel=latest/edge --amend
   snap install microk8s --channel=1.31-strict/stable
   snap install juju --channel=3/stable
 

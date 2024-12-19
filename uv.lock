@@ -351,7 +351,7 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post132+gbfe50a03"
+version = "3.2.2.post135+gb0b2ba0e"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },
@@ -450,7 +450,7 @@ requires-dist = [
     { name = "canonical-sphinx", extras = ["full"], marker = "extra == 'docs'", specifier = "~=0.2" },
     { name = "codespell", extras = ["toml"], marker = "extra == 'lint'" },
     { name = "coverage", marker = "extra == 'dev'" },
-    { name = "craft-application", git = "https://github.com/canonical/craft-application?rev=work%2FCRAFT-3721-multi-base-support" },
+    { name = "craft-application", specifier = "~=4.7" },
     { name = "craft-cli", specifier = ">=2.3.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
     { name = "craft-parts", specifier = ">=2.2.0" },
@@ -765,8 +765,8 @@ toml = [
 
 [[package]]
 name = "craft-application"
-version = "4.6.0.post5+ge6db705"
-source = { git = "https://github.com/canonical/craft-application?rev=work%2FCRAFT-3721-multi-base-support#e6db70513c595a7da208dbe37396a533bbbe3ff9" }
+version = "4.7.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
     { name = "craft-archives" },
@@ -784,6 +784,10 @@ dependencies = [
     { name = "requests" },
     { name = "snap-helpers" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/93/07/ea6b687ec207ffca23d6de390b6fd73794e907014009ae7d6f5f70d92e3a/craft_application-4.7.0.tar.gz", hash = "sha256:02dde777bf3ca288009401f6e35fbc0b31eb5cc60cebd98055a3f75fcb3bf23f", size = 225607 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/f3/6d82e8eb8215dfe96415d43fcc4ed47ce096ecb56278524cc92a06193a03/craft_application-4.7.0-py3-none-any.whl", hash = "sha256:b3b353694b720e3cfe86f40a73ad59801e177cff7bd876dfdd3d4cbc3a0bd6af", size = 144630 },
 ]
 
 [[package]]

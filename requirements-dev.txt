@@ -8,7 +8,7 @@ cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.0
 coverage==7.6.9
-git+https://github.com/canonical/craft-application@work/CRAFT-3721-multi-base-support#egg=craft-application
+craft-application==4.7.0
 craft-archives==2.0.2
 craft-cli==2.13.0
 craft-grammar==2.0.1

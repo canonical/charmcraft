@@ -17,6 +17,7 @@
 
 import argparse
 import pathlib
+from unittest import mock
 
 import craft_cli
 import pytest
@@ -133,13 +134,12 @@ def test_pack_update_charm_libs_empty(
     simple_charm,
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
+    mock_store_anonymous_client: mock.Mock,
 ):
     simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
-        store_lib
-    ]
-    service_factory.store.anonymous_client.get_library.return_value = store_lib
+    mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    mock_store_anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()
 
@@ -156,16 +156,15 @@ def test_pack_update_charm_libs_no_update(
     simple_charm,
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
+    mock_store_anonymous_client: mock.Mock,
 ):
     simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
     path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
     path.parent.mkdir(parents=True)
     path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
-        store_lib
-    ]
-    service_factory.store.anonymous_client.get_library.return_value = store_lib
+    mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    mock_store_anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()
 
@@ -181,16 +180,15 @@ def test_pack_update_charm_libs_needs_update(
     simple_charm,
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
+    mock_store_anonymous_client: mock.Mock,
 ):
     simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.2")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 2, "Lib contents", "hash")
     path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
     path.parent.mkdir(parents=True)
     path.write_text("LIBID='id'\nLIBAPI=0\nLIBPATCH=1")
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = [
-        store_lib
-    ]
-    service_factory.store.anonymous_client.get_library.return_value = store_lib
+    mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
+    mock_store_anonymous_client.get_library.return_value = store_lib
 
     pack._update_charm_libs()
 

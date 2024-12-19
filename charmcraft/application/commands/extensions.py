@@ -21,8 +21,9 @@ from textwrap import dedent
 
 from craft_cli import emit
 
-from charmcraft import extensions, utils
+from charmcraft import utils
 from charmcraft.application.commands import base
+from charmcraft.extensions import registry
 
 
 class ListExtensionsCommand(base.CharmcraftCommand):
@@ -40,7 +41,7 @@ class ListExtensionsCommand(base.CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace):
         """Print the list of available extensions and their bases."""
-        extension_data = extensions.registry.get_extensions()
+        extension_data = registry.get_extensions()
 
         if not parsed_args.format:
             extension_data = [

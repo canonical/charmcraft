@@ -49,7 +49,7 @@ def dump_yaml(data: Any) -> str:  # noqa: ANN401: yaml.dump takes anything, so w
     """Dump a craft model to a YAML string."""
     yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
     yaml.add_representer(
-        pydantic.AnyHttpUrl,
+        pydantic.AnyUrl,
         _repr_str,  # type: ignore[arg-type]
         Dumper=yaml.SafeDumper,
     )

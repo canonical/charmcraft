@@ -193,6 +193,7 @@ class CharmPlugin(plugins.Plugin):
                 "python3-setuptools",
                 "python3-venv",
                 "python3-wheel",
+                "libffi-dev",
                 "libyaml-dev",
             }
         elif platform.is_yum_based():

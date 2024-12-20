@@ -40,7 +40,7 @@ When you pack your charm, Charmcraft copies the top ``lib`` directory into the r
 directory of the charm. Thus, to import this library in Python use the full path
 minus the top ``lib`` directory, as below:
 
-.. code:: text
+.. code:: python
 
     import charms.mysql.v3.db
 

@@ -34,7 +34,7 @@ to declare information about the project in a form that can be used by Charmcraf
     keys become required as well.
 
 
-.. dropdown:: Expand to view a full charm with sample content all at once
+.. collapse:: Expand to view a full charm with sample content all at once
 
     .. literalinclude:: charmcraft-sample-charm.yaml
 
@@ -348,7 +348,7 @@ and the lib version (in ``"<api version>[.<patch version>]"`` string format).
 ============
 
 
-.. warning::
+.. caution::
 
     This key is only meaningful in Charmcraft 2. Use the environment variables
     ``CHARMCRAFT_STORE_API_URL``, ``CHARMCRAFT_UPLOAD_URL`` and
@@ -997,9 +997,9 @@ to a principal charm.
 
 **Structure:**
 
-*Type:* String.
+**Type:** String.
 
-*Value:* ``charm`` or ``bundle``.
+**Value:** ``charm`` or ``bundle``.
 
 .. dropdown:: Example
 

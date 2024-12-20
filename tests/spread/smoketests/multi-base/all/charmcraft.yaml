@@ -1,0 +1,20 @@
+name: test-charm
+type: charm
+title: test
+summary: test
+description: |
+  A charm recipe that uses a multi-base platform syntax to define
+  architecture independent charms for 22.04 and 24.04.
+
+platforms:
+  jammy:
+    build-on: [ubuntu@22.04:amd64]
+    build-for: [ubuntu@22.04:all]
+  noble:
+    build-on: [ubuntu@24.04:amd64]
+    build-for: [ubuntu@24.04:all]
+
+parts:
+  my-charm:
+    plugin: dump
+    source: .

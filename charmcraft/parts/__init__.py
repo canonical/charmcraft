@@ -41,6 +41,7 @@ def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
         "poetry": plugins.PoetryPlugin,
         "python": plugins.PythonPlugin,
         "reactive": plugins.ReactivePlugin,
+        "uv": plugins.UvPlugin,
     }
 
 

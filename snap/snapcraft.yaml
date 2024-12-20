@@ -149,7 +149,9 @@ parts:
       rustup default 1.79
     override-build: |
       uv venv --relocatable $CRAFT_PART_INSTALL
-      uv sync --no-dev --no-editable --extra apt-jammy
+      uv sync --no-dev --no-editable --no-binary
+      . $CRAFT_PART_INSTALL/bin/activate
+      uv pip install -r requirements-jammy.txt
       rm $CRAFT_PART_INSTALL/lib64
 
       cp -v completion.bash $CRAFT_PART_INSTALL
@@ -157,7 +159,7 @@ parts:
       mkdir -p $CRAFT_PART_INSTALL/libexec/charmcraft
       sed -i 's|#!/bin/sh|#!/snap/charmcraft/current/bin/python3|' $CRAFT_PART_INSTALL/bin/craftctl
 
-      version="$($CRAFT_PART_INSTALL/bin/charmcraft --version | cut -d' ' -f2)"
+      version="$(uv pip show charmcraft|grep "Version:" | cut -d' ' -f2)"
       /snap/snapcraft/current/libexec/snapcraft/craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       /snap/snapcraft/current/libexec/snapcraft/craftctl set grade="${grade}"

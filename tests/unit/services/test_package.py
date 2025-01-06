@@ -86,16 +86,39 @@ def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
 
 
 @pytest.mark.parametrize(
-    ("bases", "expected_name"),
+    ("build_plan", "expected_name"),
     [
-        (
-            [SIMPLE_BUILD_BASE],
+        pytest.param(
+            [
+                BuildInfo(
+                    platform="distro-1-test64",
+                    build_on="riscv64",
+                    build_for="riscv64",
+                    base=BaseName("ubuntu", "24.04"),
+                )
+            ],
             "charmy-mccharmface_distro-1-test64.charm",
+            id="simple",
+        ),
+        pytest.param(
+            [
+                BuildInfo(
+                    platform="ubuntu@24.04:riscv64",
+                    build_on="riscv64",
+                    build_for="riscv64",
+                    base=BaseName("ubuntu", "24.04"),
+                )
+            ],
+            "charmy-mccharmface_ubuntu@24.04-riscv64.charm",
+            id="multi-base",
         ),
     ],
 )
-def test_get_charm_path(fake_path, package_service, bases, expected_name):
+def test_get_charm_path(fake_path, package_service, build_plan, expected_name):
     fake_prime_dir = fake_path / "prime"
+    package_service._build_plan = build_plan
+    package_service._platform = build_plan[0].platform
+
     charm_path = package_service.get_charm_path(fake_prime_dir)
 
     assert charm_path == fake_prime_dir / expected_name

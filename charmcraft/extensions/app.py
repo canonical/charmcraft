@@ -204,7 +204,7 @@ GUNICORN_WEBSERVER_OPTIONS = {
     },
     "webserver-worker-class": {
         "type": "string",
-        "description": "The method of webserver worker processes for handling requests. Can be either 'gevent' or 'sync'.",
+        "description": "The webserver worker process class for handling requests. Can be either 'gevent' or 'sync'.",
     },
 }
 

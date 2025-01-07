@@ -28,9 +28,8 @@ from typing import TYPE_CHECKING, cast
 import craft_application
 import craft_platforms
 import yaml
-from craft_application import services, util
+from craft_application import services
 from craft_cli import emit
-from craft_providers import bases
 
 import charmcraft
 from charmcraft import const, errors, models, utils
@@ -121,24 +120,8 @@ class PackageService(services.PackageService):
 
     def get_charm_path(self, dest_dir: pathlib.Path) -> pathlib.Path:
         """Get a charm file name for the appropriate set of run-on bases."""
-        if self._platform:
-            return dest_dir / f"{self._project.name}_{self._platform}.charm"
-        build_plan = models.CharmcraftBuildPlanner.model_validate(
-            self._project.marshal()
-        ).get_build_plan()
-        platform = utils.get_os_platform()
-        build_on_base = bases.BaseName(name=platform.system, version=platform.release)
-        host_arch = util.get_host_architecture()
-        for build_info in build_plan:
-            print(build_info)
-            if build_info.build_on != host_arch:
-                continue
-            if build_info.base == build_on_base:
-                return dest_dir / f"{self._project.name}_{build_info.platform}.charm"
-
-        raise errors.CraftError(
-            "Current machine is not a valid build platform for this charm.",
-        )
+        platform = self._platform.replace(":", "-")
+        return dest_dir / f"{self._project.name}_{platform}.charm"
 
     @property
     def metadata(self) -> BundleMetadata | CharmMetadata:

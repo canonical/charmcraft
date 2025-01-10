@@ -113,6 +113,8 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/qmake_plugin.rst",
     "common/craft-parts/reference/plugins/rust_plugin.rst",
     "common/craft-parts/reference/plugins/scons_plugin.rst",
+    "common/craft-parts/reference/plugins/uv_plugin.rst",
+    "common/craft-parts/reference/plugins/go_use_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
 ]
 

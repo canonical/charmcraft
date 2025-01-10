@@ -104,7 +104,7 @@ Extensions
 Command line
 ============
 
-- The ``pack`` command now updates the charm libaries in the project directory
+- The ``pack`` command now updates the charm libraries in the project directory
   if they don't meet the requirements in the ``charm-libs`` key of
   ``charmcraft.yaml``.
 - New :ref:`ref_commands_create-track` command.
@@ -260,10 +260,9 @@ New Features
 * The new, experimental :ref:`ref_commands_test` command is also included in
   Charmcraft 3.1. Please have a go with it. Documentation is fairly minimal
   right now, as the implementation is still in flux.
-* The :ref:`ref_commands_upload-resource` command now uses
-  `skopeo`_ to upload images. Most notably,
-  this means you can enter
-  `any skopeo-supported containers-transports URL
+* The :ref:`ref_commands_upload-resource` command now uses `skopeo
+  <https://github.com/containers/skopeo>`_ to upload images. Most notably, this
+  means you can enter `any skopeo-supported containers-transports URL
   <https://manpages.ubuntu.com/manpages/noble/man5/containers-transports.5.html>`_
   to upload an OCI container to Charmhub.
 * New features to experimental

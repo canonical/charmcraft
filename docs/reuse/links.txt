@@ -12,7 +12,6 @@
 .. _Multipass: https://multipass.run/docs
 .. _`Open Container Initiative`: https://opencontainers.org/
 .. _Rockcraft: https://documentation.ubuntu.com/rockcraft/
-.. _skopeo: https://github.com/containers/skopeo
 .. _Snapcraft: https://snapcraft.io/docs/snapcraft-overview
 
 .. Potentially use a glossary to create indirect references to explanations.

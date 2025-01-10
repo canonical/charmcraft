@@ -59,6 +59,11 @@ backends:
       multipass delete --purge "${instance_name}"
 
     systems:
+      - ubuntu-24.04:
+          username: spread
+          password: spread
+          workers: 1
+
       - ubuntu-22.04:
           username: spread
           password: spread
@@ -96,6 +101,7 @@ suites:
     summary: Charm functionality tests
 
     systems:
+      - ubuntu-24.04*
       - ubuntu-22.04*
 
     environment:

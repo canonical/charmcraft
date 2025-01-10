@@ -98,6 +98,8 @@ class ImageService(craft_application.AppService):
             dest_username=dest_username,
             dest_password=dest_password,
             preserve_digests=True,
+            # all_images allows uploading multi-arch OCI images.
+            all_images=True,
         )
 
     @staticmethod

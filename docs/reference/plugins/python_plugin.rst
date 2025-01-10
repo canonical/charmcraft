@@ -46,9 +46,8 @@ During the build step, the plugin performs the following actions:
 2. It uses :command:`pip` to install the required Python packages specified
    by the ``python-requirements``, ``python-constraints`` and ``python-packages``
    keys.
-4. It copies any existing ``src`` and ``lib`` directories from your charm project into
+3. It copies any existing ``src`` and ``lib`` directories from your charm project into
    the final charm.
-
 
 Example
 -------
@@ -58,5 +57,3 @@ to build a charm for Ubuntu 24.04:
 
 .. literalinclude:: python-charmcraft.yaml
    :language: yaml
-
-

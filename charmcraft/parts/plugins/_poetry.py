@@ -16,6 +16,7 @@
 """Charmcraft-specific poetry plugin."""
 
 import pathlib
+import shlex
 from pathlib import Path
 
 from craft_parts.plugins import poetry_plugin
@@ -55,10 +56,11 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
         :returns: A list of strings forming the install script.
         """
         pip = self._get_pip()
+        pip_extra_args = shlex.join(self._options.poetry_pip_extra_args)
         return [
             # These steps need to be separate because poetry export defaults to including
             # hashes, which don't work with installing from a directory.
-            f"{pip} install --no-deps '--requirement={requirements_path}'",
+            f"{pip} install --no-deps --no-binary=:all: {pip_extra_args} '--requirement={requirements_path}'",
             # Check that the virtualenv is consistent.
             f"{pip} check",
         ]
@@ -91,7 +93,9 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
     @override
     def get_build_commands(self) -> list[str]:
         """Get the build commands for the Python plugin."""
-        if self._options.poetry_keep_bins:
-            return super().get_build_commands()
-        venv_bin = self._get_venv_directory() / "bin"
-        return [*super().get_build_commands(), f"rm -rf {venv_bin}"]
+        return [
+            *super().get_build_commands(),
+            *utils.get_venv_cleanup_commands(
+                self._get_venv_directory(), keep_bins=self._options.poetry_keep_bins
+            ),
+        ]

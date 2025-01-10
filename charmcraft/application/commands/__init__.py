@@ -44,6 +44,7 @@ from charmcraft.application.commands.store import (
     UploadCommand,
     ListRevisionsCommand,
     # release process, and show status
+    CreateTrack,
     ReleaseCommand,
     PromoteBundleCommand,
     StatusCommand,
@@ -88,6 +89,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             UploadCommand,
             ListRevisionsCommand,
             # release process, and show status
+            CreateTrack,
             ReleaseCommand,
             PromoteBundleCommand,
             StatusCommand,
@@ -142,6 +144,7 @@ __all__ = [
     "ListNamesCommand",
     "UploadCommand",
     "ListRevisionsCommand",
+    "CreateTrack",
     "ReleaseCommand",
     "PromoteBundleCommand",
     "StatusCommand",

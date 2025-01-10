@@ -27,6 +27,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "requirements",
     [
@@ -59,6 +60,7 @@ def test_install_strict_dependencies_pip_check_error(
         builder.handle_dependencies()
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "requirements",
     [

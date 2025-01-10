@@ -74,6 +74,7 @@ docs/_build/
 # Auto-generated command reference
 /docs/reference/commands/
 /docs/reference/_autosummary/
+/docs/common/craft-parts
 
 # PyBuilder
 target/
@@ -90,6 +91,9 @@ ipython_config.py
 
 # Pycharm
 .idea
+
+# VS Code
+.vscode
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -145,3 +149,6 @@ dmypy.json
 
 # Spread files
 .spread-reuse*.yaml
+
+# `snapcraft try` can be very useful
+/prime/

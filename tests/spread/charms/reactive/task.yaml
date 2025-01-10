@@ -27,5 +27,6 @@ execute: |
   cd charm
   charmcraft pack --verbose
 
+  rm ~/*.charm
   mv *.charm ~/
-  juju deploy ~/20.04-amd64.charm
+  juju deploy ~/*.charm

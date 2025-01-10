@@ -1,7 +1,7 @@
 # Requirements.txt file with hashes
-ops==2.6.0 \
-    --hash=sha256:387d5f5bd004b865f575ea4e25ca298bdca05b2b2beb2c51f203d5856c460cf6 \
-    --hash=sha256:b8ce352df4d17de483173dd2f8caf397e89585212d73b4d466b541b1ad3b8966
+ops==2.15.0 \
+    --hash=sha256:8e47ab8a814301776b0ff42b32544ebdece7f1639168d2c86dc7a25930d2e493 \
+    --hash=sha256:f3bad7417e98e8f390523fad097702eed16e99b38a25e9fe856aad226474b057
     # via -r requirements-basic.txt
 pyxdg==0.28 \
     --hash=sha256:3267bb3074e934df202af2ee0868575484108581e6f3cb006af1da35395e88b4 \

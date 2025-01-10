@@ -33,7 +33,7 @@ def test_get_build_environment(
 ):
     env = poetry_plugin.get_build_environment()
 
-    assert env["PIP_NO_BINARY"] == ":all:"
+    assert env["PARTS_PYTHON_VENV_ARGS"] == "--without-pip"
 
 
 def test_get_venv_directory(
@@ -48,7 +48,7 @@ def test_get_pip_install_commands(poetry_plugin: plugins.PoetryPlugin):
     assert poetry_plugin._get_pip_install_commands(
         pathlib.Path("/my dir/reqs.txt")
     ) == [
-        "/python -m pip install --no-deps '--requirement=/my dir/reqs.txt'",
+        "/python -m pip install --no-deps --no-binary=:all:  '--requirement=/my dir/reqs.txt'",
         "/python -m pip check",
     ]
 
@@ -97,7 +97,10 @@ def test_get_package_install_commands(
 def test_get_rm_command(
     poetry_plugin: plugins.PoetryPlugin, install_path: pathlib.Path
 ):
-    assert f"rm -rf {install_path / 'venv/bin'}" in poetry_plugin.get_build_commands()
+    assert (
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        in poetry_plugin.get_build_commands()
+    )
 
 
 def test_no_get_rm_command(
@@ -110,5 +113,6 @@ def test_no_get_rm_command(
     }
     poetry_plugin._options = plugins.PoetryPluginProperties.unmarshal(spec)
     assert (
-        f"rm -rf {install_path / 'venv/bin'}" not in poetry_plugin.get_build_commands()
+        f"rm -rf {install_path / 'venv/bin'}/!(activate)"
+        not in poetry_plugin.get_build_commands()
     )

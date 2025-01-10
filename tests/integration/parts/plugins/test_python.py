@@ -60,6 +60,7 @@ def python_project(project_path: pathlib.Path) -> None:
     (project_path / "requirements.txt").write_text("distro==1.4.0")
 
 
+@pytest.mark.slow
 @pytest.mark.usefixtures("python_project")
 def test_python_plugin(
     build_plan,
@@ -87,3 +88,4 @@ def test_python_plugin(
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
+    assert not (stage_path / "venv" / "lib64").is_symlink()

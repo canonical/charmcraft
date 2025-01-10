@@ -38,7 +38,7 @@ from craft_cli import CraftError, emit
 from craft_platforms import charm
 from craft_providers import bases
 from pydantic import dataclasses
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 from charmcraft import const, preprocess, utils
 from charmcraft.const import (
@@ -91,6 +91,8 @@ class CharmLib(models.CraftBaseModel):
     version: str = pydantic.Field(
         title="Version filter for the charm. Either an API version or a specific [api].[patch].",
         pattern=r"[0-9]+(\.[0-9]+)?",
+        coerce_numbers_to_str=False,
+        strict=True,
     )
 
     @pydantic.field_validator("lib", mode="before")
@@ -127,8 +129,10 @@ class CharmLib(models.CraftBaseModel):
         return str(value)
 
     @pydantic.field_validator("version", mode="before")
-    def _validate_patch_version(cls, value: str) -> str:
+    def _validate_patch_version(cls, value: str | float) -> str:
         """Validate the optional patch version, providing a useful error message."""
+        if not isinstance(value, str):
+            raise ValueError("Input should be a valid string")  # noqa: TRY004
         api, separator, patch = value.partition(".")
         if not separator:
             return value
@@ -319,6 +323,15 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
     build_base: str | None = None
     platforms: dict[str, models.Platform | None] | None = None  # type: ignore[assignment]
 
+    @override
+    @pydantic.field_validator("platforms", mode="before")
+    @classmethod
+    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
+        """Overrides the validator to prevent platforms from being modified.
+
+        Modifying the platforms field can break multi-base builds."""
+        return platforms
+
     def get_build_plan(self) -> list[models.BuildInfo]:
         """Get build bases for this charm.
 
@@ -342,12 +355,8 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                     ),
                 )
             ]
-        if not self.base:
+        if not self.base and not self.platforms:
             return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
-
-        build_base = self.build_base or self.base
-        base_name, _, base_version = build_base.partition("@")
-        base = bases.BaseName(name=base_name, version=base_version)
 
         if self.platforms is None:
             raise CraftError("Must define at least one platform.")
@@ -369,7 +378,9 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
                 platform=info.platform,
                 build_on=str(info.build_on),
                 build_for=str(info.build_for),
-                base=base,
+                base=bases.BaseName(
+                    name=info.build_base.distribution, version=info.build_base.series
+                ),
             )
             for info in build_infos
         ]
@@ -1060,7 +1071,7 @@ class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
 
     # Silencing pyright because it complains about missing default value
-    base: BaseStr  # pyright: ignore[reportGeneralTypeIssues]
+    base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
     platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
 
@@ -1071,6 +1082,15 @@ class PlatformCharm(CharmProject):
                 f"Base {self.base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
             )
         return self
+
+    @override
+    @pydantic.field_validator("platforms", mode="before")
+    @classmethod
+    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
+        """Overrides the validator to prevent platforms from being modified.
+
+        Modifying the platforms field can break multi-base builds."""
+        return platforms
 
 
 Charm = BasesCharm | PlatformCharm

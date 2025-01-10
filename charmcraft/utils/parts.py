@@ -17,6 +17,7 @@
 
 import pathlib
 import shlex
+import textwrap
 from collections.abc import Collection
 
 
@@ -27,7 +28,6 @@ def extend_python_build_environment(environment: dict[str, str]) -> dict[str, st
     :returns: the environment dictionary with charmcraft-specific additions.
     """
     return environment | {
-        "PIP_NO_BINARY": ":all:",  # Build from source
         "PARTS_PYTHON_VENV_ARGS": "--without-pip",
     }
 
@@ -54,3 +54,36 @@ def get_charm_copy_commands(
         )
 
     return commands
+
+
+def get_venv_cleanup_commands(venv_path: pathlib.Path, *, keep_bins: bool) -> list[str]:
+    """Get a script do Charmcraft-specific venv cleanup.
+
+    :param venv_path: The path to the venv.
+    :param keep_bins: Whether to keep the bin directory of the venv.
+    :returns: A shell script to do this, as a string.
+    """
+    venv_bin = venv_path / "bin"
+    venv_lib64 = venv_path / "lib64"
+    if keep_bins:
+        delete_bins = []
+    else:
+        delete_bins = [
+            # Remove all files in venv_bin except `activate`
+            "shopt -s extglob",
+            f"rm -rf {venv_bin}/!(activate)",
+            "shopt -u extglob",
+        ]
+    update_activate = [
+        # Replace hard-coded path in `activate` with portable path
+        # "\&" is escape for sed
+        'sed -i \'s#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \\&> /dev/null \\&\\& pwd )"#\' '
+        + str(venv_bin / "activate"),
+    ]
+    delete_lib64 = textwrap.dedent(f"""
+        if [ -L '{venv_lib64}' ]; then
+          rm -f '{venv_lib64}'
+        fi
+    """)
+
+    return [*delete_bins, *update_activate, delete_lib64]

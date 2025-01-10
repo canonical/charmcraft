@@ -1,12 +1,18 @@
 ## Development environment
 
+We recommend uv for setting up your local development environment:
+
+- [uv snap](https://snapcraft.io/astral-uv)
+- [Official uv binary](https://docs.astral.sh/uv/getting-started/installation/)
+
 To set up an initial development environment:
 
     git clone https://github.com/canonical/charmcraft.git
     cd charmcraft
-    virtualenv venv
-    . venv/bin/activate
-    pip install -r requirements-dev.txt -e .
+    uv sync --all-extras
+
+If you need `python-apt`, add `https://people.canonical.com/~lengau/pypi/` as an
+extra index URL.
 
 You will need a copy of `ruff` installed. On many Linux distributions, you
 can install ruff with:
@@ -15,7 +21,7 @@ can install ruff with:
 
 Otherwise, you can install ruff in your virtual environment with:
 
-    pip install ruff
+    uv tool install ruff
 
 
 ## Developing against Charmcraft source
@@ -31,7 +37,7 @@ When you're done, make sure you run the tests.
 
 You can do so with
 
-    pip install -r requirements-dev.txt
-    ./run_tests
+    uv sync
+    uv run pytest
 
 Contributions welcome!

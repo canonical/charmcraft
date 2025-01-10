@@ -62,7 +62,7 @@ class CharmBuilder:
         builddir: pathlib.Path,
         installdir: pathlib.Path,
         entrypoint: pathlib.Path,
-        allow_pip_binary: bool = None,
+        allow_pip_binary: bool = False,
         binary_python_packages: list[str] | None = None,
         python_packages: list[str] | None = None,
         requirements: list[pathlib.Path] | None = None,
@@ -497,4 +497,4 @@ def main():
 if __name__ == "__main__":
     with instrum.Timer("Full charm_builder.py main"):
         main()
-    instrum.dump(get_charm_builder_metrics_path())
+    instrum.dump(get_charm_builder_metrics_path().as_posix())

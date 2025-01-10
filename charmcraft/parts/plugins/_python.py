@@ -38,7 +38,9 @@ class PythonPlugin(python_plugin.PythonPlugin):
 
     @override
     def get_build_environment(self) -> dict[str, str]:
-        return utils.extend_python_build_environment(super().get_build_environment())
+        return {
+            "PIP_NO_BINARY": ":all:",
+        } | utils.extend_python_build_environment(super().get_build_environment())
 
     @override
     def _get_venv_directory(self) -> Path:
@@ -96,7 +98,9 @@ class PythonPlugin(python_plugin.PythonPlugin):
     @override
     def get_build_commands(self) -> list[str]:
         """Get the build commands for the Python plugin."""
-        if self._options.python_keep_bins:
-            return super().get_build_commands()
-        venv_bin = self._get_venv_directory() / "bin"
-        return [*super().get_build_commands(), f"rm -rf {venv_bin}"]
+        return [
+            *super().get_build_commands(),
+            *utils.get_venv_cleanup_commands(
+                self._get_venv_directory(), keep_bins=self._options.python_keep_bins
+            ),
+        ]

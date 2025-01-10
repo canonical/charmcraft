@@ -3,7 +3,7 @@
 How to manage charm bundles
 ===========================
 
-   See first: `Juju \| Bundle <https://juju.is/docs/juju/bundle>`__
+   See first: `Juju \| Bundle <https://juju.is/docs/juju/bundle>`_
 
 .. important::
    Starting with 1 Jan 2025, bundles are being phased out.
@@ -14,7 +14,7 @@ Create a bundle
 
 To create a bundle, create a ``<bundle>.yaml`` file with your desired configuration.
 
-  See more: :ref:`file-bundle-yaml`
+  See more: `File \<bundle.yaml\> <https://juju.is/docs/sdk/bundle.yaml>`_
 
 .. tip::
    If you don't want to start from scratch, export the contents of your model to a

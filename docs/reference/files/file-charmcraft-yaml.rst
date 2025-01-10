@@ -755,7 +755,7 @@ properties.
 providing the interface.  Cannot be ``juju``. Cannot begin with ``juju-``. Must
 only contain characters ``a-z`` and ``-`` and cannot start with ``-``.
 
-.. warning::
+.. caution::
 
     The interface name is the only means of establishing whether two charms are
     compatible for integration; and carries with it nothing more than a mutual

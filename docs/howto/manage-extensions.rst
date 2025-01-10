@@ -11,7 +11,7 @@ View all the available extensions
 To view all the available Rockcraft / Charmcraft extensions, run the
 ``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
 
-.. code:: text
+.. code:: bash
 
    $ charmcraft list-extensions
    Extension name    Supported bases    Experimental bases

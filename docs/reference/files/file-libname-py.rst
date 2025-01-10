@@ -182,9 +182,9 @@ charm.
       - Used in
       - Description
     * - `fluentbit <https://charmhub.io/fluentbit/libraries/fluentbit>`_
-      - - `fluentbit <https://charmhub.io/fluentbit>`_
+      - `fluentbit charm <https://charmhub.io/fluentbit>`_
       - Defines both sides of a relation interface to the
-        `fluentbit charm <https://charmhub.io/fluentbit>`_
+        fluentbit charm.
     * - `redis <https://charmhub.io/redis-k8s/libraries/redis>`_
       -
       - Import RedisRequires from this lib to relate your charm to the
@@ -209,20 +209,20 @@ charm.
       - Defines a relation to the `alertmanager-dispatch charm
         <https://charmhub.io/alertmanager-k8s>`_.
     * - `karma_dashboard <https://charmhub.io/karma-k8s/libraries/karma_dashboard>`_
-      - - `karma-k8s <https://charmhub.io/karma-k8s>`_
+      - `karma-k8s <https://charmhub.io/karma-k8s>`_
       - Defines an interface for charms wishing to consume or provide a
         karma-dashboard relation.
     * - `loki_push_api
         <https://charmhub.io/loki-k8s/libraries/loki_push_api>`_
-      - - `loki-k8s <https://charmhub.io/loki-k8s>`_
+      - `loki-k8s <https://charmhub.io/loki-k8s>`_
       - Defines a relation interface for charms wishing to provide or consume the
         Loki Push API---e.g., a charm that wants to send logs to Loki.
     * - `log_proxy <https://charmhub.io/loki-k8s/libraries/log_proxy>`_
-      - - `loki-k8s <https://charmhub.io/loki-k8s>`_
+      - `loki-k8s <https://charmhub.io/loki-k8s>`_
       - Defines a relation interface that allows a charm to act as a Log Proxy for
         Loki (via the Loki Push API).
     * - `guacd <https://charmhub.io/apache-guacd/libraries/guacd>`_
-      - - `apache-guacd <https://charmhub.io/apache-guacd>`_
+      - `apache-guacd <https://charmhub.io/apache-guacd>`_
       - Defines a relation for charms wishing to set up a native server side proxy
         for Apache Guacamole.
 
@@ -239,7 +239,7 @@ or to perform operations common to several charms.
       - Used in
       - Description
     * - `cert <https://charmhub.io/kubernetes-dashboard/libraries/cert>`_
-      - - `kubernetes-dashboard <https://charmhub.io/kubernetes-dashboard>`_
+      - `kubernetes-dashboard <https://charmhub.io/kubernetes-dashboard>`_
       - Generates a self signed certificate.
     * - `capture_events
         <https://discourse.charmhub.io/t/harness-recipe-capture-events/6581>`_
@@ -253,8 +253,8 @@ or to perform operations common to several charms.
       -
       - Provides utilities to track multiple independent statuses in charms.
     * - `resurrect <https://github.com/PietroPasotti/resurrect>`_
-      - - `github-runner-image-builder
-          <https://github.com/canonical/github-runner-image-builder-operator>`_
+      - `github-runner-image-builder
+        <https://github.com/canonical/github-runner-image-builder-operator>`_
       - Provides utilities to periodically trigger charm hooks
 
 
@@ -280,10 +280,10 @@ These libraries provide tooling for charms that run on top of Kubernetes clouds.
       - Allows charm authors to simply and elegantly define service overrides that
         persist through a charm upgrade.
     * - `ingress <https://charmhub.io/nginx-ingress-integrator/libraries/ingress>`_
-      - - `nginx-ingress-integrator <https://charmhub.io/nginx-ingress-integrator>`_
+      - `nginx-ingress-integrator <https://charmhub.io/nginx-ingress-integrator>`_
       - Configures nginx to use an existing Kubernetes Ingress.
     * - `ingress-per-unit <https://charmhub.io/traefik-k8s/libraries/ingress_per_unit>`_
-      - - `traefik-k8s <https://charmhub.io/traefik-k8s>`_
+      - `traefik-k8s <https://charmhub.io/traefik-k8s>`_
       - Configures traefik to provide per-unit routing.
 
 Libraries that provide tools for machine charms
@@ -323,7 +323,7 @@ containers.
         - `kafka <https://charmhub.io/kafka>`_
       - Install and manage packages via ``snapd``.
     * - `sysctl <https://charmhub.io/operator-libs-linux/libraries/sysctl>`_
-      - - `kafka <https://charmhub.io/kafka>`_
+      - `kafka <https://charmhub.io/kafka>`_
       - Manage sysctl configuration.
     * - `systemd <https://charmhub.io/operator-libs-linux/libraries/systemd>`_
       - - `mongodb <https://charmhub.io/mongodb>`_

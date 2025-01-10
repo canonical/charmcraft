@@ -28,9 +28,10 @@ from craft_application import util
 from craft_application.models import BuildInfo
 from craft_providers.bases import BaseName
 
-from charmcraft import const, models, services
+from charmcraft import const, models
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import BasesCharm
+from charmcraft.services.package import PackageService
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(
     name="ubuntu", channel="22.04", architectures=["arm64"]
@@ -52,14 +53,14 @@ def package_service(fake_path, simple_charm, service_factory, default_build_plan
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)
 
-    service_factory.set_kwargs(
+    service_factory.update_kwargs(
         "lifecycle",
         work_dir=fake_path,
         cache_dir=fake_path / "cache",
         build_plan=[],  # Only okay now because we're not asking the lifecycle service to use the plan.
     )
 
-    return services.PackageService(
+    return PackageService(
         app=APP_METADATA,
         project=simple_charm,
         # The package service doesn't call other services
@@ -290,7 +291,7 @@ def test_do_not_overwrite_actions_yaml(
 )
 def test_get_manifest_bases_from_bases(
     fake_path: pathlib.Path,
-    package_service: services.PackageService,
+    package_service: PackageService,
     bases: list[dict[str, Any]],
     build_item: BuildInfo,
     expected: list[dict[str, Any]],

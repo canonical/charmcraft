@@ -27,10 +27,14 @@ from craft_application.commands import lifecycle
 from craft_cli import ArgumentParsingError, CraftError
 from typing_extensions import override
 
-from charmcraft import models, services, utils
+from charmcraft import models, utils
 
 if TYPE_CHECKING:  # pragma: no cover
     import argparse
+
+    from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.package import PackageService
+    from charmcraft.services.store import StoreService
 
 BUNDLE_MANDATORY_FILES = ["bundle.yaml", "README.md"]
 
@@ -128,7 +132,7 @@ class PackCommand(lifecycle.PackCommand):
 
     def _validate_args(self, parsed_args: argparse.Namespace) -> None:
         project = cast(models.CharmcraftProject, self._services.project)
-        package_service = cast(services.PackageService, self._services.package)
+        package_service = cast("PackageService", self._services.package)
         if project.type == "charm":
             if parsed_args.include_all_charms:
                 raise ArgumentParsingError(
@@ -187,7 +191,7 @@ class PackCommand(lifecycle.PackCommand):
             "Checking that charmlibs match 'charmcraft.yaml' values"
         )
         project = cast(models.CharmcraftProject, self._services.project)
-        libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
+        libs_svc = cast("CharmLibsService", self._services.charm_libs)
         installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
             library_name = utils.QualifiedLibraryName.from_string(lib.lib)
@@ -196,7 +200,7 @@ class PackCommand(lifecycle.PackCommand):
             ):
                 installable_libs.append(lib)
         if installable_libs:
-            store = cast(services.StoreService, self._services.store)
+            store = cast("StoreService", self._services.store)
             libraries_md = store.get_libraries_metadata(installable_libs)
             with craft_cli.emit.progress_bar(
                 "Downloading charmlibs...", len(installable_libs)

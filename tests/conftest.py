@@ -25,6 +25,7 @@ from collections.abc import Iterator
 from typing import Any
 from unittest import mock
 
+import craft_application
 import craft_parts
 import pytest
 import responses as responses_module
@@ -101,15 +102,16 @@ def service_factory(
     mock_store_client,
     mock_store_anonymous_client,
     default_build_plan,
-) -> services.CharmcraftServiceFactory:
-    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
+) -> craft_application.ServiceFactory:
+    services.register_services()
+    factory = craft_application.ServiceFactory(app=APP_METADATA)
 
-    factory.set_kwargs(
+    factory.update_kwargs(
         "package",
         project_dir=fake_project_dir,
         build_plan=default_build_plan,
     )
-    factory.set_kwargs(
+    factory.update_kwargs(
         "lifecycle",
         work_dir=pathlib.Path("/project"),
         cache_dir=pathlib.Path("/cache"),

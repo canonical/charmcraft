@@ -18,12 +18,14 @@
 
 import argparse
 from textwrap import dedent
+from typing import cast
 
 from craft_cli import emit
 
 from charmcraft import utils
 from charmcraft.application.commands import base
 from charmcraft.extensions import registry
+from charmcraft.models import project
 
 
 class ListExtensionsCommand(base.CharmcraftCommand):
@@ -92,4 +94,8 @@ class ExpandExtensionsCommand(base.CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Print the project's specification with the extensions expanded."""
-        emit.message(utils.dump_yaml(self._services.project.marshal()))
+        emit.message(
+            utils.dump_yaml(
+                cast(project.CharmcraftProject, self._services.project).marshal()
+            )
+        )

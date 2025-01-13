@@ -1,4 +1,4 @@
-# Copyright 2024 Canonical Ltd.
+# Copyright 2024-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,6 +46,16 @@ BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.
             id="empty-charm",
         ),
         pytest.param(BASIC_CHARM.copy(), BASIC_CHARM, id="basic-charm"),
+        pytest.param(
+            {"type": "charm", "platforms": {"amd64": None}},
+            {"type": "charm", "platforms": {"amd64": None}},
+            id="platforms-charm-no-base",
+        ),
+        pytest.param(
+            {"type": "charm", "base": "ubuntu@24.04"},
+            {"type": "charm", "base": "ubuntu@24.04"},
+            id="platforms-charm-no-platforms",
+        ),
     ],
 )
 def test_add_default_parts_correct(yaml_data, expected):

@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2022,2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ def get_python_filepaths() -> list[str]:
 def test_ensure_copyright() -> None:
     """Check that all non-empty Python files have copyright somewhere in the first 5 lines."""
     issues = []
-    regex = re.compile(r"# Copyright \d{4}(-\d{4})? Canonical Ltd.$")
+    regex = re.compile(r"# Copyright \d{4}([-,]\d{4})* Canonical Ltd.$")
     for filepath in get_python_filepaths():
         if Path(filepath).stat().st_size == 0:
             continue

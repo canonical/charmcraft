@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023,2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -993,6 +993,7 @@ def test_from_yaml_file_exception(
                 "description": "",
                 "base": "ubuntu@24.04",
                 "platforms": {"amd64": None},
+                "parts": {"my-part": {"plugin": "nil"}},
                 "charmhub": {"api_url": "http://charmhub.io"},
             },
         ),
@@ -1127,19 +1128,16 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 - field 'name' required in top-level configuration
                 - field 'summary' required in top-level configuration
                 - field 'description' required in top-level configuration
-                - field 'bases' required in top-level configuration"""
+                - field 'platforms' required in top-level configuration
+                - field 'parts' required in top-level configuration"""
             ),
         ),
         (
             "invalid-type.yaml",
             dedent(
                 """\
-                Bad invalid-type.yaml content:
-                - field 'name' required in top-level configuration
-                - field 'summary' required in top-level configuration
-                - field 'description' required in top-level configuration
-                - input should be 'charm' (in field 'type')
-                - field 'bases' required in top-level configuration"""
+                Bad charmcraft.yaml content:
+                - field type cannot be 'invalid'"""
             ),
         ),
         (
@@ -1151,13 +1149,31 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
                 - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
             ),
         ),
+        pytest.param(
+            "platforms-no-parts.yaml",
+            dedent(
+                """\
+                Bad platforms-no-parts.yaml content:
+                - field 'parts' required in top-level configuration"""
+            ),
+            id="no-parts-in-platform-charm",
+        ),
+        pytest.param(
+            "platforms-empty-parts.yaml",
+            dedent(
+                """\
+                Bad platforms-empty-parts.yaml content:
+                - dictionary should have at least 1 item after validation, not 0 (in field 'parts')"""
+            ),
+            id="empty-parts-in-platform-charm",
+        ),
     ],
 )
 def test_read_charm_from_yaml_file_error(filename, errors):
     file_path = pathlib.Path(__file__).parent / "invalid_charms_yaml" / filename
 
     with pytest.raises(CraftValidationError) as exc:
-        _ = project.BasesCharm.from_yaml_file(file_path)
+        _ = project.CharmcraftProject.from_yaml_file(file_path)
 
     assert exc.value.args[0] == errors
 

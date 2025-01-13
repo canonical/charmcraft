@@ -1,14 +1,14 @@
 (write-your-first-kubernetes-charm-for-a-fastapi-app)=
 # Write your first Kubernetes charm for a FastAPI app
 
-**What you’ll need:**
+**What you'll need:**
 
 - A workstation, e.g., a laptop, with amd64 architecture which has sufficient resources to launch a virtual machine with 4 CPUs, 4 GB RAM, and a 50 GB disk
     - Note that a workstation with arm64 architecture can complete the majority of this tutorial.
 - Familiarity with Linux
 - About 90 minutes of free time.
 
-**What you’ll do:**
+**What you'll do:**
 
 Create a FastAPI application. Use that to create a rock with `rockcraft`. Use that to create a charm with `charmcraft`. Use that to test-deploy, configure, etc., your Django application on a local Kubernetes cloud, `microk8s`, with `juju`. All of that multiple times, mimicking a real development process. 
 
@@ -91,7 +91,7 @@ sudo microk8s enable registry
 sudo microk8s enable ingress
 ```
 
-> See more: [ingress^](https://microk8s.io/docs/ingress)
+> See more: [ingress](https://microk8s.io/docs/ingress)
 
 Juju is required to deploy the FastAPI application. Install Juju and bootstrap a development controller:
 
@@ -214,7 +214,7 @@ rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
    docker://localhost:32000/fastapi-hello-world:0.1
 ```
 
-> See more: [skopeo^](https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html)
+> See more: [skopeo](https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html)
 
 ## Create the charm
 
@@ -279,7 +279,7 @@ juju deploy ./fastapi-hello-world_amd64.charm fastapi-hello-world \
 
 It will take a few minutes to deploy the FastAPI application. You can monitor the progress using `juju status --watch 5s`. Once the status of the App has gone to `active`, you can stop watching using <kbd>ctrl</kbd> + <kbd>c</kbd>.
 
-> See more: {ref}`Command 'juju status' <command-juju-status>`
+> See more: {ref}`juju status <ref_commands_status>`
 
 ```
 
@@ -408,9 +408,7 @@ import os
 
 import psycopg2
 
-
-DATABASE_URI = os.environ{ref}`"POSTGRESQL_DB_CONNECT_STRING"]
-
+DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
 
 def migrate():
     with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
@@ -542,8 +540,7 @@ multipass purge
 
 By the end of this tutorial you will have built a charm and evolved it in a number of typical ways. But there is a lot more to explore:
 
-| If you are wondering... | visit...             |
-|-------------------------|----------------------|
-| "How do I...?"          | {ref}`how-to-guides` |
-| "What is...?"           | {ref}`reference`     |
-| "Why...?", "So what?"   | {ref}`explanation`   |
+If you are wondering... | Visit...
+-|-
+"How do I...?" | {ref}`how-to-guides`
+"What is...?" | {ref}`reference`

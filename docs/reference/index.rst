@@ -1,16 +1,16 @@
 .. _reference:
 
 Reference
-*********
+=========
 
 .. toctree::
     :maxdepth: 2
 
-    charmcraft
-    charmcraft-analyzers-and-linters
-    charmcraft-cli
-    extension
-    file
-    part
+    changelog
+    analyzers-and-linters
+    commands/index
+    extensions/index
+    files/index
+    parts/index
     profile
-    Data models <models/index>
+    models/index

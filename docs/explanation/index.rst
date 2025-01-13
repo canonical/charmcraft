@@ -1,6 +1,6 @@
 .. _explanation:
 
 Explanation
-***********
+===========
 
-TBA
+.. toctree

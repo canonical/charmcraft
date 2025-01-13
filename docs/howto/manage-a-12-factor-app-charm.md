@@ -30,7 +30,7 @@ charmcraft init --profile <profile>
 
 Charmcraft automatically creates `charmcraft.yaml`, `requirements.txt` and source code
 for the charm in your current directory. You will need to check `charmcraft.yaml` and
-`README.md` and verify that the charm’s name and description are correct.
+`README.md` and verify that the charm's name and description are correct.
 
 > See also: {ref}`ref_commands_init`
 
@@ -107,7 +107,7 @@ The configuration can be set on the deployed charm using `juju config <app name>
 token=<token>`.
 
 > See also: [How to add a configuration to a charm](https://juju.is/docs/sdk/config),
-> [Configuration Handling – Flask
+> [Configuration Handling -- Flask
 > Documentation](https://flask.palletsprojects.com/en/3.0.x/config/)
 ```
 
@@ -175,7 +175,7 @@ requires:
 Here, `<endpoint name>` corresponds to the endpoint of the application with which you
 want the integration, and `<endpoint interface name>` is the endpoint schema to which
 this relation conforms. Both the `<endpoint name>` and `<endpoint interface name>` must
-coincide with the structs defined in that particular application’s charm’s
+coincide with the structs defined in that particular application's charm's
 `charmcraft.yaml` file. The key `optional` with value `False` means that the charm will
 get blocked and stop the services if the integration is not provided.
 

@@ -6,7 +6,7 @@ How-to guides
 .. toctree::
    :maxdepth: 2
 
-   manage-the-charmcraft-cli
+   set-up-charmcraft
    manage-charms
    manage-a-12-factor-app-charm
    manage-extensions
@@ -20,5 +20,5 @@ How-to guides
    manage-tracks
    manage-icons
    manage-bundles
-   Migrate to other plugins <migrate-to-other-plugins/index>
+   Migrate plugins <migrate-plugins/index>
    Build <build-guides/index>

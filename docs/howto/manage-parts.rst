@@ -1,11 +1,11 @@
 .. _manage-parts:
 
-How to manage parts
-===================
+Manage parts
+============
 
    See first: :ref:`part`
 
-Remove a part’s assets
+Remove a part's assets
 ----------------------
 
 TBA

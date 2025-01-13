@@ -1,9 +1,9 @@
 .. _manage-extensions:
 
-How to manage extensions
-========================
+Manage extensions
+=================
 
-   See also: :ref:`extension`
+   See also: :ref:`extensions`
 
 View all the available extensions
 ---------------------------------
@@ -11,7 +11,7 @@ View all the available extensions
 To view all the available Rockcraft / Charmcraft extensions, run the
 ``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
 
-.. code:: bash
+.. code-block:: bash
 
    $ charmcraft list-extensions
    Extension name    Supported bases    Experimental bases
@@ -20,23 +20,26 @@ To view all the available Rockcraft / Charmcraft extensions, run the
 
 ..
 
-   See more: `Rockcraft \| rockcraft list-extensions <https://canonical-rockcraft.readthedocs-hosted.com/en/latest/reference/commands/list-extensions/>`_, :ref:`ref_commands_list-extensions`
+   See more: `Rockcraft | rockcraft list-extensions <https://canonical-rockcraft.readthedocs-hosted.com/en/latest/reference/commands/list-extensions/>`_, :ref:`ref_commands_list-extensions`
 
 View details about the extension in use
 ---------------------------------------
 
-Suppose you’ve initialised a rock / charm with a profile that comes with
+Suppose you've initialised a rock / charm with a profile that comes with
 an extension (currently, ``flask-framework``), and your
 ``rockcraft.yaml`` / ``charmcraft.yaml > extensions`` lists this
 extension.
 
-.. dropdown:: Example
+.. collapse:: Example
 
-   .. code:: text
+   .. code-block:: bash
 
-      $ mkdir my-flask-app-k8s
-      $ cd my-flask-app-k8s/
-      $ charmcraft init --profile flask-framework
+      mkdir my-flask-app-k8s
+      cd my-flask-app-k8s/
+      charmcraft init --profile flask-framework
+
+  .. terminal::
+
       Charmed operator package file and directory tree initialised.
 
       Now edit the following package files to provide fundamental charm metadata
@@ -46,14 +49,24 @@ extension.
       src/charm.py
       README.md
 
-      user@ubuntu:~/my-flask-app-k8s$ ls -R
+  .. code-block:: bash
+
+      ls -R
+
+  .. terminal::
+
       .:
       charmcraft.yaml  requirements.txt  src
 
       ./src:
       charm.py
 
-      $ cat charmcraft.yaml
+  .. code-block:: bash
+
+      cat charmcraft.yaml
+
+  .. terminal::
+
       # This file configures Charmcraft.
       # See https://juju.is/docs/sdk/charmcraft-config for guidance.
 
@@ -88,23 +101,18 @@ extension.
       #     interface: postgresql_client
       #     limit: 1
 
-
 To view details about what that extension is adding to your charm, set the
 ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,
 then run  ``charmcraft expand-extensions``. For example:
 
+.. collapse:: Expanding an extension
 
-.. code:: text
+   .. code-block:: bash
 
-   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
+      CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
+  
+  .. terminal::
 
-
-.. dropdown:: See effect given example context
-
-
-   .. code:: text
-
-      $ CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
       *EXPERIMENTAL* extension 'flask-framework' enabled
       name: my-flask-app-k8s
       summary: A very short one-line summary of the flask application.
@@ -209,4 +217,4 @@ then run  ``charmcraft expand-extensions``. For example:
 
 ..
 
-   See more: `Rockcraft \| rockcraft expand-extensions <https://canonical-rockcraft.readthedocs-hosted.com/en/latest/reference/commands/expand-extensions/>`_, :ref:`ref_commands_expand-extensions`
+   See more: `Rockcraft | rockcraft expand-extensions <https://canonical-rockcraft.readthedocs-hosted.com/en/latest/reference/commands/expand-extensions/>`_, :ref:`ref_commands_expand-extensions`

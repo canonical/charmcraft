@@ -15,7 +15,7 @@ How to pack a reactive charm with Charmcraft
 To pack a legacy reactive charm with Charmcraft, in the charm directory create a
 ``charmcraft.yaml`` file with the part definition for a reactive-based charm:
 
-.. code:: yaml
+.. code-block:: yaml
 
    type: "charm"
    bases:

@@ -1,12 +1,12 @@
 .. _manage-icons:
 
-How to manage icons
-===================
+Manage icons
+============
 
 Learn about icon requirements and best practices
 ------------------------------------------------
 
-  See more: :ref:`file-icon-svg`
+  See more: :ref:`icon-svg-file`
 
 Create an icon
 --------------

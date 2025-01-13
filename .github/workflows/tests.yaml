@@ -106,8 +106,6 @@ jobs:
       - name: Set up uv with caching
         id: setup-uv
         uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
       - name: Install dependencies
         run: |
           uv sync --no-dev
@@ -192,8 +190,6 @@ jobs:
       - name: Set up uv with caching
         id: setup-uv
         uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

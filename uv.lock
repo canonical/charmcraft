@@ -356,7 +356,7 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post145+ge12ea0e8"
+version = "3.2.2.post148+ga93a2d91"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },
@@ -765,7 +765,7 @@ toml = [
 
 [[package]]
 name = "craft-application"
-version = "4.8.0"
+version = "4.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -785,9 +785,9 @@ dependencies = [
     { name = "snap-helpers" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/d5/978fcbc02f7e420f62dd6a86be809478261d151b9f049bdbe9b4880c144c/craft_application-4.8.0.tar.gz", hash = "sha256:0e5dfc41becfde269cc4fae647604a720e3ff57472dce2ef31d7798960058b06", size = 227858 }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/d0/ab038821e52ace7a5e371978bf682d3b45657138f5f995111cbed492d41a/craft_application-4.8.1.tar.gz", hash = "sha256:e333957ff762eef443c52b2a91e66a31912a5f3012317ab71e7c6342c601ea53", size = 228078 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/c3/d616e1bf86ac89ca5c8715ee01e8167c956644390b8803f039deac787a6b/craft_application-4.8.0-py3-none-any.whl", hash = "sha256:d8c0459a6501cf7b6e20f779ef2f935d7964d68400171a19bfec7b953e695aee", size = 146002 },
+    { url = "https://files.pythonhosted.org/packages/1f/13/3754de773f557d85832226b0342b63650c65c94dbf9829ca94b122190bc7/craft_application-4.8.1-py3-none-any.whl", hash = "sha256:4b41299e50ebdb80d704d88248f78be657ddf2cecd41ce905fe71f11abe74af6", size = 146039 },
 ]
 
 [[package]]
@@ -837,7 +837,7 @@ wheels = [
 
 [[package]]
 name = "craft-parts"
-version = "2.2.1"
+version = "2.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "overrides" },
@@ -847,9 +847,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-unixsocket2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dd/11/443c81b7a7e33c7ec77f8e2cdca96a59f340e928ddda79cbc93b513e7b62/craft_parts-2.2.1.tar.gz", hash = "sha256:7a2751438dd9b26b2a2e15d79379f4fc5fb26cf6610da7fff4f0b451b843e4d3", size = 563795 }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/9d/c3352f7cbb079dbbfb43dc2e535e0f2ce6934dfd132a94adbdcf15fd3bb8/craft_parts-2.2.2.tar.gz", hash = "sha256:7f659c9a1fa5b76e5ac75415ff4dce6da3afb5d9e460ca5f225b73b5c6e494c1", size = 563863 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/1a/283a6775d86a0c7b5caf697314919172ad6f0c4a82716d3ff99f456d9e8c/craft_parts-2.2.1-py3-none-any.whl", hash = "sha256:12be64f7ba4f2909a26e1160e743613681be34634eca7206dc69a2159ca24ebc", size = 449056 },
+    { url = "https://files.pythonhosted.org/packages/7f/85/a145f657053f7701702faa85a0e493538a022da5362c76dbea580f5d6a38/craft_parts-2.2.2-py3-none-any.whl", hash = "sha256:6f84d253ef1543ef1b2c37cb6733dccd6e40a3b3474b35b247ce5137a6b04ecf", size = 449064 },
 ]
 
 [[package]]
@@ -1280,16 +1280,16 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.123.16"
+version = "6.123.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/fa/bc053826d2f01a322f9577cdfb1318648adb30cde379cef635f3cd716d99/hypothesis-6.123.16.tar.gz", hash = "sha256:2af13b9795d2c4b9c66865569a944f2d8c3812b087989bc0f408e825bb10c8e6", size = 418240 }
+sdist = { url = "https://files.pythonhosted.org/packages/15/a7/695b2bcb4e8438e1d4683efa6877fc95be293a11251471d4552d6dd08259/hypothesis-6.123.17.tar.gz", hash = "sha256:5850893975b4f08e893ddc10f1d468bc7e011d59703f70fe06a10161e426e602", size = 418572 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e8/c8/693301506622348feb165d181276652a2dcac93e6068513b8502ffafd47a/hypothesis-6.123.16-py3-none-any.whl", hash = "sha256:ab898adf001823868ff21a20355944c2eb5ce776f20e9983c7d79b535675e6c3", size = 480548 },
+    { url = "https://files.pythonhosted.org/packages/11/8a/f1c166f048df4b314d0d38e9530b7af516a16160873d724bb416084d6990/hypothesis-6.123.17-py3-none-any.whl", hash = "sha256:5c949fb44935e32c61c64abfcc3975eec41f8205ade2223073ba074c1e078ead", size = 480880 },
 ]
 
 [[package]]
@@ -1592,14 +1592,14 @@ wheels = [
 
 [[package]]
 name = "license-expression"
-version = "30.4.0"
+version = "30.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boolean-py" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c7/97/df5570fe2f1046bb5f6eeed55815ef11e371e9310d53bd94ec8efe4173f4/license_expression-30.4.0.tar.gz", hash = "sha256:6464397f8ed4353cc778999caec43b099f8d8d5b335f282e26a9eb9435522f05", size = 176230 }
+sdist = { url = "https://files.pythonhosted.org/packages/74/6f/8709031ea6e0573e6075d24ea34507b0eb32f83f10e1420f2e34606bf0da/license_expression-30.4.1.tar.gz", hash = "sha256:9f02105f9e0fcecba6a85dfbbed7d94ea1c3a70cf23ddbfb5adf3438a6f6fce0", size = 177184 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/f8/5699e6d6ea5156d53059ff07464b5d64389b084f67cb08ec97c711e587fc/license_expression-30.4.0-py3-none-any.whl", hash = "sha256:7c8f240c6e20d759cb8455e49cb44a923d9e25c436bf48d7e5b8eea660782c04", size = 110571 },
+    { url = "https://files.pythonhosted.org/packages/53/84/8a89614b2e7eeeaf0a68a4046d6cfaea4544c8619ea02595ebeec9b2bae3/license_expression-30.4.1-py3-none-any.whl", hash = "sha256:679646bc3261a17690494a3e1cada446e5ee342dbd87dcfa4a0c24cc5dce13ee", size = 111457 },
 ]
 
 [[package]]
@@ -1876,11 +1876,11 @@ wheels = [
 
 [[package]]
 name = "more-itertools"
-version = "10.5.0"
+version = "10.6.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/51/78/65922308c4248e0eb08ebcbe67c95d48615cc6f27854b6f2e57143e9178f/more-itertools-10.5.0.tar.gz", hash = "sha256:5482bfef7849c25dc3c6dd53a6173ae4795da2a41a80faea6700d9f5846c5da6", size = 121020 }
+sdist = { url = "https://files.pythonhosted.org/packages/88/3b/7fa1fe835e2e93fd6d7b52b2f95ae810cf5ba133e1845f726f5a992d62c2/more-itertools-10.6.0.tar.gz", hash = "sha256:2cd7fad1009c31cc9fb6a035108509e6547547a7a738374f10bd49a09eb3ee3b", size = 125009 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/7e/3a64597054a70f7c86eb0a7d4fc315b8c1ab932f64883a297bdffeb5f967/more_itertools-10.5.0-py3-none-any.whl", hash = "sha256:037b0d3203ce90cca8ab1defbbdac29d5f993fc20131f3664dc8d6acfa872aef", size = 60952 },
+    { url = "https://files.pythonhosted.org/packages/23/62/0fe302c6d1be1c777cab0616e6302478251dfbf9055ad426f5d0def75c89/more_itertools-10.6.0-py3-none-any.whl", hash = "sha256:6eb054cb4b6db1473f6e15fcc676a08e4732548acd47c708f0e179c2c7c01e89", size = 63038 },
 ]
 
 [[package]]
@@ -3015,16 +3015,16 @@ wheels = [
 
 [[package]]
 name = "responses"
-version = "0.25.5"
+version = "0.25.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/12/471bcafa7158cf88a207e221d0d3309c536b961d47be071e5ee7fd199fe4/responses-0.25.5.tar.gz", hash = "sha256:e53991613f76d17ba293c1e3cce8af107c5c7a6a513edf25195aafd89a870dd3", size = 79099 }
+sdist = { url = "https://files.pythonhosted.org/packages/97/63/759996eea0f17e8dc4c9ea9c60765292d28a7750bdbee073ad55d83caa57/responses-0.25.6.tar.gz", hash = "sha256:eae7ce61a9603004e76c05691e7c389e59652d91e94b419623c12bbfb8e331d8", size = 79145 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/50/4e/d7cfc559d1ca014cdfc3bef2273804e6e9cc9ce61dcca0f6c7895541f46e/responses-0.25.5-py3-none-any.whl", hash = "sha256:b3e1ae252f69301b84146ff615a869a4182fbe17e8b606f1ac54142515dad5eb", size = 34441 },
+    { url = "https://files.pythonhosted.org/packages/92/c4/8d23584b3a3471ea6f5a18cfb035e11eeb9fa9b3112d901477c6ad10cc4e/responses-0.25.6-py3-none-any.whl", hash = "sha256:9cac8f21e1193bb150ec557875377e41ed56248aed94e4567ed644db564bacf1", size = 34730 },
 ]
 
 [[package]]

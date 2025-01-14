@@ -1,8 +1,7 @@
 .. _lifecycle:
 
-*****************
 Lifecycle details
-*****************
+=================
 
 Each part is built in :ref:`four separate steps <craft_parts_steps>`, each with
 its own input and output locations:
@@ -24,6 +23,7 @@ its own input and output locations:
    While craft-parts offers an ``OVERLAY`` step as well, charmcraft does not use it.
    This is a distinction between how Charmcraft and `Rockcraft`_ work.
 
+
 Step order
 ----------
 
@@ -38,6 +38,7 @@ the general rules for combining parts are:
 #. ``STAGE`` any newly-built parts.
 #. Repeat the ``BUILD`` and ``STAGE`` steps until all parts have been staged.
 #. ``PRIME`` all parts.
+
 
 Further Information
 -------------------

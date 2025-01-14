@@ -1,0 +1,173 @@
+actions:
+  snapshot:
+    description: Take a snapshot of the database.
+    params:
+      filename:
+        type: string
+        description: The name of the snapshot file.
+      compression:
+        type: object
+        description: The type of compression to use.
+        properties:
+          kind:
+            type: string
+            enum:
+            - gzip
+            - bzip2
+            - xz
+          quality:
+            description: Compression quality
+            type: integer
+            minimum: 0
+            maximum: 9
+    required:
+    - my-favourite-photo.tiff
+    additionalProperties: false
+analysis:
+  ignore:
+    attributes:
+    - framework
+    linters:
+    - entrypoint
+assumes:
+  - any-of:
+    - juju >= 2.9.23
+    - all-of:
+      - juju >= 3.5
+      - juju < 4.0
+  - k8s-api
+base: ubuntu@24.04
+build-base: ubuntu@devel
+charm-libs:
+  - lib: postgresql.postgres_client
+    version: "1"
+  - lib: mysql.mysql
+    version: "0.5"
+config:
+  options:
+    name:
+      default: Wiki
+      description: The name, or Title of the Wiki
+      type: string
+    logo:
+      description: URL to fetch logo from
+      type: string
+    admins:
+      description: 'Comma-separated list of admin users to create: user:pass[,user:pass]+'
+      type: string
+    debug:
+      default: false
+      type: boolean
+      description: turn on debugging features of mediawiki
+    port:
+      default: 80
+      type: int
+      description: port on which to serve the wiki
+    timeout:
+      default: 60.0
+      type: float
+      description: maximum time before rendering a page will fail
+    certificate:
+      type: secret
+      description: TLS certificate to use for securing connections
+containers:
+  super-app:
+    resource: super-app-image
+    mounts:
+    - storage: logs
+      location: /logs
+description: |
+  This is a long description of the charm. It gets used when the charm is uploaded to
+  Charmhub. It is a string, but can easily be made a multiline string or any other
+  YAML string format.
+devices:
+  super-cool-gpu:
+    type: amd.com/gpu
+    description: Some sweet AMD GPU
+    countmin: 69
+    countmax: 420
+  lame-gpu:
+    type: nvidia.com/gpu
+    description: A GPU I regret buying
+    countmin: 0
+    countmax: 1
+extra-bindings:
+  Ring of Power:
+links:
+  contact: Please send your answer to Old Pink, care of the Funny Farm, Chalfont
+  documentation: https://juju.is/docs/sdk/charmcraft-yaml
+  issues:
+  - https://launchpad.net/~charmcraft-team
+  - https://github.com/canonical/charmcraft/issues
+  source:
+  - https://github.com/canonical/charmcraft
+  website:
+  - https://snapcraft.io/charmcraft
+name: full-charm
+parts:
+  my-charm:
+    plugin: charm
+    source: .
+    charm-entrypoint: src/charm.py
+    charm-binary-python-packages: []
+    charm-python-packages: []
+    charm-requirements: [requirements.txt]
+    charm-strict-dependencies: false
+  another-part:
+    plugin: nil
+    source:
+peers:
+  friend:
+    interface: life
+    limit: 150
+    optional: true
+    scope: container
+platforms:
+  all:
+    build-on:
+      - amd64
+      - arm64
+      - riscv64
+      - s390x
+      - ppc64el
+      - armhf
+    build-for: [all]
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+  arm64:
+    build-on:
+      - amd64
+      - arm64
+    build-for:
+      - arm64
+provides:
+  self:
+    interface: identity
+requires:
+  parent:
+    interface: birth
+    limit: 2
+    optional: false
+    scope: global
+resources:
+  water:
+    type: file
+    filename: /dev/h2o
+  super-app-image:
+    type: oci-image
+    description: OCI image for the Super App (hub.docker.com/_/super-app)
+storage: # Possible storage for the charm
+  jbod:
+    type: block
+    description: A nice block storage for me to use as swap space
+    shared: false
+    properties:
+    - transient
+subordinate: false
+summary: A fully-defined charm, making use of all the available charm keywords.
+terms:
+ - Butterscotch is regal
+ - Cara is adorable
+title: My awesome charm
+type: charm

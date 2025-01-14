@@ -72,9 +72,10 @@ instance/
 # Sphinx documentation
 docs/_build/
 # Auto-generated command reference
-/docs/reference/commands/
-/docs/reference/_autosummary/
-/docs/common/craft-parts
+docs/reference/commands/
+!docs/reference/commands/index.rst
+docs/reference/_autosummary/
+docs/common/craft-parts
 
 # PyBuilder
 target/

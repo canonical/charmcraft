@@ -1,12 +1,25 @@
-.. _howto:
+.. _how-to-guides:
 
-How-To
-******
+How-to guides
+=============
 
 .. toctree::
    :maxdepth: 2
 
-   charm-to-poetry
-   charm-to-python
-   shared-cache
+   set-up-charmcraft
+   manage-charms
+   manage-a-12-factor-app-charm
+   manage-extensions
+   manage-resources
+   manage-libraries
+   manage-parts
+   manage-the-current-charmhub-user
+   manage-names
+   manage-revisions
+   manage-channels
+   manage-tracks
+   manage-icons
+   manage-bundles
    flask-async
+   Migrate plugins <migrate-plugins/index>
+   Build <build-guides/index>

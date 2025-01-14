@@ -1,7 +1,7 @@
 .. _bases_charm:
 
 Charm with the ``bases`` keyword
-********************************
+================================
 
 .. currentmodule:: charmcraft.models.project
 

@@ -4,9 +4,9 @@ Write your first Kubernetes charm for a Flask app
 
 Imagine you have a Flask application backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
-this can be quite a challenge, but with Charmcraft you’ll find
+this can be quite a challenge, but with Charmcraft you'll find
 yourself packaging and deploying your Flask application in no time.
-Let’s get started!
+Let's get started!
 
 In this tutorial we will build a Kubernetes charm for a Flask
 application using Charmcraft, so we can have a Flask application
@@ -22,7 +22,7 @@ This tutorial should take 90 minutes for you to complete.
     to be deployed, integrated and operated on a Kubernetes
     cluster with the Juju orchestration engine.
 
-What you’ll need
+What you'll need
 ================
 
 - A workstation, e.g., a laptop, with amd64 or arm64 architecture which
@@ -30,7 +30,7 @@ What you’ll need
   4 GB RAM, and a 50 GB disk
 - Familiarity with Linux
 
-What you’ll do
+What you'll do
 ==============
 
 - Set things up
@@ -167,7 +167,8 @@ deployed in the Kubernetes cluster:
 
 .. seealso::
 
-    See more: `skopeo <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
+    See more: `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
 
 Create the charm
 ================
@@ -518,6 +519,3 @@ Next steps
       - `SDK Reference docs <https://juju.is/docs/sdk/reference>`_
     * - "Why...?", "So what?"
       - `SDK Explanation docs <https://juju.is/docs/sdk/explanation>`_
-
--------------------------
-

@@ -27,9 +27,12 @@ tab_width = 2
 indent_size = 2
 max_line_length = off
 
-[{*.markdown,*.md,*.rst}]
+[{*.markdown,*.md}]
 max_line_length = off
 ij_visual_guides = none
+
+[{*.rst}]
+max_line_length = 88
 
 [{*.toml,Cargo.lock,Cargo.toml.orig,Gopkg.lock,Pipfile,poetry.lock}]
 max_line_length = off

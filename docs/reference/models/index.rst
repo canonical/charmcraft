@@ -1,7 +1,7 @@
-.. _models:
+.. _data-models:
 
-Data Models
-***********
+Data models
+===========
 
 .. toctree::
     :maxdepth: 2

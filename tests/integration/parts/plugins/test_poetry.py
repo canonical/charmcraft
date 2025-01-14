@@ -64,6 +64,8 @@ def poetry_project(project_path: pathlib.Path) -> None:
             f"--directory={project_path}",
             "--no-interaction",
         ],
+        cwd=project_path,
+        capture_output=True,
         check=True,
     )
     source_dir = project_path / "src"

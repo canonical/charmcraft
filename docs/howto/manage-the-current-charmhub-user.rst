@@ -109,10 +109,10 @@ will push and release a charm could be:
 - Test that all is fine; for this get the content:
 
   .. code-block:: bash
-  
+
         CHARMCRAFT_AUTH=`cat test1`
         charmcraft whoami
-        
+
   .. terminal::
 
         name: J. Doe

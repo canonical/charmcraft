@@ -110,7 +110,7 @@ then run  ``charmcraft expand-extensions``. For example:
    .. code-block:: bash
 
       CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
-  
+
   .. terminal::
 
       *EXPERIMENTAL* extension 'flask-framework' enabled

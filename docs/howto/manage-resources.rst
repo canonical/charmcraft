@@ -88,7 +88,8 @@ resources`` followed by the charm name:
 
 .. important::
 
-    If you're not logged in to Charmhub, the command will open up a web browser and ask you to log in.
+    If you're not logged in to Charmhub, the command will open up a web browser and ask
+    you to log in.
 
 .. code-block:: bash
 

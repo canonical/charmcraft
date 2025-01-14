@@ -100,7 +100,7 @@ To create a new track yourself, follow the steps below:
 
    .. important::
 
-       If you want to view the guardrails and tracks for all published charms,Issue an 
+       If you want to view the guardrails and tracks for all published charms,Issue an
        HTTP ``GET`` request to ``/v1/<namespace>``, as below.
 
        .. code-block:: bash

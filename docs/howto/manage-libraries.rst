@@ -9,7 +9,8 @@ Initialise a library
 
    See also: :ref:`ref_commands_create-lib`
 
-In your charm's root directory, run ``charmcraft create-lib``. In this example we ues the name ``demo``.
+In your charm's root directory, run ``charmcraft create-lib``. In this example we ues
+the name ``demo``.
 
 .. code-block:: bash
 

@@ -493,7 +493,7 @@ is just a zip file with metadata and the operator code itself.
 
         ls
 
-    .. terminal:: 
+    .. terminal::
 
         CONTRIBUTING.md  charmcraft.yaml                          requirements.txt  tox.ini
         LICENSE          microsample-vm_ubuntu-22.04-amd64.charm  src
@@ -611,7 +611,7 @@ Publish a charm on Charmhub
 
        charmcraft upload-resource my-super-charm someresource
        --filepath=/tmp/superdb.bin
-    
+
    .. terminal::
 
        Revision 1 created of resource 'someresource' for charm 'my-super-charm'

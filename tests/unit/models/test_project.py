@@ -568,6 +568,92 @@ def test_build_info_generator(given, expected):
             ],
             id="arch-base",
         ),
+        pytest.param(
+            {
+                "platforms": {
+                    # shorthand notation
+                    "ubuntu@22.04:amd64": None,
+                    "ubuntu@22.04:riscv64": None,
+                    # standard notation
+                    "amd64": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                    "riscv64-cross": {
+                        "build-on": ["ubuntu@24.04:amd64", "ubuntu@24.04:riscv64"],
+                        "build-for": ["ubuntu@24.04:riscv64"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="ubuntu@22.04:amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    base=bases.BaseName(name="ubuntu", version="22.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="ubuntu@22.04:riscv64",
+                    build_on="riscv64",
+                    build_for="riscv64",
+                    base=bases.BaseName(name="ubuntu", version="22.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="amd64",
+                    build_on="amd64",
+                    build_for="amd64",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="riscv64-cross",
+                    build_on="amd64",
+                    build_for="riscv64",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="riscv64-cross",
+                    build_on="riscv64",
+                    build_for="riscv64",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+            ],
+            id="multi-base",
+        ),
+        pytest.param(
+            {
+                "platforms": {
+                    "jammy": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:all"],
+                    },
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64", "ubuntu@24.04:riscv64"],
+                        "build-for": ["ubuntu@24.04:all"],
+                    },
+                },
+            },
+            [
+                project.models.BuildInfo(
+                    platform="jammy",
+                    build_on="amd64",
+                    build_for="all",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="noble",
+                    build_on="amd64",
+                    build_for="all",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+                project.models.BuildInfo(
+                    platform="noble",
+                    build_on="riscv64",
+                    build_for="all",
+                    base=bases.BaseName(name="ubuntu", version="24.04"),
+                ),
+            ],
+            id="multi-base-all",
+        ),
     ],
 )
 def test_build_planner_correct(data, expected):

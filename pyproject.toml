@@ -4,12 +4,12 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=4.2",
+    "craft-application~=4.8",
     "craft-cli>=2.3.0",
     "craft-grammar>=2.0.0",
-    "craft-parts>=2.2.0",
-    "craft-providers>=2.0.0",
-    "craft-platforms~=0.3",
+    "craft-parts>=2.2.1",
+    "craft-providers>=2.1.0",
+    "craft-platforms~=0.5",
     "craft-providers>=2.0.0",
     "craft-store>=3.1.0",
     "distro>=1.7.0",
@@ -258,8 +258,8 @@ lint.select = [  # Base linting rule selections.
     "RSE",  # Errors on pytest raises.
     "RET",  # Simpler logic after return, raise, continue or break
     "SIM",  # Code simplification
-    "TCH004",  # Remove imports from type-checking guard blocks if used at runtime
-    "TCH005",  # Delete empty type-checking blocks
+    "TC004",  # Remove imports from type-checking guard blocks if used at runtime
+    "TC005",  # Delete empty type-checking blocks
     "ARG",  # Unused arguments
     "PTH",  # Migrate to pathlib
     "ERA",  # Don't check in commented out code
@@ -293,7 +293,6 @@ lint.extend-select = [
     "RUF100",  # #noqa directive that doesn't flag anything
 ]
 lint.ignore = [
-    "ANN10",  # Type annotations for `self` and `cls`
     #"E203",  # Whitespace before ":"  -- Commented because ruff doesn't currently check E203
     "E501",  # Line too long (reason: black will automatically fix this for us)
     "D105",  # Missing docstring in magic method (reason: magic methods already have definitions)
@@ -351,7 +350,7 @@ ignore-decorators = [  # Functions with these decorators don't have to have docs
 
     # Charmcraft-specific ignores, to be removed as we modernise the code.
     "A001", "A002",
-    "PT004", "PT012",
+    "PT012",
     "S105", "S106",
 ]
 # isort leaves init files alone by default, this makes ruff ignore them too.

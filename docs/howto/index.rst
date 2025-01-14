@@ -20,5 +20,6 @@ How-to guides
    manage-tracks
    manage-icons
    manage-bundles
+   flask-async
    Migrate plugins <migrate-plugins/index>
    Build <build-guides/index>

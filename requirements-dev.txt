@@ -1,6 +1,6 @@
 annotated-types==0.7.0
 astroid==3.3.6
-attrs==24.2.0
+attrs==24.3.0
 backports-tarfile==1.2.0
 boolean-py==4.0
 certifi==2024.8.30
@@ -8,12 +8,12 @@ cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.0
 coverage==7.6.9
-craft-application==4.4.0
+craft-application==4.7.0
 craft-archives==2.0.2
-craft-cli==2.10.1
+craft-cli==2.13.0
 craft-grammar==2.0.1
-craft-parts==2.2.0
-craft-platforms==0.4.0
+craft-parts==2.2.1
+craft-platforms==0.5.0
 craft-providers==2.0.4
 craft-store==3.1.0
 cryptography==43.0.3
@@ -33,7 +33,7 @@ jaraco-classes==3.4.0
 jaraco-context==6.0.1
 jaraco-functools==4.1.0
 jeepney==0.8.0
-jinja2==3.1.4
+jinja2==3.1.5
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 keyring==25.5.0

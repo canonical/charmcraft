@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Canonical Ltd.
+# Copyright 2023-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -404,7 +404,7 @@ def test_get_manifest_bases_from_platforms(
             "base": base,
             "build-base": build_base,
             "platforms": platforms,
-            "parts": {},
+            "parts": {"my-part": {"plugin": "nil"}},
         }
     )
     package_service._project = charm
@@ -427,7 +427,7 @@ def test_get_manifest_bases_from_platforms_invalid(package_service):
             "base": None,
             "build-base": None,
             "platforms": {"amd64": None},
-            "parts": {},
+            "parts": {"my-part": {"plugin": "nil"}},
         }
     )
     package_service._project = charm

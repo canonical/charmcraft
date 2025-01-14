@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Canonical Ltd.
+# Copyright 2023,2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -420,7 +420,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
         ),
     )
-    parts: dict[str, dict[str, Any]] = pydantic.Field(default_factory=dict)
 
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
@@ -591,29 +590,6 @@ class CharmProject(CharmcraftProject):
     )
     description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]
         description="A multi-line summary of your charm."
-    )
-
-    parts: dict[str, dict[str, Any]] = pydantic.Field(
-        default={"charm": {"plugin": "charm", "source": "."}},
-        description=textwrap.dedent(
-            """\
-            Configures the various mechanisms to obtain, process and prepare data from
-            different sources that end up being a part of the final charm.
-
-            Keys are user-defined part names. The value of each key is a map where keys
-            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
-
-            Example::
-
-                parts:
-                  libs:
-                    plugin: dump
-                    source: /usr/local/lib/
-                    organize:
-                      "libxxx.so*": lib/
-                    prime:
-                      - lib/""",
-        ),
     )
 
     actions: dict[str, Any] | None = pydantic.Field(
@@ -1066,6 +1042,29 @@ class BasesCharm(CharmProject):
 
     base: None = None
 
+    parts: dict[str, dict[str, Any]] = pydantic.Field(
+        default={"charm": {"plugin": "charm", "source": "."}},
+        description=textwrap.dedent(
+            """\
+            Configures the various mechanisms to obtain, process and prepare data from
+            different sources that end up being a part of the final charm.
+
+            Keys are user-defined part names. The value of each key is a map where keys
+            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+
+            Example::
+
+                parts:
+                  libs:
+                    plugin: dump
+                    source: /usr/local/lib/
+                    organize:
+                      "libxxx.so*": lib/
+                    prime:
+                      - lib/""",
+        ),
+    )
+
 
 class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
@@ -1074,6 +1073,29 @@ class PlatformCharm(CharmProject):
     base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
     platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
+
+    parts: dict[str, dict[str, Any]] = pydantic.Field(
+        description=textwrap.dedent(
+            """\
+            Configures the various mechanisms to obtain, process and prepare data from
+            different sources that end up being a part of the final charm.
+
+            Keys are user-defined part names. The value of each key is a map where keys
+            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+
+            Example::
+
+                parts:
+                  libs:
+                    plugin: dump
+                    source: /usr/local/lib/
+                    organize:
+                      "libxxx.so*": lib/
+                    prime:
+                      - lib/""",
+        ),
+        min_length=1,
+    )
 
     @pydantic.model_validator(mode="after")
     def _validate_dev_base_needs_build_base(self) -> Self:
@@ -1106,6 +1128,10 @@ class Bundle(CharmcraftProject):
     summary: CharmcraftSummaryStr | None = None
     description: pydantic.StrictStr | None = None
     platforms: None = None  # type: ignore[assignment]
+
+    parts: dict[str, dict[str, Any]] = pydantic.Field(
+        default_factory=lambda: {"bundle": {"plugin": "bundle", "source": "."}}
+    )
 
     @pydantic.model_validator(mode="before")
     @classmethod

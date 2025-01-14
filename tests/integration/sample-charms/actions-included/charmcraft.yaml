@@ -10,6 +10,7 @@ platforms:
 parts:
   charm:
     plugin: charm
+    source: .
 
 actions:
   pause:

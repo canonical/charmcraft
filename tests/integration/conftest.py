@@ -1,4 +1,4 @@
-# Copyright 2024 Canonical Ltd.
+# Copyright 2024-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ def charm_project(
         | {
             "base": f"{distro_id}@{distro_version}",
             "platforms": {util.get_host_architecture(): None},
+            "parts": {"charm": {"plugin": "charm", "source": "."}},
         },
     )
 

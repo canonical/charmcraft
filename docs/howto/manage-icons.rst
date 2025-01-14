@@ -31,7 +31,7 @@ From Inkscape load the ``icon.svg`` file. Select the Layer called
 “Background Circle”, either from the drop down at the bottom, or from
 the layer dialog.
 
-.. figure:: manage-icons-create-1.png
+.. figure:: https://assets.ubuntu.com/v1/067f88a5-manage-icons-create-1.png
    :alt: Open the template
 
    Open the template
@@ -42,7 +42,7 @@ the layer dialog.
 In the menu, select **Object** and then **Fill and Stroke** to adjust
 the colour.
 
-.. figure:: manage-icons-create-2.png
+.. figure:: https://assets.ubuntu.com/v1/0bff03c4-manage-icons-create-2.png
    :alt: Add color
 
 
@@ -56,7 +56,7 @@ plenty of drawing tools for creating complex images.
 If you import a bitmap image to use, be sure to convert it into a vector
 file and delete the bitmap.
 
-.. figure:: manage-icons-create-3.png
+.. figure:: https://assets.ubuntu.com/v1/2ef5c7f5-manage-icons-create-3.png
    :alt: Draw something
 
 *Cloud icon: “Cloud by unlimicon from the Noun Project” [CC BY]*
@@ -68,7 +68,7 @@ You can validate your icon at
 `charmhub.io/icon-validator <https://charmhub.io/icon-validator>`_. The
 page checks the most basic issues that prevent icons working.
 
-.. figure:: manage-icons-validate.png
+.. figure:: https://assets.ubuntu.com/v1/cc23c12a-manage-icons-validate.png
    :alt: Validate
 
 Add an icon to its charm's Charmhub page

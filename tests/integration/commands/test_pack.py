@@ -97,7 +97,7 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                         "build-for": ["amd64"],
                     }
                 },
-                "parts": {},
+                "parts": {"my-part": {"plugin": "nil"}},
             },
             "ubuntu-22.04-amd64",
             marks=pytest.mark.skipif(
@@ -114,7 +114,7 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                 "description": "A charm for testing",
                 "base": "ubuntu@22.04",
                 "platforms": {util.get_host_architecture(): None},
-                "parts": {},
+                "parts": {"my-part": {"plugin": "nil"}},
             },
             util.get_host_architecture(),
             marks=pytest.mark.skipif(
@@ -132,7 +132,7 @@ def test_build_basic_bundle(monkeypatch, capsys, app, new_path, bundle_yaml, fil
                 "base": "ubuntu@24.04",
                 "build-base": "ubuntu@devel",
                 "platforms": {util.get_host_architecture(): None},
-                "parts": {},
+                "parts": {"my-part": {"plugin": "nil"}},
             },
             util.get_host_architecture(),
             marks=pytest.mark.skipif(

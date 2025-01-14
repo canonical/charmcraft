@@ -18,6 +18,7 @@ jobs:
       # 1. requirements-noble.txt can't build on jammy
       # 2. Ignore requirements files in spread tests, as some of these intentionally
       #    contain vulnerable versions.
-      requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*"'
+      # 3. Docs contain requirements.txt files that don't specify versions.
+      requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*" ! -path "./docs/**"'
       osv-extra-args: '--config=source/osv-scanner.toml'
       uv-export: false

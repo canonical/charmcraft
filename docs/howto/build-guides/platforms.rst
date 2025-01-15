@@ -121,14 +121,21 @@ different architecture, use the following ``charmcraft.yaml`` snippet:
 
 Building on ``amd64`` will produce one charm that runs on ``riscv64``.
 
+Note that the charm developer must ensure the charm is compatible with the
+target architectures. By default, the `charm`_,
+:ref:`python <craft_parts_python_plugin>`, :ref:`poetry <craft_parts_poetry_plugin>`,
+and :ref:`uv <craft_parts_uv_plugin>` plugins will install wheels for python packages
+for the ``build-on`` architecture rather than the ``build-for``. For more information,
+see `craft-parts#974`_.
 
-Create a set of charms for multiple bases
-------------------------------------------
+Create a set of charms for multiple OS releases
+-----------------------------------------------
 
-A charm can only run on a single base. A ``charmcraft.yaml`` can use multi-base
+A charm can only run on a single OS release or ``base``, using
+``charmcraft.yaml`` nomenclature. A ``charmcraft.yaml`` can use multi-base
 syntax to create a set of charms, each for a different base. To do this, the
 base is defined in each platform entry instead of being defined with the
-top-level ``base`` and ``build-base`` keywords,
+top-level ``base`` and ``build-base`` keywords.
 
 To build a charm for Ubuntu 22.04 and a charm for Ubuntu 24.04, use the
 following ``charmcraft.yaml`` snippet which uses :ref:`multi-base
@@ -138,11 +145,11 @@ notation<reference-platforms-multi-base>`:
 
    platforms:
      ubuntu-22.04-amd64:
-       build-on: [amd64]
-       build-for: [amd64]
+       build-on: [ubuntu@22.04:amd64]
+       build-for: [ubuntu@22.04:amd64]
      ubuntu-24.04-amd64:
-       build-on: [amd64]
-       build-for: [amd64]
+       build-on: [ubuntu@24.04:amd64]
+       build-for: [ubuntu@24.04:amd64]
 
 The ``build-on`` and ``build-for`` entries are identical for each platform, so
 the :ref:`multi-base shorthand notation
@@ -157,3 +164,6 @@ the :ref:`multi-base shorthand notation
 With both snippets, building on ``amd64`` will produce two charms, one for
 ``amd64`` systems running Ubuntu 22.04 and one for ``amd64`` systems running
 Ubuntu 24.04.
+
+.. _charm: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-charm-plugin
+.. _craft-parts#974: https://github.com/canonical/craft-parts/issues/974

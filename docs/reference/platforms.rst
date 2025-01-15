@@ -121,6 +121,11 @@ The following architectures are supported:
 Bases
 -----
 
+.. note::
+
+   The bases described in this section are a different concept than the
+   deprecated ``bases`` keyword in a ``charmcraft.yaml``.
+
 The ``base`` and ``build-base`` keywords determine the environments where the
 charm is built and where it is run.
 
@@ -140,8 +145,6 @@ distribution and ``series`` is the release series name.
 
 Supported bases are:
 
-* ``ubuntu@18.04``
-* ``ubuntu@20.04``
 * ``ubuntu@22.04``
 * ``ubuntu@24.04``
 * ``ubuntu@24.10``

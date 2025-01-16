@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import platform
 from collections.abc import Collection, Mapping, Sequence
+from typing import Any, cast
 
 import craft_application
 import craft_store
@@ -30,7 +31,7 @@ from overrides import override
 from charmcraft import const, env, errors, store
 from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
-from charmcraft.store.models import Library, LibraryMetadataRequest
+from charmcraft.store.models import ChannelData, Library, LibraryMetadataRequest
 
 
 class BaseStoreService(craft_application.AppService):
@@ -185,6 +186,7 @@ class StoreService(BaseStoreService):
     ClientClass = store.Client
     client: store.Client  # pyright: ignore[reportIncompatibleVariableOverride]
     anonymous_client: store.AnonymousClient
+    _publisher: craft_store.PublisherGateway
 
     @override
     def setup(self) -> None:
@@ -204,6 +206,91 @@ class StoreService(BaseStoreService):
             namespace="charm",
             auth=self._auth,
         )
+
+    def get_package_metadata(self, name: str) -> publisher.RegisteredName:
+        """Get the metadata for a package.
+
+        :param name: The name of the package in this namespace.
+        :returns: A RegisteredName model containing store metadata.
+        """
+        return self._publisher.get_package_metadata(name)
+
+    def release(
+        self, name: str, requests: list[publisher.ReleaseRequest]
+    ) -> Sequence[publisher.ReleaseResult]:
+        """Release one or more revisions to one or more channels.
+
+        :param name: The name of the package to update.
+        :param requests: A list of dictionaries containing the requests.
+        :returns: A sequence of results of the release requests, as returned
+            by the store.
+
+        Each request dictionary requires a "channel" key with the channel name and
+        a "revision" key with the revision number. If the revision in the store has
+        resources, it requires a "resources" key that is a list of dictionaries
+        containing a "name" key with the resource name and a "revision" key with
+        the resource number to attach to that channel release.
+        """
+        return self._publisher.release(name, requests=requests)
+
+    def get_revisions_on_channel(
+        self, name: str, channel: str
+    ) -> Sequence[Mapping[str, Any]]:
+        """Get the current set of revisions on a specific channel.
+
+        :param name: The name on the store to look up.
+        :param channel: The channel on which to get the revisions.
+        :returns: A sequence of mappings of these, containing their revision,
+            bases, resources and version.
+
+        The mapping here may be passed directly into release_promotion_candidates
+        in order promote items from one channel to another.
+        """
+        releases = self._publisher.list_releases(name)
+        channel_data = ChannelData.from_str(channel)
+        channel_revisions = {
+            info.revision: info
+            for info in releases.channel_map
+            if info.channel == channel_data
+        }
+        revisions = {
+            rev.revision: cast(publisher.CharmRevision, rev)
+            for rev in releases.revisions
+        }
+
+        return [
+            {
+                "revision": revision,
+                "bases": revisions[revision].bases,
+                "resources": [
+                    {"name": res.name, "revision": res.revision}
+                    for res in info.resources or ()
+                ],
+                "version": revisions[revision].version,
+            }
+            for revision, info in channel_revisions.items()
+        ]
+
+    def release_promotion_candidates(
+        self, name: str, channel: str, candidates: Collection[Mapping[str, Any]]
+    ) -> Sequence[publisher.ReleaseResult]:
+        """Promote a set of revisions to a specific channel.
+
+        :param name: the store name to operate on.
+        :param channel: The channel to which these should be promoted.
+        :param candidates: A collection of mappings containing the revision and
+            resource revisions to promote.
+        :returns: The result of the release in the store.
+        """
+        requests = [
+            publisher.ReleaseRequest(
+                channel=channel,
+                resources=candidate["resources"],
+                revision=candidate["revision"],
+            )
+            for candidate in candidates
+        ]
+        return self.release(name, requests)
 
     def create_tracks(
         self, name: str, *tracks: publisher.CreateTrackRequest

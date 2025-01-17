@@ -18,8 +18,12 @@ Standard notation
 
    platforms:
      <platform-name>:
-       build-on: [<arch>, <arch>]
-       build-for: [<arch>]
+       build-on:
+        - <my-arch>
+        - <your-arch>
+        ...
+       build-for:
+        - <our-arch>
 
 The platform name is an arbitrary string that describes the platform. The
 recommended platform name is the ``build-for`` arch.
@@ -51,8 +55,13 @@ Multi-base notation
 
    platforms:
      <platform-name>:
-       build-on: [<base>:<arch>, <base>:<arch>]
-       build-for: [<base>:<arch>]
+       build-on:
+        - <some-base>:<some-arch>
+        - <some-base>:<another-arch>
+        - <another-base>:<some-arch>
+        - <another-base>:<another-arch>
+       build-for:
+        - <base>:<arch>
 
 Multi-base charms define a :ref:`base <reference-bases>` in each platform entry
 instead of the top-level ``base`` and ``build-base`` keywords. Within each
@@ -73,7 +82,8 @@ Multi-base shorthand notation
      <base>:<arch>:
 
 Multi-base charms can also use shorthand notation when the platform builds on
-and builds for the same architecture. The platform name must be a
+and builds for the same architecture. This shorthand notation is a YAML dictionary
+that contains the shorthand name as a key and a null value. The platform name must be a
 :ref:`valid base <reference-bases>` and
 :ref:`debian architecture <reference-architectures>` formatted as
 ``<base>:<arch>``.
@@ -84,8 +94,24 @@ and builds for the same architecture. The platform name must be a
 ~~~~~~~~~~~~
 
 ``build-on`` is a list of architectures and optional bases that describes the
-environments where the platform can build. Each entry is formatted as
-``[<base>:]<arch>``.
+environments where the platform can build. Each entry is formatted with an optional
+base and a mandatory architecture: ``[<base>:]<arch>``
+
+Example ``build-on`` values with only architectures include:
+
+.. code:: yaml
+
+    build-on:
+      - amd64
+      - riscv64
+
+Example ``build-on`` values containing both a base and an architecture include:
+
+.. code:: yaml
+
+    build-on:
+      - ubuntu@24.04:riscv64
+      - ubuntu@22.04:amd64
 
 .. _reference-build-for:
 
@@ -93,8 +119,9 @@ environments where the platform can build. Each entry is formatted as
 ~~~~~~~~~~~~~
 
 ``build-for`` is a single-element list containing an architecture and optional
-base that describes the environment where the resulting charm can run. The
-entry is formatted as ``[<base>:]<arch>``.
+base that describes the environment where the resulting charm can run. Each
+entry is formatted with an optional base and a mandatory architecture, using the
+same structure as ``build-on``.
 
 ``build-for: [all]`` is a special keyword to denote an architecture-independent
 charm.

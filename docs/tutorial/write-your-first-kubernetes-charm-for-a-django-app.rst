@@ -426,11 +426,11 @@ following output:
    django-hello-world  dev-controller  microk8s/localhost  3.5.3    unsupported  16:47:01+10:00
 
    App                 Version  Status  Scale  Charm               Channel    Rev  Address         Exposed  Message
-   django-hello-world           active      1  django-hello-world               3  10.152.183.126  no       
-   postgresql-k8s      14.11    active      1  postgresql-k8s      14/stable  281  10.152.183.197  no       
+   django-hello-world           active      1  django-hello-world               3  10.152.183.126  no
+   postgresql-k8s      14.11    active      1  postgresql-k8s      14/stable  281  10.152.183.197  no
 
    Unit                   Workload  Agent  Address      Ports  Message
-   django-hello-world/0*  active    idle   10.1.157.80         
+   django-hello-world/0*  active    idle   10.1.157.80
    postgresql-k8s/0*      active    idle   10.1.157.78         Primary
 
 To be able to test the deployment, we need to include the IP address in
@@ -722,7 +722,7 @@ development process, including:
 - Creating a Django application
 - Deploying the application locally
 - Building an OCI image using Rockcraft
-- Packaging the application using Charmcraft 
+- Packaging the application using Charmcraft
 - Deplyoing the application using Juju
 - Integrating the application with PostgreSQL to be production ready
 - Exposing the application using an ingress

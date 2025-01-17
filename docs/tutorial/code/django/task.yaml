@@ -69,7 +69,7 @@ execute: |
 
   sed -i "s/name: .*/name: django-hello-world/g" rockcraft.yaml
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
-  
+ 
   # Update settings.py file
   cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
@@ -91,7 +91,7 @@ execute: |
   # [docs:charm-init]
   charmcraft init --profile django-framework --name django-hello-world
   # [docs:charm-init-end]
-  
+
   # Add postgresql_client to charmcraft.yaml
   cat $HOME/postgres_requires_charmcraft.yaml >> charmcraft.yaml
 
@@ -110,15 +110,15 @@ execute: |
     django-hello-world --resource \
     django-app-image=localhost:32000/django-hello-world:0.1
   # [docs:deploy-juju-model-end]
-  
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
   # [docs:deploy-postgres-end]
-  
+
   # [docs:integrate-postgres]
   juju integrate django-hello-world postgresql-k8s
   # [docs:integrate-postgres-end]
-  
+
   # Check that django-hello-world and postgres are active idle
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
@@ -142,23 +142,23 @@ execute: |
 
   # curl the Django app
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
-  
+
   # Configure allowed-hosts
   juju config django-hello-world django-allowed-hosts=django-hello-world
 
   # curl again
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
-  
+
   cd ..
   cd django_hello_world
-  
+
   # [docs:startapp-greeting]
   django-admin startapp greeting
   # [docs:startapp-greeting-end]
- 
+
   # Update greeting/views.py file
   cat $HOME/views_greeting.py > greeting/views.py
- 
+
   # Create greeting/urls.py file
   cat $HOME/urls_greeting.py > greeting/urls.py
 
@@ -181,7 +181,7 @@ execute: |
       --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
       --resource django-app-image=localhost:32000/django-hello-world:0.2
   # [docs:refresh-deployment-end]
-  
+
   # Disable debug mode
   juju config django-hello-world django-debug=false
 
@@ -190,22 +190,22 @@ execute: |
 
   # curl and check that the response is Hello, world!
   curl 127.0.0.1 -H "Host: django-hello-world" | grep Hello
-  
+
   cd ..
   # Update django_hello_world/greeting/views.py
   cat $HOME/views_greeting_configuration.py > django_hello_world/greeting/views.py
 
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
-  
+
   # [docs:repack-2nd-update]
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
       oci-archive:django-hello-world_0.3_$(dpkg --print-architecture).rock \
       docker://localhost:32000/django-hello-world:0.3
   # [docs:repack-2nd-update-end]
-  
+
   cd charm
-  
+
   # Update greeting config in charmcraft.yaml
   cat $HOME/greeting_charmcraft.yaml >> ./charmcraft.yaml
 
@@ -215,7 +215,7 @@ execute: |
     --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     --resource django-app-image=localhost:32000/django-hello-world:0.3
   # [docs:repack-refresh-2nd-deployment-end]
-  
+
   # Wait for django-hello-world to be active
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 

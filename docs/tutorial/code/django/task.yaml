@@ -69,7 +69,7 @@ execute: |
 
   sed -i "s/name: .*/name: django-hello-world/g" rockcraft.yaml
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
- 
+
   # Update settings.py file
   cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 

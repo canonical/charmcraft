@@ -17,7 +17,8 @@ system and version on which a charm can build and run. Supported OSs
 vary by both the version of Charmcraft and the version of `Juju`_.
 
 The general syntax for defining a distribution and series is to use
-``base: <distribution>@<series>``. For example, a charm that runs on Ubuntu 24.04 LTS may be defined with the following ``base`` key:
+``base: <distribution>@<series>``. For example, a charm that runs on Ubuntu
+24.04 LTS may be defined with the following ``base`` key:
 
 .. code-block:: yaml
 

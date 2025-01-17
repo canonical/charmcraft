@@ -142,7 +142,7 @@ save it:
 
     Django
 
-Install ``python3-venv and create a virtual environment``:
+Install ``python3-venv`` and create a virtual environment:
 
 .. code-block:: bash
 

@@ -4,7 +4,8 @@
 Manage a 12-factor app charm
 ============================
 
-    See also: `juju | 12-factor app charms <https://juju.is/docs/juju/charmed-operator>`_
+    See also: `Juju | 12-factor app charms <https://juju.is/docs/juju/charmed-operator>`_
+
 
 Prepare an OCI image for a 12-factor app charm
 ----------------------------------------------
@@ -20,7 +21,7 @@ Use ``charmcraft init`` and specify the relevant profile:
 
 .. code-block:: bash
 
-    charmcraft init --profile <profile>
+  charmcraft init --profile <profile>
 
 Charmcraft automatically creates ``charmcraft.yaml``,
 ``requirements.txt`` and source code for the charm in your
@@ -151,7 +152,7 @@ Manage relations for a 12-factor app charm
 ------------------------------------------
 
 A charm integration can be added to your charmed 12-factor app by providing
-he integration and endpoint definition in ``charmcraft.yaml``:
+the integration and endpoint definition in ``charmcraft.yaml``:
 
 .. code-block:: yaml
 

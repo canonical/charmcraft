@@ -234,7 +234,7 @@ Pack the rock:
     extension is experimental.
 
 Once Rockcraft has finished packing the FastAPI rock, you'll find a new file
-in your workign directory with the ``.rock`` extension. View its contents:
+in your working directory with the ``.rock`` extension. View its contents:
 
 .. code-block:: bash
 
@@ -287,11 +287,11 @@ The charm depends on several libraries. Download the libraries and pack the char
     Depending on your system and network, this step may take a couple of minutes
     to finish.
 
-    11CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS11 is required while the FastAPI
+    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the FastAPI
     extension is experimental.
 
 Once Charmcraft has finished packing the charm, you'll find a new file in your
-working directory with the .charm extension. View its contents:
+working directory with the ``.charm`` extension. View its contents:
 
 .. code-block:: bash
 

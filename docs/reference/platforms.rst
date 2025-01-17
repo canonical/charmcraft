@@ -8,7 +8,7 @@ The ``platforms`` keyword in a ``charmcraft.yaml`` determines where charms are
 built and where they run.
 
 For more information on how to build charms for specific bases and
-architectures, see the :doc:`Platforms how-to </howto/build-guides/platforms>`
+architectures, see the :doc:`Platforms how-to </howto/build-guides/select-platforms>`
 page.
 
 Standard notation
@@ -94,8 +94,8 @@ that contains the shorthand name as a key and a null value. The platform name mu
 ~~~~~~~~~~~~
 
 ``build-on`` is a list of architectures and optional bases that describes the
-environments where the platform can build. Each entry is formatted with an optional
-base and a mandatory architecture: ``[<base>:]<arch>``
+environments where the platform can build. Entries can be formatted either as only
+the architecture (``<arch>``), or as base and architecture (``<base>:<arch>``).
 
 Example ``build-on`` values with only architectures include:
 
@@ -131,24 +131,38 @@ charm.
 Architectures
 -------------
 
-Charmcraft uses `Debian's naming convention`_ for architectures.
+Charmcraft uses `Debian's naming convention`_ for architectures and supports several
+architectures:
 
-The following architectures are supported:
+.. list-table::
+    :header-rows: 1
 
-* amd64
-* arm64
-* armhf
-* i386
-* ppc64el
-* riscv64
-* s390x
+    * - Debian name
+      - Description
+    * - ``amd64``
+      - `64-bit x86 <https://en.wikipedia.org/wiki/X86-64>`_
+    * - ``arm64``
+      - `64-bit ARMv8 <https://en.wikipedia.org/wiki/AArch64>`_
+    * - ``armhf``
+      - `32-bit ARMv7 with hardware floating point
+        <https://en.wikipedia.org/wiki/ARM_architecture_family#VFP>`_
+    * - ``ppc64el``
+      - `Little-endian 64-bit PowerPC <https://en.wikipedia.org/wiki/Ppc64>`_
+    * - ``s390x``
+      - `IBM Z-series Linux <https://en.wikipedia.org/wiki/Linux_on_IBM_Z>`_
+
+.. important::
+
+    While Charmcraft will build on or for each of these architectures, not all
+    architectures are supported by all Juju versions, and not all clouds support
+    all architectures.
 
 .. _reference-bases:
 
 Bases
 -----
 
-.. note::
+.. important::
 
    The bases described in this section are a different concept than the
    deprecated ``bases`` keyword in a ``charmcraft.yaml``.
@@ -232,14 +246,14 @@ This snippet generates a build plan with 4 items:
 | 4      | riscv64-cross | riscv64       | Ubuntu 24.04    | riscv64        | Ubuntu 24.04 |
 +--------+---------------+---------------+-----------------+----------------+--------------+
 
-If Charmcraft executes on an ``riscv64`` system, it filters the build plan to
+If Charmcraft executes on a RISC-V system, it filters the build plan to
 only builds with a ``build-on`` of ``riscv64``. This means Charmcraft will only
-build charm #4.
+pack the fourth binary.
 
-If Charmcraft executes on an ``amd64`` system, it will build charms #1, #2, and
-#3. This can be further filtered with the ``--platform`` argument or the
+If Charmcraft executes on an AMD64 system, it will build charms one, two and three.
+This can be further filtered with the ``--platform`` argument or the
 ``CRAFT_PLATFORM`` environment variable. For example, running
-``charmcraft pack --platform amd64-debug`` on an ``amd64`` system would build
-only charm #2.
+``charmcraft pack --platform amd64-debug`` on an ``amd64`` system would pack
+only the second binary.
 
 .. _Debian's naming convention: https://wiki.debian.org/SupportedArchitectures

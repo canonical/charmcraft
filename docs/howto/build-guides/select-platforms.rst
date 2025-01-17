@@ -3,17 +3,17 @@
 Select charm platforms
 ======================
 
-The ``platforms`` and ``base`` keys in a charm's :ref:`charmcraft-yaml-file` selects
-both the operating system releases and silicon architectures on which the charm
+The ``platforms`` and ``base`` keys in a charm's :ref:`charmcraft-yaml-file` select
+both the OS releases and silicon architectures on which the charm
 can build and run.
 
 See the :doc:`Platforms reference </reference/platforms>` for more information.
 
-Select an operating system
---------------------------
+Select an OS
+------------
 
 The :ref:`charmcraft-yaml-base` key in ``charmcraft.yaml`` defines the operating
-system and version on which a charm can build and run. Supported operating systems
+system and version on which a charm can build and run. Supported OSs
 vary by both the version of Charmcraft and the version of `Juju`_.
 
 The general syntax for defining a distribution and series is to use
@@ -27,7 +27,7 @@ Select one build and one target architecture
 --------------------------------------------
 
 The following ``charmcraft.yaml`` snippet will define a charm that both builds and
-runs on Ubuntu 24.04 LTS, only on an amd64 architecture:
+runs on Ubuntu 24.04 LTS, only on an AMD64 architecture:
 
 .. code-block:: yaml
 
@@ -46,8 +46,8 @@ The ``build-on`` and ``build-for`` entries are identical, so the
    platforms:
      amd64:
 
-The results are the same with either snippet. Building on amd64 will
-produce one charm that runs on an amd64 Ubuntu 24.04 LTS system. Charmcraft
+The results are the same with either snippet. Building on AMD64 will
+produce one charm that runs on an AMD64 Ubuntu 24.04 LTS system. Charmcraft
 will not build the charm on other architectures.
 
 .. note::
@@ -123,9 +123,9 @@ platform, the shorthand notation can be used instead:
      amd64:
      riscv64:
 
-The results are the same with either snippet. Building on amd64 will
-produce one charm that runs on amd64. Building on ``riscv64`` will produce
-one charm that runs on ``riscv64``.
+The results are the same with either snippet. Building on AMD64 will
+produce one charm that runs on AMD64. Building on RISC-V will produce
+one charm that runs on RISC-V.
 
 .. note::
 
@@ -146,7 +146,7 @@ different architecture, use the following ``charmcraft.yaml`` snippet:
        build-on: [amd64]
        build-for: [riscv64]
 
-Building on amd64 will produce one charm that runs on ``riscv64``.
+Building on AMD64 will produce one charm that runs on ``riscv64``.
 
 Note that the charm developer must ensure the charm is compatible with the
 target architectures. By default, the `charm`_,
@@ -164,7 +164,7 @@ multi-base syntax to create a set of charms, each for a different base. To do th
 base is defined in each platform entry instead of being defined with the
 top-level ``base`` and ``build-base`` keys.
 
-To build a charm for Ubuntu 22.04 and a charm for Ubuntu 24.04, use the
+To build a charm for Ubuntu 22.04 LTS and a charm for Ubuntu 24.04 LTS, use the
 following ``charmcraft.yaml`` snippet which uses :ref:`multi-base
 notation<reference-platforms-multi-base>`:
 
@@ -188,9 +188,9 @@ the :ref:`multi-base shorthand notation
      ubuntu@22.04:amd64:
      ubuntu@24.04:amd64:
 
-With both snippets, building on amd64 will produce two charms, one for
-amd64 systems running Ubuntu 22.04 and one for amd64 systems running
-Ubuntu 24.04.
+With both snippets, building on AMD64 will produce two charms, one for
+AMD64 systems running Ubuntu 22.04 LTS and one for AMD64 systems running
+Ubuntu 24.04 LTS.
 
 .. _charm: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-charm-plugin
 .. _craft-parts#974: https://github.com/canonical/craft-parts/issues/974

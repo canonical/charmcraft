@@ -838,7 +838,18 @@ class PromoteCommand(CharmcraftCommand):
 
     name = "promote"
     help_msg = "Promote a charm from one channel to another on Charmhub."
-    overview = "TODO"
+    overview = textwrap.dedent(
+        """Promote a charm from one channel to another on Charmhub.
+
+        Promotes the current revisions of a charm in a specific channel, as well as
+        their related resources, to another channel.
+
+        The most common use is to promote a charm to a more stable risk value on a
+        single track:
+
+            charmcraft promote --from-channel=candidate --to-channel=stable
+        """
+    )
 
     @override
     def needs_project(self, parsed_args: argparse.Namespace) -> bool:

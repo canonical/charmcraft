@@ -163,6 +163,7 @@ block must be satisfied.
         :end-before: base:
 
 
+.. _charmcraft-yaml-base:
 .. _recipe-key-base:
 
 ``base``

@@ -11,7 +11,7 @@
 
 
 The ``actions.yaml`` file in a charm project is an optional file that may be used to
-define the `actions`_ supported by the charm.
+define the :external+juju:ref:`actions <action>` supported by the charm.
 
 The file contains a YAML map for each defined action. Each map starts with an
 ``<action name>`` key. The rest of this document gives details about this key.
@@ -103,16 +103,14 @@ helping a Juju end user know what actions and action parameters are defined for 
 charm.
 
     See more:
-    `Juju | juju actions <actions>`_,
-    `Juju | juju run <run>`_
+    :external+juju:ref:`Juju | juju actions <command-juju-actions>`,
+    :external+juju:ref:`Juju | juju run <command-juju-run>`
 
 **Structure:**
 
 *Name:* The name of the key (``<action name>``) is defined by the charm
-author. It must be a valid Python
-`identifier <https://docs.python.org/3/reference/lexical_analysis.html#identifiers>`_
-that does not collide with Python
-`keywords <https://docs.python.org/3/reference/lexical_analysis.html#keywords>`_
+author. It must be a valid Python :external+python:ref:`identifier <identifiers>`
+that does not collide with Python :external+python:ref:`keywords <keywords>`
 except that it may contain hyphens (which will be mapped to underscores in the Python
 event handler).
 
@@ -169,7 +167,8 @@ validation, defined as follows:
 
 **Structure:** *Type:* String.
 
-   See more: `Juju | juju run <run>`_, `Juju | Task <task>`_
+   See more: :external+juju:ref:`Juju | juju run <command-juju-run>`,
+   :external+juju:ref:`Juju | Task <task>`
 
 ``<action>.parallel``
 ---------------------
@@ -180,7 +179,7 @@ validation, defined as follows:
 
 **Structure:** *Type:* Boolean.
 
-   See more: `Juju | juju run <run>`_, `Juju | Task <task>`_
+   See more: :external+juju:ref:`Juju | juju run <command-juju-run>`, :external+juju:ref:`Juju | Task <task>`
 
 ``<action>.params``
 -------------------
@@ -225,8 +224,5 @@ Juju will parse additional keywords as a `JSON Schema`_ with some limitations:
 It is highly recommended to provide ``additionalProperties: false`` to avoid user
 frustration with accidental typos.
 
-.. _actions: https://juju.is/docs/juju/action
-.. _run: https://juju.is/docs/juju/juju-run
-.. _task: https://juju.is/docs/juju/task
 .. _JSON-Schema: https://json-schema.org/
 .. _jsonschema-object: https://json-schema.org/understanding-json-schema/reference/object.html

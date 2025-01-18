@@ -16,7 +16,7 @@ file:
 .. literalinclude:: code/flask-async/requirements.txt
 
 Pack the rock using ``rockcraft pack`` and redeploy the charm with the new rock using
-[``juju refresh``](https://juju.is/docs/juju/juju-refresh).
+:external+juju:ref:`command-juju-refresh`.
 
 Configure the async application
 -------------------------------

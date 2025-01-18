@@ -3,7 +3,13 @@
 ``bundle.yaml`` file
 ====================
 
-    See also: `Bundle <juju-bundle>`_
+.. important::
+
+    As of 1 Jan 2025, bundles are being phased out.
+
+..
+
+    See also: :external+juju:ref:`Juju | Bundle <bundle>`
 
     Source for the keys used by Juju:
     `Schema <https://github.com/juju/charm/blob/v12/bundledata.go>`_,
@@ -19,7 +25,7 @@ your bundle.
 .. important::
 
     ``bundle.yaml`` is typically generated using
-    `Juju's export-bundle command <juju-export-bundle>`_.
+    :external+juju:ref:`Juju's export-bundle command <command-juju-export-bundle>`.
 
 **For overlay bundles:**
 
@@ -741,7 +747,8 @@ The default base for deploying charms that can be deployed on multiple bases.
 
 **Purpose:** A link to a documentation cover page.
 
-    See more: `Charm documentation <https://juju.is/docs/sdk/charm-documentation>`_
+    See more: :external+juju:ref:`Juju | Charm documentation
+    <charm-documentation-best-practices>`
 
 
 ``issues``
@@ -926,6 +933,3 @@ The alias will typically be used to specify a value for an application option
 **Structure:** A string (or a list of strings) containing a link (or links) to
 project websites. In general this is likely to be the upstream project website or the
 formal website for the charmed bundle.
-
-.. _juju-bundle: https://juju.is/docs/juju/bundle
-.. _juju-export-bundle: https://juju.is/docs/juju/juju-export-bundle

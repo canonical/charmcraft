@@ -88,6 +88,7 @@ Plugins
 
 - New :ref:`craft_parts_poetry_plugin`.
 - New :ref:`craft_parts_python_plugin`.
+- In the reactive plugin, the ``charm`` command is now run in verbose mode by default.
 
 Reactive
 """"""""
@@ -95,16 +96,13 @@ Reactive
 Extensions
 ##########
 
-- New `fastapi-framework extension
-  <https://juju.is/docs/sdk/charmcraft-extension-fastapi-framework>`_
-- The Django extension is no longer considered experimental.
-
-- The ``charm`` command is now run in verbose mode by default.
+- New :ref:`fastapi-framework-extension`
+- The :ref:`django-framework-extension` is no longer considered experimental.
 
 Command line
 ============
 
-- The ``pack`` command now updates the charm libaries in the project directory
+- The :doc:`commands/pack` command now updates the charm libaries in the project directory
   if they don't meet the requirements in the ``charm-libs`` key of
   ``charmcraft.yaml``.
 - New :ref:`ref_commands_create-track` command.
@@ -256,20 +254,20 @@ New Features
 * Charmcraft has a new :ref:`ref_commands_fetch-libs` command, which, when
   combined with a ``charm-libs`` key in ``charmcraft.yaml``, allows the
   automatic fetching and updating of multiple
-  `charm libraries <https://juju.is/docs/sdk/manage-libraries>`_.
+  :doc:`charm libraries </howto/manage-libraries>`.
 * The new, experimental :ref:`ref_commands_test` command is also included in
   Charmcraft 3.1. Please have a go with it. Documentation is fairly minimal
   right now, as the implementation is still in flux.
 * The :ref:`ref_commands_upload-resource` command now uses
-  `skopeo`_ to upload images. Most notably,
+  :literalref:`skopeo` to upload images. Most notably,
   this means you can enter
   `any skopeo-supported containers-transports URL
   <https://manpages.ubuntu.com/manpages/noble/man5/containers-transports.5.html>`_
   to upload an OCI container to Charmhub.
-* New features to experimental
-  `extensions <https://juju.is/docs/sdk/manage-extensions>`_:
-  ``django-framework`` and ``flask-framework``. These are designed to work with rocks,
-  for example, `rocks with the flask-framework extension`_.
+* New features to experimental :ref:`extensions <manage-extensions>`:
+  ``django-framework`` and ``flask-framework``. These are designed to work with
+  :external+rockcraft:doc:`rocks <index>`, for example,
+  :external+rockcraft:doc:`rocks with the flask-framework extension <tutorial/flask>`.
 * New releases are automatically published to PyPI (thanks @bittner)!
 
 Bug fixes
@@ -291,8 +289,7 @@ Breaking Changes
 ================
 
 - The ``prime`` keyword no longer adds extra files to a charm. If you need this
-  functionality, please refer to this documentation page:
-  `Include extra files in a charm`_
+  functionality, use the :ref:`craft_parts_dump_plugin`
 - All new bases, starting with ``ubuntu@24.04``, must use the ``base`` and
   ``platforms`` keywords.
 - The ``--bases-index`` parameter is deprecated.
@@ -392,9 +389,8 @@ For the changes from releases before 2.5.0, please consult the `GitHub Releases`
 page.
 
 .. _`GitHub Releases`: https://github.com/canonical/charmcraft/releases
-.. _`Include extra files in a charm`: https://juju.is/docs/sdk/include-extra-files-in-a-charm
 .. _`3.0 release announcement`: https://discourse.charmhub.io/t/charmcraft-3-0-in-the-beta-channel/13469
-.. _`rocks with the flask-framework extension`: https://documentation.ubuntu.com/rockcraft/en/stable/tutorials/getting-started-with-flask/
+
 .. _2.5.0: https://github.com/canonical/charmcraft/releases/tag/2.5.0
 .. _2.5.1: https://github.com/canonical/charmcraft/releases/tag/2.5.1
 .. _2.5.2: https://github.com/canonical/charmcraft/releases/tag/2.5.2

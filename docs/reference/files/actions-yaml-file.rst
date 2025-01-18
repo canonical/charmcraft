@@ -179,7 +179,8 @@ validation, defined as follows:
 
 **Structure:** *Type:* Boolean.
 
-   See more: :external+juju:ref:`Juju | juju run <command-juju-run>`, :external+juju:ref:`Juju | Task <task>`
+   See more: :external+juju:ref:`Juju | juju run <command-juju-run>`,
+   :external+juju:ref:`Juju | Task <task>`
 
 ``<action>.params``
 -------------------

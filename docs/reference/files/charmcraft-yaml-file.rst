@@ -394,7 +394,8 @@ the standard Canonical services to operate with charms.
 ``config``
 ----------
 
-    See first: :external+juju:ref:`Juju | Application configuration <application-configuration>`
+    See first: :external+juju:ref:`Juju | Application configuration
+    <application-configuration>`
 
 **Status:** Optional.
 

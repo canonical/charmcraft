@@ -102,8 +102,8 @@ Extensions
 Command line
 ============
 
-- The :doc:`commands/pack` command now updates the charm libaries in the project directory
-  if they don't meet the requirements in the ``charm-libs`` key of
+- The :doc:`commands/pack` command now updates the charm libaries in the project
+  directory if they don't meet the requirements in the ``charm-libs`` key of
   ``charmcraft.yaml``.
 - New :ref:`ref_commands_create-track` command.
 

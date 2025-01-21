@@ -101,8 +101,8 @@ true:
 - it is a dictionary
 - each item inside has the mandatory ``type`` key
 
-Check how to `create config.yaml and configure
-charms <https://discourse.charmhub.io/t/creating-config-yaml-and-configuring-charms/1039>`__
+Check how to `create config.yaml and configure charms
+<https://discourse.charmhub.io/t/creating-config-yaml-and-configuring-charms/1039>`_
 for more information.
 
 

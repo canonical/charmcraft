@@ -8,7 +8,8 @@ The ``pyproject.toml`` file in your charm's root directory is a typical
 Python ``pyproject.toml`` file.
 
     See more: `pip |
-    pyproject.toml <https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/>`_
+    pyproject.toml
+    <https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/>`_
 
 This file is generated automatically by ``charmcraft init`` with the
 contents below:

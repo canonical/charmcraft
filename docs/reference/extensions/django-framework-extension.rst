@@ -262,7 +262,7 @@ Background Tasks
 ----------------
 
 Extra services defined in the file
-:literalref:`rockcraft.yaml <https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/#services>`_
+:literalref:`rockcraft.yaml <https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/#services>`
 with names ending in ``-worker`` or ``-scheduler`` will be passed the
 same environment variables as the main application. If there is more
 than one unit in the application, the services with the name ending in

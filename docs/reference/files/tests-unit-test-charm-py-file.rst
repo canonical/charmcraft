@@ -4,7 +4,8 @@
 ``tests/unit/test_charm.py`` file
 =================================
 
-    See also: `How to write unit tests for a charm <https://juju.is/docs/sdk/write-a-unit-test-for-a-charm>`_
+    See also: `How to write unit tests for a charm
+    <https://juju.is/docs/sdk/write-a-unit-test-for-a-charm>`_
 
 The ``tests/unit/test_charm.py`` file is the companion to
 ``src/charm.py`` for unit testing. It is pre-populated with standard

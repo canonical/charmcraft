@@ -54,7 +54,8 @@ Set things up
 
 Install Multipass.
 
-    See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
+    See more: `Multipass | How to install Multipass
+    <https://multipass.run/docs/install-multipass>`_
 
 Use Multipass to launch an Ubuntu VM with the name ``charm-dev`` from the 22.04
 blueprint.
@@ -428,7 +429,7 @@ output (e.g., ``10.1.157.80`` in the sample output above):
 
 .. code-block:: bash
 
-    curl 10.1.157:8000
+    curl 10.1.157.80:8000
 
 The Django app should again respond with:
 

@@ -11,7 +11,7 @@ This file is optional, though it may be useful for charms intended for a
 machine cloud of the LXD type.
 
     See more: `Juju \| The LXD cloud and
-    Juju <https://juju.is/docs/juju/lxd>`__
+    Juju <https://juju.is/docs/juju/lxd>`_
 
 The file allows you to specify a LXD profile to be applied to the LXD
 container that your charm is deployed into. The structure of the file
@@ -20,10 +20,7 @@ following devices are supported: ``unix-char``, ``unix-block``, ``gpu``,
 ``usb``.
 
     See more: `LXD | How to use
-    profiles <https://documentation.ubuntu.com/lxd/en/latest/profiles/>`_,
-    `Charmhub | Charmed Neutron
-    Openvswitch <https://charmhub.io/neutron-openvswitch>`_'s
-    `lxd-profile.yaml <https://opendev.org/openstack/charm-neutron-openvswitch/src/branch/master/lxd-profile.yaml>`_
+    profiles <https://documentation.ubuntu.com/lxd/en/latest/profiles/>`_
 
 .. Source: https://github.com/juju/charm/blob/master/lxdprofile.go#L58-L75
 .. // WhiteList devices: unix-char, unix-block, gpu, usb.
@@ -38,32 +35,9 @@ the machine level via ``juju show-machine`` or ``juju status --format=yaml``.
   command or the ``status --format=yaml`` command. Below is an example of the kind
   of information that can be obtained from either of these two commands:
 
-.. ```yaml
-..   lxd-profiles:
-..       juju-default-lxd-profile-0:
-..         config:
-..           linux.kernel_modules: openvswitch,ip_tables,ip6_tables
-.. ```
+.. code-block:: yaml
 
-
-.. Juju (`v.2.5.0`) supports LXD profiles for charms. This is implemented by including file `lxd-profile.yaml` in a  charm's root directory. For example, here is a simple two-line file (this is taken from the [Openvswitch](https://jaas.ai/neutron-openvswitch) charm):
-
-.. ```yaml
-.. config:
-..   linux.kernel_modules: openvswitch,ip_tables,ip6_tables
-.. ```
-
-.. - A validity check is performed on the profile(s) during the deployment of the charm. This is based on a hardcoded list of allowed items, everything else being denied. The `--force` option can be used to bypass this check but this is not recommended. The list is:
-
-.. ```yaml
-.. config
-..   -boot
-..   -limits
-..   -migration
-
-.. devices
-..   unix-char
-..   unix-block
-..   gpu
-..   usb
-.. ```
+    lxd-profiles:
+      juju-default-lxd-profile-0:
+        config:
+          linux.kernel_modules: openvswitch,ip_tables,ip6_tables

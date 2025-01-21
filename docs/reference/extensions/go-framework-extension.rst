@@ -4,9 +4,8 @@
 Go framework extension
 ======================
 
-The ``go-framework`` extension includes configuration options customised
-for a Go application. This document describes all the keys that a user
-may interact with.
+The ``go-framework`` extension includes configuration options customised for a Go
+application. This document describes all the keys that a user may interact with.
 
 .. tip::
 
@@ -17,33 +16,29 @@ may interact with.
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
 
-You can use the predefined options (run ``charmcraft expand-extensions``
-for details) but also add your own, as needed.
+You can use the predefined options (run ``charmcraft expand-extensions`` for details)
+but also add your own, as needed.
 
-The predefined configuration options for the ``go-framework`` are: -
-**app-port**: Port in which the application should listen. The ingress
-will be configured using this port. The environment variable passed to
-the app is ``APP_PORT``. Default value is 8080. - **app-secret-key**:
-Long secret you can use for sessions, csrf or any other thing where you
-need a random secret shared by all units. The environment variable
-passed to the app is ``APP_METRICS_PORT``. The default value is random.
-- **metrics-port**: Port where the prometheus metrics will be scraped.
-The environment variable passed to the app is ``APP_PORT``. Default
-value is 8080. - **metrics-path**: Path where the prometheus metrics
-will be scraped. The environment variable passed to the app is
+The predefined configuration options for the ``go-framework`` are: - **app-port**: Port
+in which the application should listen. The ingress will be configured using this port.
+The environment variable passed to the app is ``APP_PORT``. Default value is 8080. -
+**app-secret-key**: Long secret you can use for sessions, csrf or any other thing where
+you need a random secret shared by all units. The environment variable passed to the app
+is ``APP_METRICS_PORT``. The default value is random. - **metrics-port**: Port where the
+prometheus metrics will be scraped. The environment variable passed to the app is
+``APP_PORT``. Default value is 8080. - **metrics-path**: Path where the prometheus
+metrics will be scraped. The environment variable passed to the app is
 ``APP_METRICS_PATH``. Default value is ``/metrics``.
 
-In case you want to add extra configuration options, any option you
-define will be used to generate environment variables; a user-defined
-option ``config-option-name`` will generate an environment variable
-named ``APP_CONFIG_OPTION_NAME`` where the option name is converted to
-upper case and dashes are converted to underscores.
+In case you want to add extra configuration options, any option you define will be used
+to generate environment variables; a user-defined option ``config-option-name`` will
+generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where the option name
+is converted to upper case and dashes are converted to underscores.
 
-In either case, you will be able to set it in the usual way by running
-``juju config <application> <option>=<value>``. For example, if you
-define an option called ``token``, as below, this will generate a
-``APP_TOKEN`` environment variable, and a user of your charm can set it
-by running ``juju config <application> token=<token>``.
+In either case, you will be able to set it in the usual way by running ``juju config
+<application> <option>=<value>``. For example, if you define an option called ``token``,
+as below, this will generate a ``APP_TOKEN`` environment variable, and a user of your
+charm can set it by running ``juju config <application> token=<token>``.
 
 .. code-block:: yaml
 
@@ -80,16 +75,15 @@ integrations, for internal purposes.
             limit: 1
 
 
-In addition to these, in each ``provides`` and ``requires`` block you
-may specifying further integration endpoints, to integrate with the
-following charms and bundles:
+In addition to these, in each ``provides`` and ``requires`` block you may specifying
+further integration endpoints, to integrate with the following charms and bundles:
 
 - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
   ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
 - MySQL: `machine <https://charmhub.io/mysql>`__ and
   `k8s <https://charmhub.io/mysql-k8s>`__ charm
 - PostgreSQL: `machine <https://charmhub.io/postgresql>`__ and
-  `k8s <https://charmhub.io/postgresql-k8s>`__ char
+  `k8s <https://charmhub.io/postgresql-k8s>`__ charm
 - `MongoDB <https://charmhub.io/mongodb>`__
 - `Canonical Observability Stack
   (COS) <https://charmhub.io/cos-lite>`__
@@ -162,18 +156,16 @@ These endpoint definitions are as below:
     The key optional with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
 
-To add one of these integrations, e.g., postgresql, in the
-``charmcraft.yaml`` file include the appropriate requires block and
-integrate with ``juju integrate <go charm> postgresql`` as usual.
+To add one of these integrations, e.g., postgresql, in the ``charmcraft.yaml`` file
+include the appropriate requires block and integrate with ``juju integrate <go charm>
+postgresql`` as usual.
 
-After the integration has been established, the connection string will
-be available as an environment variable. Integration with PostgreSQL,
-MySQL, MongoDB or Redis provides the string as the
-``POSTGRESQL_DB_CONNECT_STRING``, ``MYSQL_DB_CONNECT_STRING``,
-``MONGODB_DB_CONNECT_STRING`` or ``REDIS_DB_CONNECT_STRING`` environment
-variables respectively. Furthermore, the following environment variables
-will be provided to your Go application for integrations with
-PostgreSQL, MySQL, MongoDB or Redis:
+After the integration has been established, the connection string will be available as
+an environment variable. Integration with PostgreSQL, MySQL, MongoDB or Redis provides
+the string as the ``POSTGRESQL_DB_CONNECT_STRING``, ``MYSQL_DB_CONNECT_STRING``,
+``MONGODB_DB_CONNECT_STRING`` or ``REDIS_DB_CONNECT_STRING`` environment variables
+respectively. Furthermore, the following environment variables will be provided to your
+Go application for integrations with PostgreSQL, MySQL, MongoDB or Redis:
 
 - ``<integration>_DB_SCHEME``
 - ``<integration>_DB_NETLOC``
@@ -197,8 +189,8 @@ The provided SAML environment variables are as follows:
 - ``SAML_SINGLE_SIGN_ON_REDIRECT_URL`` (required)
 - ``SAML_SIGNING_CERTIFICATE`` (required)
 
-The S3 integration creates the following environment variables that you
-may use to configure your Go application:
+The S3 integration creates the following environment variables that you may use to
+configure your Go application:
 
 - ``S3_ACCESS_KEY`` (required)
 - ``S3_SECRET_KEY`` (required)
@@ -213,10 +205,9 @@ may use to configure your Go application:
 - ``S3_ATTRIBUTES``
 - ``S3_TLS_CA_CHAIN``
 
-The RabbitMQ integration creates the connection string in the
-environment variable ``RABBITMQ_CONNECT_STRING``. Furthermore, the
-following environment variables may be provided, derived from the
-connection string:
+The RabbitMQ integration creates the connection string in the environment variable
+``RABBITMQ_CONNECT_STRING``. Furthermore, the following environment variables may be
+provided, derived from the connection string:
 
 - ``RABBITMQ_SCHEME``
 - ``RABBITMQ_NETLOC``
@@ -230,19 +221,18 @@ connection string:
 - ``RABBITMQ_PORT``
 - ``RABBITMQ_VHOST``
 
-The environment variable ``APP_BASE_URL`` provides the Ingress URL for
-an Ingress integration or the Kubernetes service URL if there is no
-Ingress integration.
+The environment variable ``APP_BASE_URL`` provides the Ingress URL for an Ingress
+integration or the Kubernetes service URL if there is no Ingress integration.
 
 
 HTTP Proxy
 ----------
 
-Proxy settings should be set as model configurations. Charms generated
-using the ``go-framework`` extension will make the Juju proxy settings
-available as the ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY``
-environment variables. For example, the ``juju-http-proxy`` environment
-variable will be exposed as ``HTTP_PROXY`` to the Go service.
+Proxy settings should be set as model configurations. Charms generated using the
+``go-framework`` extension will make the Juju proxy settings available as the
+``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environment variables. For example, the
+``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the Go
+service.
 
     See more: `List of model configuration
     keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
@@ -252,22 +242,20 @@ Background Tasks
 ----------------
 
 Extra services defined in the file
-:literalref:`rockcraft.yaml <https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/#services>`_
-with names ending in ``-worker`` or ``-scheduler`` will be passed the
-same environment variables as the main application. If there is more
-than one unit in the application, the services with the name ending in
-``-worker`` will run in all units. The services with name ending in
-``-scheduler`` will only run in one of the units of the application.
+:literalref:`rockcraft.yaml <https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/#services>`
+with names ending in ``-worker`` or ``-scheduler`` will be passed the same environment
+variables as the main application. If there is more than one unit in the application,
+the services with the name ending in ``-worker`` will run in all units. The services
+with name ending in ``-scheduler`` will only run in one of the units of the application.
 
 
 Secrets
 -------
 
-Juju secrets can be passed as environment variables to your Go
-application. The secret ID has to be passed to the application as a
-config option in the file ``charmcraft.yaml`` file of type ``secret``.
-This config option has to be populated with the secret ID, in the format
-``secret:<secret ID>``.
+Juju secrets can be passed as environment variables to your Go application. The secret
+ID has to be passed to the application as a config option in the file
+``charmcraft.yaml`` file of type ``secret``. This config option has to be populated with
+the secret ID, in the format ``secret:<secret ID>``.
 
 The environment variable name passed to the application will be:
 
@@ -275,8 +263,8 @@ The environment variable name passed to the application will be:
 
     APP_<config option name>_<key inside the secret>
 
-The ``<config option name>`` and ``<key inside the secret>`` keywords in
-the environment variable name will have the hyphens replaced by
-underscores and all the letters capitalised.
+The ``<config option name>`` and ``<key inside the secret>`` keywords in the environment
+variable name will have the hyphens replaced by underscores and all the letters
+capitalised.
 
    See more: `Secret <https://juju.is/docs/juju/secret>`_

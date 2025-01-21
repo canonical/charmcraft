@@ -54,7 +54,8 @@ Set things up
 
 Install Multipass.
 
-    See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
+    See more: `Multipass | How to install Multipass
+    <https://multipass.run/docs/install-multipass>`_
 
 Use Multipass to launch an Ubuntu VM with the name charm-dev from the 24.04 blueprint:
 
@@ -597,11 +598,10 @@ Wait for ``juju status`` to show that the App is ``active`` again. Executing
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1`` should
 still return the ``{"message":"Hi!"}`` greeting.
 
-To check the local visitors, use
-``curl http://fastapi-hello-world/visitors  --resolve fastapi-hello-world:80:127.0.0.1``,
-which should return ``{"count":1}`` after the previous request to the root endpoint. This
-should be incremented each time the root endpoint is requested. If we repeat this process,
-the output should be as follows:
+To check the local visitors, use ``curl http://fastapi-hello-world/visitors  --resolve
+fastapi-hello-world:80:127.0.0.1``, which should return ``{"count":1}`` after the
+previous request to the root endpoint. This should be incremented each time the root
+endpoint is requested. If we repeat this process, the output should be as follows:
 
 .. terminal::
     :input: curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1

@@ -7,9 +7,9 @@
 The ``tests/integration/test_charm.py`` file is the companion to
 ``src/charm.py`` for integration testing.
 
-This file is created automatically by ``charmcraft init`` and it is
-pre-populated with standard constructs used by ``pytest-operator``,
-similar to the below:
+Profiles other than the one for 12-factor apps automatically create
+``charmcraft init``. It is pre-populated with standard constructs used by
+``pytest-operator``, similar to the below:
 
 .. code-block:: python
 

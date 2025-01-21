@@ -41,3 +41,23 @@ You can do so with
     uv run pytest
 
 Contributions welcome!
+
+## Contributing to documentation
+
+Charmcraft uses Sphinx for its documentation, so contributing to the documentation
+is similar to contributing to the code. To begin, fork and clone the repository.
+Once in the repository directory, run:
+
+    make setup
+
+to bring in any build dependencies and create a virtual environment. Before proceeding,
+check that the documentation builds and lints correctly on your machine:
+
+    make lint-docs
+    make docs
+
+If both of those commands succeed, you can make a branch and start writing docs.
+A useful tool while writing docs is `sphinx-autobuild`, which you can access by running
+the following in the Charmcraft root directory:
+
+    make docs-auto

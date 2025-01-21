@@ -5,7 +5,8 @@
 
 .. important::
 
-    As of 1 Jan 2025, bundles are being phased out.
+    Bundles are being phased out. Starting 1 Jan 2025, charm authors can no longer
+    register new bundles.
 
 ..
 

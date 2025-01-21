@@ -66,10 +66,7 @@ Create the Django application
 Create a ``requirements.txt`` file, copy the following text into it and
 then save it:
 
-.. code:: bash
-
-   Django
-   psycopg2-binary
+.. literalinclude:: code/django/requirements.txt
 
 .. note::
 
@@ -78,15 +75,19 @@ then save it:
 
 Install the packages:
 
-.. code:: bash
-
-   pip install -r requirements.txt
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:install-requirements]
+    :end-before: [docs:install-requirements-end]
+    :dedent: 2
 
 Create a new project using ``django-admin``:
 
-.. code:: bash
-
-   django-admin startproject django_hello_world
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:django-startproject]
+    :end-before: [docs:django-startproject-end]
+    :dedent: 2
 
 Run the Django application locally
 ----------------------------------
@@ -112,9 +113,11 @@ Save and close the ``settings.py`` file.
 
 Now, run the Django application to verify that it works:
 
-.. code:: bash
-
-   python3 manage.py runserver 0.0.0.0:8000
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:run-django-app]
+    :end-before: [docs:run-django-app-end]
+    :dedent: 2
 
 .. note::
 
@@ -271,14 +274,16 @@ Save and close the ``settings.py`` file.
 
 Now let’s pack the rock:
 
-.. code:: bash
-
-   rockcraft pack
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
 
 .. note::
 
    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-   for the packing for older versions of Rockcraft.
+   in the pack command for older versions of Rockcraft.
 
 Depending on your network, this step can take a couple of minutes to
 finish. Once Rockcraft has finished packing the Django rock, the
@@ -294,11 +299,11 @@ The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in a Kubernetes cluster.
 Copy the rock:
 
-.. code:: bash
-
-   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:django-hello-world_0.1_amd64.rock \
-      docker://localhost:32000/django-hello-world:0.1
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
 
 .. seealso::
 
@@ -310,10 +315,11 @@ Create the charm
 From the ``django-hello-world`` directory, create a new directory for
 the charm and change inside it:
 
-.. code:: bash
-
-   mkdir charm
-   cd charm
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
 
 Using the ``django-framework`` profile, Charmcraft will automate the
 creation of the files needed for our charm, including a
@@ -323,9 +329,11 @@ application.
 
 Initialize a charm named ``django-hello-world``:
 
-.. code:: bash
-
-   charmcraft init --profile django-framework --name django-hello-world
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
 
 The files will automatically be created in your working directory.
 
@@ -333,19 +341,16 @@ We will need to connect to the PostgreSQL database. Open the
 ``charmcraft.yaml`` file and add the following section to the end of the
 file:
 
-.. code:: yaml
-
-   requires:
-     postgresql:
-       interface: postgresql_client
-       optional: false
-       limit: 1
+.. literalinclude:: code/django/postgres_requires_charmcraft.yaml
+   :language: yaml
 
 Now let’s pack the charm:
 
-.. code:: bash
-
-   charmcraft pack
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -370,42 +375,50 @@ Deploy the Django application
 A Juju model is needed to handle Kubernetes resources while deploying
 the Django application. Let’s create a new model:
 
-.. code:: bash
-
-   juju add-model django-hello-world
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
 
 If you are not on a host with the ``amd64`` architecture, you will need
 to include a constraint to the Juju model to specify your architecture.
 Check the architecture of your system using
 ``dpkg --print-architecture``.
 
-For the ``arm64`` architecture, set the model constraints using
+Set the Juju model constraints using
 
-.. code:: bash
-
-   juju set-model-constraints -m django-hello-world arch=arm64
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:add-model-constraints]
+    :end-before: [docs:add-model-constraints-end]
+    :dedent: 2
 
 Now let’s use the OCI image we previously uploaded to deploy the Django
 application. Deploy using Juju by specifying the OCI image name with the
 ``--resource`` option:
 
-.. code:: bash
-
-   juju deploy ./django-hello-world_ubuntu-22.04-amd64.charm \
-      django-hello-world \
-      --resource django-app-image=localhost:32000/django-hello-world:0.1
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-django-app]
+    :end-before: [docs:deploy-django-app-end]
+    :dedent: 2
 
 Now let’s deploy PostgreSQL:
 
-.. code:: bash
-
-   juju deploy postgresql-k8s --trust
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
 
 Integrate PostgreSQL with the Django application:
 
-.. code:: bash
-
-   juju integrate django-hello-world postgresql-k8s
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:integrate-postgres]
+    :end-before: [docs:integrate-postgres-end]
+    :dedent: 2
 
 It will take a few minutes to deploy the Django application. You can
 monitor the progress using
@@ -442,9 +455,11 @@ To be able to test the deployment, we need to include the IP address in
 the allowed hosts configuration. We’ll also enable debug mode for now
 whilst we are testing. Set both configurations:
 
-.. code:: bash
-
-   juju config django-hello-world django-allowed-hosts=*  django-debug=true
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:config-allowed-hosts-debug]
+    :end-before: [docs:config-allowed-hosts-debug-end]
+    :dedent: 2
 
 .. note::
 
@@ -456,18 +471,20 @@ whilst we are testing. Set both configurations:
 Let’s expose the application using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Django app:
 
-.. code:: bash
-
-   juju deploy nginx-ingress-integrator
-   juju integrate nginx-ingress-integrator django-hello-world
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
 the ingress. We will also set the default route to be the root endpoint:
 
-.. code:: bash
-
-   juju config nginx-ingress-integrator \
-      service-hostname=django-hello-world path-routes=/
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
@@ -491,9 +508,11 @@ We can now also change the Django allowed hosts to
 production, you will need to set up a DNS record). Inside the Multipass
 VM, set the configuration:
 
-.. code:: bash
-
-   juju config django-hello-world django-allowed-hosts=django-hello-world
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:config-allowed-hosts]
+    :end-before: [docs:config-allowed-hosts-end]
+    :dedent: 2
 
 Visiting http://django-hello-world should still respond with
 ``The install worked successfully! Congratulations!``.
@@ -508,31 +527,21 @@ out to the ``django-hello-world`` directory where the rock is and enter
 into the ``django_hello_world`` directory where the Django application
 is. Let’s add a new Django app:
 
-.. code:: bash
-
-   django-admin startapp greeting
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:startapp-greeting]
+    :end-before: [docs:startapp-greeting-end]
+    :dedent: 2
 
 Open the ``greeting/views.py`` file and replace the content with:
 
-.. code:: python
-
-   from django.http import HttpResponse
-
-
-   def index(request):
-       return HttpResponse("Hello, world!\n")
+.. literalinclude:: code/django/views_greeting.py
+   :language: python
 
 Create the ``greeting/urls.py`` file with the following contents:
 
-.. code:: python
-
-   from django.urls import path
-
-   from . import views
-
-   urlpatterns = [
-       path("", views.index, name="index"),
-   ]
+.. literalinclude:: code/django/urls_greeting.py
+   :language: python
 
 Open the ``django_hello_world/urls.py`` file and edit the imports to
 contain ``include`` and the value of ``urlpatterns`` to include
@@ -580,28 +589,28 @@ the ``rockcraft.yaml`` file should look similar to the following:
 
 Now let’s pack and upload the rock using similar commands as before:
 
-.. code:: bash
-
-   rockcraft pack
-   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:django-hello-world_0.2_amd64.rock \
-      docker://localhost:32000/django-hello-world:0.2
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:repack-update]
+    :end-before: [docs:repack-update-end]
+    :dedent: 2
 
 Now we can deploy the new version of the Django application from the
 ``charm`` directory using:
 
-.. code:: bash
-
-   cd charm
-   juju refresh django-hello-world \
-      --path=./django-hello-world_ubuntu-22.04-amd64.charm \
-      --resource django-app-image=localhost:32000/django-hello-world:0.2
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
 
 Now that we have the greeting app, we can disable debug mode:
 
-.. code:: bash
-
-   juju config django-hello-world django-debug=false
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:disable-debug-mode]
+    :end-before: [docs:disable-debug-mode-end]
+    :dedent: 2
 
 Use ``juju status --watch 5s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
@@ -624,15 +633,8 @@ directory ``django-hello-world`` using ``cd ..``. From there, open the
 ``django_hello_world/greeting/views.py`` file and replace the content
 with:
 
-.. code:: python
-
-   import os
-
-   from django.http import HttpResponse
-
-
-   def index(request):
-       return HttpResponse(f"{os.environ.get('DJANGO_GREETING', 'Hello, world!')}\n")
+.. literalinclude:: code/django/views_greeting_configuration.py
+   :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -663,12 +665,11 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
 Let’s run the pack and upload commands for the rock:
 
-.. code:: bash
-
-   rockcraft pack
-   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:django-hello-world_0.3_amd64.rock \
-      docker://localhost:32000/django-hello-world:0.3
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:repack-2nd-update]
+    :end-before: [docs:repack-2nd-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``.
 
@@ -677,15 +678,8 @@ configurations in ``charmcraft.yaml`` which will be passed as
 environment variables to the Django application. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
-.. code:: yaml
-
-   config:
-     options:
-       greeting:
-         description: |
-           The greeting to be returned by the Django application.
-         default: "Hello, world!"
-         type: string
+.. literalinclude:: code/django/greeting_charmcraft.yaml
+   :language: yaml
 
 .. note::
 
@@ -695,12 +689,11 @@ the end of the ``charmcraft.yaml`` file:
 
 We can now pack and deploy the new version of the Django app:
 
-.. code:: bash
-
-   charmcraft pack
-   juju refresh django-hello-world \
-      --path=./django-hello-world_ubuntu-22.04-amd64.charm \
-      --resource django-app-image=localhost:32000/django-hello-world:0.3
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:repack-refresh-2nd-deployment]
+    :end-before: [docs:repack-refresh-2nd-deployment-end]
+    :dedent: 2
 
 After we wait for a bit monitoring ``juju status`` the application
 should go back to ``active`` again. Sending a request to the root
@@ -710,9 +703,11 @@ Django application responding with ``Hello, world!`` again.
 
 Now let’s change the greeting:
 
-.. code:: bash
-
-   juju config django-hello-world greeting='Hi!'
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
 
 After we wait for a moment for the app to be restarted, using
 ``curl 127.0.0.1 -H "Host: django-hello-world"`` or visiting
@@ -735,6 +730,12 @@ development process, including:
 
 If you’d like to reset your working environment, you can run the
 following in the rock directory ``django-hello-world`` for the tutorial:
+
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
 
 .. code:: bash
 

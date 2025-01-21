@@ -43,7 +43,7 @@ times, mimicking a real development process.
 Set things up
 -------------
 
-.. include:: setup_edge.rst
+.. include:: /reuse/tutorial/setup_edge.rst
 
 Let’s create a new directory for this tutorial and change into it:
 
@@ -54,11 +54,11 @@ Let’s create a new directory for this tutorial and change into it:
 
 Finally, install ``python3-venv`` and create a virtual environment:
 
-.. code:: bash
-
-   sudo apt-get update && sudo apt-get install python3-venv -y
-   python3 -m venv .venv
-   source .venv/bin/activate
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:create-venv]
+    :end-before: [docs:create-venv-end]
+    :dedent: 2
 
 Create the Django application
 -----------------------------

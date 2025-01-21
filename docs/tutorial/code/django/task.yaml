@@ -47,10 +47,15 @@ execute: |
   sudo apt-get update && sudo apt-get install python3-venv -y
   python3 -m venv .venv
   source .venv/bin/activate
-  pip install -r requirements.txt
   # [docs:create-venv-end]
 
+  # [docs:install-requirements]
+  pip install -r requirements.txt
+  # [docs:install-requirements-end]
+
+  # [docs:django-startproject]
   django-admin startproject django_hello_world
+  # [docs:django-startproject-end]
 
   # Update settings.py file
   cat $HOME/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py

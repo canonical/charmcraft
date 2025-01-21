@@ -847,7 +847,7 @@ class PromoteCommand(CharmcraftCommand):
         The most common use is to promote a charm to a more stable risk value on a
         single track:
 
-            charmcraft promote --from-channel=candidate --to-channel=stable
+            ``charmcraft promote --from-channel=candidate --to-channel=stable``
         """
     )
 

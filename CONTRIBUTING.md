@@ -57,7 +57,9 @@ check that the documentation builds and lints correctly on your machine:
     make docs
 
 If both of those commands succeed, you can make a branch and start writing docs.
-A useful tool while writing docs is `sphinx-autobuild`, which you can access by running
-the following in the Charmcraft root directory:
+To continuously build and locally host the documentation while writing docs, run:
 
     make docs-auto
+
+This will run `sphinx-autobuild` and provide you with a link to view the updated
+documentation in your browser.

@@ -737,19 +737,6 @@ following in the rock directory ``django-hello-world`` for the tutorial:
     :end-before: [docs:clean-environment-end]
     :dedent: 2
 
-.. code:: bash
-
-   deactivate
-   rm -rf charm .venv django_hello_world
-   # delete all the files created during the tutorial
-   rm django-hello-world_0.1_amd64.rock \
-      django-hello-world_0.2_amd64.rock \
-      django-hello-world_0.3_amd64.rock \
-      rockcraft.yaml requirements.txt
-
-   # Remove the Juju model
-   juju destroy-model django-hello-world --destroy-storage
-
 You can also clean up your Multipass instance. Start by exiting it:
 
 .. code:: bash

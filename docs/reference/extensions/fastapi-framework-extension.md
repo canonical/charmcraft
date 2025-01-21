@@ -11,9 +11,9 @@ If you'd like to see the full contents contributed by this extension, see {ref}`
 
 ## `charmcraft.yaml` > `config` > `options`
 
-You can use the predefined options (run `charmcraft expand-extensions` for details) but also add your own, as needed. 
+You can use the predefined options (run `charmcraft expand-extensions` for details) but also add your own, as needed.
 
-In the latter case, any option you define will be used to generate environment variables; a user-defined option `config-option-name` will generate an environment variable named `APP_CONFIG_OPTION_NAME` where the option name is converted to upper case, dashes will be converted to underscores and the `APP_` prefix will be added. 
+In the latter case, any option you define will be used to generate environment variables; a user-defined option `config-option-name` will generate an environment variable named `APP_CONFIG_OPTION_NAME` where the option name is converted to upper case, dashes will be converted to underscores and the `APP_` prefix will be added.
 
 In either case, you will be able to set it in the usual way by running `juju config <application> <option>=<value>`. For example, if you define an option called `token`, as below, this will generate a `APP_TOKEN` environment variable, and a user of your charm can set it by running `juju config <application> token=<token>`.
 
@@ -29,7 +29,7 @@ config:
 
 ## `charmcraft.yaml` > `peers`, `provides`, `requires`
 
-Your charm already has some `peers`, `provides`, and `requires` integrations, for internal purposes. 
+Your charm already has some `peers`, `provides`, and `requires` integrations, for internal purposes.
 
 
 `````{dropdown} Expand to view pre-loaded integrations
@@ -66,6 +66,9 @@ In addition to these integrations, in each `provides` and `requires` block you m
 - [Redis](https://charmhub.io/redis-k8s)
 - [SAML](https://charmhub.io/saml-integrator)
 - [S3](https://charmhub.io/s3-integrator)
+- RabbitMQ: [machine](https://charmhub.io/rabbitmq-server) and
+  [k8s](https://charmhub.io/rabbitmq-k8s) charm
+- [Tempo](https://charmhub.io/topics/charmed-tempo-ha)
 
 These endpoint definitions are as below:
 
@@ -117,11 +120,27 @@ requires:
     limit: 1
 ```
 
+```yaml
+requires:
+  rabbitmq:
+    interface: rabbitmq
+    optional: True
+    limit: 1
+```
+
+```yaml
+requires:
+  tracing:
+    interface: tracing
+    optional: True
+    limit: 1
+```
+
 ```{note}
 The key `optional` with value `False` means that the charm will get blocked and stop the services if the integration is not provided.
 ```
 
-To add one of these integrations, e.g. PostgreSQL, in the `charmcraft.yaml` file include the appropriate requires block and integrate with `juju integrate <fastapi charm> postgresql` as usual. 
+To add one of these integrations, e.g. PostgreSQL, in the `charmcraft.yaml` file include the appropriate requires block and integrate with `juju integrate <fastapi charm> postgresql` as usual.
 
 After the integration has been established, the connection string will be
 available as an environment variable. Integration with PostgreSQL, MySQL, MongoDB or Redis provides the string as the `POSTGRESQL_DB_CONNECT_STRING`, `MYSQL_DB_CONNECT_STRING`,
@@ -136,8 +155,8 @@ available as an environment variable. Integration with PostgreSQL, MySQL, MongoD
 - `<integration>_DB_USERNAME`
 - `<integration>_DB_PASSWORD`
 - `<integration>_DB_HOSTNAME`
-- `<integration>_DB_PORT` 
-- `<integration>_DB_NAME` 
+- `<integration>_DB_PORT`
+- `<integration>_DB_NAME`
 
 Here, `<integration>` is replaced by `POSTGRESQL`, `MYSQL` `MONGODB` or `REDIS` for the relevant integration.
 
@@ -163,6 +182,25 @@ The S3 integration creates the following environment variables that you may use 
 - `S3_ATTRIBUTES`
 - `S3_TLS_CA_CHAIN`
 
+The RabbitMQ integration creates the connection string in the environment variable `RABBITMQ_CONNECT_STRING`. Furthermore, the following environment variables may be provided, derived from the connection string:
+
+- `RABBITMQ_SCHEME`
+- `RABBITMQ_NETLOC`
+- `RABBITMQ_PATH`
+- `RABBITMQ_PARAMS`
+- `RABBITMQ_QUERY`
+- `RABBITMQ_FRAGMENT`
+- `RABBITMQ_USERNAME`
+- `RABBITMQ_PASSWORD`
+- `RABBITMQ_HOSTNAME`
+- `RABBITMQ_PORT`
+- `RABBITMQ_VHOST`
+
+The Tracing integration creates the following environment variables that you may use to configure your application:
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_SERVICE_NAME`
+
 The environment variable `APP_BASE_URL` provides the Ingress URL for an Ingress integration or the Kubernetes service URL if there is no Ingress integration.
 
 
@@ -179,6 +217,29 @@ Extra services defined in the file [`rockcraft.yaml`](https://documentation.ubun
 names ending in `-worker` or `-scheduler` will be passed the same environment variables as the main application. If there is more than one unit
 in the application, the services with the name ending in `-worker` will run in all units. The services with name ending in `-scheduler` will
 only run in one of the units of the application.
+
+
+## Observability
+
+12 Factor charms are designed to be easily observable using [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
+
+You can easily integrate your charm with [Loki](https://charmhub.io/loki-k8s) and [Prometheus](https://charmhub.io/prometheus-k8s) using Juju.
+
+```shell
+juju integrate fastapi-k8s grafana
+juju integrate fastapi-k8s loki
+juju integrate fastapi-k8s prometheus
+```
+After integration, you will be able to observe your workload using Grafana dashboards.
+
+
+In addition to that you can also trace your workload code using [Tempo](https://charmhub.io/topics/charmed-tempo-ha).
+To learn about how to deploy Tempo you can read the documentation [here](https://charmhub.io/topics/charmed-tempo-ha).
+
+To learn how to enable tracing in your FastAPI app you can checkout the example in [Paas Charm repository](https://github.com/canonical/paas-charm).
+
+Opentelemetry will automatically read the environment variables and configure the OpenTelemetry SDK to use them.
+For other frameworks and further configuration options please refer to [OpenTelemetry documentation](https://opentelemetry-python.readthedocs.io/en/latest/).
 
 
 ## Regarding the `migrate.sh` file

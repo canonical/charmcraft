@@ -11,9 +11,9 @@ If you'd like to see the full contents contributed by this extension, see {ref}`
 
 ## `charmcraft.yaml` > `config` > `options`
 
-You can use the predefined options (run `charmcraft expand-extensions` for details) but also add your own, as needed. 
+You can use the predefined options (run `charmcraft expand-extensions` for details) but also add your own, as needed.
 
-In the latter case, any option you define will be used to generate environment variables; a user-defined option `config-option-name` will generate an environment variable named `FLASK_CONFIG_OPTION_NAME` where the option name is converted to upper case and dashes are converted to underscores. 
+In the latter case, any option you define will be used to generate environment variables; a user-defined option `config-option-name` will generate an environment variable named `FLASK_CONFIG_OPTION_NAME` where the option name is converted to upper case and dashes are converted to underscores.
 
 In either case, you will be able to set it in the usual way by running `juju config <application> <option>=<value>`. For example, if you define an option called `token`, as below, this will generate a `FLASK_TOKEN` environment variable, and a user of your charm can set it by running `juju config <application> token=<token>`.
 
@@ -29,7 +29,7 @@ config:
 
 ## `charmcraft.yaml` > `peers`, `provides`, `requires`
 
-Your charm already has some `peers`, `provides`, and `requires` integrations, for internal purposes. 
+Your charm already has some `peers`, `provides`, and `requires` integrations, for internal purposes.
 
 `````{dropdown} Expand to view pre-loaded integrations
 
@@ -67,6 +67,7 @@ In addition to these, in each `provides` and `requires` block you may specifying
 - [S3](https://charmhub.io/s3-integrator)
 - RabbitMQ: [machine](https://charmhub.io/rabbitmq-server) and
   [k8s](https://charmhub.io/rabbitmq-k8s) charm
+- [Tempo](https://charmhub.io/topics/charmed-tempo-ha)
 
 These endpoint definitions are as below:
 
@@ -126,11 +127,19 @@ requires:
     limit: 1
 ```
 
+```yaml
+requires:
+  tracing:
+    interface: tracing
+    optional: True
+    limit: 1
+```
+
 ```{note}
 The key `optional` with value `False` means that the charm will get blocked and stop the services if the integration is not provided.
 ```
 
-To add one of these integrations, e.g. postgresql, in the `charmcraft.yaml` file include the appropriate requires block and integrate with `juju integrate <flask charm> postgresql` as usual. 
+To add one of these integrations, e.g. postgresql, in the `charmcraft.yaml` file include the appropriate requires block and integrate with `juju integrate <flask charm> postgresql` as usual.
 
 After the integration has been established, the connection string will be
 available as an environment variable. Integration with PostgreSQL, MySQL, MongoDB or Redis provides the string as the `POSTGRESQL_DB_CONNECT_STRING`, `MYSQL_DB_CONNECT_STRING`,
@@ -145,8 +154,8 @@ available as an environment variable. Integration with PostgreSQL, MySQL, MongoD
 - `<integration>_DB_USERNAME`
 - `<integration>_DB_PASSWORD`
 - `<integration>_DB_HOSTNAME`
-- `<integration>_DB_PORT` 
-- `<integration>_DB_NAME` 
+- `<integration>_DB_PORT`
+- `<integration>_DB_NAME`
 
 Here, `<integration>` is replaced by `POSTGRESQL`, `MYSQL` `MONGODB` or `REDIS` for the relevant integration.
 
@@ -183,8 +192,13 @@ The RabbitMQ integration creates the connection string in the environment variab
 - `RABBITMQ_USERNAME`
 - `RABBITMQ_PASSWORD`
 - `RABBITMQ_HOSTNAME`
-- `RABBITMQ_PORT` 
-- `RABBITMQ_VHOST` 
+- `RABBITMQ_PORT`
+- `RABBITMQ_VHOST`
+
+The Tracing integration creates the following environment variables that you may use to configure your application:
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_SERVICE_NAME`
 
 The environment variable `FLASK_BASE_URL` provides the Ingress URL for an Ingress integration or the Kubernetes service URL if there is no Ingress integration.
 
@@ -203,6 +217,46 @@ names ending in `-worker` or `-scheduler` will be passed the same environment va
 in the application, the services with the name ending in `-worker` will run in all units. The services with name ending in `-scheduler` will
 only run in one of the units of the application.
 
+
+## Observability
+
+12 Factor charms are designed to be easily observable using [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
+
+You can easily integrate your charm with [Loki](https://charmhub.io/loki-k8s) and [Prometheus](https://charmhub.io/prometheus-k8s) using Juju.
+
+```shell
+juju relate flask-k8s grafana
+juju relate flask-k8s loki
+juju relate flask-k8s prometheus
+```
+After integration, you will be able to observe your workload using Grafana dashboards.
+
+
+In addition to that you can also trace your workload code using [Tempo](https://charmhub.io/topics/charmed-tempo-ha).
+To learn about how to deploy Tempo you can read the documentation [here](https://charmhub.io/topics/charmed-tempo-ha).
+
+To enable tracing in your Flask app you can simply add the following lines to your workload code:
+
+```python
+from opentelemetry import trace
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+
+app = Flask(__name__)
+FlaskInstrumentor().instrument_app(app)
+tracer = trace.get_tracer(__name__)
+```
+
+You also need to add the following lines into your `requirements.txt` file:
+
+```
+opentelemetry-api
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-flask
+opentelemetry-sdk
+```
+
+Opentelemetry will automatically read the environment variables and configure the OpenTelemetry SDK to use them.
+For other frameworks and further configuration options please refer to [OpenTelemetry documentation](https://opentelemetry-python.readthedocs.io/en/latest/).
 
 ## Regarding the `migrate.sh` file
 

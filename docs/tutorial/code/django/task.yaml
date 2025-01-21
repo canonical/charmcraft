@@ -74,7 +74,7 @@ execute: |
   cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # [docs:pack]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
@@ -96,7 +96,7 @@ execute: |
   cat $HOME/postgres_requires_charmcraft.yaml >> charmcraft.yaml
 
   # [docs:charm-pack]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   # [docs:charm-pack-end]
 
   # [docs:add-juju-model]
@@ -169,7 +169,7 @@ execute: |
   rockcraft pack
 
   # [docs:repack-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:django-hello-world_0.2_$(dpkg --print-architecture).rock \
     docker://localhost:32000/django-hello-world:0.2
@@ -198,10 +198,10 @@ execute: |
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
 
   # [docs:repack-2nd-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:django-hello-world_0.3_$(dpkg --print-architecture).rock \
-      docker://localhost:32000/django-hello-world:0.3
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:django-hello-world_0.3_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/django-hello-world:0.3
   # [docs:repack-2nd-update-end]
 
   cd charm
@@ -210,7 +210,7 @@ execute: |
   cat $HOME/greeting_charmcraft.yaml >> ./charmcraft.yaml
 
   # [docs:repack-refresh-2nd-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh django-hello-world \
     --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     --resource django-app-image=localhost:32000/django-hello-world:0.3

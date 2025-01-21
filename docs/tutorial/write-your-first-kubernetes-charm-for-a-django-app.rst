@@ -273,12 +273,12 @@ Now let’s pack the rock:
 
 .. code:: bash
 
-   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+   rockcraft pack
 
 .. note::
 
-   ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required whilst the Django
-   extension is experimental.
+   ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
+   for the packing for older versions of Rockcraft.
 
 Depending on your network, this step can take a couple of minutes to
 finish. Once Rockcraft has finished packing the Django rock, the
@@ -345,7 +345,12 @@ Now let’s pack the charm:
 
 .. code:: bash
 
-   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+   charmcraft pack
+
+.. note::
+
+   ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
+   in the pack command for older versions of Charmcraft.
 
 Depending on your system and network, this step can take a couple of
 minutes to finish.
@@ -577,7 +582,7 @@ Now let’s pack and upload the rock using similar commands as before:
 
 .. code:: bash
 
-   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+   rockcraft pack
    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
       oci-archive:django-hello-world_0.2_amd64.rock \
       docker://localhost:32000/django-hello-world:0.2
@@ -660,7 +665,7 @@ Let’s run the pack and upload commands for the rock:
 
 .. code:: bash
 
-   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+   rockcraft pack
    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
       oci-archive:django-hello-world_0.3_amd64.rock \
       docker://localhost:32000/django-hello-world:0.3
@@ -692,7 +697,7 @@ We can now pack and deploy the new version of the Django app:
 
 .. code:: bash
 
-   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+   charmcraft pack
    juju refresh django-hello-world \
       --path=./django-hello-world_ubuntu-22.04-amd64.charm \
       --resource django-app-image=localhost:32000/django-hello-world:0.3

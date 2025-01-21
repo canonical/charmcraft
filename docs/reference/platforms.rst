@@ -4,7 +4,7 @@ Platforms
 Platforms
 ---------
 
-The ``platforms`` keyword in a ``charmcraft.yaml`` determines where charms are
+The ``platforms`` key in a ``charmcraft.yaml`` determines where charms are
 built and where they run.
 
 For more information on how to build charms for specific bases and
@@ -30,7 +30,7 @@ recommended platform name is the ``build-for`` arch.
 
 See :ref:`build-on <reference-build-on>` and
 :ref:`build-for <reference-build-for>` for information on the ``build-on``
-and ``build-for`` keywords.
+and ``build-for`` keys.
 
 .. _reference-platforms-shorthand:
 
@@ -56,17 +56,14 @@ Multi-base notation
    platforms:
      <platform-name>:
        build-on:
-        - <some-base>:<some-arch>
-        - <some-base>:<another-arch>
-        - <another-base>:<some-arch>
-        - <another-base>:<another-arch>
+        - <base>:<some-arch>
+        - <base>:<another-arch>
        build-for:
         - <base>:<arch>
 
 Multi-base charms define a :ref:`base <reference-bases>` in each platform entry
-instead of the top-level ``base`` and ``build-base`` keywords. Within each
-platform entry, the base must be the same for all ``build-on`` and
-``build-for`` entries.
+instead of the top-level ``base`` and ``build-base`` keys. Within each platform
+entry, the base must be the same for all ``build-on`` and ``build-for`` entries.
 
 The recommended platform name is ``<distribution>-<series>-<build-for-arch>``
 (for example, ``ubuntu-24.04-riscv64``).
@@ -111,6 +108,10 @@ Example ``build-on`` values containing both a base and an architecture include:
 
     build-on:
       - ubuntu@24.04:riscv64
+
+.. code:: yaml
+
+    build-on:
       - ubuntu@22.04:amd64
 
 .. _reference-build-for:
@@ -123,7 +124,7 @@ base that describes the environment where the resulting charm can run. Each
 entry is formatted with an optional base and a mandatory architecture, using the
 same structure as ``build-on``.
 
-``build-for: [all]`` is a special keyword to denote an architecture-independent
+``build-for: [all]`` is a special key to denote an architecture-independent
 charm.
 
 .. _reference-architectures:
@@ -165,13 +166,13 @@ Bases
 .. important::
 
    The bases described in this section are a different concept than the
-   deprecated ``bases`` keyword in a ``charmcraft.yaml``.
+   deprecated ``bases`` key in a ``charmcraft.yaml``.
 
-The ``base`` and ``build-base`` keywords determine the environments where the
-charm is built and where it is run.
+The ``base`` and ``build-base`` keys determine the environments where the charm
+is built and where it is run.
 
 ``base`` and ``build-base`` can't be defined for multi-base charms. Instead,
-the base is defined in the ``platforms`` keyword.
+the base is defined in the ``platforms`` key.
 
 ``base``
 ~~~~~~~~
@@ -213,7 +214,7 @@ Build plans
 A build plan is a list of what charms Charmcraft will build, the environments
 where the charms will build, and the environments where the charms will run.
 Build plans are determined by the ``platforms``, ``base``, and ``build-base``
-keywords in a ``charmcraft.yaml``. The build plan can be filtered with
+keys in a ``charmcraft.yaml``. The build plan can be filtered with
 command-line arguments or environment variables.
 
 Consider the following ``charmcraft.yaml`` snippet:

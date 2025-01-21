@@ -4,15 +4,15 @@
 Manage a 12-factor app charm
 ============================
 
-    See also:
-    `Juju | 12-factor app charms <https://juju.is/docs/juju/charmed-operator>`_
+    See also: :external+juju:ref:`Juju | Charm <charm>`
 
 
 Prepare an OCI image for a 12-factor app charm
 ----------------------------------------------
 
-Follow this :external+rockcraft:doc:`how-to guide <how-to/build-a-12-factor-app-rock>`
-to prepare your OCI image.
+    See more:
+    :external+rockcraft:doc:`Rockcraft | How to build a 12-factor app rock
+    <how-to/build-a-12-factor-app-rock>`
 
 
 Initialise a 12-factor app charm
@@ -99,8 +99,9 @@ token for a service. Add the configuration in ``charmcraft.yaml``:
         also available in the Flask variable ``app.config`` without
         the ``FLASK_`` prefix.
 
-            See also: `How to add configuration to a
-            charm <https://juju.is/docs/sdk/config>`_, `Configuration Handling --
+            See also:
+            :external+ops:ref:`How to add configuration to a charm <manage-configurations>`,
+            `Configuration Handling --
             Flask Documentation <https://flask.palletsprojects.com/en/3.0.x/config/>`_
 
     .. group-tab:: Django

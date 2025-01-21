@@ -136,7 +136,7 @@ These endpoint definitions are as below:
 
 .. note::
 
-    The ``key optional`` with value ``False`` means that the charm will
+    The key ``optional`` with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
 
 To add one of these integrations, e.g., PostgreSQL, in the
@@ -213,7 +213,7 @@ Background Tasks
 ----------------
 
 Extra services defined in the file
-:literalref:`rockcraft.yaml <https://documentation.ubuntu.com/rockcraft/en/stable/reference/rockcraft.yaml/#services>`
+:external+rockcraft:ref:`rockcraft.yaml <rockcraft.yaml_reference>`
 with names ending in ``-worker`` or ``-scheduler`` will be passed the
 same environment variables as the main application. If there is more
 than one unit in the application, the services with the name ending in
@@ -257,4 +257,4 @@ The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
-   See more: `Secret <https://juju.is/docs/juju/secret>`_
+   See more: :external+juju:ref:`Juju | Secret <secret>`

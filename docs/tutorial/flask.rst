@@ -253,7 +253,7 @@ to ``active``, you can stop watching using :kbd:`Ctrl` + :kbd:`C`.
 
 .. seealso::
 
-    See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
 The Flask application should now be running. We can monitor the status of the deployment
 using ``juju status`` which should be similar to the following output:
@@ -510,12 +510,16 @@ Next steps
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - `SDK How-to docs <https://juju.is/docs/sdk/how-to>`_
+      - :ref:`How-to guides <how-to-guides>`,
+        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
     * - "How do I debug?"
       - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - `SDK Reference docs <https://juju.is/docs/sdk/reference>`_
+      - :ref:`reference`,
+        :external+ops:ref:`Ops | Reference <reference>`,
+        :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - `SDK Explanation docs <https://juju.is/docs/sdk/explanation>`_
+      - :external+ops:ref:`Ops | Explanation <explanation>`,
+        :external+juju:ref:`Juju | Explanation <explanation>`

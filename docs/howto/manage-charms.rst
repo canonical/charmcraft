@@ -3,8 +3,8 @@
 Manage charms
 =============
 
-    See first: `Juju | Charm <https://juju.is/docs/juju/charmed-operator>`_,
-    `Juju | Manage charms <https://juju.is/docs/juju/manage-charms-or-bundles>`_
+    See first: :external+juju:ref:`Juju | Charm <charm>`,
+    :external+juju:ref:`Juju | Manage charms <manage-charms>`
 
 
 Initialise a charm
@@ -389,8 +389,8 @@ same machine as another charm, called its *principal*), in your charm's
 Manage actions
 ~~~~~~~~~~~~~~
 
-    See first: `Juju | Action <https://juju.is/docs/juju/action>`_,
-    `Juju | Manage actions <https://juju.is/docs/juju/manage-actions>`_
+    See first: :external+juju:ref:`Juju | Action <action>`,
+    :external+juju:ref:`Juju | Manage actions <manage-actions>`
 
 To declare an action in your charm, in your charm's ``charmcraft.yaml`` file
 specify the ``actions`` key.
@@ -403,10 +403,10 @@ specify the ``actions`` key.
 Manage configurations
 ~~~~~~~~~~~~~~~~~~~~~
 
-    See first: `Juju | Application configuration
-    <https://juju.is/docs/juju/configuration#heading--application-configuration>`_,
-    `Juju | Manage applications > Configure
-    <https://juju.is/docs/juju/manage-applications#configure-an-application>`_
+    See first: :external+juju:ref:`Juju | Configuration > Application configuration
+    <application-configuration>`,
+    :external+juju:ref:`Juju | Manage applications > Configure
+    <configure-an-application>`
 
 To declare a configuration option for your charm, in your charm's ``charmcraft.yaml``
 specify the ``config`` key.
@@ -420,15 +420,15 @@ specify the ``config`` key.
 Manage relations (integrations)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    See first: `Juju | Relation <https://juju.is/docs/juju/relation>`_,
-    `Juju | Manage relations <https://juju.is/docs/juju/manage-relations>`_
+    See first: :external+juju:ref:`Juju | Relation <relation>`,
+    :external+juju:ref:`Juju | Manage relations <manage-relations>`
 
     To declare a relation endpoint in your charm, in your charm's ``charmcraft.yaml``
     specify the ``peers``, ``provides``, or ``requires`` key.
 
     See more: :ref:`recipe-key-peers`
 
-    See more: :external+ops:ref:`manage-relations`
+    See more: :external+ops:ref:`Ops | How to manage relations <manage-relations>`
 
 
 Specify necessary libs
@@ -442,7 +442,8 @@ Specify necessary libs
 Manage secrets
 ~~~~~~~~~~~~~~
 
-    See first: `Juju | User secret <https://juju.is/docs/juju/secret#heading--user>`_
+    See first: :external+juju:ref:`Juju | Manage secrets <manage-secrets>`,
+    :external+juju:ref:`Juju | Secret <secret>`
 
 To make your charm capable of accepting a user secret, in your charm's
 ``charmcraft.yaml`` specify the ``config`` key with the ``type`` subkey set to
@@ -450,7 +451,7 @@ To make your charm capable of accepting a user secret, in your charm's
 
     See more: :ref:`recipe-key-config`
 
-    See next: :external+ops:ref:`manage-secrets`
+    See next: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`
 
 
 Specify necessary parts
@@ -549,8 +550,7 @@ to pack, whether to force pack if there are linting errors, etc.
 
 ..
 
-    See next: `Juju | Manage charms
-    <https://juju.is/docs/juju/manage-charms-or-bundles>`_
+    See next: :external+juju:ref:`Juju | Manage charms <manage-charms>`
 
 .. _publish-a-charm:
 
@@ -646,10 +646,8 @@ Publish a charm on Charmhub
 
    ..
 
-   See next: `Juju | Deploy a Charmub charm
-   <https://juju.is/docs/juju/manage-charms-or-bundles#deploy-a-charm-bundle>`_, `Juju |
-   Update a Charmhub charm
-   <https://juju.is/docs/juju/manage-charms-or-bundles#update-a-charmhub-charm>`_
+   See next: :external+juju:ref:`Juju | Deploy a charm <deploy-a-charm>`,
+   :external+juju:ref:`Juju | Update a charm <update-a-charm>`
 
 .. tip::
 

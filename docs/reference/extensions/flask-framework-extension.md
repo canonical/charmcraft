@@ -220,7 +220,7 @@ only run in one of the units of the application.
 
 ## Observability
 
-12 Factor charms are designed to be easily observable using [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
+12-Factor charms are designed to be easily observable using the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
 You can easily integrate your charm with [Loki](https://charmhub.io/loki-k8s) and [Prometheus](https://charmhub.io/prometheus-k8s) using Juju.
 
@@ -255,7 +255,7 @@ opentelemetry-instrumentation-flask
 opentelemetry-sdk
 ```
 
-Opentelemetry will automatically read the environment variables and configure the OpenTelemetry SDK to use them.
+OpenTelemetry will automatically read the environment variables and configure the OpenTelemetry SDK to use them.
 For other frameworks and further configuration options please refer to [OpenTelemetry documentation](https://opentelemetry-python.readthedocs.io/en/latest/).
 
 ## Regarding the `migrate.sh` file

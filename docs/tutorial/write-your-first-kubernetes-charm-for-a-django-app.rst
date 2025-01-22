@@ -123,17 +123,17 @@ Now, run the Django application to verify that it works:
 
    Specifying ``0.0.0.0:8000`` allows for traffic outside of the Multipass VM.
 
-Now we need the private IP address of the Multipass VM. Use one of the
-following options for finding the IP address:
+Now we need the private IP address of the Multipass VM. Outside of the
+Multipass VM, run:
 
-1. Open a new terminal of the Multipass VM using
-   ``multipass shell charm-dev`` and run
-   ``ip route get $(ip route show 0.0.0.0/0 | grep -oP 'via \K\S+') | grep -oP 'src \K\S+'``.
-2. Outside of the Multipass VM, run
-   ``multipass info charm-dev | grep IP``. The ``grep`` command extracts
-   a portion of the output to highlight the IP address.
-3. In the Multipass GUI, under the Instances tab, find the private IP
-   address listed under the ``charm-dev`` VM.
+.. code-block::
+
+   multipass info charm-dev | grep IP
+
+.. note::
+
+   The ``grep`` command extracts a portion of the output to highlight the
+   IP address.
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -425,8 +425,9 @@ monitor the progress using
 
 .. code:: bash
 
-   juju status --watch 5s
+   juju status --relations --watch 2s
 
+The ``--relations`` flag will list the currently enabled integrations.
 It can take a couple of minutes for the apps to finish the deployment.
 During this time, the Django app may enter a ``blocked`` state as it
 waits to become integrated with the PostgreSQL database.
@@ -612,7 +613,7 @@ Now that we have the greeting app, we can disable debug mode:
     :end-before: [docs:disable-debug-mode-end]
     :dedent: 2
 
-Use ``juju status --watch 5s`` again to wait until the App is active
+Use ``juju status --watch 2s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
 you can use ``curl 127.0.0.1 -H "Host: django-hello-world"`` inside the
 Multipass VM. Either way, the Django application should respond with

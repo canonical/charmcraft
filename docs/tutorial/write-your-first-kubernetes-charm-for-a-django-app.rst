@@ -113,11 +113,9 @@ Save and close the ``settings.py`` file.
 
 Now, run the Django application to verify that it works:
 
-.. literalinclude:: code/django/task.yaml
-    :language: bash
-    :start-after: [docs:run-django-app]
-    :end-before: [docs:run-django-app-end]
-    :dedent: 2
+.. code:: bash
+
+   python3 manage.py runserver 0.0.0.0:8000
 
 .. note::
 

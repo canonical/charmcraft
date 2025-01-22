@@ -28,7 +28,7 @@ execute: |
   snap install lxd
   lxd init --auto
   snap install microk8s --channel=1.31-strict/stable
-  snap refresh juju --channel=3.5/stable --amend
+  snap install juju --channel=3.5/stable
 
   # Juju config setup
   lxc network set lxdbr0 ipv6.address none
@@ -43,12 +43,17 @@ execute: |
   # Bootstrap controller
   juju bootstrap microk8s dev-controller
 
+  # Create working dir and cd
+  mkdir django-hello-world
+  cd django-hello-world
+
   # [docs:create-venv]
   sudo apt-get update && sudo apt-get install python3-venv -y
   python3 -m venv .venv
   source .venv/bin/activate
   # [docs:create-venv-end]
 
+  mv $HOME/requirements.txt $HOME/django-hello-world/
   # [docs:install-requirements]
   pip install -r requirements.txt
   # [docs:install-requirements-end]
@@ -57,12 +62,14 @@ execute: |
   django-admin startproject django_hello_world
   # [docs:django-startproject-end]
 
+  # cd into django project dir
+  cd django_hello_world
+
   # Update settings.py file
   cat $HOME/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
-  # [docs:run-django-app]
+  # Run Django app locally
   python3 manage.py runserver 0.0.0.0:8000 &
-  # [docs:run-django-app-end]
 
   # Test the Django app
   retry -n 5 --wait 2 curl --fail localhost:8000
@@ -70,6 +77,7 @@ execute: |
   curl localhost:8000 | grep Congratulations
 
   kill $!
+  cd $HOME/django-hello-world
 
   # [docs:create-rockcraft-yaml]
   rockcraft init --profile django-framework
@@ -179,6 +187,7 @@ execute: |
   # Update django_hello_world/urls.py file
   cat $HOME/urls_django_hello_world.py > django_hello_world/urls.py
 
+  cd ..
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
 
   # [docs:repack-update]
@@ -200,6 +209,7 @@ execute: |
   # [docs:disable-debug-mode-end]
 
   # give Juju some time to refresh the app
+  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!

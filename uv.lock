@@ -356,7 +356,6 @@ wheels = [
 
 [[package]]
 name = "charmcraft"
-version = "3.2.2.post148+ga93a2d91"
 source = { editable = "." }
 dependencies = [
     { name = "craft-application" },
@@ -494,7 +493,7 @@ requires-dist = [
     { name = "responses", marker = "extra == 'dev'" },
     { name = "snap-helpers" },
     { name = "sphinx-autobuild", marker = "extra == 'docs'", specifier = "~=2024.2" },
-    { name = "sphinx-lint", marker = "extra == 'docs'", specifier = "~=0.9" },
+    { name = "sphinx-lint", marker = "extra == 'docs'", specifier = "~=1.0" },
     { name = "sphinx-pydantic", marker = "extra == 'docs'", specifier = "~=0.1" },
     { name = "sphinx-toolbox", marker = "extra == 'docs'", specifier = "~=3.5" },
     { name = "sphinxcontrib-details-directive", marker = "extra == 'docs'" },
@@ -3386,15 +3385,15 @@ sdist = { url = "https://files.pythonhosted.org/packages/9c/3f/559d054f977596c55
 
 [[package]]
 name = "sphinx-lint"
-version = "0.9.1"
+version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "polib" },
     { name = "regex" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/98/ae9d0b97fb9340e7dd9b1f709fad9a41201c73e9a0f9c4c933a0449f8e56/sphinx_lint-0.9.1.tar.gz", hash = "sha256:185cee19ff1129549c45e15a3b25404daeb47c54d15112dda589cedad82957aa", size = 33277 }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/46/f2dad36a4076e9ce88498b25b3f0de82eb7d341ea0ef715cd6c48005bcef/sphinx_lint-1.0.0.tar.gz", hash = "sha256:6eafdb44172ce526f405bf36c713eb246f1340ec2d667e7298e2487ed76decd2", size = 33574 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/94/96123989e93449fe4ecd329bc74e554126c8c4a3034abe3c32bd9d98c237/sphinx_lint-0.9.1-py3-none-any.whl", hash = "sha256:df34271ab65ce43676cbd90726f4dea5cd200b43b01448b2aee8f06e609edcbb", size = 20019 },
+    { url = "https://files.pythonhosted.org/packages/31/d2/a130ffba531af7cbbb0e7ad24c7d577d3de0b797437f61d3a7234ed6d836/sphinx_lint-1.0.0-py3-none-any.whl", hash = "sha256:6117a0f340b2dc73eadfc57db7531d4477e0929f92a0c1a2f61e6edbc272f0bc", size = 20163 },
 ]
 
 [[package]]

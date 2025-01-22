@@ -20,6 +20,7 @@ from __future__ import annotations
 import platform
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any, cast
+from urllib import parse
 
 import craft_application
 import craft_store
@@ -198,7 +199,7 @@ class StoreService(BaseStoreService):
         )
         self._auth = craft_store.Auth(
             application_name=self._app.name,
-            host=self._base_url,
+            host=str(parse.urlparse(self._base_url).hostname),
             environment_auth=self._environment_auth,
         )
         self._publisher = craft_store.PublisherGateway(

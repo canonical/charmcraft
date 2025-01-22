@@ -880,7 +880,7 @@ class PromoteCommand(CharmcraftCommand):
             "--yes",
             default=False,
             action="store_true",
-            help="Answer yes to all questions.",
+            help="use non-interactive mode, answering yes to most questions.",
         )
 
     @override
@@ -902,6 +902,14 @@ class PromoteCommand(CharmcraftCommand):
             parsed_args.to_channel
         )
         if None in (from_channel.track, to_channel.track):
+            if parsed_args.yes:
+                raise CraftError(
+                    "Channels must be fully defined in non-interactive mode.",
+                    resolution="Provide channel names as '<track>/<risk>'.",
+                    reportable=False,
+                    logpath_report=False,
+                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                )
             package_metadata = store.get_package_metadata(name)
             default_track = package_metadata.default_track
             if from_channel.track is None:
@@ -917,9 +925,9 @@ class PromoteCommand(CharmcraftCommand):
         if to_channel.risk > from_channel.risk:
             command_parts = [
                 self._app.name,
+                self.name,
                 f"--from-channel={to_channel.name}",
                 f"--to-channel={from_channel.name}",
-                self.name,
             ]
             command = " ".join(command_parts)
             raise CraftError(
@@ -928,6 +936,13 @@ class PromoteCommand(CharmcraftCommand):
                 resolution=f"Did you mean: {command}",
             )
         if to_channel.track != from_channel.track:
+            if from_channel.risk != to_channel.risk:
+                raise CraftError(
+                    "Cross-track promotion can only occur at the same risk level.",
+                    reportable=False,
+                    logpath_report=False,
+                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                )
             if not parsed_args.yes and not utils.confirm_with_user(
                 "Did you mean to promote to a different track? (from "
                 f"{from_channel.track} to {to_channel.track})",

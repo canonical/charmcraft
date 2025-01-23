@@ -28,7 +28,8 @@ from charmcraft.application.commands import base
 _overview = """
 Run charm tests in different back-ends.
 
-This command will run charm test suites using the spread tool. For further
+This command will run charm test suites using the spread tool. The test
+command is EXPERIMENTAL and may be changed without prior notice. For further
 information, see the spread documentation: https://github.com/snapcore/spread
 """
 
@@ -37,7 +38,7 @@ class TestCommand(base.CharmcraftCommand):
     """Initialize a directory to be a charm project."""
 
     name = "test"
-    help_msg = "Execute charm test suites"
+    help_msg = "Execute charm test suites (EXPERIMENTAL)"
     overview = _overview
     common = True
 
@@ -97,6 +98,10 @@ class TestCommand(base.CharmcraftCommand):
             else:
                 spread_tasks = ["multipass"]
 
+        emit.progress(
+            "WARNING: This is an EXPERIMENTAL command that can be changed without prior notice.",
+            permanent=True,
+        )
         try:
             with emit.pause():
                 subprocess.run([*cmd, *spread_tasks], check=True)

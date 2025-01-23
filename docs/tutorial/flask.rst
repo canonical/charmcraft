@@ -109,7 +109,7 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-flask-end]
     :dedent: 2
 
-The Flask application should respond with ``Hello, world!``. 
+The Flask application should respond with ``Hello, world!``.
 
 The Flask application looks good, so we can stop for now using
 :kbd:`Ctrl` + :kbd:`C`.
@@ -120,7 +120,7 @@ Pack the Flask application into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``flask-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Flask application.
-From the `flask-hello-world` directory, initialize the rock:
+From the ``flask-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -227,7 +227,7 @@ Using the ``flask-framework`` profile, Charmcraft will automate the
 creation of the files needed for our charm, including a
 ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
 The source code contains the logic required to operate the Flask
-application. 
+application.
 
 Initialize a charm named ``flask-hello-world``:
 
@@ -298,7 +298,7 @@ progress using
 
 .. code:: bash
 
-   juju status --relations --watch 2s 
+   juju status --relations --watch 2s
 
 The ``--relations`` flag will list the currently enabled integrations.
 It can take a couple of minutes for the apps to finish the deployment.
@@ -370,7 +370,7 @@ keyword ``GREETING``. Change back to the ``flask-hello-world`` directory using
     :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
-top of the ``rockcraft.yaml`` file looks similar to the following: 
+top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
    :emphasize-lines: 5

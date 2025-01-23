@@ -65,10 +65,7 @@ extension.
 
       cat charmcraft.yaml
 
-  .. terminal::
-
-      # This file configures Charmcraft.
-      # See https://juju.is/docs/sdk/charmcraft-config for guidance.
+  .. code-block:: yaml
 
       name: my-flask-app-k8s
 

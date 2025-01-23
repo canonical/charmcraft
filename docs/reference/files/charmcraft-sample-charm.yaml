@@ -95,7 +95,7 @@ extra-bindings:
   Ring of Power:
 links:
   contact: Please send your answer to Old Pink, care of the Funny Farm, Chalfont
-  documentation: https://juju.is/docs/sdk/charmcraft-yaml
+  documentation: https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/
   issues:
   - https://launchpad.net/~charmcraft-team
   - https://github.com/canonical/charmcraft/issues

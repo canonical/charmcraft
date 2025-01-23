@@ -77,6 +77,13 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+3.2.3 (2025-01-23)
+------------------
+
+- The ``test`` command is now correctly marked as experimental.
+
+For a complete list of commits, see the `3.2.3`_ release on GitHub.
+
 3.2.2 (2024-10-16)
 ------------------
 

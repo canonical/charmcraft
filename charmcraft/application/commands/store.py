@@ -839,7 +839,8 @@ class PromoteCommand(CharmcraftCommand):
     name = "promote"
     help_msg = "Promote a charm from one channel to another on Charmhub."
     overview = textwrap.dedent(
-        """Promote a charm from one channel to another on Charmhub.
+        """\
+        Promote a charm from one channel to another on Charmhub.
 
         Promotes the current revisions of a charm in a specific channel, as well as
         their related resources, to another channel.

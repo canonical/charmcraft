@@ -895,7 +895,6 @@ class PromoteCommand(CharmcraftCommand):
 
         name = parsed_args.name or self._services.project.name
 
-        # Check snapcraft for equiv logic
         from_channel = charmcraft.store.models.ChannelData.from_str(
             parsed_args.from_channel
         )

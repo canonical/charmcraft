@@ -47,8 +47,11 @@ execute: |
   sudo apt-get update && sudo apt-get install python3-venv -y
   python3 -m venv .venv
   source .venv/bin/activate
-  pip install -r requirements.txt
   # [docs:create-venv-end]
+
+  # [docs:install-requirements]
+  pip install -r requirements.txt
+  # [docs:install-requirements-end]
 
   flask run -p 8000 &
   retry -n 5 --wait 2 curl --fail localhost:8000
@@ -69,10 +72,6 @@ execute: |
   # [docs:pack]
   rockcraft pack
   # [docs:pack-end]
-
-  # [docs:ls-rock]
-  ls *.rock -l
-  # [docs:ls-rock-end]
 
   # [docs:skopeo-copy]
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
@@ -101,14 +100,16 @@ execute: |
   juju add-model flask-hello-world
   # [docs:add-juju-model-end]
 
+  #[docs:add-model-constraints]
   juju set-model-constraints -m flask-hello-world arch=$(dpkg --print-architecture)
+  #[docs:add-model-constraints-end]
 
-  # [docs:deploy-juju-model]
+  # [docs:deploy-flask-app]
   juju deploy \
     ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     flask-hello-world --resource \
     flask-app-image=localhost:32000/flask-hello-world:0.1
-  # [docs:deploy-juju-model-end]
+  # [docs:deploy-flask-app-end]
 
   # [docs:deploy-nginx]
   juju deploy nginx-ingress-integrator --channel=latest/stable --trust
@@ -131,9 +132,9 @@ execute: |
   cd ..
   cat greeting_app.py > app.py
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
-  rockcraft pack
 
   # [docs:docker-update]
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:flask-hello-world_0.2_$(dpkg --print-architecture).rock \
     docker://localhost:32000/flask-hello-world:0.2
@@ -141,9 +142,9 @@ execute: |
 
   cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
-  charmcraft pack
 
   # [docs:refresh-deployment]
+  charmcraft pack
   juju refresh flask-hello-world \
     --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.2
@@ -170,10 +171,9 @@ execute: |
   cat visitors_migrate.py >> migrate.py
   cat visitors_app.py > app.py
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
-  echo "psycopg2-binary" >> requirements.txt
-  rockcraft pack
 
   # [docs:docker-2nd-update]
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:flask-hello-world_0.3_$(dpkg --print-architecture).rock \
     docker://localhost:32000/flask-hello-world:0.3
@@ -181,9 +181,9 @@ execute: |
 
   cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
-  charmcraft pack
 
   # [docs:refresh-2nd-deployment]
+  charmcraft pack
   juju refresh flask-hello-world \
     --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.3

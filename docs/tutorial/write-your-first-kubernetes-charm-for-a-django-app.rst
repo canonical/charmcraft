@@ -305,7 +305,8 @@ Copy the rock:
 
 .. seealso::
 
-   See more: `skopeo <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
+   See more: `Ubuntu manpage | skopeo
+   <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 Create the charm
 ----------------
@@ -433,7 +434,11 @@ waits to become integrated with the PostgreSQL database.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-The Django application should now be running. You can see the status of
+.. seealso::
+
+    See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
+
+The Django application should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the
 following output:
 
@@ -755,20 +760,19 @@ Next steps
 By the end of this tutorial you will have built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
-+--------------------------+------------------------------------------+
-| If you are wondering…    | visit…                                   |
-+==========================+==========================================+
-| “How do I…?”             | :ref:`how-to-guides`                     |
-+--------------------------+------------------------------------------+
-| “How do I debug?”        | `Charm debugging                         |
-|                          | tools <ht                                |
-|                          | tps://juju.is/docs/sdk/debug-a-charm>`__ |
-+--------------------------+------------------------------------------+
-| “How do I get in touch?” | `Matrix                                  |
-|                          | channel <https://matr                    |
-|                          | ix.to/#/#12-factor-charms:ubuntu.com>`__ |
-+--------------------------+------------------------------------------+
-| “What is…?”              | :ref:`reference`                         |
-+--------------------------+------------------------------------------+
-| “Why…?”, “So what?”      | :ref:`explanation`                       |
-+--------------------------+------------------------------------------+
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
+
+    * - If you are wondering...
+      - Visit...
+    * - "How do I...?"
+      - :ref:`how-to-guides`
+    * - "How do I debug?"
+      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+    * - "How do I get in touch?"
+      - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
+    * - "What is...?"
+      - :ref:`reference`
+    * - "Why...?", "So what?"
+      - :ref:`explanation`

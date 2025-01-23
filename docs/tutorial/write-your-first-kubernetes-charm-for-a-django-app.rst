@@ -355,7 +355,7 @@ Now let’s pack the charm:
    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
    in the pack command for older versions of Charmcraft.
 
-Depending on your system and network, this step can take a couple of
+Depending on your system and network, this step can take several
 minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will

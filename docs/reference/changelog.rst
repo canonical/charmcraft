@@ -88,6 +88,7 @@ Command line
 - The :ref:`ref_commands_publish-lib` command now returns ``0`` if the libraries
   published match the versions already on the store. It also no longer creates a new
   revision on the store in this case.
+- The ``test`` command is now correctly marked as experimental.
 
 Documentation
 =============

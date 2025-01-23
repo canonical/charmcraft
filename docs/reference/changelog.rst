@@ -77,6 +77,28 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+3.3.1 (2025-01-23)
+------------------
+
+This release contains some bug fixes for the 3.3 branch.
+
+Command line
+============
+
+- The :ref:`ref_commands_publish-lib` command now returns ``0`` if the libraries
+  published match the versions already on the store. It also no longer creates a new
+  revision on the store in this case.
+
+Documentation
+=============
+
+- Add :doc:`reference </reference/platforms>` and a
+  :ref:`how-to guide <select-platforms>` for the ``platforms`` key in the
+  :ref:`charmcraft-yaml-file`.
+- Fix some links to the `Juju`_ documentation.
+
+For a complete list of commits, see the `3.3.1`_ release on GitHub.
+
 3.3.0 (2025-01-13)
 ------------------
 
@@ -411,3 +433,4 @@ page.
 .. _3.2.1: https://github.com/canonical/charmcraft/releases/tag/3.2.1
 .. _3.2.2: https://github.com/canonical/charmcraft/releases/tag/3.2.2
 .. _3.3.0: https://github.com/canonical/charmcraft/releases/tag/3.3.0
+.. _3.3.1: https://github.com/canonical/charmcraft/releases/tag/3.3.1

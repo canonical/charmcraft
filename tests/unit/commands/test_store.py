@@ -160,6 +160,42 @@ def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
     )
 
 
+def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
+    # Publishing the same version of a library with the same hash should not result
+    # in an error return.
+    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
+    mock_service_factory.project.name = "test-project"
+    lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
+    lib_path.parent.mkdir(parents=True)
+    lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
+
+    mock_store = mock.Mock()
+    mock_store.return_value.get_libraries_tips.return_value = {
+        ("blah", 0): Library(
+            charm_name="test-project",
+            lib_id="blah",
+            lib_name="my_lib",
+            api=0,
+            patch=1,
+            content=None,
+            content_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ),
+    }
+    monkeypatch.setattr(store_commands, "Store", mock_store)
+
+    cmd = PublishLibCommand({"app": APP_METADATA, "services": mock_service_factory})
+
+    assert (
+        cmd.run(
+            argparse.Namespace(
+                library="charms.test-project.v0.my_lib",
+                format=False,
+            )
+        )
+        == 0
+    )
+
+
 @pytest.mark.parametrize(
     ("updates", "expected"),
     [

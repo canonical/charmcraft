@@ -85,17 +85,17 @@ This release contains some bug fixes for the 3.3 branch.
 Command line
 ============
 
-- the :ref:`ref_commands_publish-lib` command now returns ``0`` if the libraries
-  published match the versions already on the store. It also does not create a new
+- The :ref:`ref_commands_publish-lib` command now returns ``0`` if the libraries
+  published match the versions already on the store. It also no longer creates a new
   revision on the store in this case.
 
 Documentation
 =============
 
-- Adds :doc:`reference </reference/platforms>` and a
-  :ref:`how-to guide <select-platforms>` for the ``platforms`` keyword in the
+- Add :doc:`reference </reference/platforms>` and a
+  :ref:`how-to guide <select-platforms>` for the ``platforms`` key in the
   :ref:`charmcraft-yaml-file`.
-- Fixes for some links to the `Juju`_ documentation.
+- Fix some links to the `Juju`_ documentation.
 
 For a complete list of commits, see the `3.3.1`_ release on GitHub.
 

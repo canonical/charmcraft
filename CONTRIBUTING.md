@@ -10,7 +10,7 @@ To set up a local copy of the repository for development:
 ```bash
 git clone https://github.com/canonical/charmcraft.git
 cd charmcraft
-uv sync --all-extras
+make setup
 ```
 
 If you need `python-apt`, add `https://people.canonical.com/~lengau/pypi/` as an
@@ -58,16 +58,8 @@ Contributions welcome!
 Charmcraft stores its documentation source in the repository and tests it for errors.
 Contributing to the documentation is similar to contributing to the code.
 
-
-### Set up the documentation environment
-
-First, [download the repository and tools](#set-up-the-development-environment).
-
-Then, from the root of the repository, install the dependencies and build environment:
-
-```bash
-make setup
-```
+Before you begin, [set up the development
+environment](#set-up-the-development-environment).
 
 
 ### Write the docs
@@ -83,8 +75,8 @@ style](https://canonical-documentation-with-sphinx-and-readthedocscom.readthedoc
 
 ### Build the docs
 
-After you've made changes to the documentation, generate it locally so you can verify
-that the results look and feel correct.
+After you've made changes to the documentation, it's a good practice to generate it
+locally so you can verify that the results look and feel correct.
 
 You can preview the entire documentation set with your changes by building it as a
 website:

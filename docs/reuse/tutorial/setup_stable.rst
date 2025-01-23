@@ -13,7 +13,8 @@ Once the VM is up, open a shell into it:
 
     multipass shell charm-dev
 
-In order to create the rock, you'll need to install Rockcraft:
+In order to create the rock, you'll need to install Rockcraft with the
+``--classic`` confinement to allow access to the whole file system:
 
 .. code-block:: bash
 
@@ -24,8 +25,10 @@ Make sure it is installed and initialised:
 
 .. code-block:: bash
 
-    sudo snap install lxd
+    lxd --version
     lxd init --auto
+
+If ``LXD`` is not installed, install it with ``sudo snap install lxd``.
 
 In order to create the charm, you'll need to install Charmcraft:
 
@@ -41,7 +44,8 @@ In order to create the charm, you'll need to install Charmcraft:
     ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest
     edge version of Charmcraft.
 
-MicroK8s is required to deploy the Flask application on Kubernetes. Install MicroK8s:
+MicroK8s is required to deploy the Flask application on Kubernetes.
+Let's install MicroK8s using the ``1.31-strict/stable`` track:
 
 .. code-block:: bash
 
@@ -49,11 +53,17 @@ MicroK8s is required to deploy the Flask application on Kubernetes. Install Micr
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
 
-Wait for MicroK8s to be ready using ``sudo microk8s status --wait-ready``.
+Wait for MicroK8s to be ready:
+
+.. code-block:: bash
+
+   sudo microk8s status --wait-ready
+
 Several MicroK8s add-ons are required for deployment:
 
 .. code-block:: bash
 
+    # Required for Juju to provide storage volumes
     sudo microk8s enable hostpath-storage
     # Required to host the OCI image of the Flask application
     sudo microk8s enable registry
@@ -61,10 +71,15 @@ Several MicroK8s add-ons are required for deployment:
     sudo microk8s enable ingress
 
 Juju is required to deploy the Flask application.
-Install Juju and bootstrap a development controller:
+Install Juju using the ``3.5/stable`` track, and bootstrap a
+development controller:
 
 .. code-block:: bash
 
     sudo snap install juju --channel 3.5/stable
     mkdir -p ~/.local/share
     juju bootstrap microk8s dev-controller
+
+.. note::
+
+    It could take a few minutes to download the images.

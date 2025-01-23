@@ -21,8 +21,8 @@ In order to create the rock, you'll need to install Rockcraft with the
     sudo snap install rockcraft --classic
 
 
-``LXD`` will be required for building the rock. Make sure it is installed
-and initialised:
+``LXD`` will be required for building the rock. 
+Make sure it is installed and initialised:
 
 .. code-block:: bash
 

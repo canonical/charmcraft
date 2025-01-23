@@ -283,7 +283,7 @@ Now let’s pack the rock:
    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
    in the pack command for older versions of Rockcraft.
 
-Depending on your network, this step can take a couple of minutes to
+Depending on your system and network, this step can take several minutes to
 finish. Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
 ``Packed django-hello-world_0.1_amd64.rock``.

@@ -28,7 +28,7 @@ execute: |
   snap install lxd
   lxd init --auto
   snap install microk8s --channel=1.31-strict/stable
-  snap refresh juju --channel=3.5/stable --amend
+  snap install juju --channel=3.5/stable
 
   # Juju config setup
   lxc network set lxdbr0 ipv6.address none
@@ -104,13 +104,14 @@ execute: |
   juju set-model-constraints -m flask-hello-world arch=$(dpkg --print-architecture)
 
   # [docs:deploy-juju-model]
-  juju deploy ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+  juju deploy \
+    ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
     flask-hello-world --resource \
     flask-app-image=localhost:32000/flask-hello-world:0.1
   # [docs:deploy-juju-model-end]
 
   # [docs:deploy-nginx]
-  juju deploy nginx-ingress-integrator --channel=latest/edge --base ubuntu@20.04
+  juju deploy nginx-ingress-integrator --channel=latest/stable --trust
   juju integrate nginx-ingress-integrator flask-hello-world
   # [docs:deploy-nginx-end]
 
@@ -189,7 +190,7 @@ execute: |
   # [docs:refresh-2nd-deployment-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --channel=14/stable --trust
+  juju deploy postgresql-k8s --trust
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
@@ -204,7 +205,7 @@ execute: |
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
   curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 2
 
-  # Back out to main directory for clean-up
+  # Back out to main directory for cleanup
   cd ..
 
   # [docs:clean-environment]
@@ -212,9 +213,10 @@ execute: |
   deactivate
   rm -rf charm .venv __pycache__
   # delete all the files created during the tutorial
-  rm flask-hello-world_0.1_$(dpkg --print-architecture).rock flask-hello-world_0.2_$(dpkg --print-architecture).rock \
-    flask-hello-world_0.3_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
-    requirements.txt migrate.py
+  rm flask-hello-world_0.1_$(dpkg --print-architecture).rock \
+    flask-hello-world_0.2_$(dpkg --print-architecture).rock \
+    flask-hello-world_0.3_$(dpkg --print-architecture).rock \
+    rockcraft.yaml app.py requirements.txt migrate.py
   # Remove the juju model
   juju destroy-model flask-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]

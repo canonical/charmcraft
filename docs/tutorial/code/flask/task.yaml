@@ -29,6 +29,7 @@ execute: |
   lxd init --auto
   snap install microk8s --channel=1.31-strict/stable
   snap install juju --channel=3.5/stable
+  snap refresh juju --channel=3.5/stable --amend
 
   # Juju config setup
   lxc network set lxdbr0 ipv6.address none

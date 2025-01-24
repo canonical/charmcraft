@@ -16,7 +16,7 @@
 .. _Multipass: https://multipass.run/docs
 .. _`Open Container Initiative`: https://opencontainers.org/
 .. _Rockcraft: https://documentation.ubuntu.com/rockcraft/
-.. _Snap: https://snapcraft.io/docs/installing-snapd
+.. _snapd installed: https://snapcraft.io/docs/installing-snapd
 .. _Spread: https://github.com/canonical/spread
 .. _skopeo: https://github.com/containers/skopeo
 .. _Snapcraft: https://snapcraft.io/docs/snapcraft-overview

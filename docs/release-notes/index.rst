@@ -94,7 +94,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   ------------------------------
 
   It is recommended that you install Charmcraft from the
-  `Snap store <https://snapcraft.io/charmcraft>`_, which provides automatic updates
+  `Snap Store <https://snapcraft.io/charmcraft>`_, which provides automatic updates
   and is the primary environment where it is tested. Most dependencies are included
   within the Charmcraft snap, making installation easier.
 
@@ -110,7 +110,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   - Either `LXD`_ or `Multipass`_
 
   For development and testing, Charmcraft requires a modern Linux system or VM
-  with `Snap`_ and a minimum of 4 GiB RAM.
+  with `snapd installed`_ and a minimum of 4 GiB RAM.
 
   What's new
   ----------

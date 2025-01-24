@@ -3,45 +3,43 @@
 Release notes
 =============
 
-This page lists the notes for past releases of Starcraft, which summarise new features,
+This page lists the notes for past releases of Charmcraft, which summarise new features,
 bug fixes and backwards-incompatible changes in each version. It also contains the
-release and support policies for Starcraft.
+release and support policies for Charmcraft.
 
 
 Current releases
 ----------------
 
 
-<latest release>
-~~~~~~~~~~~~~~~~
+Charmcraft 3
+~~~~~~~~~~~~
 
 - <link to latest release, update, such as 8.2.0>
 - <link to latest release, update, such as 8.1.0>
 - <link to latest release, initial, such as 8.0.0>
 
+Charmcraft 2
+~~~~~~~~~~~~
 
-<parallel release>
-~~~~~~~~~~~~~~~~~~
+Charmcraft 2 is supported for use cases that Charmcraft 3 does not support. If
+you have a use case that does not work in Charmcraft 3, please check the
+:ref:`3.0 breaking changes <release-3.0.0>` and, if your issue is not listed as
+a breaking change, pleas `file a bug report <issues>`_
 
-<If necessary, add guidance and caveats about these older releases, such as
-"Snapcraft 7 is available for building core18 snaps. When building for a newer
-base, use Snapcraft 8.">
+- :ref:`Charmcraft 2.7.0 <release-2.7.0>`
 
-- <link to parallel release, update, such as 7.2.0>
-- <link to parallel release, update, such as 7.1.0>
-- <link to parallel release, initial, such as 7.0.0>
-
-
-Past releases
--------------
+.. Leaving this here for when we do sunset Charmcraft 2
+    Past releases
+    -------------
 
 
-<past release>
-~~~~~~~~~~~~~~
+    <past release>
+    ~~~~~~~~~~~~~~
 
-- <link to past release, update, such as 6.2.0>
-- <link to past release, update, such as 6.1.0>
-- <link to past release, initial, such as 6.0.0>
+    - <link to past release, update, such as 6.2.0>
+    - <link to past release, update, such as 6.1.0>
+    - <link to past release, initial, such as 6.0.0>
 
 
 .. _release-versioning:
@@ -49,7 +47,7 @@ Past releases
 Release versioning
 ------------------
 
-Starcraft version naming follows the Semantic Versioning 2.0.0 scheme with
+Charmcraft version naming follows the Semantic Versioning 2.0.0 scheme with
 numbers for major, minor, and patch versions.
 
 .. list-table::
@@ -60,10 +58,7 @@ numbers for major, minor, and patch versions.
       - Significance
     * - Major
       - **3**.1.2
-      - <Apps: "A change that drops support for an earlier software base.">
-
-        <Libraries: "A change that breaks compatibility with the previous
-        version.">
+      - Apps: A change that drops support for operating systems or features.
     * - Minor
       - 3.\ **1**\ .2
       - A new feature within the major version.
@@ -75,12 +70,10 @@ numbers for major, minor, and patch versions.
 Long-term support
 -----------------
 
-Starcraft doesn't have long-term support (LTS) releases. However, we typically
+Charmcraft doesn't have long-term support (LTS) releases. However, we typically
 deliver a compatibility release shortly after Ubuntu LTS releases to ensure
-continuity.
-
-<Apps: Starcraft software bases are derived from Ubuntu LTS releases, and their
-development keeps pace with the OS's new releases and support lifecycle.>
+continuity. Charmcraft software bases are derived from Ubuntu LTS releases, and their
+development keeps pace with the OS's new releases and support lifecycle.
 
 .. toctree::
    :maxdepth: 1
@@ -88,31 +81,40 @@ development keeps pace with the OS's new releases and support lifecycle.>
 
 .. release note template:
 
-  Starcraft 2.0 release notes
-  ===========================
+  Charmcraft 3.0 release notes
+  ============================
 
   15 October 2024
 
-  Learn about the new features, changes, and fixes introduced in Starcraft 2.0.
+  Learn about the new features, changes, and fixes introduced in Charmcraft 3.0.
 
 
   Requirements and compatibility
   ------------------------------
 
-  Starcraft 2.0 requires Python 3.11 or higher.
+  It is recommended that you install Charmcraft from the
+  `Snap store <https://snapcraft.io/charmcraft>`_, which provides automatic updates
+  and is the primary environment where it is tested. Most dependencies are included
+  within the Charmcraft snap, making installation easier.
 
-  <If there are multiple requirements, remove "Python 3.11 or higher" in the
-  previous paragraph and add a separate list here, with the same format of
-  "<package> or higher".>
+  If installed as a snap, the only external dependency is either `LXD`_ or
+  `Multipass`_.
 
-  For development and testing, Starcraft requires a <architecture> system or VM
-  with a minimum of <number>GB RAM.
+  Manual installation has the following requirements:
 
+  - Python 3.10 or higher
+  - libgit2 1.7
+  - `skopeo`_
+  - `Spread`_
+  - Either `LXD`_ or `Multipass`_
+
+  For development and testing, Starcraft requires a modern Linux system or VM
+  with `Snap`_ and a minimum of 4 GiB RAM.
 
   What's new
   ----------
 
-  Starcraft 2.0 brings the following features, integrations, and improvements.
+  Charmcraft 3.4 brings the following features, integrations, and improvements.
 
 
   <Important change>

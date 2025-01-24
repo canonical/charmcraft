@@ -5,6 +5,7 @@
 .. _`Craft-parts`: https://canonical-craft-parts.readthedocs-hosted.com
 .. _Discourse: https://discourse.charmhub.io/
 .. _Docker: https://docs.docker.com/
+.. _issues: https://github.com/canonical/charmcraft/issues
 .. _Juju: https://juju.is/docs
 .. _`feature request`: https://github.com/canonical/charmcraft/issues/new?assignees=&labels=Enhancement&projects=&template=task.yaml
 .. _`OCI archive format`: https://github.com/opencontainers/image-spec/blob/main/layer.md#distributable-format
@@ -15,6 +16,8 @@
 .. _Multipass: https://multipass.run/docs
 .. _`Open Container Initiative`: https://opencontainers.org/
 .. _Rockcraft: https://documentation.ubuntu.com/rockcraft/
+.. _Snap: https://snapcraft.io/docs/installing-snapd
+.. _Spread: https://github.com/canonical/spread
 .. _skopeo: https://github.com/containers/skopeo
 .. _Snapcraft: https://snapcraft.io/docs/snapcraft-overview
 

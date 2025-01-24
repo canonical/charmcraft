@@ -25,7 +25,7 @@ Manual installation has the following requirements:
 - `Spread`_
 - Either `LXD`_ or `Multipass`_
 
-For development and testing, Starcraft requires a modern Linux system or VM
+For development and testing, Charmcraft requires a modern Linux system or VM
 with `Snap`_ and a minimum of 4 GiB RAM.
 
 What's new
@@ -53,7 +53,7 @@ channel with the same resources.
 Feature deprecations
 --------------------
 
-The following features are deprecated in Starcraft 3.4 and will be removed in
+The following features are deprecated in Charmcraft 3.4 and will be removed in
 Charmcraft 4.0:
 
 Windows support
@@ -63,6 +63,8 @@ Charmcraft 3 has deprecated support running on Windows, and the upcoming 4.0
 release will not have any amount of support for it. Please use
 `Ubuntu inside WSL <https://ubuntu.com/desktop/wsl>`_.
 
+Related issue: `#1810 <https://github.com/canonical/charmcraft/issues/1810>`_
+
 CentOS 7 support
 ~~~~~~~~~~~~~~~~
 
@@ -71,13 +73,17 @@ CentOS 7 reached its `End of life
 Charmcraft 3 will continue its current support for CentOS 7, but Charmcraft 4
 will not support CentOS 7.
 
+Related issue: `#1826 <https://github.com/canonical/charmcraft/issues/1826>`_
+
 Bundle registration
 ~~~~~~~~~~~~~~~~~~~
 
 New bundle registration `ceased on 1 November 2024
-<https://discourse.charmhub.io/t/discontinuing-new-charmhub-bundle-registrations/15344>`_
+<https://discourse.charmhub.io/t/15344>`_
 and Charmcraft's ``register-bundle`` command currently returns an error.
 It will be removed entirely in Charmcraft 4.0
+
+Related issue: `#1858 <https://github.com/canonical/charmcraft/issues/1858>`_
 
 Scheduled feature deprecations
 ------------------------------
@@ -91,11 +97,15 @@ Bundle management
 In line with the phasing out of bundles, Charmcraft 4.0 will deprecate all
 bundle management commands. The removal versions have not been set.
 
+Related issue: `#2113 <https://github.com/canonical/charmcraft/issues/2113>`_
+
 ``bundle`` plugin
 ~~~~~~~~~~~~~~~~~
 
 In line with the phasing out of bundles, Charmcraft 4.0 will deprecate the
 bundle plugin. No schedule has been set for the removal of the bundle plugin.
+
+Related issue: `#2114 <https://github.com/canonical/charmcraft/issues/2114>`_
 
 Known issues
 ------------

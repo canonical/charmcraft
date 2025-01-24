@@ -11,13 +11,10 @@ release and support policies for Charmcraft.
 Current releases
 ----------------
 
-
 Charmcraft 3
 ~~~~~~~~~~~~
 
-- <link to latest release, update, such as 8.2.0>
-- <link to latest release, update, such as 8.1.0>
-- <link to latest release, initial, such as 8.0.0>
+- :doc:`Charmcraft 3.4 <charmcraft-3.4.0>`
 
 Charmcraft 2
 ~~~~~~~~~~~~
@@ -29,17 +26,18 @@ a breaking change, pleas `file a bug report <issues>`_
 
 - :ref:`Charmcraft 2.7.0 <release-2.7.0>`
 
-.. Leaving this here for when we do sunset Charmcraft 2
-    Past releases
-    -------------
+Past releases
+-------------
 
-
+..
     <past release>
     ~~~~~~~~~~~~~~
 
     - <link to past release, update, such as 6.2.0>
     - <link to past release, update, such as 6.1.0>
     - <link to past release, initial, such as 6.0.0>
+
+Older releases can be seen in the :doc:`/reference/changelog`.
 
 
 .. _release-versioning:
@@ -77,6 +75,9 @@ development keeps pace with the OS's new releases and support lifecycle.
 
 .. toctree::
    :maxdepth: 1
+   :glob:
+
+   *
 
 
 .. release note template:

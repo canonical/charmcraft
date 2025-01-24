@@ -1,6 +1,9 @@
 Changelog
 *********
 
+Newer releases have their own :doc:`/release-notes/index` pages. Please refer
+to those.
+
 ..
   release template:
 

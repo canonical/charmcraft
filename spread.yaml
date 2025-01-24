@@ -139,7 +139,7 @@ suites:
     summary: tests tutorial from the docs
     systems:
       - ubuntu-22.04-64
-    manual: true
+    #manual: true
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

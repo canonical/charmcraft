@@ -456,7 +456,7 @@ requires-dist = [
     { name = "codespell", extras = ["toml"], marker = "extra == 'lint'" },
     { name = "coverage", marker = "extra == 'dev'" },
     { name = "craft-application", specifier = "~=4.8" },
-    { name = "craft-cli", specifier = ">=2.3.0" },
+    { name = "craft-cli", specifier = ">=2.15.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
     { name = "craft-parts", specifier = ">=2.2.1" },
     { name = "craft-platforms", specifier = "~=0.5" },
@@ -809,7 +809,7 @@ wheels = [
 
 [[package]]
 name = "craft-cli"
-version = "2.14.0"
+version = "2.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
@@ -819,9 +819,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/81/925e11cd71b77c3a56c3759848741a641aef0f64f857608822be3aedc050/craft_cli-2.14.0.tar.gz", hash = "sha256:b4ab5dd2bc83e4c08f54a73b92e29856cf7f2c9f138053443a992b7dbc09770e", size = 116567 }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/a7/32b8170deaefb28a8ec4cbccbaa0fbc4fac019cf3edf3682079af271ffa9/craft_cli-2.15.0.tar.gz", hash = "sha256:83c94e521c597c0836eb4a649c68105827006731d2032ca925cf1aea27d9fc9c", size = 116960 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/84/58943f17990d85bfc1b5b43062146f09366a01c1042c85f422a627d797fe/craft_cli-2.14.0-py3-none-any.whl", hash = "sha256:8815de64740d802702265caac666ef42f9e33bed21ef0c0bca7857221b810b57", size = 46348 },
+    { url = "https://files.pythonhosted.org/packages/f8/1c/9786bc93f1d210eadf6513868d27b75996ab6c3a40013782a4be86f5a98e/craft_cli-2.15.0-py3-none-any.whl", hash = "sha256:4ed2f7e409acce8f66a60d7038645431b38b2320d2eb88e133b7b9af1ce9843a", size = 46437 },
 ]
 
 [[package]]

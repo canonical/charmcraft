@@ -162,10 +162,6 @@ parts:
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       /snap/snapcraft/current/libexec/snapcraft/craftctl set grade="${grade}"
 
-      LD_LIBRARY_PATH=$CRAFT_STAGE/usr/lib/x86_64-linux-gnu \
-        uv run --no-sync -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
-        > $CRAFT_PART_INSTALL/completion.sh
-
       rm $CRAFT_PART_INSTALL/bin/python*
       ln -s ../usr/bin/python3 $CRAFT_PART_INSTALL/bin/python3
       ln -s python3 $CRAFT_PART_INSTALL/bin/python
@@ -184,6 +180,16 @@ parts:
       - -bin/tabulate
     organize:
       bin/craftctl: libexec/charmcraft/craftctl
+
+  bash-completion:
+    after: [charmcraft]
+    plugin: nil
+    build-environment:
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/x86_64-linux-gnu
+      - PYTHONPATH: $CRAFT_STAGE/lib/python3.10/site-packages
+    override-build: |
+      python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
+        > $CRAFT_PART_INSTALL/completion.sh
 
   skopeo:  # Copied from Rockcraft
     plugin: nil

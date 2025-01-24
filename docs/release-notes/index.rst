@@ -109,7 +109,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   - `Spread`_
   - Either `LXD`_ or `Multipass`_
 
-  For development and testing, Starcraft requires a modern Linux system or VM
+  For development and testing, Charmcraft requires a modern Linux system or VM
   with `Snap`_ and a minimum of 4 GiB RAM.
 
   What's new
@@ -157,7 +157,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   their locations more predictable.">
 
   <Paragraph 3, optional: Provide a call to action. This could take several
-  forms, such as a call to immediately perform a relevant action in Starcraft,
+  forms, such as a call to immediately perform a relevant action in Charmcraft,
   solicititation of the reader's feedback on a form or forum, or a link to
   documentation, demo, blog post, and so on. For example, "See ``:ref:`Manage
   store profile``` to configure how the public can engage with your snap on the
@@ -167,7 +167,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   Minor features
   --------------
 
-  Starcraft 2.0 brings the following minor changes.
+  Charmcraft 2.0 brings the following minor changes.
 
 
   <Feature A>
@@ -184,7 +184,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   Backwards-incompatible changes
   ------------------------------
 
-  The following changes are incompatible with previous versions of Starcraft.
+  The following changes are incompatible with previous versions of Charmcraft.
 
 
   <"Removed" or "Disabled"> <feature B>
@@ -199,7 +199,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   alternative solution, or state if no alternative exists. If necessary,
   describe the consequences of the reader's inaction. Link to relevant
   documentation, standards, or public discussion. For example, "In accordance
-  with the report, Starcraft 2.0 no longer supports encryption algorithm X. As
+  with the report, Charmcraft 2.0 no longer supports encryption algorithm X. As
   of this release, if you haven't already we highly recommend you immediately
   switch to encryption algorithm Y to ensure your data stays protected. For
   more details about this decision and our policy, see ```Security notice on
@@ -209,7 +209,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   Feature deprecations
   --------------------
 
-  The following features are deprecated in Starcraft 2.0:
+  The following features are deprecated in Charmcraft 2.0:
 
   Deprecated <feature C>
   ~~~~~~~~~~~~~~~~~~~~~~
@@ -233,7 +233,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   <Iterate on the following paragraph+items if you're covering multiple
   versions in this section.>
 
-  The following features will be deprecated in Starcraft <planned version>:
+  The following features will be deprecated in Charmcraft <planned version>:
 
 
   <Feature D>
@@ -249,7 +249,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   working on", or "we have scheduled development of". End by linking to
   relevant documentation, standards, or public discussion. For example, "In
   October 2024, the NIST published SP ABC-123, urging software publishers to
-  cease the use of encryption algorithm X. We plan to deprecate it in Starcraft
+  cease the use of encryption algorithm X. We plan to deprecate it in Charmcraft
   1.2. For more details about this decision and our policy, see `Security
   notice on encryption X <>`_ on the Ubuntu blog.">
 
@@ -269,7 +269,7 @@ development keeps pace with the OS's new releases and support lifecycle.
   Fixed bugs and issues
   ---------------------
 
-  The following issues have been resolved in Starcraft 2.0:
+  The following issues have been resolved in Charmcraft 2.0:
 
   - `ID <link>`_ <Title>
   - `ID <link>`_ <Title>

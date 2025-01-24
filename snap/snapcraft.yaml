@@ -162,8 +162,6 @@ parts:
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       /snap/snapcraft/current/libexec/snapcraft/craftctl set grade="${grade}"
 
-      # uv pip uninstall charmcraft
-      # uv pip install ooooooooh\!
       LD_LIBRARY_PATH=$CRAFT_STAGE/usr/lib/x86_64-linux-gnu \
         uv run --no-sync -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
         > $CRAFT_PART_INSTALL/completion.sh

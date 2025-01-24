@@ -140,6 +140,6 @@ Contributors
 We would like to express a big thank you to all the people who contributed to
 this release.
 
-:literalref:`@bepri <https://github.com/bepri>`,
-:literalref:`@dariuszd21 <https://github.com/dariuszd21>`,
-:literalref:`@lengau <https://launchpad.net/lengau>`
+:literalref:`@bepri<https://github.com/bepri>`,
+:literalref:`@dariuszd21<https://github.com/dariuszd21>`,
+:literalref:`@lengau<https://launchpad.net/~lengau>`

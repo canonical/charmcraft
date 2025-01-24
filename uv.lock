@@ -456,7 +456,7 @@ requires-dist = [
     { name = "codespell", extras = ["toml"], marker = "extra == 'lint'" },
     { name = "coverage", marker = "extra == 'dev'" },
     { name = "craft-application", specifier = "~=4.8" },
-    { name = "craft-cli", specifier = ">=2.3.0" },
+    { name = "craft-cli", specifier = ">=2.15.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
     { name = "craft-parts", specifier = ">=2.2.1" },
     { name = "craft-platforms", specifier = "~=0.5" },

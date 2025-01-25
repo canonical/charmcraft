@@ -11,20 +11,23 @@ release and support policies for Charmcraft.
 Current releases
 ----------------
 
+
 Charmcraft 3
 ~~~~~~~~~~~~
 
 - :doc:`Charmcraft 3.4 <charmcraft-3.4.0>`
 
+
 Charmcraft 2
 ~~~~~~~~~~~~
 
-Charmcraft 2 is supported for use cases that Charmcraft 3 does not support. If
-you have a use case that does not work in Charmcraft 3, please check the
-:ref:`3.0 breaking changes <release-3.0.0>` and, if your issue is not listed as
-a breaking change, please `file a bug report <issues>`_
+Charmcraft 2 is supported for use cases that Charmcraft 3 does not support. If you have
+a use case that does not work in Charmcraft 3, please check the :ref:`3.0 breaking
+changes <release-3.0.0>` and, if your issue is not listed as a breaking change, please
+`file a bug report <issues>`_
 
 - :ref:`Charmcraft 2.7.0 <release-2.7.0>`
+
 
 Past releases
 -------------
@@ -68,16 +71,17 @@ numbers for major, minor, and patch versions.
 Long-term support
 -----------------
 
-Charmcraft doesn't have long-term support (LTS) releases. However, we typically
-deliver a compatibility release shortly after Ubuntu LTS releases to ensure
-continuity. Charmcraft software bases are derived from Ubuntu LTS releases, and their
-development keeps pace with the OS's new releases and support lifecycle.
+Charmcraft doesn't have long-term support (LTS) releases. However, we typically deliver
+a compatibility release shortly after Ubuntu LTS releases to ensure continuity.
+Charmcraft software bases are derived from Ubuntu LTS releases, and their development
+keeps pace with the OS's new releases and support lifecycle.
 
 .. toctree::
-   :maxdepth: 1
-   :glob:
+    :hidden:
+    :maxdepth: 1
+    :glob:
 
-   *
+    *
 
 
 .. release note template:
@@ -93,24 +97,25 @@ development keeps pace with the OS's new releases and support lifecycle.
   Requirements and compatibility
   ------------------------------
 
-  It is recommended that you install Charmcraft from the
-  `Snap Store <https://snapcraft.io/charmcraft>`_, which provides automatic updates
-  and is the primary environment where it is tested. Most dependencies are included
-  within the Charmcraft snap, making installation easier.
+  For development and testing, Charmcraft requires a host with a minimum of 4GB RAM
+  running a Linux distribution compatible with systemd.
 
-  If installed as a snap, the only external dependency is either `LXD`_ or
-  `Multipass`_.
+  All versions of Charmcraft require the following software:
 
-  Manual installation has the following requirements:
+  - systemd
+  - `snapd <https://snapcraft.io/docs/installing-snapd>`_
+  - Either `LXD`_ or `Multipass`_
+
+  We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It
+  comes comes bundled with all its dependencies.
+
+  Non-snap installations of Charmcraft have the following dependencies:
 
   - Python 3.10 or higher
   - libgit2 1.7
   - `skopeo`_
   - `Spread`_
-  - Either `LXD`_ or `Multipass`_
 
-  For development and testing, Charmcraft requires a modern Linux system or VM
-  with `snapd installed`_ and a minimum of 4 GiB RAM.
 
   What's new
   ----------

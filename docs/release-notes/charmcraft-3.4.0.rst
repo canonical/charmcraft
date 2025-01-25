@@ -9,24 +9,25 @@ Learn about the new features, changes, and fixes introduced in Charmcraft 3.4.
 Requirements and compatibility
 ------------------------------
 
-It is recommended that you install Charmcraft from the
-`Snap Store <https://snapcraft.io/charmcraft>`_, which provides automatic updates
-and is the primary environment where it is tested. Most dependencies are included
-within the Charmcraft snap, making installation easier.
+For development and testing, Charmcraft requires a host with a minimum of 4GB RAM
+running a Linux distribution compatible with systemd.
 
-If installed as a snap, the only external dependency is either `LXD`_ or
-`Multipass`_.
+All versions of Charmcraft require the following software:
 
-Manual installation has the following requirements:
+- systemd
+- `snapd <https://snapcraft.io/docs/installing-snapd>`_
+- Either `LXD`_ or `Multipass`_
+
+We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It
+comes comes bundled with all its dependencies.
+
+Non-snap installations of Charmcraft have the following dependencies:
 
 - Python 3.10 or higher
 - libgit2 1.7
 - `skopeo`_
 - `Spread`_
-- Either `LXD`_ or `Multipass`_
 
-For development and testing, Charmcraft requires a modern Linux system or VM
-with `snapd installed`_ and a minimum of 4 GiB RAM.
 
 What's new
 ----------
@@ -34,61 +35,69 @@ What's new
 Charmcraft 3.4 brings the following features, integrations, and improvements.
 
 
-``charmcraft promote``
-~~~~~~~~~~~~~~~~~~~~~~
+``charmcraft promote`` command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charmcraft 3.4 has a new :ref:`ref_commands_promote` command, which can promote
-a charm on Charmhub from one channel to another. The promote command automates the
-following steps:
+In previous releases, switching charm revisions between channels and re-releasing them
+was a manual and time-consuming process that involved:
 
-1. Find all charm revisions currently published on a given channel.
-2. Find the revisions of each resource attached to that charm revision on the channel.
-3. Release each of those charm revisions, with their appropriate resources, to a new
+1. Finding all charm revisions currently published on a given channel.
+2. Finding the revisions of each resource attached to that charm revision on the
+   channel.
+3. Releasing each of those charm revisions, with their appropriate resources, to a new
    channel.
 
-This means that if your charm supports three bases on two architectures, each
-with its own resource revision, all six revisions will be released to the new
-channel with the same resources.
+Charmcraft 3.4 introduces the :ref:`ref_commands_promote` command, which promotes a
+charm on Charmhub from one channel to another. The command runs through this procedure
+on your behalf.
+
+If, for example, your charm supports three bases across two architectures, each with its
+own resource revision, the ``promote`` command would automatically release all six
+revisions to the new channel with the same resources.
+
 
 Feature deprecations
 --------------------
 
 The following features are deprecated in Charmcraft 3.4 and will be removed in
-Charmcraft 4.0:
+Charmcraft 4.0.
+
 
 Windows support
 ~~~~~~~~~~~~~~~
 
-Charmcraft 3 has deprecated support running on Windows, and the upcoming 4.0
-release will not have any amount of support for it. Please use
-`Ubuntu inside WSL <https://ubuntu.com/desktop/wsl>`_.
+Charmcraft 3.0 deprecated support for Windows, and the upcoming 4.0 major release will
+remove support for it. Windows users should begin preparing to migrate their workflows
+to `Windows Subsystem for Linux <https://ubuntu.com/desktop/wsl>`_.
 
 Related issue: `#1810 <https://github.com/canonical/charmcraft/issues/1810>`_
+
 
 CentOS 7 support
 ~~~~~~~~~~~~~~~~
 
-CentOS 7 reached its `End of life
-<https://www.redhat.com/en/topics/linux/centos-linux-eol>`_ on 30 June 2024.
-Charmcraft 3 will continue its current support for CentOS 7, but Charmcraft 4
-will not support CentOS 7.
+CentOS 7 reached its `end of life
+<https://www.redhat.com/en/topics/linux/centos-linux-eol>`_ on 30 June 2024. Charmcraft
+3 will continue its current support for CentOS 7, but Charmcraft 4.0 won't support
+CentOS 7.
 
 Related issue: `#1826 <https://github.com/canonical/charmcraft/issues/1826>`_
+
 
 Bundle registration
 ~~~~~~~~~~~~~~~~~~~
 
 New bundle registration `ceased on 1 November 2024
-<https://discourse.charmhub.io/t/15344>`_
-and Charmcraft's ``register-bundle`` command currently returns an error.
-It will be removed entirely in Charmcraft 4.0
+<https://discourse.charmhub.io/t/15344>`_ and the ``register-bundle`` command currently
+returns an error. It will be removed in Charmcraft 4.0.0.
 
 Related issue: `#1858 <https://github.com/canonical/charmcraft/issues/1858>`_
+
 
 Scheduled feature deprecations
 ------------------------------
 
-The following features will be deprecated in Charmcraft 4.0:
+The following features will be deprecated in Charmcraft 4.0.
 
 
 Bundle management
@@ -99,6 +108,7 @@ bundle management commands. The removal versions have not been set.
 
 Related issue: `#2113 <https://github.com/canonical/charmcraft/issues/2113>`_
 
+
 ``bundle`` plugin
 ~~~~~~~~~~~~~~~~~
 
@@ -106,6 +116,7 @@ In line with the phasing out of bundles, Charmcraft 4.0 will deprecate the
 bundle plugin. No schedule has been set for the removal of the bundle plugin.
 
 Related issue: `#2114 <https://github.com/canonical/charmcraft/issues/2114>`_
+
 
 Known issues
 ------------
@@ -142,4 +153,4 @@ this release.
 
 :literalref:`@bepri<https://github.com/bepri>`,
 :literalref:`@dariuszd21<https://github.com/dariuszd21>`,
-:literalref:`@lengau<https://launchpad.net/~lengau>`
+and :literalref:`@lengau<https://launchpad.net/~lengau>`

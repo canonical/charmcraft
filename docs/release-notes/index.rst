@@ -21,10 +21,10 @@ Charmcraft 3
 Charmcraft 2
 ~~~~~~~~~~~~
 
-Charmcraft 2 is supported for use cases that Charmcraft 3 does not support. If you have
-a use case that does not work in Charmcraft 3, please check the :ref:`3.0 breaking
-changes <release-3.0.0>` and, if your issue is not listed as a breaking change, please
-`file a bug report <issues>`_
+Charmcraft 2 is supported for older deployments and features. If you require a feature
+that Charmcraft 3 doesn't support, please check the :ref:`3.0 breaking changes
+<release-3.0.0>` and, if your issue isn't listed as a breaking change, please `file a
+bug report <issues>`_.
 
 - :ref:`Charmcraft 2.7.0 <release-2.7.0>`
 

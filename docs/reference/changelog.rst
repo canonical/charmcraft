@@ -77,6 +77,17 @@ Changelog
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
+3.3.2 (2025-01027)
+------------------
+
+This release contains some bug fixes for the 3.3 branch.
+
+Command line
+============
+
+This release removes experimental test templates added to the project when
+running ``charmcraft init``. Existing projects will not be affected.
+
 3.3.1 (2025-01-23)
 ------------------
 

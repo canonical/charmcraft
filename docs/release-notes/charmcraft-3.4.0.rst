@@ -15,7 +15,7 @@ running a Linux distribution compatible with systemd.
 All versions of Charmcraft require the following software:
 
 - systemd
-- `snapd <https://snapcraft.io/docs/installing-snapd>`_
+- `snapd`_
 - Either `LXD`_ or `Multipass`_
 
 We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It

@@ -25,13 +25,14 @@ import pathlib
 import re
 import shutil
 import string
+import sys
 import tempfile
 import textwrap
 import typing
 import zipfile
 from collections.abc import Collection
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import yaml
 from craft_application import util
@@ -43,11 +44,13 @@ from craft_store.errors import CredentialsUnavailable
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
+from typing_extensions import override
 
 import charmcraft.store.models
 from charmcraft import const, env, errors, parts, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
+from charmcraft.services.store import StoreService
 from charmcraft.store import Store
 from charmcraft.store.models import Entity
 from charmcraft.utils import cli
@@ -830,6 +833,167 @@ class ReleaseCommand(CharmcraftCommand):
         emit.message(msg.format(*args))
 
 
+class PromoteCommand(CharmcraftCommand):
+    """Promote a charm in the Store."""
+
+    name = "promote"
+    help_msg = "Promote a charm from one channel to another on Charmhub."
+    overview = textwrap.dedent(
+        """\
+        Promote a charm from one channel to another on Charmhub.
+
+        Promotes the current revisions of a charm in a specific channel, as well as
+        their related resources, to another channel.
+
+        The most common use is to promote a charm to a more stable risk value on a
+        single track:
+
+            ``charmcraft promote --from-channel=candidate --to-channel=stable``
+        """
+    )
+
+    @override
+    def needs_project(self, parsed_args: argparse.Namespace) -> bool:
+        if parsed_args.name is None:
+            emit.progress("Inferring name from project file.", permanent=True)
+            return True
+        return False
+
+    @override
+    def fill_parser(self, parser: "ArgumentParser") -> None:
+        parser.add_argument(
+            "--name",
+            help="the name of the charm to promote. If not specified, the name will be inferred from the charm in the current directory.",
+        )
+        parser.add_argument(
+            "--from-channel",
+            metavar="from-channel",
+            help="the channel to promote from",
+            required=True,
+        )
+        parser.add_argument(
+            "--to-channel",
+            metavar="to-channel",
+            help="the channel to promote to",
+            required=True,
+        )
+        parser.add_argument(
+            "--yes",
+            default=False,
+            action="store_true",
+            help="use non-interactive mode, answering yes to most questions.",
+        )
+
+    @override
+    def run(self, parsed_args: argparse.Namespace) -> int | None:
+        emit.progress(
+            f"{self._app.name} {self.name} does not have a stable CLI interface. "
+            "Use with caution in scripts.",
+            permanent=True,
+        )
+        store = cast(StoreService, self._services.get("store"))
+
+        name = parsed_args.name or self._services.project.name
+
+        from_channel = charmcraft.store.models.ChannelData.from_str(
+            parsed_args.from_channel
+        )
+        to_channel = charmcraft.store.models.ChannelData.from_str(
+            parsed_args.to_channel
+        )
+        if None in (from_channel.track, to_channel.track):
+            if parsed_args.yes:
+                raise CraftError(
+                    "Channels must be fully defined in non-interactive mode.",
+                    resolution="Provide channel names as '<track>/<risk>'.",
+                    reportable=False,
+                    logpath_report=False,
+                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                )
+            package_metadata = store.get_package_metadata(name)
+            default_track = package_metadata.default_track
+            if from_channel.track is None:
+                from_channel = dataclasses.replace(from_channel, track=default_track)
+            if to_channel.track is None:
+                to_channel = dataclasses.replace(to_channel, track=default_track)
+
+        if to_channel == from_channel:
+            raise CraftError(
+                "Cannot promote from a channel to the same channel.",
+                retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+            )
+        if to_channel.risk > from_channel.risk:
+            command_parts = [
+                self._app.name,
+                self.name,
+                f"--from-channel={to_channel.name}",
+                f"--to-channel={from_channel.name}",
+            ]
+            command = " ".join(command_parts)
+            raise CraftError(
+                f"Target channel ({to_channel.name}) must be lower risk "
+                f"than the source channel ({from_channel.name}).",
+                resolution=f"Did you mean: {command}",
+            )
+        if to_channel.track != from_channel.track:
+            if from_channel.risk != to_channel.risk:
+                raise CraftError(
+                    "Cross-track promotion can only occur at the same risk level.",
+                    reportable=False,
+                    logpath_report=False,
+                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                )
+            if not parsed_args.yes and not utils.confirm_with_user(
+                "Did you mean to promote to a different track? (from "
+                f"{from_channel.track} to {to_channel.track})",
+            ):
+                emit.message("Cancelling.")
+                return 64  # Replace with os.EX_USAGE once we drop Windows.
+
+        candidates = store.get_revisions_on_channel(name, from_channel.name)
+
+        def get_base_strings(bases):
+            if bases is None:
+                return ""
+            return ",".join(
+                f"{base.name}@{base.channel}:{base.architecture}" for base in bases
+            )
+
+        presentable_candidates = [
+            {
+                "Revision": info["revision"],
+                "Platforms": get_base_strings(info["bases"]),
+                "Resource revisions": ", ".join(
+                    f"{res['name']}: {res['revision']}" for res in info["resources"]
+                ),
+            }
+            for info in sorted(candidates, key=lambda x: x["revision"])
+        ]
+        emit.progress(
+            f"The following revisions are on the {from_channel.name} channel:",
+            permanent=True,
+        )
+        with emit.pause():
+            print(
+                tabulate(presentable_candidates, tablefmt="plain", headers="keys"),
+                file=sys.stderr,
+            )
+        if not parsed_args.yes and not utils.confirm_with_user(
+            f"Do you want to promote these revisions to the {to_channel.name} channel?"
+        ):
+            emit.message("Channel promotion cancelled.")
+            return 1
+
+        promotion_results = store.release_promotion_candidates(
+            name, to_channel.name, candidates
+        )
+
+        emit.message(
+            f"{len(promotion_results)} revisions promoted from {from_channel.name} to {to_channel.name}"
+        )
+        return 0
+
+
 class PromoteBundleCommand(CharmcraftCommand):
     """Promote a bundle in the Store."""
 
@@ -1491,6 +1655,7 @@ class PublishLibCommand(CharmcraftCommand):
         to_query = [{"lib_id": lib.lib_id, "api": lib.api} for lib in local_libs_data]
         libs_tips = store.get_libraries_tips(to_query)
         analysis = []
+        return_code = 0
         for lib_data in local_libs_data:
             emit.debug(f"Verifying local lib {lib_data}")
             tip = libs_tips.get((lib_data.lib_id, lib_data.api))
@@ -1504,6 +1669,7 @@ class PublishLibCommand(CharmcraftCommand):
                 pass
             elif tip.patch > lib_data.patch:
                 # the store is more advanced than local
+                return_code = 1
                 error_message = (
                     f"Library {lib_data.full_name} is out-of-date locally, Charmhub has "
                     f"version {tip.api:d}.{tip.patch:d}, please "
@@ -1517,6 +1683,7 @@ class PublishLibCommand(CharmcraftCommand):
                     )
                 else:
                     # but shouldn't as hash is different!
+                    return_code = 1
                     error_message = (
                         f"Library {lib_data.full_name} version {tip.api:d}.{tip.patch:d} "
                         "is the same than in Charmhub but content is different"
@@ -1525,12 +1692,14 @@ class PublishLibCommand(CharmcraftCommand):
                 # local is correctly incremented
                 if tip.content_hash == lib_data.content_hash:
                     # but shouldn't as hash is the same!
+                    return_code = 1
                     error_message = (
                         f"Library {lib_data.full_name} LIBPATCH number was incorrectly "
                         "incremented, Charmhub has the "
                         f"same content in version {tip.api:d}.{tip.patch:d}."
                     )
             else:
+                return_code = 1
                 error_message = (
                     f"Library {lib_data.full_name} has a wrong LIBPATCH number, it's too high "
                     "and needs to be consecutive, Charmhub "
@@ -1539,7 +1708,6 @@ class PublishLibCommand(CharmcraftCommand):
             analysis.append((lib_data, error_message))
 
         # work on the analysis result, showing messages to the user if not programmatic output
-        return_code = 0
         for lib_data, error_message in analysis:
             if error_message is None:
                 store.create_library_revision(
@@ -1556,7 +1724,6 @@ class PublishLibCommand(CharmcraftCommand):
                 )
             else:
                 message = error_message
-                return_code = 1
             if not parsed_args.format:
                 emit.message(message)
 
@@ -2102,7 +2269,6 @@ class UploadResourceCommand(CharmcraftCommand):
                     resolution="Pass a valid container transport string.",
                 )
             emit.debug(f"Using source path {source_path!r}")
-
             emit.progress("Inspecting source image")
             image_metadata = image_service.inspect(source_path)
 

@@ -1,6 +1,9 @@
 Changelog
 *********
 
+Newer releases have their own :doc:`/release-notes/index` pages. Please refer
+to those.
+
 ..
   release template:
 
@@ -315,6 +318,7 @@ Bug fixes
 
 For a complete list of commits, see the `3.1.0`_ release on GitHub.
 
+.. _release-3.0.0:
 
 3.0.0 (2024-03-14)
 ------------------
@@ -342,6 +346,7 @@ For a complete list of commits, see the `3.0.0`_ release on GitHub.
 
 For a complete list of commits, see the `2.7.1`_ release on GitHub.
 
+.. _release-2.7.0:
 
 2.7.0 (2024-06-18)
 ------------------

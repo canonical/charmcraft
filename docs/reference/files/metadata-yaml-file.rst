@@ -894,4 +894,12 @@ Other keys
 In addition to the keys mentioned above, a ``metadata.yaml`` file may also contain other
 arbitrary keys. These can serve to keep track of other choices a charmer might make. In
 some cases these become semi-official, being adopted by many charmers and even
-incorporated into CI processes.
+incorporated into CI processes. One such example is ``upstream-source``:
+
+.. code-block:: yaml
+
+    # The upstream-source field is ignored by Juju. It is included here as a reference
+    # so the integration testing suite knows which image to deploy during testing. This
+    # field is also used by the 'canonical/charming-actions' Github action for automated
+    # releasing.
+    upstream-source: kennethreitz/httpbin

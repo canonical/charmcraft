@@ -67,10 +67,9 @@ Windows support
 ~~~~~~~~~~~~~~~
 
 Charmcraft 3.0 deprecated support for Windows, and the upcoming 4.0 major release will
-remove support for it. Windows users should begin preparing to migrate their workflows
-to `Windows Subsystem for Linux <https://ubuntu.com/desktop/wsl>`_.
-
-Related issue: `#1810 <https://github.com/canonical/charmcraft/issues/1810>`_
+remove support for it (`#1810 <https://github.com/canonical/charmcraft/issues/1810>`_).
+Windows users should begin preparing to migrate their workflows to `Windows Subsystem
+for Linux <https://ubuntu.com/desktop/wsl>`_.
 
 
 CentOS 7 support
@@ -79,9 +78,7 @@ CentOS 7 support
 CentOS 7 reached its `end of life
 <https://www.redhat.com/en/topics/linux/centos-linux-eol>`_ on 30 June 2024. Charmcraft
 3 will continue its current support for CentOS 7, but Charmcraft 4.0 won't support
-CentOS 7.
-
-Related issue: `#1826 <https://github.com/canonical/charmcraft/issues/1826>`_
+CentOS 7 (`#1826 <https://github.com/canonical/charmcraft/issues/1826>`_).
 
 
 Bundle registration
@@ -89,9 +86,8 @@ Bundle registration
 
 New bundle registration `ceased on 1 November 2024
 <https://discourse.charmhub.io/t/15344>`_ and the ``register-bundle`` command currently
-returns an error. It will be removed in Charmcraft 4.0.0.
-
-Related issue: `#1858 <https://github.com/canonical/charmcraft/issues/1858>`_
+returns an error. It will be removed in Charmcraft 4.0.0 (`#1858
+<https://github.com/canonical/charmcraft/issues/1858>`_).
 
 
 Scheduled feature deprecations
@@ -103,19 +99,17 @@ The following features will be deprecated in Charmcraft 4.0.
 Bundle management
 ~~~~~~~~~~~~~~~~~
 
-In line with the phasing out of bundles, Charmcraft 4.0 will deprecate all
-bundle management commands. The removal versions have not been set.
-
-Related issue: `#2113 <https://github.com/canonical/charmcraft/issues/2113>`_
+In line with the phasing out of bundles, Charmcraft 4.0 will deprecate all bundle
+management commands (`#2113 <https://github.com/canonical/charmcraft/issues/2113>`_).
+The schedule for removing this feature hasn't been set yet.
 
 
 ``bundle`` plugin
 ~~~~~~~~~~~~~~~~~
 
-In line with the phasing out of bundles, Charmcraft 4.0 will deprecate the
-bundle plugin. No schedule has been set for the removal of the bundle plugin.
-
-Related issue: `#2114 <https://github.com/canonical/charmcraft/issues/2114>`_
+In line with the phasing out of bundles, Charmcraft 4.0 will deprecate the bundle plugin
+(`#2114 <https://github.com/canonical/charmcraft/issues/2114>`_). No schedule has been
+set yet for this change.
 
 
 Known issues

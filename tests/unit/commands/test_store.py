@@ -19,13 +19,16 @@ import argparse
 import datetime
 import pathlib
 import textwrap
+import types
 from unittest import mock
 
 import craft_cli.pytest_plugin
 import craft_store
 import freezegun
 import pytest
-from craft_store import models
+from craft_cli import CraftError
+from craft_store import models, publisher
+from craft_store.publisher import Releases
 
 from charmcraft import errors, store
 from charmcraft.application import commands
@@ -397,3 +400,229 @@ def test_register_bundle_error(monkeypatch: pytest.MonkeyPatch, emitter):
         f"more information, see: {store_commands.BUNDLE_REGISTRATION_REMOVAL_URL}",
     )
     mock_store.assert_not_called()
+
+
+def test_promote_no_track_inference_noninteractive(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway,
+):
+    mock_publisher_gateway.get_package_metadata.return_value = types.SimpleNamespace(
+        default_track="latest"
+    )
+
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel="candidate",
+        to_channel="stable",
+        yes=True,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(CraftError, match="Channels must be fully defined"):
+        cmd.run(parsed_args)
+
+
+@pytest.mark.parametrize(
+    "channel",
+    ["latest/stable", "latest/candidate", "latest/beta", "latest/edge", "3/edge"],
+)
+def test_promote_to_same_channel(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    channel: str,
+):
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=channel,
+        to_channel=channel,
+        yes=True,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(
+        CraftError, match="Cannot promote from a channel to the same channel."
+    ):
+        cmd.run(parsed_args)
+
+
+@pytest.mark.parametrize(
+    ("from_channel", "to_channel"),
+    [
+        ("candidate", "latest/candidate"),
+        ("stable", "latest/stable"),
+        ("latest/candidate", "candidate"),
+        ("latest/stable", "stable"),
+    ],
+)
+def test_promote_infers_channel(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    from_channel: str,
+    to_channel: str,
+):
+    # This test works by checking that the channels become the same after inferring
+    # the default track "latest" and then checking that the channels are the same.
+    mock_publisher_gateway.get_package_metadata.return_value = types.SimpleNamespace(
+        default_track="latest"
+    )
+
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=from_channel,
+        to_channel=to_channel,
+        yes=False,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(
+        CraftError, match=r"^Cannot promote from a channel to the same channel\.$"
+    ):
+        cmd.run(parsed_args)
+
+
+@pytest.mark.parametrize(
+    ("from_channel", "to_channel"),
+    [
+        ("latest/stable", "latest/candidate"),
+        ("latest/stable", "latest/beta"),
+        ("latest/candidate", "latest/beta"),
+        ("latest/beta", "latest/edge"),
+    ],
+)
+def test_promote_not_demote(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    from_channel: str,
+    to_channel: str,
+):
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=from_channel,
+        to_channel=to_channel,
+        yes=True,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(
+        CraftError,
+        match=r"^Target channel \([a-z/]+\) must be lower risk than the source channel \([a-z/]+\)\.$",
+    ) as exc_info:
+        cmd.run(parsed_args)
+
+    assert (
+        exc_info.value.resolution
+        == f"Did you mean: charmcraft promote --from-channel={to_channel} --to-channel={from_channel}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("from_channel", "to_channel"),
+    [
+        ("latest/candidate", "3/stable"),
+        ("latest/beta", "3/candidate"),
+        ("latest/edge", "3/beta"),
+    ],
+)
+def test_promote_cross_track_cannot_be_different_risk(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    from_channel: str,
+    to_channel: str,
+):
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=from_channel,
+        to_channel=to_channel,
+        yes=True,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    with pytest.raises(
+        CraftError,
+        match=r"^Cross-track promotion can only occur at the same risk level\.$",
+    ):
+        cmd.run(parsed_args)
+
+
+@pytest.mark.parametrize(
+    ("from_channel", "to_channel"),
+    [
+        ("latest/candidate", "3/candidate"),
+    ],
+)
+def test_promote_cross_track_defaults_no(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    from_channel: str,
+    to_channel: str,
+):
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=from_channel,
+        to_channel=to_channel,
+        yes=False,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    assert cmd.run(parsed_args) == 64
+
+    emitter.assert_message("Cancelling.")
+
+
+@pytest.mark.parametrize(
+    ("from_channel", "to_channel"),
+    [
+        ("latest/candidate", "latest/stable"),
+    ],
+)
+def test_promote_defaults_no(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+    from_channel: str,
+    to_channel: str,
+):
+    mock_publisher_gateway.list_releases.return_value = Releases(
+        channel_map=[], package=publisher.Package(channels=[]), revisions=[]
+    )
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel=from_channel,
+        to_channel=to_channel,
+        yes=False,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    assert cmd.run(parsed_args) == 1
+
+    emitter.assert_message("Channel promotion cancelled.")
+
+
+def test_promote_revisions(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    service_factory: CharmcraftServiceFactory,
+    mock_publisher_gateway: mock.Mock,
+):
+    mock_publisher_gateway.list_releases.return_value = Releases(
+        channel_map=[], package=publisher.Package(channels=[]), revisions=[]
+    )
+    mock_publisher_gateway.release.return_value = []
+    parsed_args = argparse.Namespace(
+        name="my-charm",
+        from_channel="latest/candidate",
+        to_channel="latest/stable",
+        yes=True,
+    )
+    cmd = commands.PromoteCommand({"app": APP_METADATA, "services": service_factory})
+
+    assert cmd.run(parsed_args) == 0
+
+    emitter.assert_message(
+        "0 revisions promoted from latest/candidate to latest/stable"
+    )

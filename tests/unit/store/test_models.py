@@ -66,3 +66,17 @@ from charmcraft.store import models
 )
 def test_library_from_dict(data, expected):
     assert models.Library.from_dict(data) == expected
+
+
+@pytest.mark.parametrize(
+    ("this", "that", "expected"),
+    [
+        (models.ChannelData("latest", models.Risk.STABLE, None), "latest/stable", True),
+        (models.ChannelData(None, models.Risk.STABLE, None), "stable", True),
+        (models.ChannelData("2", models.Risk.EDGE, "leaf"), "2/edge/leaf", True),
+        (models.ChannelData("2", models.Risk.EDGE, "leaf"), "2/edge", False),
+    ],
+)
+def test_channel_data_equality(this, that, expected):
+    assert (this == that) is expected
+    assert (this == models.ChannelData.from_str(that)) is expected

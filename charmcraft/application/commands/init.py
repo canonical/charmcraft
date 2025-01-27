@@ -83,15 +83,8 @@ files and directories:
     ├── tests
     │   ├── integration
     │   │   └── test_charm.py      - Integration tests
-    │   ├── spread
-    │   │   ├── lib
-    │   │   │   └── test-helpers.sh
-    │   │   └── general
-    │   │       └── integration
-    │   │           └── task.yaml  - Run integration tests in spread back-end
     │   └── unit
     │       └── test_charm.py      - Unit tests
-    ├── spread.yaml                - Spread testing configuration file
     └── tox.ini                    - Configuration for tox, the tool to run all tests
 
 You will need to edit at least charmcraft.yaml and README.md.

@@ -5,7 +5,7 @@
 .. _`Craft-parts`: https://canonical-craft-parts.readthedocs-hosted.com
 .. _Discourse: https://discourse.charmhub.io/
 .. _Docker: https://docs.docker.com/
-.. _Juju: https://juju.is/docs
+.. _Juju: https://juju.is
 .. _`feature request`: https://github.com/canonical/charmcraft/issues/new?assignees=&labels=Enhancement&projects=&template=task.yaml
 .. _`OCI archive format`: https://github.com/opencontainers/image-spec/blob/main/layer.md#distributable-format
 .. _OCI_image_spec: https://github.com/opencontainers/image-spec/blob/main/spec.md

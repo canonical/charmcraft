@@ -195,7 +195,7 @@ The RabbitMQ integration creates the connection string in the environment variab
 - `RABBITMQ_PORT`
 - `RABBITMQ_VHOST`
 
-The Tracing integration creates the following environment variables that you may use to configure your application:
+The Tracing integration creates the following environment variables that you can use to configure your application:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `OTEL_SERVICE_NAME`
@@ -222,15 +222,15 @@ only run in one of the units of the application.
 
 12-Factor charms are designed to be easily observable using the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
-You can easily integrate your charm with [Loki](https://charmhub.io/loki-k8s) and [Prometheus](https://charmhub.io/prometheus-k8s) using Juju.
+You can easily integrate your charm with [Loki](https://charmhub.io/loki-k8s), [Prometheus](https://charmhub.io/prometheus-k8s) and [Grafana](https://charmhub.io/grafana-k8s) using Juju.
 
 ```shell
 juju relate flask-k8s grafana
 juju relate flask-k8s loki
 juju relate flask-k8s prometheus
 ```
-After integration, you will be able to observe your workload using Grafana dashboards.
 
+After integration, you will be able to observe your workload using Grafana dashboards.
 
 In addition to that you can also trace your workload code using [Tempo](https://charmhub.io/topics/charmed-tempo-ha).
 To learn about how to deploy Tempo you can read the documentation [here](https://charmhub.io/topics/charmed-tempo-ha).
@@ -256,7 +256,7 @@ opentelemetry-sdk
 ```
 
 OpenTelemetry will automatically read the environment variables and configure the OpenTelemetry SDK to use them.
-For other frameworks and further configuration options please refer to [OpenTelemetry documentation](https://opentelemetry-python.readthedocs.io/en/latest/).
+See the [OpenTelemetry documentation](https://opentelemetry-python.readthedocs.io/en/latest/) for further information about tracing.
 
 ## Regarding the `migrate.sh` file
 

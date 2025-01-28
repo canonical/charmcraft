@@ -5,13 +5,13 @@ description = "The main tool to build, upload, and develop in general the Juju c
 readme = "README.md"
 dependencies = [
     "craft-application~=4.8",
-    "craft-cli>=2.3.0",
+    "craft-cli>=2.15.0",
     "craft-grammar>=2.0.0",
     "craft-parts>=2.2.1",
     "craft-providers>=2.1.0",
     "craft-platforms~=0.5",
     "craft-providers>=2.0.0",
-    "craft-store>=3.1.0",
+    "craft-store~=3.2",
     "distro>=1.7.0",
     "docker>=7.0.0",
     "humanize>=2.6.0",
@@ -91,7 +91,7 @@ docs = [
     "sphinx-autobuild~=2024.2",
     "sphinx-pydantic~=0.1",
     "sphinx-toolbox~=3.5",
-    "sphinx-lint~=0.9",
+    "sphinx-lint~=1.0",
     "sphinxcontrib-details-directive",
     "matplotlib",
 ]

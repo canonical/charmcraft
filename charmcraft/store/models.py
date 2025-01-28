@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Internal models for store data structiues."""
 
+import contextlib
 import dataclasses
 import datetime
 import enum
@@ -281,6 +282,20 @@ class ChannelData:
         """Get the channel name as a string."""
         risk = self.risk.name.lower()
         return "/".join(i for i in (self.track, risk, self.branch) if i is not None)
+
+    def __eq__(self, other: object, /) -> bool:
+        if isinstance(other, ChannelData):
+            return (
+                self.track == other.track
+                and self.risk == other.risk
+                and self.branch == other.branch
+            )
+
+        if isinstance(other, str):
+            with contextlib.suppress(CraftError):
+                return self == ChannelData.from_str(other)
+
+        return NotImplemented
 
 
 LibraryMetadataRequest = TypedDict(

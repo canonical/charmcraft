@@ -12,5 +12,6 @@ Reference
     extensions/index
     files/index
     parts/index
+    platforms
     profile
     models/index

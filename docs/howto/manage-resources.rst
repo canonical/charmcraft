@@ -3,8 +3,8 @@
 Manage resources
 ================
 
-    See first: `Juju | Charm resource <https://juju.is/docs/juju/charm-resource>`_,
-    `Juju | Manage resources <https://juju.is/docs/juju/manage-charm-resources>`_
+    See first: :external+juju:ref:`Juju | Charm resource <resource-charm>`,
+    :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
 
 
 Declare a resource

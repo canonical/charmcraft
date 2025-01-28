@@ -8,7 +8,7 @@ application to use asynchronous Gunicorn workers to be
 able to serve to multiple users easily.
 
 Make the rock async
-===================
+-------------------
 
 To make the rock async, make sure to put the following in its ``requirements.txt``
 file:
@@ -16,7 +16,7 @@ file:
 .. literalinclude:: code/flask-async/requirements.txt
 
 Pack the rock using ``rockcraft pack`` and redeploy the charm with the new rock using
-[``juju refresh``](https://juju.is/docs/juju/juju-refresh).
+:external+juju:ref:`command-juju-refresh`.
 
 Configure the async application
 -------------------------------

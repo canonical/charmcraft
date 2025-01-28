@@ -82,6 +82,4 @@ Following the release, Charmhub will display the charm's information at
 ``charmhub.io/<charm-name>``. (The default information displayed is obtained from the
 most stable channel.) Your charm will also become available for download.
 
-    See more: `Juju | Manage charms`_
-
-.. _`Juju | Manage charms`: https://juju.is/docs/juju/manage-charms-or-bundles
+    See more: :external+juju:ref:`Juju | Manage charms <manage-charms>`

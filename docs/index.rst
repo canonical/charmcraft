@@ -10,6 +10,7 @@ Charmcraft
     tutorial/index
     howto/index
     reference/index
+    release-notes/index
 
 Charmcraft is a tool designed to simplify the creation, building, and sharing of a
 :external+juju:ref:`Juju charm <charm>`.

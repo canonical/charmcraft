@@ -768,12 +768,16 @@ in a number of typical ways. But there is a lot more to explore:
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - :ref:`how-to-guides`
+      - :ref:`How-to guides <how-to-guides>`,
+        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
     * - "How do I debug?"
       - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :ref:`reference`
-..    * - "Why...?", "So what?"
-      - :ref:`explanation`
+      - :ref:`reference`,
+        :external+ops:ref:`Ops | Reference <reference>`,
+        :external+juju:ref:`Juju | Reference <reference>`
+    * - "Why...?", "So what?"
+      - :external+ops:ref:`Ops | Explanation <explanation>`,
+        :external+juju:ref:`Juju | Explanation <explanation>`

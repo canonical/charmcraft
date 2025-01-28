@@ -2,7 +2,8 @@ First, install Multipass.
 
 .. seealso::
 
-    See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
+    See more: `Multipass |
+    How to install Multipass <https://multipass.run/docs/install-multipass>`_
 
 Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
 from the 24.04 blueprint:

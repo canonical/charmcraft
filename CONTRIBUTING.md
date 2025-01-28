@@ -70,7 +70,10 @@ Guide](https://docs.ubuntu.com/styleguide/en).
 
 The documentation source is written in reStructuredText, and is formatted according to
 [Canonical's reStructuredText
-style](https://canonical-documentation-with-sphinx-and-readthedocscom.readthedocs-hosted.com/style-guide). It uses Sphinx for linting and building.
+style](https://canonical-documentation-with-sphinx-and-readthedocscom.readthedocs-hosted.com/style-guide).
+It uses Sphinx for linting and building, and employs the
+[Intersphinx](https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html)
+extension to link to the related Juju and ops library documentation.
 
 
 ### Build the docs

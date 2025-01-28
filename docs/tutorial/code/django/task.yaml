@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with Django tutorial
 
-kill-timeout: 90m
+kill-timeout: 180m
 
 environment:
 

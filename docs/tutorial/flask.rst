@@ -43,6 +43,7 @@ Set things up
 -------------
 
 .. include:: /reuse/tutorial/setup_stable.rst
+.. |12FactorApp| replace:: Flask
 
 Let's create a new directory for this tutorial and change into it:
 
@@ -628,5 +629,5 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :ref:`reference`
-    * - "Why...?", "So what?"
+..    * - "Why...?", "So what?"
       - :ref:`explanation`

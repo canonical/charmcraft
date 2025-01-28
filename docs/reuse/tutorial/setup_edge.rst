@@ -1,4 +1,8 @@
-First, `install Multipass <https://multipass.run/docs/install-multipass>`_.
+First, install Multipass.
+
+.. seealso::
+
+    See more: `Multipass | How to install Multipass <https://multipass.run/docs/install-multipass>`_
 
 Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
 from the 24.04 blueprint:
@@ -43,7 +47,7 @@ In order to create the charm, you'll need to install Charmcraft:
     This tutorial requires version ``3.2.0`` or later of Charmcraft.
     Check the version of Charmcraft using ``charmcraft --version``.
 
-MicroK8s is required to deploy the Django application on Kubernetes.
+MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track:
 
 .. code-block:: bash
@@ -64,12 +68,12 @@ Several MicroK8s add-ons are required for deployment:
 
     # Required for Juju to provide storage volumes
     sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the Django application
+    # Required to host the OCI image of the 12-Factor application
     sudo microk8s enable registry
-    # Required to expose the Django application
+    # Required to expose the 12-Factor application
     sudo microk8s enable ingress
 
-Juju is required to deploy the Django application.
+Juju is required to deploy the |12FactorApp| application.
 Install Juju using the ``3.5/stable`` track, and bootstrap a
 development controller:
 

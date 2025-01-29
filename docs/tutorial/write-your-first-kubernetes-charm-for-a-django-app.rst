@@ -1,4 +1,4 @@
-(write-your-first-kubernetes-charm-for-a-django-app)=
+.. _write-your-first-kubernetes-charm-for-a-django-app:
 
 Write your first Kubernetes charm for a Django app
 ==================================================
@@ -39,6 +39,12 @@ Create a Django application. Use that to create a rock with
 to test-deploy, configure, etc., your Django application on a local
 Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
 times, mimicking a real development process.
+
+.. important::
+
+    Should you get stuck or notice issues, please get in touch on
+    `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
+    `Discourse <https://discourse.charmhub.io/>`_
 
 Set things up
 -------------
@@ -444,6 +450,7 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
+    :input: juju status
 
    Model               Controller      Cloud/Region        Version  SLA          Timestamp
    django-hello-world  dev-controller  microk8s/localhost  3.5.3    unsupported  16:47:01+10:00

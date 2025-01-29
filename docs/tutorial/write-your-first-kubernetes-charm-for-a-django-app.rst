@@ -36,7 +36,7 @@ What you’ll do
 
 Create a Django application. Use that to create a rock with
 ``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
-to test-deploy, configure, etc., your Django application on a local
+to test, deploy, configure, etc., your Django application on a local
 Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
 times, mimicking a real development process.
 
@@ -69,6 +69,9 @@ Finally, install ``python3-venv`` and create a virtual environment:
 
 Create the Django application
 -----------------------------
+
+Let's start by creating the "Hello, world" Django application that
+will be used for this tutorial.
 
 Create a ``requirements.txt`` file, copy the following text into it and
 then save it:
@@ -148,8 +151,8 @@ browser. Open a new tab and visit
 The Django application should respond in the browser with
 ``The install worked successfully! Congratulations!``.
 
-The Django application looks good, so you can stop it for now in the
-Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
+The Django application looks good, so we can stop it for now from the
+original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 
 Pack the Django application into a rock
 ---------------------------------------
@@ -291,7 +294,9 @@ Now let’s pack the rock:
    in the pack command for older versions of Rockcraft.
 
 Depending on your system and network, this step can take several minutes to
-finish. Once Rockcraft has finished packing the Django rock, the
+finish.
+
+Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
 ``Packed django-hello-world_0.1_amd64.rock``.
 
@@ -343,9 +348,9 @@ Initialize a charm named ``django-hello-world``:
 
 The files will automatically be created in your working directory.
 
-We will need to connect to the PostgreSQL database. Open the
-``charmcraft.yaml`` file and add the following section to the end of the
-file:
+We will need to connect the Django application to the PostgreSQL database.
+Open the ``charmcraft.yaml`` file and add the following section to the end
+of the file:
 
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
    :language: yaml
@@ -389,7 +394,7 @@ the Django application. Let’s create a new model:
 
 If you are not on a host with the ``amd64`` architecture, you will need
 to include a constraint to the Juju model to specify your architecture.
-Check the architecture of your system using
+You can check the architecture of your system using
 ``dpkg --print-architecture``.
 
 Set the Juju model constraints using
@@ -640,7 +645,9 @@ Enable a configuration
 ----------------------
 
 To demonstrate how to provide a configuration to the Django application,
-we will make the greeting configurable. Go back out to the rock
+we will make the greeting configurable. We will expect this
+configuration option to be available in the Django app configuration under the
+keyword ``GREETING``. Go back out to the rock
 directory ``django-hello-world`` using ``cd ..``. From there, open the
 ``django_hello_world/greeting/views.py`` file and replace the content
 with:

@@ -52,78 +52,8 @@ times, mimicking a real development process.
 Set things up
 -------------
 
-Install Multipass.
-
-    See more: `Multipass | How to install Multipass
-    <https://multipass.run/docs/install-multipass>`_
-
-Use Multipass to launch an Ubuntu VM with the name charm-dev from the 24.04 blueprint:
-
-.. code-block:: bash
-
-    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 24.04
-
-Once the VM is up, open a shell into it:
-
-.. code-block:: bash
-
-    multipass shell charm-dev
-
-In order to create the rock, you'll need to install Rockcraft:
-
-.. code-block:: bash
-
-    sudo snap install rockcraft --channel latest/edge --classic
-
-``LXD`` will be required for building the rock. Make sure it is installed
-and initialised:
-
-.. code-block:: bash
-
-    sudo snap install lxd
-    lxd init --auto
-
-In order to create the charm, you'll need to install Charmcraft:
-
-.. code-block:: bash
-
-    sudo snap install charmcraft --channel latest/edge --classic
-
-MicroK8s is required to deploy the FastAPI application on Kubernetes.
-Install MicroK8s:
-
-.. code-block:: bash
-
-    sudo snap install microk8s --channel 1.31-strict/stable
-    sudo adduser $USER snap_microk8s
-    newgrp snap_microk8s
-
-Wait for MicroK8s to be ready using ``sudo microk8s status --wait-ready``.
-Several MicroK8s add-ons are required for deployment:
-
-.. code-block:: bash
-
-    sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the FastAPI application
-    sudo microk8s enable registry
-    # Required to expose the FastAPI application
-    sudo microk8s enable ingress
-
-Juju is required to deploy the FastAPI application. Install Juju and bootstrap
-a development controller:
-
-.. code-block:: bash
-
-    sudo snap install juju --channel 3.5/stable
-    mkdir -p ~/.local/share
-    juju bootstrap microk8s dev-controller
-
-Finally, create a new directory for this tutorial and go inside it:
-
-.. code-block:: bash
-
-    mkdir fastapi-hello-world
-    cd fastapi-hello-world
+.. include:: /reuse/tutorial/setup_edge.rst
+.. |12FactorApp| replace:: FastAPI
 
 .. note::
 
@@ -139,6 +69,20 @@ Finally, create a new directory for this tutorial and go inside it:
     ``sudo snap refresh rockcraft --channel latest/edge`` to get the latest edge
     version of Rockcraft.
 
+Let's create a directory for this tutorial and change into it:
+
+.. code-block:: bash
+
+    mkdir fastapi-hello-world
+    cd fastapi-hello-world
+
+Finally, install ``python-venv`` and create a virtual environment:
+
+.. code-block:: bash
+
+    sudo apt-get update && sudo apt-get install python3-venv -y
+    python3 -m venv .venv
+    source .venv/bin/activate
 
 Create the FastAPI application
 ------------------------------
@@ -172,9 +116,6 @@ Install ``python3-venv`` and create a virtual environment:
 
 .. code-block:: bash
 
-    sudo apt-get update && sudo apt-get install python3-venv -y
-    python3 -m venv .venv
-    source .venv/bin/activate
     pip install -r requirements.txt
 
 Now that we have a virtual environment with all the dependencies,

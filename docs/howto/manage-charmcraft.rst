@@ -1,6 +1,6 @@
-.. _set-up-charmcraft:
+.. _manage-charmcraft:
 
-Set up Charmcraft
+Manage Charmcraft
 =================
 
 
@@ -148,3 +148,18 @@ To check the installed version, run:
 ..
 
     See more: :ref:`ref_commands_version`
+
+
+Upgrade Charmcraft
+------------------
+
+If you've installed it on Linux via snap, Charmcraft will upgrade automatically.
+
+Uninstall Charmcraft
+--------------------
+
+For an installation on Linux via snap, run:
+
+.. code-block:: bash
+    
+    snap remove charmcraft

@@ -6,9 +6,9 @@ How-to guides
 .. toctree::
    :maxdepth: 2
 
-   set-up-charmcraft
+   manage-charmcraft
    manage-charms
-   manage-a-12-factor-app-charm
+   manage-12-factor-app-charms
    manage-extensions
    manage-resources
    manage-libraries

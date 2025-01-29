@@ -196,8 +196,8 @@ execute: |
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m | juju status --relations
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m | juju status --relations
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 20m | juju status --relations
 
   juju status --relations
 

@@ -4,43 +4,43 @@
 Write your first Kubernetes charm for a FastAPI app
 ===================================================
 
+Imagine you have a FastAPI application backed up by a database
+such as PostgreSQL and need to deploy it. In a traditional setup,
+this can be quite a challenge, but with Charmcraft you'll find
+yourself packaging and deploying your FastAPI application in no time.
+Let's get started!
+
+In this tutorial we will build a Kubernetes charm for a FastAPI
+application using Charmcraft, so we can have a FastAPI application
+up and running with Juju.
+
+This tutorial should take 90 minutes for you to complete.
+
+.. note::
+    If you're new to the charming world: Flask applications are
+    specifically supported with a coordinated pair of profiles
+    for an OCI container image (**rock**) and corresponding
+    packaged software (**charm**) that allow for the application
+    to be deployed, integrated and operated on a Kubernetes
+    cluster with the Juju orchestration engine.
 
 What you'll need
 ----------------
 
-- A working station, e.g., a laptop, with amd64 architecture which has
-  sufficient resources to launch a virtual machine with 4 CPUs, 4GB RAM,
-  and a 50GB disk.
-
-  * Note that a workstation with arm64 architecture can complete the
-    majority of this tutorial.
+- A workstation, e.g., a laptop, with amd64 or arm64 architecture which
+  has sufficient resources to launch a virtual machine with 4 CPUs,
+  4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
-- About 90 minutes of free time.
 
 
 What you'll do
 --------------
 
-Create a FastAPI application. Use that to create a rock with ``rockcraft``. Use
-that to create a charm with ``charmcraft``. Use that to test-deploy, configure, etc.,
-your Django application on a local Kubernetes cloud, ``microk8s``, with ``juju``.
-All of that multiple times, mimicking a real development process.
-
-.. note::
-
-    **rock**
-
-    An Ubuntu LTS-based OCI compatible container image designed to meet security,
-    stability, and reliability requirements for cloud-native software.
-
-    **charm**
-
-    A package consisting of YAML files + Python code that will automate every
-    aspect of an application's lifecycle so it can be easily orchestrated with Juju.
-
-    **Juju**
-
-    An orchestration engine for charmed applications.
+Create a FastAPI application. Use that to create a rock with
+``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
+to test, deploy, configure, etc., your FastAPI application on a local
+Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
+times, mimicking a real development process.
 
 .. important::
 

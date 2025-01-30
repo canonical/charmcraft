@@ -5,8 +5,8 @@ environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
   PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
-  CRAFT_DEBUG: 1  # Show exception tracebacks.
-  CRAFT_VERBOSITY_LEVEL: debug  # Show debugging output when failing.
+  CRAFT_DEBUG: 1 # Show exception tracebacks.
+  CRAFT_VERBOSITY_LEVEL: debug # Show debugging output when failing.
   # Use the staging store for tests:
   CHARMCRAFT_STORE_API_URL: https://api.staging.charmhub.io
   CHARMCRAFT_UPLOAD_URL: https://storage.staging.snapcraftcontent.com
@@ -33,6 +33,7 @@ backends:
           storage: 40G
       - ubuntu-22.04-64:
           workers: 6
+          memory: 8G
           storage: 40G
 
   multipass:
@@ -134,12 +135,37 @@ suites:
   docs/howto/code/:
     summary: tests howto from the docs
     systems:
-      - ubuntu-24.04-64
+      - ubuntu-22.04-64
+    manual: true
+    prepare: |
+      juju_channel=3.5/stable
+      microk8s_channel=1.31-strict/stable
+
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+
+      #shellcheck source=tests/spread/tools/prepare.sh
+      . "/charmcraft/tests/spread/tools/prepare.sh"
+
+      refresh_or_install_snap juju "$juju_channel"
+      refresh_or_install_snap microk8s "$microk8s_channel"
+      refresh_or_install_snap rockcraft latest/stable --classic
   docs/tutorial/code/:
     summary: tests tutorial from the docs
     systems:
-      - ubuntu-24.04-64
+      - ubuntu-22.04-64
     #manual: true
+    prepare: |
+      juju_channel=3.5/stable
+      microk8s_channel=1.31-strict/stable
+
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+
+      #shellcheck source=tests/spread/tools/prepare.sh
+      . "/charmcraft/tests/spread/tools/prepare.sh"
+
+      refresh_or_install_snap juju "$juju_channel"
+      refresh_or_install_snap microk8s "$microk8s_channel"
+      refresh_or_install_snap rockcraft latest/stable --classic
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:
@@ -174,8 +200,8 @@ suites:
     summary: test charm dependencies
     systems:
       - ubuntu-22.04-64
-    kill-timeout: 60m  # Setting up Juju can take a while.
-    priority: 50  # Because setting up Juju takes a while, do these first.
+    kill-timeout: 60m # Setting up Juju can take a while.
+    priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
       snap install juju --channel=3.2/stable
       # Set up Juju controllers for the charms

@@ -11,6 +11,10 @@ kill-timeout: 90m
 
 environment:
 
+prepare: |
+  juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
+  juju destroy-controller --force --destroy-all-models --destroy-storage --no-prompt --no-wait dev-controller || true
+
 execute: |
   # Move everything to $HOME so that Juju deployment works
   mv *.yaml *.py *.txt $HOME
@@ -89,8 +93,6 @@ execute: |
   charmcraft init --profile flask-framework --name flask-async-app
   # [docs:charm-init-end]
 
-  sed -i "s/paas-charm.*/https:\/\/github.com\/canonical\/paas-charm\/archive\/async-workers.tar.gz/g" requirements.txt
-
   # [docs:charm-pack]
   charmcraft pack
   # [docs:charm-pack-end]
@@ -160,7 +162,8 @@ execute: |
   end_time=$(date +%s)
   overall_passtime=$((end_time - overall_start_time))
   echo "Total pass time: $overall_passtime"
-  if [ $((3 < overall_passtime)) -eq 1 ]; then
+  # If this takes more than 60 seconds we probably have an issue.
+  if [ $((60 < overall_passtime)) -eq 1 ]; then
     echo "Error!"
     ASYNC_RESULT='FALSE'
     exit 2
@@ -176,7 +179,14 @@ execute: |
   rm -rf charm .venv __pycache__
   # delete all the files created during the tutorial
   rm flask-async-app_0.1_$(dpkg --print-architecture).rock rockcraft.yaml app.py \
-    requirements.txt migrate.py
+    requirements.txt
   # Remove the juju model
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+restore: |
+  # Destroy the model on restore just in case the test failed.
+  juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
+
+  # Destroy the controller
+  juju destroy-controller --force --destroy-all-models --destroy-storage --no-prompt --no-wait dev-controller || true

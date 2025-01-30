@@ -1,0 +1,45 @@
+name: Spread tests for docs
+on:
+  pull_request:
+    paths:
+      - spread.yaml
+      - docs/**/code/**
+  push:
+    branches:
+      - main
+    paths:
+      - spread.yaml
+      - docs/**/code/**
+  schedule:
+    - cron: "0 0 * * 0" # Midnight UTC on Sundays
+
+jobs:
+  docs-tests:
+    runs-on: spread-installed
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Download snap from store
+        run: |
+          snap download --edge charmcraft
+
+      - name: Run spread
+        run: |
+          spread google:docs/howto/code/ google:docs/tutorial/code/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

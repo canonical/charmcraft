@@ -55,20 +55,6 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: FastAPI
 
-.. note::
-
-    This tutorial requires version ``3.0.0`` or later of Charmcraft. Check which
-    version of Charmcraft you have installed using ``charmcraft --version``. If
-    you have an older version of Charmcraft installed, use
-    ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest edge
-    version of Charmcraft.
-
-    This tutorial requires version ``1.5.4`` or later of Rockcraft. Check which
-    version of Rockcraft you have installed using ``rockcraft --version``. If you
-    have an older version of Rockcraft installed, use
-    ``sudo snap refresh rockcraft --channel latest/edge`` to get the latest edge
-    version of Rockcraft.
-
 Let's create a directory for this tutorial and change into it:
 
 .. code-block:: bash
@@ -100,7 +86,7 @@ and then save it:
 
 .. note::
 
-   The ``psycopg2-binary`` package is needed so the Flask application can
+   The ``psycopg2-binary`` package is needed so the FastAPI application can
    connect to PostgreSQL.
 
 Install the packages:
@@ -172,24 +158,24 @@ The top of the file should look similar to the following snippet:
 
 .. code:: yaml
 
-    name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
-    # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI application
-    version: '0.1' # just for humans. Semantic versioning is recommended
-    summary: A summary of your FastAPI application # 79 char long summary
-    description: |
-        This is fastapi project's description. You have a paragraph or two to tell the
-        most important story about it. Keep it under 100 words though,
-        we live in tweetspace and your description wants to look good in the
-        container registries out there.
-    # the platforms this rock should be built on and run on.
-    # you can check your architecture with `dpkg --print-architecture`
-    platforms:
-        amd64:
-        # arm64:
-        # ppc64el:
-        # s390x:
+   name: fastapi-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: ubuntu@24.04 # the base environment for this FastAPI application
+   version: '0.1' # just for humans. Semantic versioning is recommended
+   summary: A summary of your FastAPI application # 79 char long summary
+   description: |
+       This is fastapi project's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
 
    ...
 
@@ -391,7 +377,7 @@ to send a request via the ingress. It should return the
 Configure the FastAPI application
 ---------------------------------
 
-To demonstrate how to provide a configuration to the Flask application,
+To demonstrate how to provide a configuration to the FastAPI application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the FastAPI app configuration under the
 keyword ``APP_GREETING``. Change back to the ``fastapi-hello-world`` directory
@@ -413,26 +399,26 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :emphasize-lines: 5
+   :emphasize-lines: 5
 
-    name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
-    # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI application
-    version: '0.2' # just for humans. Semantic versioning is recommended
-    summary: A summary of your FastAPI application # 79 char long summary
-    description: |
-        This is fastapi project's description. You have a paragraph or two to tell the
-        most important story about it. Keep it under 100 words though,
-        we live in tweetspace and your description wants to look good in the
-        container registries out there.
-    # the platforms this rock should be built on and run on.
-    # you can check your architecture with `dpkg --print-architecture`
-    platforms:
-        amd64:
-        # arm64:
-        # ppc64el:
-        # s390x:
+   name: fastapi-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: ubuntu@24.04 # the base environment for this FastAPI application
+   version: '0.2' # just for humans. Semantic versioning is recommended
+   summary: A summary of your FastAPI application # 79 char long summary
+   description: |
+       This is fastapi project's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
 
    ...
 
@@ -556,26 +542,26 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :emphasize-lines: 5
+   :emphasize-lines: 5
 
-    name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
-    # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI application
-    version: '0.3' # just for humans. Semantic versioning is recommended
-    summary: A summary of your FastAPI application # 79 char long summary
-    description: |
-        This is fastapi project's description. You have a paragraph or two to tell the
-        most important story about it. Keep it under 100 words though,
-        we live in tweetspace and your description wants to look good in the
-        container registries out there.
-    # the platforms this rock should be built on and run on.
-    # you can check your architecture with `dpkg --print-architecture`
-    platforms:
-        amd64:
-        # arm64:
-        # ppc64el:
-        # s390x:
+   name: fastapi-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: ubuntu@24.04 # the base environment for this FastAPI application
+   version: '0.3' # just for humans. Semantic versioning is recommended
+   summary: A summary of your FastAPI application # 79 char long summary
+   description: |
+       This is fastapi project's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
 
    ...
 

@@ -306,10 +306,9 @@ progress using
 
 .. code:: bash
 
-   juju status --relations --watch 2s
+   juju status --watch 2s
 
-The ``--relations`` flag will list the currently enabled integrations.
-It can take a couple of minutes for the apps to finish the deployment.
+It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
@@ -354,9 +353,9 @@ the ingress. We will also set the default route to be the root endpoint:
 Monitor ``juju status`` until everything has a status of ``active``.
 
 Test the deployment using
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1`` to send
-a request via the ingress to the root endpoint. It should still be returning
-the ``Hello, world!`` greeting.
+``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
+to send a request via the ingress. It should return the
+``Hello, world!`` greeting.
 
 .. note::
 
@@ -569,13 +568,16 @@ should still return the ``Hi!`` greeting.
 
 To check the total visitors, use
 ``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
-which should return ``1`` after the previous request to the root endpoint and
-should be incremented each time the root endpoint is requested.
+which should return ``1`` after the previous request to the root endpoint,
+This should be incremented each time the root endpoint is requested. If we
+repeat this process, the output should be as follows:
 
-If we perform another request to
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``,
-``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
-will return ``2``.
+.. terminal::
+    :input: curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    
+    Hi!
+    :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+    2
 
 Tear things down
 ----------------

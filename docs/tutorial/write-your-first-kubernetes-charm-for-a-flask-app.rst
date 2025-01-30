@@ -574,7 +574,7 @@ repeat this process, the output should be as follows:
 
 .. terminal::
     :input: curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-    
+
     Hi!
     :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
     2

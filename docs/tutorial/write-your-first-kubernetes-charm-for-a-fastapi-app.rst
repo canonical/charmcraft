@@ -193,7 +193,7 @@ The top of the file should look similar to the following snippet:
 
    ...
 
-Verify that the ``name`` is ``fastapi-hello-world``. 
+Verify that the ``name`` is ``fastapi-hello-world``.
 
 Ensure that ``platforms`` includes the architecture of your host. Check
 the architecture of your system:

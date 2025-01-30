@@ -357,6 +357,7 @@ To specify device requirements, in your charm's ``charmcraft.yaml`` file specify
 
     See more: :ref:`recipe-key-devices`
 
+.. _manage-charms-storage:
 
 Specify storage requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -399,6 +400,7 @@ specify the ``actions`` key.
 
     See next: :external+ops:ref:`manage-actions`
 
+.. _manage-charms-configurations:
 
 Manage configurations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -416,6 +418,7 @@ specify the ``config`` key.
 
     See next: :external+ops:ref:`manage-configurations`
 
+.. _manage-charms-relations:
 
 Manage relations (integrations)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -438,6 +441,7 @@ Specify necessary libs
 
     See more: :ref:`manage-libraries`
 
+.. _manage-charms-secrets:
 
 Manage secrets
 ~~~~~~~~~~~~~~
@@ -459,6 +463,7 @@ Specify necessary parts
 
     See more: :ref:`manage-parts`
 
+.. _manage-charms-pack:
 
 Pack a charm
 ------------

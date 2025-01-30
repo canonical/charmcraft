@@ -141,7 +141,7 @@ suites:
       juju_channel=3.5/stable
       microk8s_channel=1.31-strict/stable
 
-      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
 
       #shellcheck source=tests/spread/tools/prepare.sh
       . "/charmcraft/tests/spread/tools/prepare.sh"
@@ -158,7 +158,7 @@ suites:
       juju_channel=3.5/stable
       microk8s_channel=1.31-strict/stable
 
-      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
 
       #shellcheck source=tests/spread/tools/prepare.sh
       . "/charmcraft/tests/spread/tools/prepare.sh"

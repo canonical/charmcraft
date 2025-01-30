@@ -161,5 +161,5 @@ Uninstall Charmcraft
 For an installation on Linux via snap, run:
 
 .. code-block:: bash
-    
+
     snap remove charmcraft

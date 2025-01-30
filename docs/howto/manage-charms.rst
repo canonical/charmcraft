@@ -11,9 +11,10 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. note:: 
-    
-    **Best practice:** If you're setting up a git repository: Name it on the pattern `<charm name>-operator`. For the charm name, see :ref:`specify-a-name`.
+.. note::
+
+    **Best practice:** If you're setting up a git repository: Name it on the pattern
+     ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
@@ -90,9 +91,11 @@ Specify a name
 
 .. note::
 
-    **Best practice:** The name should be slug-oriented (ASCII lowercase letters, numbers, and hyphens) and follow the pattern `<workload name in full>[<function>][-k8s]`. E.g., `argo-server-k8s`.
+    **Best practice:** The name should be slug-oriented (ASCII lowercase letters,
+    numbers, and hyphens) and follow the pattern
+    ``<workload name in full>[<function>][-k8s]``. E.g., ``argo-server-k8s``.
 
-.. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 . 
+.. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 .
 
 
 To specify a pack-and-deploy name for your charm, in your charm's

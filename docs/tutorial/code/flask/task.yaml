@@ -16,12 +16,6 @@ execute: |
   mv *.yaml *.py *.txt $HOME
   cd $HOME
 
-  # Test/debug
-  microk8s version
-  juju version
-  charmcraft --version
-  rockcraft --version
-
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL

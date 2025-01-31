@@ -26,7 +26,7 @@ In order to create the rock, you'll need to install Rockcraft with the
     sudo snap install rockcraft --classic
 
 ``LXD`` will be required for building the rock.
-Make sure it is installed and initialised:
+Make sure it is installed and initialized:
 
 .. code-block:: bash
 
@@ -70,9 +70,9 @@ Several MicroK8s add-ons are required for deployment:
 
     # Required for Juju to provide storage volumes
     sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the 12-Factor application
+    # Required to host the OCI image of the application
     sudo microk8s enable registry
-    # Required to expose the 12-Factor application
+    # Required to expose the application
     sudo microk8s enable ingress
 
 Juju is required to deploy the |12FactorApp| application.

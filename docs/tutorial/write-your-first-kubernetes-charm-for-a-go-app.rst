@@ -51,7 +51,7 @@ Set things up
 -------------
 
 .. include:: /reuse/tutorial/setup_edge.rst
-.. |12FactorApp| replace: Go
+.. |12FactorApp| replace:: Go
 
 Finally, let's create a new directory for this tutorial and
 change into it:
@@ -71,7 +71,8 @@ Install ``go`` and initialize the Go module:
 
 .. code-block:: bash
 
-    sudo snap install go --classic go mod init go-hello-world
+    sudo snap install go --classic
+    go mod init go-hello-world
 
 Create a ``main.go`` file, copy the following text into it and then
 save it:
@@ -81,16 +82,20 @@ save it:
     package main
 
     import (
-      "fmt" "log" "net/http"
+      "fmt"
+      "log"
+      "net/http"
     )
 
     func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request") fmt.Fprintln(w, "Hello, world!")
+      log.Printf("new hello world request")
+      fmt.Fprintln(w, "Hello, world!")
     }
 
     func main() {
-      log.Printf("starting hello world application") http.HandleFunc("/",
-      helloWorldHandler) http.ListenAndServe(":8080", nil)
+      log.Printf("starting hello world application")
+      http.HandleFunc("/", helloWorldHandler)
+      http.ListenAndServe(":8080", nil)
     }
 
 
@@ -147,7 +152,7 @@ Check out the contents of ``rockcraft.yaml``:
 
 The top of the file should look similar to the following snippet:
 
-.. code:: yaml
+.. code-block:: yaml
 
    name: go-hello-world
    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
@@ -256,7 +261,7 @@ The charm depends on several libraries. Download the libraries and pack the char
 
 .. note::
 
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the FastAPI
+    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
     extension is experimental.
 
 Depending on your system and network, this step can take several
@@ -291,7 +296,7 @@ Set the Juju model constraints using
 
 .. code-block:: bash
 
-    juju set-model-constraints -m fastapi-hello-world \
+    juju set-model-constraints -m go-hello-world \
          arch=$(dpkg --print-architecture)
 
 Now let’s use the OCI image we previously uploaded to deploy the Go
@@ -325,6 +330,7 @@ following output:
 .. terminal::
     :input: juju status
 
+    Model              Controller      Cloud/Region        Version  SLA          Timestamp
     go-hello-world  microk8s    microk8s/localhost  3.5.4    unsupported  14:35:07+02:00
 
     App             Version  Status  Scale  Charm           Channel  Rev  Address
@@ -360,7 +366,7 @@ Monitor ``juju status`` until everything has a status of ``active``.
 
 Use ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should return the
-``Hello, world~`` greeting.
+``Hello, world!`` greeting.
 
 .. note::
 
@@ -382,25 +388,31 @@ keyword ``GREETING``. Change back to the ``go-hello-world`` directory using
     package main
 
     import (
-      "fmt" "log" "os" "net/http"
+      "fmt"
+      "log"
+      "os"
+      "net/http"
     )
 
     func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request") greeting, found :=
-      os.LookupEnv("APP_GREETING") if !found {
-        greeting = "Hello, world!"
-      } fmt.Fprintln(w, greeting)
+      log.Printf("new hello world request")
+      greeting, found := os.LookupEnv("APP_GREETING")
+      if !found {
+            greeting = "Hello, world!"
+      }
+      fmt.Fprintln(w, greeting)
     }
 
     func main() {
-      log.Printf("starting hello world application") http.HandleFunc("/",
-      helloWorldHandler) http.ListenAndServe(":8080", nil)
+      log.Printf("starting hello world application")
+      http.HandleFunc("/", helloWorldHandler)
+      http.ListenAndServe(":8080", nil)
     }
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
-.. code:: yaml
+.. code-block:: yaml
    :emphasize-lines: 6
 
    name: go-hello-world
@@ -499,8 +511,8 @@ This will require a few changes:
 - We will need to create a database migration that creates the ``visitors`` table.
 - We will need to keep track how many times the root endpoint has been called
   in the database.
-- We will need to add a new endpoint to retrieve the number of visitors from the
-- database.
+- We will need to add a new endpoint to retrieve the number of visitors from
+  the database.
 
 Let's start with the database migration to create the required tables.
 The charm created by the ``go-framework`` extension will execute the
@@ -516,9 +528,7 @@ following code into it:
 
     #!/bin/bash
 
-    PGPASSWORD="${POSTGRESQL_DB_PASSWORD}" psql -h "${POSTGRESQL_DB_HOSTNAME}" -U
-    "${POSTGRESQL_DB_USERNAME}" "${POSTGRESQL_DB_NAME}" -c "CREATE TABLE IF NOT EXISTS
-    visitors (timestamp TIMESTAMP NOT NULL, user_agent TEXT NOT NULL);"
+    PGPASSWORD="${POSTGRESQL_DB_PASSWORD}" psql -h "${POSTGRESQL_DB_HOSTNAME}" -U "${POSTGRESQL_DB_USERNAME}" "${POSTGRESQL_DB_NAME}" -c "CREATE TABLE IF NOT EXISTS visitors (timestamp TIMESTAMP NOT NULL, user_agent TEXT NOT NULL);"
 
 .. note::
 
@@ -552,7 +562,7 @@ end of the file:
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
-.. code:: yaml
+.. code-block:: yaml
    :emphasize-lines: 6
 
    name: go-hello-world
@@ -590,27 +600,35 @@ replace its content with the following code:
         package main
 
         import (
-                "database/sql" "fmt" "log" "net/http" "os" "time"
+                "database/sql"
+                "fmt"
+                "log"
+                "net/http"
+                "os"
+                "time"
 
                 _ "github.com/jackc/pgx/v5/stdlib"
         )
 
         func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("new hello world request") postgresqlURL :=
-                os.Getenv("POSTGRESQL_DB_CONNECT_STRING") db, err := sql.Open("pgx",
-                postgresqlURL) if err != nil {
-                        log.Printf("An error occurred while connecting to postgresql:
-                        %v", err) return
+                log.Printf("new hello world request")
+                postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
+                db, err := sql.Open("pgx", postgresqlURL)
+                if err != nil {
+                        log.Printf("An error occurred while connecting to postgresql: %v", err)
+                        return
                 } defer db.Close()
 
-                ua := req.Header.Get("User-Agent") timestamp := time.Now() _, err =
-                db.Exec("INSERT into visitors (timestamp, user_agent) VALUES ($1, $2)",
-                timestamp, ua) if err != nil {
+                ua := req.Header.Get("User-Agent")
+                timestamp := time.Now() _,
+                err = db.Exec("INSERT into visitors (timestamp, user_agent) VALUES ($1, $2)", timestamp, ua)
+                if err != nil {
                         log.Printf("An error occurred while executing query: %v", err)
                         return
                 }
 
-                greeting, found := os.LookupEnv("APP_GREETING") if !found {
+                greeting, found := os.LookupEnv("APP_GREETING")
+                if !found {
                         greeting = "Hello, world!"
                 }
 
@@ -618,22 +636,27 @@ replace its content with the following code:
         }
 
         func visitorsHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("visitors request") postgresqlURL :=
-                os.Getenv("POSTGRESQL_DB_CONNECT_STRING") db, err := sql.Open("pgx",
-                postgresqlURL) if err != nil {
+                log.Printf("visitors request")
+                postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
+                db, err := sql.Open("pgx", postgresqlURL)
+                if err != nil {
                         return
-                } defer db.Close()
+                }
+                defer db.Close()
 
-                var numVisitors int err = db.QueryRow("SELECT count(*) from
-                visitors").Scan(&numVisitors) if err != nil {
+                var numVisitors
+                int err = db.QueryRow("SELECT count(*) from visitors").Scan(&numVisitors)
+                if err != nil {
                         log.Printf("An error occurred while executing query: %v", err)
                         return
-                } fmt.Fprintf(w, "Number of visitors %d\n", numVisitors)
+                }
+                fmt.Fprintf(w, "Number of visitors %d\n", numVisitors)
         }
 
         func main() {
-                log.Printf("starting hello world application") http.HandleFunc("/",
-                helloWorldHandler) http.HandleFunc("/visitors", visitorsHandler)
+                log.Printf("starting hello world application")
+                http.HandleFunc("/", helloWorldHandler)
+                http.HandleFunc("/visitors", visitorsHandler)
                 http.ListenAndServe(":8080", nil)
         }
 
@@ -671,8 +694,8 @@ We can now pack and deploy the new version of the Go app:
 
     CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
     juju refresh go-hello-world \
-      --path=./go-hello-world_amd64.charm \ --resource
-      app-image=localhost:32000/go-hello-world:0.3
+      --path=./go-hello-world_amd64.charm \
+      --resource app-image=localhost:32000/go-hello-world:0.3
 
 Now let’s deploy PostgreSQL and integrate it with the Go application:
 

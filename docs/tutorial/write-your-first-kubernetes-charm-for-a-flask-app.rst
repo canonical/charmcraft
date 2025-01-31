@@ -467,11 +467,11 @@ Now let's keep track of how many visitors your application has received.
 This will require integration with a database to keep the visitor count.
 This will require a few changes:
 
-* We will need to create a database migration that creates the ``visitors`` table
+* We will need to create a database migration that creates the ``visitors`` table.
 * We will need to keep track how many times the root endpoint has been called
-  in the database
+  in the database.
 * We will need to add a new endpoint to retrieve the number of visitors from the
-  database
+  database.
 
 Let's start with the database migration to create the required tables.
 The charm created by the ``flask-framework`` extension will execute the
@@ -541,7 +541,7 @@ Change back into the charm directory using ``cd charm``.
 
 The Flask app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
-add the following section to the end:
+add the following section to the end of the file:
 
 .. literalinclude:: code/flask/visitors_charmcraft.yaml
     :language: yaml

@@ -508,7 +508,7 @@ The charm created by the ``go-framework`` extension will execute the
 database is initialized and ready to be used by the application. We will
 create a ``migrate.sh`` file containing this logic.
 
-Go back out to the ``go-hello-world``directory using ``cd ..``.
+Go back out to the ``go-hello-world`` directory using ``cd ..``.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
@@ -696,7 +696,7 @@ repeat this process, the output should be as follows:
     :input: curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1 
+    :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
     Number of visitors 2
 
 

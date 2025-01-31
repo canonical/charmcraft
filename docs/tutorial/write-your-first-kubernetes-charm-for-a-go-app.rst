@@ -1,148 +1,80 @@
 .. _write-your-first-kubernetes-charm-for-a-go-app:
 
-
 Write your first Kubernetes charm for a Go app
 ==============================================
 
+Imagine you have a Go application backed up by a database
+such as PostgreSQL and need to deploy it. In a traditional setup,
+this can be quite a challenge, but with Charmcraft you'll find
+yourself packaging and deploying your Go application in no time.
+Let's get started!
+
+In this tutorial we will build a Kubernetes charm for a Go
+application using Charmcraft, so we can have a Go application
+up and running with Juju.
+
+This tutorial should take 90 minutes for you to complete.
+
+.. note::
+    If you're new to the charming world: Go applications are
+    specifically supported with a coordinated pair of profiles
+    for an OCI container image (**rock**) and corresponding
+    packaged software (**charm**) that allow for the application
+    to be deployed, integrated and operated on a Kubernetes
+    cluster with the Juju orchestration engine.
 
 What you'll need:
 -----------------
 
-- A working station, e.g., a laptop, with amd64 architecture which has sufficient
-  resources to launch a virtual machine with 4 CPUs, 4GB RAM, and a 50GB disk.
-
-  * Note that a workstation with arm64 architecture can complete the majority of this
-    tutorial.
+- A workstation, e.g., a laptop, with amd64 or arm64 architecture which
+  has sufficient resources to launch a virtual machine with 4 CPUs,
+  4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
-- About 90 minutes of free time.
-
 
 What you'll do:
 ---------------
 
-Create a Go application. Use that to create a rock with ``rockcraft``. Use that to
-create a charm with ``charmcraft``. Use that to test-deploy, configure, etc., your Go
-application on a local Kubernetes cloud, ``microk8s``, with ``juju``. All of that
-multiple, times, mimicking a real development process.
-
-.. note::
-
-    **rock**
-
-    An Ubuntu LTS-based OCI compatible container image designed to meet security,
-    stability, and reliability requirements for cloud-native software.
-
-    **charm**
-
-    A package consisting of YAML files + Python code that will automate every aspect of
-    an application's lifecycle so it can be easily orchestrated with Juju.
-
-    **Juju**
-
-    An orchestration engine for charmed applications.
+Create a Go application. Use that to create a rock with
+``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
+to test, deploy, configure, etc., your Go application on a local
+Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
+times, mimicking a real development process.
 
 .. important::
 
-    Should you get stuck or notice issues, please get in touch on `Matrix
-    <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or `Discourse
-    <https://discourse.charmhub.io/>`_
+    Should you get stuck or notice issues, please get in touch on
+    `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
+    `Discourse <https://discourse.charmhub.io/>`_
 
 
-Set things up:
---------------
+Set things up
+-------------
 
-Install Multipass.
+.. include:: /reuse/tutorial/setup_edge.rst
+.. |12FactorApp| replace: Go
 
-    See more: `Multipass | How to install Multipass
-    <https://multipass.run/docs/install-multipass>`_
-
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev`` from the 22.04
-blueprint.
+Finally, let's create a new directory for this tutorial and
+change into it:
 
 .. code-block:: bash
 
-    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 22.04
-
-Once the VM is up, open a shell into it:
-
-.. code-block:: bash
-
-    multipass shell charm-dev
-
-In order to create the rock, you'll need to install Rockcraft:
-
-.. code-block:: bash
-
-    sudo snap install rockcraft --classic
-
-``LXD`` will be required for building the rock. Make sure it is installed and
-initialised:
-
-.. code-block:: bash
-
-    sudo snap install lxd lxd init --auto
-
-In order to create the charm, you'll need to install Charmcraft:
-
-.. code-block:: bash
-
-    sudo snap install charmcraft --channel latest/edge --classic
-
-MicroK8s is required to deploy the FastAPI application on Kubernetes. Install MicroK8s:
-
-.. code-block:: bash
-
-    sudo snap install microk8s --channel 1.31-strict/stable sudo adduser $USER
-    snap_microk8s newgrp snap_microk8s
-
-Wait for MicroK8s to be ready using ``sudo microk8s status --wait-ready``. Several
-MicroK8s add-ons are required for deployment:
-
-.. code-block:: bash
-
-    sudo microk8s enable hostpath-storage # Required to host the OCI image of the
-    FastAPI application sudo microk8s enable registry # Required to expose the FastAPI
-    application sudo microk8s enable ingress
-
-Juju is required to deploy the Go application. Install Juju and bootstrap a development
-controller:
-
-.. code-block:: bash
-
-    sudo snap install juju --channel 3.5/stable mkdir -p ~/.local/share juju bootstrap
-    microk8s dev-controller
-
-Finally, create a new directory for this tutorial and go inside it:
-
-.. code-block:: bash
-
-    mkdir go-hello-world cd go-hello-world
-
-.. note::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft. Check which version
-    of Charmcraft you have installed using ``charmcraft --version``. If you have an
-    older version of Charmcraft installed, use ``sudo snap refresh charmcraft --channel
-    latest/edge`` to get the latest edge version of Charmcraft.
-
-    This tutorial requires version ``1.5.4`` or later of Rockcraft. Check which version
-    of Rockcraft you have installed using ``rockcraft --version``. If you have an older
-    version of Rockcraft installed, use ``sudo snap refresh rockcraft --channel
-    latest/edge`` to get the latest edge version of Rockcraft.
-
+    mkdir go-hello-world
+    cd go-hello-world
 
 Create the Go application
 -------------------------
 
-Start by creating the "Hello, world" Go application that will be used for this tutorial.
+Start by creating the "Hello, world" Go application that will be
+used for this tutorial.
 
-Install ``go`` and initialise the Go module:
+Install ``go`` and initialize the Go module:
 
 .. code-block:: bash
 
     sudo snap install go --classic go mod init go-hello-world
 
-Create a ``main.go`` file, copy the following text into it and then save it:
+Create a ``main.go`` file, copy the following text into it and then
+save it:
 
 .. code-block:: python
 
@@ -165,54 +97,94 @@ Create a ``main.go`` file, copy the following text into it and then save it:
 Run the Go application locally
 ------------------------------
 
-Build the Go application so it can be run:
+First, we need to build the Go application so it can run:
 
 .. code-block:: bash
 
     go build .
 
-Now that we have a binary compiled, let's run the Go application to verify that it
-works:
+Now that we have a binary compiled, let's run the Go application to verify
+that it works:
 
 .. code-block:: bash
 
     ./go-hello-world
 
-Test the Go application by using ``curl`` to send a request to the root endpoint. You
-may need a new terminal for this; if you are using Multipass, use ``multipass shell
-charm-dev`` to get another terminal:
+Test the Go application by using ``curl`` to send a request to the root
+endpoint. You will need a new terminal for this; use
+``multipass shell charm-dev`` to open a new terminal in Multipass:
 
 .. code-block:: bash
 
     curl localhost:8080
 
-The Go application should respond with ``Hello, world!``. The Go application looks good,
-so we can stop for now using :kbd:`Ctrl` + :kbd:`C`.
+The Go application should respond with ``Hello, world!``.
+
+The Go application looks good, so we can stop it for now from the
+original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
 
 Pack the Go application into a rock
 -----------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Rockcraft will automate its creation and
-tailoring for a Go application using the ``go-framework`` profile.
+First, we'll need a ``rockcraft.yaml`` file. Using the
+``go-framework`` profile, Rockcraft will automate the creation of
+``rockcraft.yaml`` and tailor the file for a Go application.
+From the ``go-hello-world`` directory, initialize the rock:
 
 .. code-block:: bash
 
     rockcraft init --profile go-framework
 
-The ``rockcraft.yaml`` file will be created automatically, with its name being set based
-on your working directory. Open the file in a text editor and check that the ``name`` is
-``go-hello-world``. Ensure that ``platforms`` includes the architecture of your host.
-For example, if your host uses the ARM architecture, include ``arm64`` in ``platforms``.
+The ``rockcraft.yaml`` file will automatically be created and set the name
+based on your working directory.
 
-.. note::
+Check out the contents of ``rockcraft.yaml``:
 
-    For this tutorial, we'll use the name ``go-hello-world`` and assume you are on the
-    ``amd64`` platform. Check the architecture of your system using ``dpkg
-    --print-architecture``. Choosing a different name or running a different platform
-    will influence the names of the files generated by Rockcraft.
+.. code:: bash
 
-Pack the rock:
+    cat rockcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code:: yaml
+
+   name: go-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: bare # as an alternative, a ubuntu base can be used
+   build-base: ubuntu@24.04 # build-base is required when the base is bare
+   version: '0.1' # just for humans. Semantic versioning is recommended
+   summary: A summary of your Go application # 79 char long summary
+   description: |
+       This is go-hello-world's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
+
+   ...
+
+Verfiy that the ``name`` is ``go-hello-world``.
+
+Ensure that ``platforms`` includes the architecture of your host. Check
+the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
+
+If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
+text editor and include ``arm64`` in ``platforms``.
+
+Now let's pack the rock:
 
 .. code-block:: bash
 
@@ -220,23 +192,24 @@ Pack the rock:
 
 .. note::
 
-    Depending on your system and network, this step can take a couple of minutes to
-    finish.
+    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
+    extension is experimental.
 
-Once Rockcraft has finished packing the Go rock, you'll find a new file in your working
-directory with the ``.rock`` extension. View its contents:
+Depending on your system and network, this step can take several
+minutes to finish.
 
-.. code-block:: bash
-
-    ls *.rock -l
+Once Rockcraft has finished packing the Go rock,
+the terminal will respond with something similar to
+``Packed go-hello-world_0.1_amd64.rock``.
 
 .. note::
 
-    If you changed the ``name`` or ``version`` in ``rockcraft.yaml`` or are not on the
-    ``amd64`` platform, the name of the ``.rock`` file will be different for you.
+   If you are not on an ``amd64`` platform, the name of the ``.rock`` file
+   will be different for you.
 
-The rock needs to be copied to the Microk8s registry so that it can be deployed in the
-Kubernetes cluster:
+The rock needs to be copied to the MicroK8s registry, which stores OCI
+archives so they can be downloaded and deployed in the Kubernetes cluster.
+Copy the rock:
 
 .. code-block:: bash
 
@@ -244,19 +217,29 @@ Kubernetes cluster:
       oci-archive:go-hello-world_0.1_amd64.rock \
       docker://localhost:32000/go-hello-world:0.1
 
+.. seealso::
+
+    See more: `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
 
 Create the charm
 ----------------
 
-Create a new directory for the charm and go inside it:
+From the ``go-hello-world`` directory, let's create a new directory
+for the charm and change inside it:
 
 .. code-block:: bash
 
-    mkdir charm cd charm
+    mkdir charm
+    cd charm
 
-We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Go application. Charmcraft
-will automate the creation of these files by using the ``go-framework`` profile:
+Using the ``go-framework`` profile, Charmcraft will automate the
+creation of the files needed for our charm, including a
+``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
+The source code contains the logic required to operate the Go
+application.
+
+Initialize a charm named ``go-hello-world``:
 
 .. code-block:: bash
 
@@ -273,20 +256,20 @@ The charm depends on several libraries. Download the libraries and pack the char
 
 .. note::
 
-    Depending on your system and network, this step can take a couple of minutes to
-    finish.
+    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the FastAPI
+    extension is experimental.
 
-Once Charmcraft has finished packing the charm, you'll find a new file in your working
-directory with the ``.charm`` extension. View its contents:
+Depending on your system and network, this step can take several
+minutes to finish.
 
-.. code-block:: bash
-
-    ls *.charm -l
+Once Charmcraft has finished packing the charm, the terminal will
+respond with something similar to
+``Packed go-hello-world_ubuntu-24.04-amd64.charm``.
 
 .. note::
 
-    If you changed the name in ``charmcraft.yaml`` or are not on the ``amd64`` platform,
-    the name of the ``.charm`` file will be different for you.
+    If you are not on the ``amd64`` platform, the name of the ``.charm``
+    file will be different for you.
 
 
 Deploy the Go application

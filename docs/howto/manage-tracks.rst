@@ -3,7 +3,7 @@
 Manage tracks
 =============
 
-    See first: :external+juju:ref:`Juju | Charm channel track <track>`
+    See first: :external+juju:ref:`Juju | Charm channel track <charm-channel-track>`
 
 When you register a charm name on Charmhub, you automatically get 4 channels, all with
 track ``latest``. However, as your charm evolves, you'll likely want to customise the
@@ -16,7 +16,7 @@ new pattern. This document shows you how.
 Request a track guardrail
 -------------------------
 
-    See first: :external+juju:ref:`Juju | Charm channel track guardrail <guardrail>`
+    See first: :external+juju:ref:`Juju | Charm channel track guardrail <charm-channel-track-guardrail>`
 
 To request a track guardrail, contact a Charmhub admin by creating a post on Discourse
 under the **charmhub requests** category, that is, here:

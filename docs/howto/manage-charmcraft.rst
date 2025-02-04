@@ -153,7 +153,7 @@ To check the installed version, run:
 Upgrade Charmcraft
 ------------------
 
-If you've installed it on Linux via snap, Charmcraft will upgrade automatically.
+If you've installed Charmcraft on Linux as a snap, it will upgrade automatically.
 
 Uninstall Charmcraft
 --------------------
@@ -162,4 +162,4 @@ For an installation on Linux via snap, run:
 
 .. code-block:: bash
 
-    snap remove charmcraft
+    sudo snap remove charmcraft

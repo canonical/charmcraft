@@ -1,10 +1,10 @@
-.. _manage-a-12-factor-app-charm:
+.. _manage-12-factor-app-charms:
 
 
-Manage a 12-factor app charm
-============================
+Manage 12-factor app charms
+===========================
 
-    See also: :external+juju:ref:`Juju | Charm <charm>`
+    See also: :external+juju:ref:`Juju | Charm taxonomy <charm-taxonomy>`
 
 
 Prepare an OCI image for a 12-factor app charm

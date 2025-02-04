@@ -21,8 +21,8 @@ To create a bundle, create a ``<bundle>.yaml`` file with your desired configurat
     If you don't want to start from scratch, export the contents of your model to a
     ``<bundle>.yaml`` file via ``juju export-bundle --filename <bundle>.yaml`` or
     download the ``<bundle>.yaml`` of an existing bundle from Charmhub.
-    See more: :external+juju:ref:`Juju | How to compare and export the contents of a
-    model to a bundle <Compare-and-export-the-contents-of-a-model-to-a-bundle>`.
+    See more: :external+juju:ref:`Juju | Compare and export the contents of a model to
+    a bundle <export-model-to-bundle>`.
 
 Pack a bundle
 -------------

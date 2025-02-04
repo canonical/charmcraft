@@ -3,6 +3,7 @@
 Manage channels
 ===============
 
+    See first: :external+juju:ref:`Juju | Charm channel <charm-channel>`
 
 Create a channel
 ----------------

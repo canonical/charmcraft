@@ -44,6 +44,9 @@ APT_PACKAGES :=
 ifeq ($(wildcard /usr/share/doc/libapt-pkg-dev/copyright),)
 APT_PACKAGES += libapt-pkg-dev
 endif
+ifeq ($(wildcard /usr/share/doc/libffi-dev/copyright),)
+APT_PACKAGES += libffi-dev
+endif
 ifeq ($(wildcard /usr/share/doc/libgit2-dev/copyright),)
 APT_PACKAGES += libgit2-dev
 endif

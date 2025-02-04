@@ -72,7 +72,7 @@ ifeq ($(wildcard /usr/share/doc/python3-wheel/copyright),)
 APT_PACKAGES += python3-wheel
 endif
 ifeq ($(shell which skopeo),)
-APT_PACKGES += skopeo
+APT_PACKAGES += skopeo
 endif
 
 # Used for installing build dependencies in CI.

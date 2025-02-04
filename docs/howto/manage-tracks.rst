@@ -16,7 +16,8 @@ new pattern. This document shows you how.
 Request a track guardrail
 -------------------------
 
-    See first: :external+juju:ref:`Juju | Charm channel track guardrail <charm-channel-track-guardrail>`
+    See first: :external+juju:ref:`Juju | Charm channel track guardrail 
+    <charm-channel-track-guardrail>`
 
 To request a track guardrail, contact a Charmhub admin by creating a post on Discourse
 under the **charmhub requests** category, that is, here:

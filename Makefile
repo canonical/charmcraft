@@ -39,11 +39,54 @@ publish-pypi: clean package-pip lint-twine  ##- Publish Python packages to pypi
 setup: install-uv setup-precommit ## Set up a development environment
 	uv sync --frozen $(SETUP_TESTS_EXTRA_ARGS) --extra docs --extra lint --extra types
 
+# Find dependencies that need installing
+APT_PACKAGES :=
+ifeq ($(wildcard /usr/share/doc/libapt-pkg-dev/copyright),)
+APT_PACKAGES += libapt-pkg-dev
+endif
+ifeq ($(wildcard /usr/share/doc/libgit2-dev/copyright),)
+APT_PACKAGES += libgit2-dev
+endif
+ifeq ($(wildcard /usr/include/libxml2/libxml/xpath.h),)
+APT_PACKAGES += libxml2-dev
+endif
+ifeq ($(wildcard /usr/include/libxslt/xslt.h),)
+APT_PACKAGES += libxslt1-dev
+endif
+ifeq ($(wildcard /usr/share/doc/libyaml-dev/copyright),)
+APT_PACKAGES += libyaml-dev
+endif
+ifeq ($(wildcard /usr/share/doc/python3-dev/copyright),)
+APT_PACKAGES += python3-dev
+endif
+ifeq ($(wildcard /usr/share/doc/python3-pip/copyright),)
+APT_PACKAGES += python3-pip
+endif
+ifeq ($(wildcard /usr/share/doc/python3-setuptools/copyright),)
+APT_PACKAGES += python3-setuptools
+endif
+ifeq ($(wildcard /usr/share/doc/python3-venv/copyright),)
+APT_PACKAGES += python3-venv
+endif
+ifeq ($(wildcard /usr/share/doc/python3-wheel/copyright),)
+APT_PACKAGES += python3-wheel
+endif
+ifeq ($(shell which skopeo),)
+APT_PACKGES += skopeo
+endif
+
 # Used for installing build dependencies in CI.
 .PHONY: install-build-deps
-install-build-deps: install-linux-build-deps install-macos-build-deps install-lint-build-deps
+install-build-deps: install-linux-build-deps install-macos-build-deps
 	# Ensure the system pip is new enough. If we get an error about breaking system packages, it is.
-	sudo pip install 'pip>=22.2' || true
+	sudo pip install 'pip>=22.2' 2> /dev/null || true
+ifeq ($(APT_PACKAGES),)
+else ifeq ($(shell which apt-get),)
+	$(warning Cannot install build dependencies without apt.)
+	$(warning Please ensure the equivalents to these packages are installed: $(APT_PACKAGES))
+else
+	sudo $(APT) install $(APT_PACKAGES)
+endif
 
 .PHONY: install-lint-build-deps
 install-lint-build-deps:
@@ -55,18 +98,8 @@ endif
 
 .PHONY: install-linux-build-deps
 install-linux-build-deps:
-ifneq ($(OS),Linux)
-else ifeq ($(shell which apt-get),)
-	$(warning apt-get not found. Please install dependencies yourself.)
-else
-	sudo $(APT) install skopeo
-	# Needed for integration testing the charm plugin.
-	sudo $(APT) install libyaml-dev python3-dev python3-pip python3-setuptools python3-venv python3-wheel
-endif
 ifneq ($(shell which snap),)
 	sudo snap install lxd
-endif
-ifneq ($(shell which lxd),)
 	sudo lxd init --auto
 endif
 

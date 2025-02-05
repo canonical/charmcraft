@@ -15,7 +15,7 @@ its recipe.
 
     See more: :ref:`recipe-key-resources`
 
-    See next: :external+ops:ref:`manage-resources`
+    See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 
 .. tip::
 

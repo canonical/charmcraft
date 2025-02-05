@@ -397,7 +397,7 @@ specify the ``actions`` key.
 
     See more: :ref:`recipe-key-actions`
 
-    See next: :external+ops:ref:`manage-actions`
+    See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
 
 Manage configurations
@@ -414,7 +414,7 @@ specify the ``config`` key.
 
     See more: :ref:`recipe-key-config`
 
-    See next: :external+ops:ref:`manage-configurations`
+    See next: :external+ops:ref:`Ops | Manage configurations <manage-configurations>`
 
 
 Manage relations (integrations)
@@ -428,7 +428,7 @@ Manage relations (integrations)
 
     See more: :ref:`recipe-key-peers`
 
-    See more: :external+ops:ref:`Ops | How to manage relations <manage-relations>`
+    See more: :external+ops:ref:`Ops | Manage relations <manage-relations>`
 
 
 Specify necessary libs

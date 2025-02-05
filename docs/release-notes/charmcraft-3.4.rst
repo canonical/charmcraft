@@ -138,6 +138,13 @@ The following issues have been resolved in Charmcraft 3.4:
 - `#2058 <https://github.com/canonical/charmcraft/issues/2058>`_ Multi-base charm
   uses the same LXD container for different bases
 
+The following issues were resolved in Charmcraft 3.4.1:
+
+- `#2125 <https://github.com/canonical/charmcraft/issues/2125>`_
+  ``charmcraft pack`` fails under certain instances when packing in parallel.
+- `#264 (craft-store) <https://github.com/canonical/craft-store/issues/264>`_
+  ``charmcraft promote`` errors when promoting certain charm/resource combinations.
+
 
 Contributors
 ------------

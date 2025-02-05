@@ -886,7 +886,7 @@ wheels = [
 
 [[package]]
 name = "craft-store"
-version = "3.2.0"
+version = "3.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -901,9 +901,9 @@ dependencies = [
     { name = "requests-toolbelt" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/51/8135945f2e2bad6a30c70fcfb6009194821818a730d306ee28c11e6a0273/craft_store-3.2.0.tar.gz", hash = "sha256:60bbe6b1e65b0b2691d0fe42df88ce0853df312507d2b853d2b508d7e5f80910", size = 200904 }
+sdist = { url = "https://files.pythonhosted.org/packages/78/80/edc3cf128f1e3302f0c591539a278b4bd6a09ad23e959f620494ce8cb285/craft_store-3.2.1.tar.gz", hash = "sha256:0c8ae8870362e6e670c0766026849683f6f4563d108a7acca800d4db024a3a21", size = 201049 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/41/d7/39d43ec8a7df9082bce03f3fc82980501a5152c8a8f057a0caa97743cc36/craft_store-3.2.0-py3-none-any.whl", hash = "sha256:fb2feff7d4bebd0eba9f6b01916d6cad7c6cc69c10da5be3f2238856fd61294a", size = 53112 },
+    { url = "https://files.pythonhosted.org/packages/da/41/12e8b8d5e6336556579151b67fa673343e7368ea4e07f7afbd6a5c5f40d8/craft_store-3.2.1-py3-none-any.whl", hash = "sha256:e87b222d848051063e576c21679073bcd0c07ad6d116740033f0c7e50b6bfa76", size = 53143 },
 ]
 
 [[package]]
@@ -2625,12 +2625,15 @@ wheels = [
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp310-cp310-manylinux_2_35_riscv64.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp310-cp310-manylinux_2_35_s390x.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp310-cp310-manylinux_2_35_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp311-cp311-manylinux_2_35_aarch64.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp311-cp311-manylinux_2_35_ppc64le.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp311-cp311-manylinux_2_35_s390x.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp311-cp311-manylinux_2_35_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp312-cp312-manylinux_2_35_aarch64.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp312-cp312-manylinux_2_35_ppc64le.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp312-cp312-manylinux_2_35_s390x.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp312-cp312-manylinux_2_35_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp313-cp313-manylinux_2_35_aarch64.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp313-cp313-manylinux_2_35_ppc64le.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp313-cp313-manylinux_2_35_s390x.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.4.0+ubuntu4-cp313-cp313-manylinux_2_35_x86_64.whl" },

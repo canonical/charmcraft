@@ -45,6 +45,7 @@ ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg
 html_context = {
     "product_page": "github.com/canonical/charmcraft",
     "github_url": "https://github.com/canonical/charmcraft",
+    "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
 }
 
@@ -184,3 +185,11 @@ common_docs_path = pathlib.Path(__file__).parent / "common"
 craft_parts_docs_path = pathlib.Path(craft_parts_docs.__file__).parent / "craft-parts"
 (common_docs_path / "craft-parts").unlink(missing_ok=True)
 (common_docs_path / "craft-parts").symlink_to(craft_parts_docs_path, target_is_directory=True)
+
+# By default, the documentation includes a feedback button at the top.
+# You can disable it by setting the following configuration to True.
+disable_feedback_button = False
+
+html_js_files = ['header-nav.js']
+if 'github_issues' in html_context and html_context['github_issues'] and not disable_feedback_button:
+    html_js_files.append('github_issue_links.js')

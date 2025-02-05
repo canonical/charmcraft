@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,6 @@ is not available.
 Help is (for now) handled by classic charmcraft.
 """
 
-from charmcraft.application.main import APP_METADATA, Charmcraft, main
+from charmcraft.application.main import APP_METADATA, Charmcraft, main, get_app_info
 
-__all__ = ["APP_METADATA", "Charmcraft", "main"]
+__all__ = ["APP_METADATA", "Charmcraft", "main", "get_app_info"]

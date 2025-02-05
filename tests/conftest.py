@@ -26,6 +26,7 @@ from typing import Any
 from unittest import mock
 
 import craft_parts
+import craft_store
 import pytest
 import responses as responses_module
 import yaml
@@ -93,6 +94,11 @@ def mock_store_anonymous_client() -> mock.Mock:
 
 
 @pytest.fixture
+def mock_publisher_gateway() -> mock.Mock:
+    return mock.Mock(spec_set=craft_store.PublisherGateway)
+
+
+@pytest.fixture
 def service_factory(
     fs,
     fake_project_dir,
@@ -100,6 +106,7 @@ def service_factory(
     simple_charm,
     mock_store_client,
     mock_store_anonymous_client,
+    mock_publisher_gateway,
     default_build_plan,
 ) -> services.CharmcraftServiceFactory:
     factory = services.CharmcraftServiceFactory(app=APP_METADATA)
@@ -124,6 +131,7 @@ def service_factory(
 
     factory.store.client = mock_store_client
     factory.store.anonymous_client = mock_store_anonymous_client
+    factory.store._publisher = mock_publisher_gateway
 
     return factory
 

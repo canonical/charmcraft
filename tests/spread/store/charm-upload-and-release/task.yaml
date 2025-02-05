@@ -66,3 +66,4 @@ execute: |
   if [ $edge_revision -lt $uploaded_revno ]; then
     ERROR "Revision wasn't released. Uploaded revision: $uploaded_revno; Currently on edge: $edge_revision"
   fi
+  charmcraft promote --yes --from-channel=latest/edge --to-channel=latest/beta

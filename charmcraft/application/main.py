@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Canonical Ltd.
+# Copyright 2023-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -189,12 +189,25 @@ class Charmcraft(craft_application.Application):
         super()._expand_environment(yaml_data, build_for)
 
 
+def create_app() -> Charmcraft:
+    """Create the Charmcraft application with its commands."""
+    charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
+    app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
+    commands.fill_command_groups(app)
+
+    return app
+
+
+def get_app_info() -> tuple[craft_cli.Dispatcher, dict[str, Any]]:
+    """Retrieve application info. Used by craft-cli's completion module."""
+    app = create_app()
+    dispatcher = app._create_dispatcher()
+
+    return dispatcher, app.app_config
+
+
 def main() -> int:
     """Run craft-application based charmcraft."""
-    charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
-
-    app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
-
-    commands.fill_command_groups(app)
+    app = create_app()
 
     return app.run()

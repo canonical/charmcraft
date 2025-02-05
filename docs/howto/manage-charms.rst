@@ -6,9 +6,15 @@ Manage charms
     See first: :external+juju:ref:`Juju | Charm <charm>`,
     :external+juju:ref:`Juju | Manage charms <manage-charms>`
 
+.. _initialise-a-charm:
 
 Initialise a charm
 ------------------
+
+.. note::
+
+    **Best practice:** If you're setting up a git repository: Name it on the pattern
+     ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
@@ -74,9 +80,23 @@ To specify that the project is a charm (as supposed to a bundle), in your
 
     type: charm
 
+..
+
+    See more: :ref:`recipe-key-type`
+
+.. _specify-a-name:
 
 Specify a name
 ~~~~~~~~~~~~~~
+
+.. note::
+
+    **Best practice:** The name should be slug-oriented (ASCII lowercase letters,
+    numbers, and hyphens) and follow the pattern
+    ``<workload name in full>[<function>][-k8s]``. E.g., ``argo-server-k8s``.
+
+.. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 .
+
 
 To specify a pack-and-deploy name for your charm, in your charm's
 ``charmcraft.yaml`` file specify the ``name`` key. E.g.,
@@ -210,9 +230,10 @@ charm's ``charmcraft.yaml`` file specify an item under the :ref:`links.website
 
     See more: :ref:`recipe-key-links`
 
+.. _add-docs:
 
-Add docs and a link to the docs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add docs
+~~~~~~~~
 
 If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is extracted automatically.
@@ -251,7 +272,7 @@ value for the ``terms`` key. E.g.,
 Add an icon
 ~~~~~~~~~~~
 
-    See :ref:`manage-icons`.
+    See more: :ref:`manage-icons`
 
 
 Add runtime details to a charm
@@ -357,9 +378,10 @@ To specify device requirements, in your charm's ``charmcraft.yaml`` file specify
 
     See more: :ref:`recipe-key-devices`
 
+.. _manage-storage:
 
-Specify storage requirements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Manage storage
+~~~~~~~~~~~~~~
 
 To specify storage requirements, in your charm's ``charmcraft.yaml`` file specify
 the ``storage`` key.
@@ -385,6 +407,7 @@ same machine as another charm, called its *principal*), in your charm's
 
     See more: :ref:`recipe-key-subordinate`
 
+.. _manage-actions:
 
 Manage actions
 ~~~~~~~~~~~~~~
@@ -399,6 +422,7 @@ specify the ``actions`` key.
 
     See next: :external+ops:ref:`manage-actions`
 
+.. _manage-configurations:
 
 Manage configurations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -416,9 +440,10 @@ specify the ``config`` key.
 
     See next: :external+ops:ref:`manage-configurations`
 
+.. _manage-relations:
 
-Manage relations (integrations)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Manage relations
+~~~~~~~~~~~~~~~~
 
     See first: :external+juju:ref:`Juju | Relation <relation>`,
     :external+juju:ref:`Juju | Manage relations <manage-relations>`
@@ -434,10 +459,9 @@ Manage relations (integrations)
 Specify necessary libs
 ~~~~~~~~~~~~~~~~~~~~~~
 
-..    See first: `Juju | Library <>`_
-
     See more: :ref:`manage-libraries`
 
+.. _manage-secrets:
 
 Manage secrets
 ~~~~~~~~~~~~~~
@@ -459,6 +483,7 @@ Specify necessary parts
 
     See more: :ref:`manage-parts`
 
+.. _pack-a-charm:
 
 Pack a charm
 ------------
@@ -563,7 +588,7 @@ Publish a charm on Charmhub
 
        charmcraft login
 
-    ..
+..
 
    See more: :ref:`manage-the-current-charmhub-user`
 

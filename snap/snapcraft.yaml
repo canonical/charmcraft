@@ -57,7 +57,7 @@ apps:
   charmcraft:
     # run Python in unbuffered mode
     command: bin/python3 -u $SNAP/bin/charmcraft
-    completer: completion.bash
+    completer: completion.sh
     environment:
       # have the cache outside of the version dirs (avoids keeping N copies)
       XDG_CACHE_HOME: $SNAP_USER_COMMON/cache
@@ -154,8 +154,6 @@ parts:
       uv pip install -r requirements-jammy.txt
       rm $CRAFT_PART_INSTALL/lib64
 
-      cp -v completion.bash $CRAFT_PART_INSTALL
-
       mkdir -p $CRAFT_PART_INSTALL/libexec/charmcraft
       sed -i 's|#!/bin/sh|#!/snap/charmcraft/current/bin/python3|' $CRAFT_PART_INSTALL/bin/craftctl
 
@@ -182,6 +180,16 @@ parts:
       - -bin/tabulate
     organize:
       bin/craftctl: libexec/charmcraft/craftctl
+
+  bash-completion:
+    after: [charmcraft]
+    plugin: nil
+    build-environment:
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/x86_64-linux-gnu
+      - PYTHONPATH: $CRAFT_STAGE/lib/python3.10/site-packages
+    override-build: |
+      python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
+        > $CRAFT_PART_INSTALL/completion.sh
 
   skopeo:  # Copied from Rockcraft
     plugin: nil

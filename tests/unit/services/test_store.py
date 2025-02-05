@@ -317,6 +317,260 @@ def test_get_credentials(monkeypatch, store):
     )
 
 
+@given(name=strategies.text())
+def test_get_package_metadata(reusable_store: StoreService, name: str):
+    mock_get = cast(mock.Mock, reusable_store._publisher.get_package_metadata)
+    mock_get.reset_mock()  # Hypothesis runs this multiple times with the same fixture.
+
+    reusable_store.get_package_metadata(name)
+
+    mock_get.assert_called_once_with(name)
+
+
+@pytest.mark.parametrize("requests", [[], [{}]])
+def test_release(reusable_store: StoreService, requests):
+    name = "my-charm"
+    mock_release = cast(mock.Mock, reusable_store._publisher.release)
+    mock_release.reset_mock()
+
+    reusable_store.release(name, requests)
+
+    mock_release.assert_called_once_with(name, requests=requests)
+
+
+@pytest.mark.parametrize(
+    ("store_response", "expected"),
+    [
+        pytest.param(
+            publisher.Releases(
+                channel_map=[], package=publisher.Package(channels=[]), revisions=[]
+            ),
+            [],
+            id="empty",
+        ),
+        pytest.param(
+            publisher.Releases(
+                channel_map=[
+                    publisher.ChannelMap(
+                        base=publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        ),
+                        channel="latest/edge",
+                        revision=1,
+                        when=datetime.datetime(2020, 1, 1),
+                    )
+                ],
+                package=publisher.Package(channels=[]),
+                revisions=[
+                    publisher.CharmRevision(
+                        revision=1,
+                        bases=[
+                            publisher.Base(
+                                name="ubuntu", channel="25.10", architecture="riscv64"
+                            )
+                        ],
+                        version="1",
+                        status="peachy",
+                        created_at=datetime.datetime(2020, 1, 1),
+                        size=0,
+                    )
+                ],
+            ),
+            [
+                {
+                    "revision": 1,
+                    "bases": [
+                        publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        )
+                    ],
+                    "resources": [],
+                    "version": "1",
+                }
+            ],
+            id="basic",
+        ),
+        pytest.param(
+            publisher.Releases(
+                channel_map=[
+                    publisher.ChannelMap(
+                        base=publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        ),
+                        channel="latest/edge",
+                        revision=1,
+                        when=datetime.datetime(2020, 1, 1),
+                        resources=[
+                            publisher.Resource(name="file", revision=2, type="file"),
+                            publisher.Resource(
+                                name="rock", revision=3, type="oci-image"
+                            ),
+                        ],
+                    )
+                ],
+                package=publisher.Package(channels=[]),
+                revisions=[
+                    publisher.CharmRevision(
+                        revision=1,
+                        bases=[
+                            publisher.Base(
+                                name="ubuntu", channel="25.10", architecture="riscv64"
+                            )
+                        ],
+                        version="1",
+                        status="peachy",
+                        created_at=datetime.datetime(2020, 1, 1),
+                        size=0,
+                    )
+                ],
+            ),
+            [
+                {
+                    "revision": 1,
+                    "bases": [
+                        publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        )
+                    ],
+                    "resources": [
+                        {"name": "file", "revision": 2},
+                        {"name": "rock", "revision": 3},
+                    ],
+                    "version": "1",
+                }
+            ],
+            id="resources",
+        ),
+        pytest.param(
+            publisher.Releases(
+                channel_map=[
+                    publisher.ChannelMap(
+                        base=publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        ),
+                        channel="latest/edge",
+                        revision=1,
+                        when=datetime.datetime(2020, 1, 1),
+                        resources=[
+                            publisher.Resource(name="file", revision=2, type="file"),
+                            publisher.Resource(
+                                name="rock", revision=3, type="oci-image"
+                            ),
+                        ],
+                    ),
+                    publisher.ChannelMap(
+                        base=publisher.Base(
+                            name="ubuntu", channel="25.11", architecture="riscv64"
+                        ),
+                        channel="latest/edge",
+                        revision=1,
+                        when=datetime.datetime(2020, 1, 1),
+                        resources=[
+                            publisher.Resource(name="file", revision=2, type="file"),
+                            publisher.Resource(
+                                name="rock", revision=3, type="oci-image"
+                            ),
+                        ],
+                    ),
+                ],
+                package=publisher.Package(channels=[]),
+                revisions=[
+                    publisher.CharmRevision(
+                        revision=1,
+                        bases=[
+                            publisher.Base(
+                                name="ubuntu", channel="25.10", architecture="riscv64"
+                            ),
+                            publisher.Base(
+                                name="ubuntu", channel="25.11", architecture="riscv64"
+                            ),
+                        ],
+                        version="1",
+                        status="peachy",
+                        created_at=datetime.datetime(2020, 1, 1),
+                        size=0,
+                    )
+                ],
+            ),
+            [
+                {
+                    "revision": 1,
+                    "bases": [
+                        publisher.Base(
+                            name="ubuntu", channel="25.10", architecture="riscv64"
+                        ),
+                        publisher.Base(
+                            name="ubuntu", channel="25.11", architecture="riscv64"
+                        ),
+                    ],
+                    "resources": [
+                        {"name": "file", "revision": 2},
+                        {"name": "rock", "revision": 3},
+                    ],
+                    "version": "1",
+                }
+            ],
+            id="multiple-bases",
+        ),
+    ],
+)
+def test_get_revisions_on_channel(
+    reusable_store: StoreService, store_response, expected
+):
+    name = "my-charm"
+    channel = "latest/edge"
+    mock_list = cast(mock.Mock, reusable_store._publisher.list_releases)
+    mock_list.return_value = store_response
+
+    actual = reusable_store.get_revisions_on_channel(name, channel)
+
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ("channel", "candidates", "expected"),
+    [
+        ("latest/stable", [], []),
+        (
+            "latest/edge",
+            [{"revision": 1, "resources": []}],
+            [{"channel": "latest/edge", "revision": 1, "resources": []}],
+        ),
+        (
+            "latest/beta",
+            [
+                {"revision": 1, "resources": [{"name": "boo", "revision": 1}]},
+                {"revision": 2, "resources": [{"name": "hoo", "revision": 2}]},
+            ],
+            [
+                {
+                    "channel": "latest/beta",
+                    "revision": 1,
+                    "resources": [{"name": "boo", "revision": 1}],
+                },
+                {
+                    "channel": "latest/beta",
+                    "revision": 2,
+                    "resources": [{"name": "hoo", "revision": 2}],
+                },
+            ],
+        ),
+    ],
+)
+def test_release_promotion_candidates(
+    reusable_store: StoreService, channel, candidates, expected
+):
+    mock_release = cast(mock.Mock, reusable_store._publisher.release)
+    mock_release.reset_mock()
+
+    assert (
+        reusable_store.release_promotion_candidates("my-charm", channel, candidates)
+        == mock_release.return_value
+    )
+
+    mock_release.assert_called_once_with("my-charm", requests=expected)
+
+
 @pytest.mark.parametrize(
     ("libs", "expected_call"),
     [

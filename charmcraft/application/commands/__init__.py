@@ -46,6 +46,7 @@ from charmcraft.application.commands.store import (
     # release process, and show status
     CreateTrack,
     ReleaseCommand,
+    PromoteCommand,
     PromoteBundleCommand,
     StatusCommand,
     CloseCommand,
@@ -91,6 +92,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
             # release process, and show status
             CreateTrack,
             ReleaseCommand,
+            PromoteCommand,
             PromoteBundleCommand,
             StatusCommand,
             CloseCommand,

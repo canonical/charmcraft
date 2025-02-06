@@ -21,19 +21,6 @@ execute: |
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
 
-  # Add setup instructions
-  # (Ran into issues in prepare section)
-  # (don't install charmcraft)
-  snap install rockcraft --classic
-  snap install lxd
-  lxd init --auto
-  snap install microk8s --channel=1.31-strict/stable
-  snap refresh juju --channel=3.5/stable --amend
-
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
-  mkdir -p ~/.local/share
-
   # MicroK8s config setup
   microk8s status --wait-ready
   microk8s enable hostpath-storage

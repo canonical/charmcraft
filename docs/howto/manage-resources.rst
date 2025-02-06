@@ -3,7 +3,7 @@
 Manage resources
 ================
 
-    See first: :external+juju:ref:`Juju | Charm resource <resource-charm>`,
+    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`,
     :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
 
 

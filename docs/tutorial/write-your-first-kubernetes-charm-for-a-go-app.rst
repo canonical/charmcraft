@@ -687,7 +687,8 @@ add the following section to the end of the file:
 
     requires:
       postgresql:
-        interface: postgresql_client optional: false
+        interface: postgresql_client
+        optional: false
 
 We can now pack and deploy the new version of the Go app:
 

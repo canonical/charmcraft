@@ -460,7 +460,8 @@ the Go application. Add the following to the end of the
         greeting:
           description: |
             The greeting to be returned by the Go application.
-          default: "Hello, world!" type: string
+          default: "Hello, world!"
+          type: string
 
 .. note::
 

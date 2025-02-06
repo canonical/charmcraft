@@ -12,8 +12,8 @@ Charmcraft
     reference/index
     release-notes/index
 
-Charmcraft is a command-line tool designed to simplify the building, packaging,
-and publishing of :external+juju:ref:`Juju charms <charm>`.
+Charmcraft is a tool designed to simplify the creation, building, and sharing of a
+:external+juju:ref:`Juju charm <charm>`.
 
 When you initialise a charm with Charmcraft, you automatically get all the crucial
 project files, pre-populated with helpful template content. These files are such that

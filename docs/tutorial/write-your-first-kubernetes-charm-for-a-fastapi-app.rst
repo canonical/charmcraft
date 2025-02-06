@@ -363,7 +363,7 @@ the ingress. We will also set the default route to be the root endpoint:
 Monitor ``juju status`` until everything has a status of ``active``.
 
 Test the deployment using
-``curl http://fastapi-hello-world --resolve fast-api-hello-world:80:127.0.0.1``
+``curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should return the
 ``{"message":"Hello World"}`` greeting.
 

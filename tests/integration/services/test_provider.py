@@ -114,3 +114,30 @@ def test_locked_cache_no_cache(
         )
 
         assert not (tmp_path / "cache_cached").exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
+)
+def test_cache_symlink(
+    service_factory: services.CharmcraftServiceFactory,
+    tmp_path: pathlib.Path,
+    default_build_info: BuildInfo,
+    emitter: RecordingEmitter,
+):
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+    provider = service_factory.provider
+    provider_kwargs = {
+        "build_info": default_build_info,
+        "work_dir": tmp_path,
+        "cache_path": cache_path,
+    }
+    with provider.instance(**provider_kwargs) as instance:
+        instance.execute_run(["test", "-d", "/root/.cache"], check=True)
+        instance.execute_run(
+            ["test", "-d", "/root/snap/charmcraft/common/cache"], check=True
+        )
+        with pytest.raises(subprocess.CalledProcessError):
+            instance.execute_run(["test", "-d", "/blorp"], check=True)

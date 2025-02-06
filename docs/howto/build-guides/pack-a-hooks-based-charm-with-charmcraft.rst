@@ -5,7 +5,8 @@ How to pack a hooks-based charm with Charmcraft
 
     Introduced in Charmcraft 1.4
 
-    See first: :external+ops:ref:`turn-a-hooks-based-charm-into-an-ops-charm`
+    See first: :external+ops:ref:`Ops | Turn a hooks-based charm into an ops charm
+    <turn-a-hooks-based-charm-into-an-ops-charm>`
 
 Suppose you have a legacy hooks-only charm, for example, `tiny-bash
 <https://github.com/erik78se/tiny-bash>`_, which you can clone with:

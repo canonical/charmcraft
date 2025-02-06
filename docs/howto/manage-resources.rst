@@ -3,7 +3,7 @@
 Manage resources
 ================
 
-    See first: :external+juju:ref:`Juju | Charm resource <resource-charm>`,
+    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`,
     :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
 
 
@@ -15,7 +15,7 @@ its recipe.
 
     See more: :ref:`recipe-key-resources`
 
-    See next: :external+ops:ref:`manage-resources`
+    See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 
 .. tip::
 

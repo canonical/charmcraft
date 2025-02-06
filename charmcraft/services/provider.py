@@ -126,10 +126,12 @@ class ProviderService(services.ProviderService):
             try:
                 # Use /root/.cache even if we're in the snap.
                 instance.execute_run(
-                    ["rm", "-rf", "/root/snap/charmcraft/common/cache"]
+                    ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True
                 )
+                instance.execute_run(["mkdir", "-p", "/root/.cache"], check=True)
                 instance.execute_run(
-                    ["ln", "-s", "/root/.cache", "/root/snap/charmcraft/common/cache"]
+                    ["ln", "-s", "/root/.cache", "/root/snap/charmcraft/common/cache"],
+                    check=True,
                 )
                 yield instance
             finally:

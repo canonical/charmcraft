@@ -1,10 +1,10 @@
-.. _manage-a-12-factor-app-charm:
+.. _manage-12-factor-app-charms:
 
 
-Manage a 12-factor app charm
-============================
+Manage 12-factor app charms
+===========================
 
-    See also: :external+juju:ref:`Juju | Charm <charm>`
+    See also: :external+juju:ref:`Juju | Charm taxonomy <charm-taxonomy>`
 
 
 Prepare an OCI image for a 12-factor app charm
@@ -99,10 +99,9 @@ token for a service. Add the configuration in ``charmcraft.yaml``:
         also available in the Flask variable ``app.config`` without
         the ``FLASK_`` prefix.
 
-            See also:
-            :external+ops:ref:`How to add configuration to a charm <manage-configurations>`,
-            `Configuration Handling --
-            Flask Documentation <https://flask.palletsprojects.com/en/3.0.x/config/>`_
+            See also: :external+ops:ref:`Ops | Manage configurations
+            <manage-configurations>`, `Configuration Handling -- Flask Documentation
+            <https://flask.palletsprojects.com/en/3.0.x/config/>`_
 
     .. group-tab:: Django
 

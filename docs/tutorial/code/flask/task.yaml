@@ -79,10 +79,6 @@ execute: |
   charmcraft pack
   # [docs:charm-pack-end]
 
-  # [docs:ls-charm]
-  ls *.charm -l
-  # [docs:ls-charm-end]
-
   # [docs:add-juju-model]
   juju add-model flask-hello-world
   # [docs:add-juju-model-end]

@@ -191,10 +191,13 @@ parts:
       python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
         > $CRAFT_PART_INSTALL/completion.sh
 
-  skopeo:  # Copied from Rockcraft
+  skopeo:
     plugin: nil
     source: https://github.com/containers/skopeo.git
-    source-tag: v1.15.1
+    source-tag: v1.17.0
+    build-environment:
+      - DISABLE_DOCS: "1"
+      - CGO_ENABLED: "1"
     override-build: |
       CGO=1 go build -ldflags -linkmode=external ./cmd/skopeo
       mkdir "$CRAFT_PART_INSTALL"/bin

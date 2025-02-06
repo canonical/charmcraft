@@ -97,7 +97,7 @@ Specify a name
 
 .. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 .
 
-To specify a pack-and-deploy name for your charm, in your charm's project file specify
+To specify a pack-and-deploy name for your charm, in your charm's project file, specify
 the ``name`` key. E.g.,
 
 .. code-block:: yaml
@@ -112,7 +112,7 @@ the ``name`` key. E.g.,
 Specify a title
 ~~~~~~~~~~~~~~~
 
-To specify a title for your charm's page on Charmhub, in your charm's project file
+To specify a title for your charm's page on Charmhub, in your charm's project file,
 specify a value for the ``title`` key. E.g.,
 
 .. code-block:: yaml
@@ -128,7 +128,7 @@ specify a value for the ``title`` key. E.g.,
 Add a summary
 ~~~~~~~~~~~~~
 
-To add a summary line for your charm, in your charm's project file specify a
+To add a summary line for your charm, in your charm's project file, specify a
 value for the ``summary`` key. E.g.,
 
 .. code-block:: yaml

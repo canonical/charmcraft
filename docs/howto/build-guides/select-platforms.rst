@@ -160,10 +160,10 @@ Select multiple OS releases
 ---------------------------
 
 The resulting ``.charm`` file packed by charmcraft can only run on a single OS release
-or ``base``, using ``charmcraft.yaml`` nomenclature. A project file can use
-multi-base syntax to create a set of charms, each for a different base. To do this, the
-base is defined in each platform entry instead of being defined with the
-top-level ``base`` and ``build-base`` keys.
+or ``base``, using ``charmcraft.yaml`` nomenclature. A project can use multi-base syntax
+to create a set of charms, each for a different base. To do this, the base is defined in
+each platform entry instead of being defined with the top-level ``base`` and
+``build-base`` keys.
 
 To build a charm for Ubuntu 22.04 LTS and a charm for Ubuntu 24.04 LTS, use the
 following snippet which uses :ref:`multi-base

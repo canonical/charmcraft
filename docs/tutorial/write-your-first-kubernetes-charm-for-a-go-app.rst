@@ -254,9 +254,10 @@ Create a new directory for the charm and go inside it:
 
     mkdir charm cd charm
 
-We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Go application. Charmcraft
-will automate the creation of these files by using the ``go-framework`` profile:
+We'll need a project file named ``charmcraft.yaml``, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the Go
+application. Charmcraft will automate the creation of these files by using the
+``go-framework`` profile:
 
 .. code-block:: bash
 
@@ -285,8 +286,8 @@ directory with the ``.charm`` extension. View its contents:
 
 .. note::
 
-    If you changed the name in ``charmcraft.yaml`` or are not on the ``amd64`` platform,
-    the name of the ``.charm`` file will be different for you.
+    If you changed the project name or are not on the ``amd64`` platform, the name of
+    the ``.charm`` file will be different for you.
 
 
 Deploy the Go application
@@ -401,9 +402,9 @@ new OCI image to the MicroK8s registry.
       docker://localhost:32000/go-hello-world:0.2
 
 Change back into the charm directory using ``cd charm``. The ``go-framework`` Charmcraft
-extension supports adding configurations to ``charmcraft.yaml``, which will be passed as
+extension supports adding configurations to the project, which will be passed as
 environment variables to the Go application. Add the following to the end of the
-``charmcraft.yaml`` file:
+project file:
 
 .. code-block:: yaml
 
@@ -587,8 +588,8 @@ newly created rock to the MicroK8s registry:
       docker://localhost:32000/go-hello-world:0.3
 
 Go back into the charm directory using ``cd charm``. The Go app now requires a database
-which needs to be declared in the ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in
-a text editor and add the following section to the end of the file:
+which needs to be declared in the project file. Open the project file in a text
+editor and add the following section to the end of the file:
 
 .. code-block:: yaml
 

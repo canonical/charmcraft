@@ -12,7 +12,7 @@ charm, for a Kubernetes charm for a Flask application etc. -- in order to
 speed up development.
 
 The customisation often takes the shape of a specific
-:ref:`extensions` in the charm's ``charmcraft.yaml``
+:ref:`extensions` in the charm's project
 file.
 
     See more: `How to set up a charm

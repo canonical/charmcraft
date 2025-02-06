@@ -12,24 +12,22 @@ Charmcraft
     reference/index
     release-notes/index
 
-Charmcraft is a tool designed to simplify the creation, building, and sharing of a
-:external+juju:ref:`Juju charm <charm>`.
+Charmcraft is a command-line tool designed to simplify the building, packaging,
+and publishing of :external+juju:ref:`Juju charms <charm>`.
 
-When you initialise a charm with Charmcraft, you automatically get all the crucial
-project files, pre-populated with helpful template content. These files are such that
-they can be packed right away; however, to make them meaningul for the application you
-are charming, you'll want to customise the YAML and
-:external+ops:doc:`ops <index>`-powered Python in these files. For certain types of
-applications (Django, FastAPI, Flask, Go), if you initialise with a suitable
-Charmcraft extension, things are even easier -- just tweak a few values in the
-YAML and you get a fully functioning charm. Either way, once you're pleased with
-what you've got, you can again use Charmcraft to publish your charm
-on `Charmhub`_.
+Charmcraft empowers charm authors to simplify their workflow by automating the
+creation of project files with application-specific extensions. Charm authors
+can then use Charmcraft to build distribution-ready charms before sharing them
+on `Charmhub`_, where they can use channels and tracks to easily manage
+releases.
 
-You can create, build, and share a charm any way you want, but with Charmcraft you get
-state-of-the-art results in record time.
+While there are many ways to develop charms, Charmcraft and the
+:external+ops:doc:`ops <index>` Python library provide a truly end-to-end charm
+development experience.
 
-If you're a charm author, you *must* use Charmcraft!
+Whether you're just getting started with charms or managing a vast array of
+cloud applications for your business, Charmcraft will prove to be an invaluable
+tool.
 
 
 In this documentation
@@ -74,7 +72,7 @@ that warmly welcomes community projects, contributions, suggestions, fixes
 and constructive feedback.
 
 - `Ubuntu Code of Conduct <https://ubuntu.com/community/code-of-conduct>`_.
-- `Canonical contributor licenses agreement <https://ubuntu.com/legal/contributors>`_.
+- `Canonical contributor license agreement <https://ubuntu.com/legal/contributors>`_.
 
 
 Indices and tables

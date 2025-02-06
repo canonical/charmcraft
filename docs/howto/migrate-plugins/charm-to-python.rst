@@ -7,10 +7,10 @@ The Python plugin in Charmcraft offers a faster, stricter means of packing an op
 charm with a virtual environment. This guide shows how to migrate from a charm using
 the default Charm plugin to using the Python plugin.
 
-Update ``charmcraft.yaml``
---------------------------
+Update the project file
+-----------------------
 
-The first step is to update ``charmcraft.yaml`` to include the correct parts definition.
+The first step is to update the project to include the correct parts definition.
 Depending on the history of a specific charm, it may not have an explicitly-included
 ``parts`` section determining how to build the charm. In this case, a ``parts`` section
 can be created as follows:

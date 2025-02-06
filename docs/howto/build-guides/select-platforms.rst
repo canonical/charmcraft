@@ -12,7 +12,7 @@ See the :doc:`Platforms reference </reference/platforms>` for more information.
 Select an OS
 ------------
 
-The :ref:`charmcraft-yaml-base` key in ``charmcraft.yaml`` defines the operating
+The project's :ref:`charmcraft-yaml-base` key defines the operating
 system and version on which a charm can build and run. Supported OSs
 vary by both the version of Charmcraft and the version of `Juju`_.
 
@@ -27,7 +27,7 @@ The general syntax for defining a distribution and series is to use
 Select one build and one target architecture
 --------------------------------------------
 
-The following ``charmcraft.yaml`` snippet will define a charm that both builds and
+The following project file snippet will define a charm that both builds and
 runs on Ubuntu 24.04 LTS, only on an AMD64 architecture:
 
 .. code-block:: yaml
@@ -61,7 +61,7 @@ Select one build architecture and target all architectures
 ----------------------------------------------------------
 
 When crafting a charm that contains only architecture-independent code,
-set ``build-for: [all]``. For example, the following ``charmcraft.yaml`` snippet
+set ``build-for: [all]``. For example, the following project file snippet
 packs a single charm on an AMD64 host while declaring support for any architecture:
 
 .. code-block:: yaml
@@ -100,7 +100,7 @@ Select multiple build and target architectures
 Charms may contain architecture-specific code and thus need separate artifacts
 for each. You can declare multiple architectures in the ``platforms`` key,
 which instructs Charmcraft to build a charm for each of them as a set. For
-example, you could use the following snippet in ``charmcraft.yaml`` to build
+example, you could use the following snippet in your project file to build
 for both AMD64 and 64-bit RISC-V:
 
 .. code-block:: yaml
@@ -137,7 +137,7 @@ Select different architectures for building and running
 -------------------------------------------------------
 
 A charm may require cross-compilation to build. To create a charm for a
-different architecture, use the following ``charmcraft.yaml`` snippet:
+different architecture, use the following snippet:
 
 .. code-block:: yaml
 
@@ -160,13 +160,13 @@ Select multiple OS releases
 ---------------------------
 
 The resulting ``.charm`` file packed by charmcraft can only run on a single OS release
-or ``base``, using ``charmcraft.yaml`` nomenclature. A ``charmcraft.yaml`` can use
+or ``base``, using ``charmcraft.yaml`` nomenclature. A project file can use
 multi-base syntax to create a set of charms, each for a different base. To do this, the
 base is defined in each platform entry instead of being defined with the
 top-level ``base`` and ``build-base`` keys.
 
 To build a charm for Ubuntu 22.04 LTS and a charm for Ubuntu 24.04 LTS, use the
-following ``charmcraft.yaml`` snippet which uses :ref:`multi-base
+following snippet which uses :ref:`multi-base
 notation<reference-platforms-multi-base>`:
 
 .. code-block:: yaml

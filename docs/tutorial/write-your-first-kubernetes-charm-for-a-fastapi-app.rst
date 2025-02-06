@@ -474,7 +474,7 @@ the configuration option.
     The ``grep`` command extracts a portion of the configuration to make it easier to
     check whether the configuration option has been added.
 
-Using ``http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
+Using ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
 shows that the response is still ``{"message":"Hello, world!"}`` as expected.
 
 Now let's change the greeting:

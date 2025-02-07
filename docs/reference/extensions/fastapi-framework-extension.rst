@@ -289,10 +289,6 @@ using `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__.
 To learn about how to deploy Tempo you can read the
 documentation `here <https://charmhub.io/topics/charmed-tempo-ha>`__.
 
-To learn how to enable tracing in your FastAPI app you can
-checkout the example in
-`Paas Charm repository <https://github.com/canonical/paas-charm>`__.
-
 OpenTelemetry will automatically read the environment variables
 and configure the OpenTelemetry SDK to use them.
 See the `OpenTelemetry documentation <https://opentelemetry-python.readthedocs.io/en/latest/>`__

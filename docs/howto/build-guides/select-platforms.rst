@@ -100,7 +100,7 @@ Select multiple build and target architectures
 Charms may contain architecture-specific code and thus need separate artifacts
 for each. You can declare multiple architectures in the ``platforms`` key,
 which instructs Charmcraft to build a charm for each of them as a set. For
-example, you could use the following snippet in your project file to build
+example, you could use the following snippet in your project to build
 for both AMD64 and 64-bit RISC-V:
 
 .. code-block:: yaml

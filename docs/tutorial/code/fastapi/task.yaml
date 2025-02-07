@@ -184,6 +184,8 @@ execute: |
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 20m | juju status --relations
 
+  juju status --relations
+
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi

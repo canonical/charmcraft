@@ -252,6 +252,43 @@ Initialize a charm named ``go-hello-world``:
 
 The files will automatically be created in your working directory.
 
+Check out the contents of ``charmcraft.yaml``:
+
+.. code-block:: bash
+
+    cat charmcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code:: yaml
+
+    # This file configures Charmcraft.
+    # See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+    name: go-hello-world
+
+    type: charm
+
+    base: ubuntu@24.04
+
+    # the platforms this charm should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+      amd64:
+      # arm64:
+      # ppc64el:
+      # s390x:
+
+    # (Required)
+    summary: A very short one-line summary of the Go application.
+
+    ...
+
+Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
+includes the architecture of your host. If your host uses the ARM architecture,
+open ``charmcraft.yaml`` in a text editor and include ``arm64``
+in ``platforms``.
+
 The charm depends on several libraries. Download the libraries and pack the charm:
 
 .. code-block:: bash

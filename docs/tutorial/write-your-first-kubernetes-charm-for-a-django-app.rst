@@ -307,18 +307,18 @@ Create a new directory for the charm and go inside it:
     mkdir charm
     cd charm
 
-We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code
-for the charm. The source code contains the logic required to operate
-the Django application. Charmcraft will automate the creation of these
-files using the ``django-framework`` profile:
+We'll need a project file named ``charmcraft.yaml``, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the Django
+application. Charmcraft will automate the creation of these files using the
+``django-framework`` profile:
 
 .. code-block:: bash
 
     charmcraft init --profile django-framework --name django-hello-world
 
-The files will automatically be created in your working directory. We will
-need to connect to the PostgreSQL database. Open the ``charmcraft.yaml``
-file and add the following section to the end of the file:
+The files will automatically be created in your working directory. We will need to
+connect to the PostgreSQL database. Open the project file and add the following section
+to the end of the file:
 
 .. code-block:: yaml
 
@@ -350,8 +350,8 @@ your working directory with the charm extension. View its contents:
 
 .. note::
 
-    If you changed the name in ``charmcraft.yaml`` or are not on the ``amd64``
-    platform, the name of the ``.charm`` file will be different for you.
+    If you changed the project name or are not on the ``amd64`` platform, the name of
+    the ``.charm`` file will be different for you.
 
 
 Deploy the Django application
@@ -545,9 +545,9 @@ commands for the rock:
         docker://localhost:32000/django-hello-world:0.3
 
 Change back into the charm directory using ``cd charm``. The ``django-framework``
-Charmcraft extension supports adding configurations in ``charmcraft.yaml``, which
-will be passed as environment variables to the Django application. Add the following
-to the end of the ``charmcraft.yaml`` file:
+Charmcraft extension supports adding configurations to the project file, which will be
+passed as environment variables to the Django application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 

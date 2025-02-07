@@ -15,9 +15,9 @@ This document describes the ``metadata.yaml`` file in your charm project.
 
 .. important::
 
-    The ``charmcraft.yaml`` file follows keywords similar to snaps, but
+    The project file follows keywords similar to snaps, but
     ``metadata.yaml`` does not. As a result, when ``charmcraft pack`` generates
-    the file, some keys may differ -- e.g., the ``title``  key from ``charmcraft.yaml``
+    the file, some keys may differ -- e.g., the project's ``title``  key from
     is rendered as ``display-name`` in ``metadata.yaml``.
 
 This file contains identifying and configuration information about the charm.
@@ -608,7 +608,7 @@ configuration layer.
 
 .. important::
 
-    In :ref:`recipes <charmcraft-yaml-file>`, this is now the ``title`` key.
+    In the :ref:`project file <charmcraft-yaml-file>`, this is now the ``title`` key.
 
 .. code-block:: yaml
 
@@ -624,7 +624,7 @@ configuration layer.
 
 .. important::
 
-    In :ref:`recipes <charmcraft-yaml-file>`, this is now the
+    In the :ref:`project file <charmcraft-yaml-file>`, this is now the
     ``links.documentation`` key.
 
 .. code-block:: yaml
@@ -650,7 +650,8 @@ configuration layer.
 
 .. important::
 
-    In :ref:`recipes <charmcraft-yaml-file>`, this is now the ``links.issues`` key.
+    In the :ref:`project file <charmcraft-yaml-file>`, this is now the ``links.issues``
+    key.
 
 .. code-block:: yaml
 
@@ -664,7 +665,8 @@ configuration layer.
 
 .. important::
 
-    In :ref:`recipes <charmcraft-yaml-file>`, this is now the ``links.contact`` key.
+    In :ref:`the project file <charmcraft-yaml-file>`, this is now the ``links.contact``
+    key.
 
 .. code-block:: yaml
 
@@ -795,7 +797,8 @@ configuration layer.
 
 .. important::
 
-    In :ref:`recipes <charmcraft-yaml-file>`, this is now the ``links.source`` key.
+    In the :ref:`project file <charmcraft-yaml-file>`, this is now the ``links.source``
+    key.
 
 .. code-block:: yaml
 

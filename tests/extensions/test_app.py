@@ -66,6 +66,7 @@ def flask_input_yaml_fixture():
                     {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
                     "options": {**FlaskFramework.options},
@@ -142,6 +143,7 @@ def flask_input_yaml_fixture():
                     {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
                     "options": {**DjangoFramework.options},
@@ -208,6 +210,7 @@ def flask_input_yaml_fixture():
                     {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
                     "options": {**GoFramework.options},
@@ -274,6 +277,7 @@ def flask_input_yaml_fixture():
                     {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
                     "options": {**FastAPIFramework.options},

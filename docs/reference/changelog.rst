@@ -80,7 +80,18 @@ to those.
 
   For a complete list of commits, see the `X.Y.Z`_ release on GitHub.
 
-3.3.2 (2025-01027)
+3.3.3 (2025-02-05)
+------------------
+
+This release contains some bug fixes for the 3.3 branch.
+
+Core
+====
+
+- Charmcraft no longer crashes when setting up a managed instance if ``/root/.cache``
+  does not exist in the instance.
+
+3.3.2 (2025-01-27)
 ------------------
 
 This release contains some bug fixes for the 3.3 branch.

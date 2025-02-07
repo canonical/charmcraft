@@ -185,7 +185,7 @@ parts:
     after: [charmcraft]
     plugin: nil
     build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/x86_64-linux-gnu
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
       - PYTHONPATH: $CRAFT_STAGE/lib/python3.10/site-packages
     override-build: |
       python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \

@@ -19,7 +19,9 @@ jobs:
       # Self-hosted Jammy and Noble runners, GH-hosted macos and Windows runners.
       # Limiting to amd64 is a workaround for https://github.com/canonical/charmcraft/issues/2018
       fast-test-platforms: '[["jammy", "amd64"], ["noble", "amd64"], "macos-13", "macos-14-large", "windows-2019", "windows-2022"]'
+      fast-test-python-versions: '["3.10", "3.12"]'
       # Slow tests run on noble to avoid an issue with old skopeo versions.
       slow-test-platforms: '["noble", "macos-14-large"]'
+      slow-test-python-versions: '["3.10", "3.12"]'
       # Switch to just noble when we fix #2018
       lowest-python-platform: self-hosted-linux-amd64-noble-large

@@ -10,19 +10,21 @@ Charmcraft
     tutorial/index
     howto/index
     reference/index
+    release-notes/index
 
-Charmcraft is a tool designed to simplify the creation, building, and sharing of a `Juju
-charm <https://juju.is/docs/juju/charmed-operator>`_.
+Charmcraft is a tool designed to simplify the creation, building, and sharing of a
+:external+juju:ref:`Juju charm <charm>`.
 
 When you initialise a charm with Charmcraft, you automatically get all the crucial
 project files, pre-populated with helpful template content. These files are such that
 they can be packed right away; however, to make them meaningul for the application you
-are charming, you'll want to customise the YAML and `ops <Operator framework>`_-powered
-Python in these files. For certain types of applications (Django, FastAPI, Flask, Go),
-if you initialise with a suitable Charmcraft extension, things are even easier -- just
-tweak a few values in the YAML and you get a fully functioning charm. Either way, once
-you're pleased with what you've got, you can again use Charmcraft to publish your charm
-on `Charmhub <https://charmhub.io>`_.
+are charming, you'll want to customise the YAML and
+:external+ops:doc:`ops <index>`-powered Python in these files. For certain types of
+applications (Django, FastAPI, Flask, Go), if you initialise with a suitable
+Charmcraft extension, things are even easier -- just tweak a few values in the
+YAML and you get a fully functioning charm. Either way, once you're pleased with
+what you've got, you can again use Charmcraft to publish your charm
+on `Charmhub`_.
 
 You can create, build, and share a charm any way you want, but with Charmcraft you get
 state-of-the-art results in record time.

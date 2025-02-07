@@ -36,7 +36,7 @@ Edit this file to write your library.
 
 ..
 
-    See next: :external+ops:ref:`manage-libraries`
+    See next: :external+ops:ref:`Ops | Manage libraries <manage-libraries>`
 
 
 .. _publish-a-library:

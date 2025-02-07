@@ -108,7 +108,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install dependencies
         run: |
-          uv sync --no-dev
+          uv sync --no-dev --python=3.12
           uv pip install pyinstaller
       - name: Build
         run: |

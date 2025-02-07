@@ -137,13 +137,13 @@ block must be satisfied.
       - Examples
       - Juju versions
     * - ``juju <comparison predicate> <version number>``
-      - The charm deploys iff the model runs agent binaries with the specified
+      - The charm deploys `iff`_ the model runs agent binaries with the specified
         Juju version(s).
       - ``juju >= 3.0``
         ``juju < 4.0``
       - Since 2.9.23
     * - ``k8s-api``
-      - The charm deploys iff the `backing cloud <https://juju.is/docs/juju/cloud>`_
+      - The charm deploys `iff`_ the :external+juju:ref:`backing cloud <cloud>`
         for the model is Kubernetes.
       - ``k8s-api``
       - Since Juju 2.9.23
@@ -163,6 +163,7 @@ block must be satisfied.
         :end-before: base:
 
 
+.. _charmcraft-yaml-base:
 .. _recipe-key-base:
 
 ``base``
@@ -393,7 +394,8 @@ the standard Canonical services to operate with charms.
 ``config``
 ----------
 
-    See first: `Juju | Application configuration <juju-configuration>`_
+    See first: :external+juju:ref:`Juju | Application configuration
+    <application-configuration>`
 
 **Status:** Optional.
 
@@ -646,7 +648,7 @@ is a map where keys are part properties.
 
     **The** ``bundle`` **plugin**
 
-    Used to pack a `charm bundle <juju-bundles>`_, a collection of charms which have been carefully combined and configured in order to automate a multi-charm solution.
+    Used to pack a :external+juju:ref:`charm bundle <bundle>`, a collection of charms which have been carefully combined and configured in order to automate a multi-charm solution.
 
     Supports the following configuration:
 
@@ -660,7 +662,11 @@ is a map where keys are part properties.
 
     Used to pack charms using the reactive framework.
 
-    Note that this is a framework that has now been superseded by the `Operator framework`_. Please use that framework instead of reactive. Support for reactive in Charmcraft is only to ease the transition of old charms into the new framework.
+    ..  important::
+
+        The reactive framework has been superseded by the `Operator framework`_.
+        Please use that framework instead of reactive. Support for reactive in
+        Charmcraft is only to ease the transition of old charms to the new framework.
 
     Supports the following configuration:
 
@@ -683,7 +689,7 @@ is a map where keys are part properties.
 ``peers``, ``provides``, and ``requires``
 -----------------------------------------
 
-    See also: `Juju | Relation (integration) <https://juju.is/docs/juju/relation>`_
+    See also: :external+juju:ref:`Juju | Relation (integration) <relation>`
 
 .. collapse:: Example featuring all three keys
 
@@ -836,11 +842,11 @@ at least one ``requires`` integration with ``container`` scope.
 ``resources``
 -------------
 
-    See first: `Juju | Charm resource <juju-resource>`_
+    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`
 
 **Status:** Optional.
 
-**Purpose:**  To define a `resource <juju-resource>`_ for your charm.
+**Purpose:**  To define a resource for your charm.
 
 .. note::
     Kubernetes charms must declare an ``oci-image`` resource for each container
@@ -1035,6 +1041,4 @@ to a principal charm.
 
         type: charm
 
-.. _juju-bundles: https://juju.is/docs/olm/bundles
-.. _juju-configuration: https://juju.is/docs/juju/configuration
-.. _juju-resource: https://juju.is/docs/juju/charm-resource
+.. _iff: https://en.wikipedia.org/wiki/If_and_only_if

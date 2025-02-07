@@ -95,7 +95,7 @@ extra-bindings:
   Ring of Power:
 links:
   contact: Please send your answer to Old Pink, care of the Funny Farm, Chalfont
-  documentation: https://juju.is/docs/sdk/charmcraft-yaml
+  documentation: https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/
   issues:
   - https://launchpad.net/~charmcraft-team
   - https://github.com/canonical/charmcraft/issues
@@ -157,7 +157,7 @@ resources:
   super-app-image:
     type: oci-image
     description: OCI image for the Super App (hub.docker.com/_/super-app)
-storage: # Possible storage for the charm
+storage:  # Possible storage for the charm
   jbod:
     type: block
     description: A nice block storage for me to use as swap space

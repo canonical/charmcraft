@@ -3,8 +3,8 @@
 Manage resources
 ================
 
-    See first: `Juju | Charm resource <https://juju.is/docs/juju/charm-resource>`_,
-    `Juju | Manage resources <https://juju.is/docs/juju/manage-charm-resources>`_
+    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`,
+    :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
 
 
 Declare a resource
@@ -15,7 +15,7 @@ its recipe.
 
     See more: :ref:`recipe-key-resources`
 
-    See next: :external+ops:ref:`manage-resources`
+    See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 
 .. tip::
 

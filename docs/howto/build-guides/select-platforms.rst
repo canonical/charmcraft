@@ -27,8 +27,8 @@ The general syntax for defining a distribution and series is to use
 Select one build and one target architecture
 --------------------------------------------
 
-The following project file snippet will define a charm that both builds and
-runs on Ubuntu 24.04 LTS, only on an AMD64 architecture:
+The following snippet defines a charm that both builds and runs on Ubuntu 24.04 LTS,
+only on an AMD64 architecture:
 
 .. code-block:: yaml
 
@@ -161,9 +161,9 @@ Select multiple OS releases
 
 The resulting ``.charm`` file packed by charmcraft can only run on a single OS release
 or ``base``, using ``charmcraft.yaml`` nomenclature. A project file can use multi-base
-syntax to create a set of charms, each for a different base. To do this, the base is
-defined in each platform entry instead of being defined with the top-level ``base`` and
-``build-base`` keys.
+syntax to create multiple ``.charm`` files, each for a different base. To do this, the
+base is defined in each platform entry instead of being defined with the top-level
+``base`` and ``build-base`` keys.
 
 To build a charm for Ubuntu 22.04 LTS and a charm for Ubuntu 24.04 LTS, use the
 following snippet which uses :ref:`multi-base

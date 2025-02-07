@@ -256,7 +256,8 @@ Observability
 -------------
 
 12-Factor charms are designed to be easily observable using the
-`Canonical Observability Stack <https://charmhub.io/topics/canonical-observability-stack>`__.
+`Canonical Observability Stack
+<https://charmhub.io/topics/canonical-observability-stack>`__.
 
 You can easily integrate your charm with
 `Loki <https://charmhub.io/loki-k8s>`__,
@@ -280,7 +281,8 @@ documentation `here <https://charmhub.io/topics/charmed-tempo-ha>`__.
 
 OpenTelemetry will automatically read the environment variables
 and configure the OpenTelemetry SDK to use them.
-See the `OpenTelemetry documentation <https://opentelemetry-python.readthedocs.io/en/latest/>`__
+See the `OpenTelemetry documentation
+<https://opentelemetry-python.readthedocs.io/en/latest/>`__
 for further information about tracing.
 
 

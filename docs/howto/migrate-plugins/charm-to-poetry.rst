@@ -13,7 +13,7 @@ on how to use poetry for a Python project.
 Update the project file
 -----------------------
 
-The first step is to update the project to include the correct parts definition.
+The first step is to update the project file to include the correct parts definition.
 Depending on the history of a specific charm, it may not have an explicitly-included
 ``parts`` section determining how to build the charm. In this case, a ``parts`` section
 can be created as follows:

@@ -545,9 +545,9 @@ commands for the rock:
         docker://localhost:32000/django-hello-world:0.3
 
 Change back into the charm directory using ``cd charm``. The ``django-framework``
-Charmcraft extension supports adding configurations to the project, which will be passed
-as environment variables to the Django application. Add the following to the end of the
-project file:
+Charmcraft extension supports adding configurations to the project file, which will be
+passed as environment variables to the Django application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 

@@ -410,9 +410,9 @@ then upload the new OCI image to the MicroK8s registry:
       docker://localhost:32000/fastapi-hello-world:0.2
 
 Change back into the charm directory using ``cd charm``. The ``fastapi-framework``
-Charmcraft extension supports adding configurations to the project which will be passed
-as environment variables to the FastAPI application. Add the following to the end of the
-project file:
+Charmcraft extension supports adding configurations to the project file which will be
+passed as environment variables to the FastAPI application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 

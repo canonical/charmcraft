@@ -181,10 +181,10 @@ Let's create a new directory for the charm and go inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-We'll need a project file named ``charmcraft.yaml``, ``requirements.txt`` and source
-code for the charm. The source code contains the logic required to operate the Flask
-application. Charmcraft will automate the creation of these files by using the
-``flask-framework`` profile:
+We'll need the project's ``charmcraft.yaml``, ``requirements.txt`` and source code for
+the charm. The source code contains the logic required to operate the Flask application.
+Charmcraft will automate the creation of these files by using the ``flask-framework``
+profile:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -321,9 +321,9 @@ again, then upload the new OCI image to the MicroK8s registry:
     :dedent: 2
 
 Change back into the charm directory using ``cd charm``. The ``flask-framework``
-Charmcraft extension supports adding configurations to the project which will be passed
-as environment variables to the Flask application. Add the following to the end of the
-project file:
+Charmcraft extension supports adding configurations to the project file which will be
+passed as environment variables to the Flask application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 

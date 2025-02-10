@@ -64,11 +64,11 @@ Let's create a directory for this tutorial and change into it:
 
 Finally, install ``python-venv`` and create a virtual environment:
 
-.. code-block:: bash
-
-    sudo apt-get update && sudo apt-get install python3-venv -y
-    python3 -m venv .venv
-    source .venv/bin/activate
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:create-venv]
+    :end-before: [docs:create-venv-end]
+    :dedent: 2
 
 Create the FastAPI application
 ------------------------------
@@ -79,10 +79,7 @@ this tutorial.
 Create a ``requirements.txt`` file, copy the following text into it
 and then save it:
 
-.. code-block:: bash
-
-    fastapi[standard]
-    psycopg2-binary
+.. literalinclude:: code/fastapi/requirements.txt
 
 .. note::
 
@@ -91,22 +88,17 @@ and then save it:
 
 Install the packages:
 
-.. code-block:: bash
-
-    pip install -r requirements.txt
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:install-requirements]
+    :end-before: [docs:install-requirements-end]
+    :dedent: 2
 
 In the same directory, copy and save the following into a text file
 called ``app.py``:
 
-.. code-block:: python
-
-    from fastapi import FastAPI
-
-    app = FastAPI()
-
-    @app.get("/")
-    async def root():
-        return {"message": "Hello World"}
+.. literalinclude:: code/fastapi/app.py
+    :language: python
 
 
 Run the FastAPI application locally
@@ -123,9 +115,11 @@ Test the FastAPI application by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
 
-.. code-block:: bash
-
-    curl localhost:8080
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:curl-fastapi]
+    :end-before: [docs:curl-fastapi-end]
+    :dedent: 2
 
 The FastAPI application should respond with ``{"message":"Hello World"}``.
 
@@ -141,9 +135,11 @@ First, we'll need a ``rockcraft.yaml`` file. Using the
 ``rockcraft.yaml`` and tailor the file for a FastAPI application.
 From the ``fastapi-hello-world`` directory, initialize the rock:
 
-.. code-block:: bash
-
-    rockcraft init --profile fastapi-framework
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:create-rockcraft-yaml]
+    :end-before: [docs:create-rockcraft-yaml-end]
+    :dedent: 2
 
 The ``rockcraft.yaml`` file will be automatically created, with the name being
 set based on your working directory.
@@ -193,9 +189,11 @@ text editor and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -218,11 +216,11 @@ The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.
 Copy the rock:
 
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:fastapi-hello-world_0.1_amd64.rock \
-      docker://localhost:32000/fastapi-hello-world:0.1
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
 
 .. seealso::
 
@@ -236,10 +234,11 @@ Create the charm
 From the ``fastapi-hello-world`` direcotyr, let's create a new directory
 for the charm and change inside it:
 
-.. code-block:: bash
-
-    mkdir charm
-    cd charm
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
 
 Using the ``fastapi-framework`` profile, Charmcraft will automate the
 creation of the files needed for our charm, including a
@@ -249,9 +248,11 @@ application.
 
 Initialize a charm named ``fastapi-hello-world``:
 
-.. code-block:: bash
-
-    charmcraft init --profile fastapi-framework --name fastapi-hello-world
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
 
 The files will automatically be created in your working directory.
 
@@ -292,13 +293,13 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor and include ``arm64``
 in ``platforms``.
 
-The charm depends on several libraries. Download the libraries and pack
-the charm:
+Let's pack the charm
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft fetch-libs
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -324,9 +325,11 @@ Deploy the FastAPI application
 A Juju model is needed to handle Kubernetes resources while deploying
 the FastAPI application. Let's create a new model:
 
-.. code-block:: bash
-
-    juju add-model fastapi-hello-world
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
 
 If you are not on a host with the ``amd64`` architecture, you will
 need to include a constraint to the Juju model to specify your
@@ -335,20 +338,22 @@ architecture. You can check the architecture of your system using
 
 Set the Juju model constraints using
 
-.. code-block:: bash
-
-      juju set-model-constraints -m fastapi-hello-world \
-         arch=$(dpkg --print-architecture)
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:add-model-constraints]
+    :end-before: [docs:add-model-constraints-end]
+    :dedent: 2
 
 
 Now let’s use the OCI image we previously uploaded to deploy the FastAPI
 application. Deploy using Juju by specifying the OCI image name with the
 ``--resource`` option:
 
-.. code-block:: bash
-
-    juju deploy ./fastapi-hello-world_amd64.charm fastapi-hello-world \
-      --resource app-image=localhost:32000/fastapi-hello-world:0.1
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-fastapi-app]
+    :end-before: [docs:deploy-fastapi-app-end]
+    :dedent: 2
 
 It will take a few minutes to deploy the FastAPI application. You can monitor
 the progress using
@@ -385,18 +390,20 @@ output:
 Let's expose the application using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the FastAPI app:
 
-.. code-block:: bash
-
-    juju deploy nginx-ingress-integrator
-    juju integrate nginx-ingress-integrator fastapi-hello-world
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
 the ingress. We will also set the default route to be the root endpoint:
 
-.. code-block:: bash
-
-    juju config nginx-ingress-integrator \
-      service-hostname=fastapi-hello-world path-routes=/
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
@@ -421,17 +428,8 @@ configuration option to be available in the FastAPI app configuration under the
 keyword ``APP_GREETING``. Change back to the ``fastapi-hello-world`` directory
 using ``cd ..`` and copy the following code into ``app.py``:
 
-.. code-block:: python
-
-    import os
-
-    from fastapi import FastAPI
-
-    app = FastAPI()
-
-    @app.get("/")
-    async def root():
-        return {"message": os.getenv("APP_GREETING", "Hello World")}
+.. literalinclude:: code/fastapi/greeting_app.py
+    :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -462,12 +460,11 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
 Let's run the pack and upload commands for the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:fastapi-hello-world_0.2_amd64.rock \
-      docker://localhost:32000/fastapi-hello-world:0.2
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:docker-update]
+    :end-before: [docs:docker-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``.
 
@@ -476,15 +473,8 @@ configurations to ``charmcraft.yaml`` which will be passed as
 environment variables to the FastAPI application. Add the
 following to the end of the ``charmcraft.yaml`` file:
 
-.. code-block:: yaml
-
-    config:
-      options:
-        greeting:
-          description: |
-            The greeting to be returned by the FastAPI application.
-          default: "Hello, world!"
-          type: string
+.. literalinclude:: code/fastapi/greeting_charmcraft.yaml
+    :language: yaml
 
 .. note::
 
@@ -494,12 +484,11 @@ following to the end of the ``charmcraft.yaml`` file:
 
 We can now pack and deploy the new version of the FastAPI app:
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
-    juju refresh fastapi-hello-world \
-      --path=./fastapi-hello-world_amd64.charm \
-      --resource app-image=localhost:32000/fastapi-hello-world:0.2
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
 
 After we wait for a bit monitoring ``juju status`` the application
 should go back to ``active`` again. Verify that the
@@ -517,9 +506,11 @@ shows that the response is still ``{"message":"Hello, world!"}`` as expected.
 
 Now let's change the greeting:
 
-.. code-block:: bash
-
-    juju config fastapi-hello-world greeting='Hi!'
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
 
 After we wait for a moment for the app to be restarted, using
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
@@ -548,27 +539,8 @@ Go back out to the ``fastapi-hello-world`` directory using ``cd ..``,
 open the ``migrate.py`` file using a text editor and paste the
 following code into it:
 
-.. code-block:: python
-
-    import os
-
-    import psycopg2
-
-    DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
-
-    def migrate():
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS visitors (
-                    timestamp TIMESTAMP NOT NULL,
-                    user_agent TEXT NOT NULL
-                );
-            """)
-            conn.commit()
-
-
-    if __name__ == "__main__":
-        migrate()
+.. literalinclude:: code/fastapi/visitors_migrate.py
+    :language: python
 
 .. note::
 
@@ -608,49 +580,18 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. code-block:: python
+.. collapse:: visitors_app.py
 
-    import datetime
-    import os
-    from typing import Annotated
-
-    from fastapi import FastAPI, Header
-    import psycopg2
-
-    app = FastAPI()
-    DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
-
-
-    @app.get("/")
-    async def root(user_agent: Annotated[str | None, Header()] = None):
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            timestamp = datetime.datetime.now()
-
-            cur.execute(
-                "INSERT INTO visitors (timestamp, user_agent) VALUES (%s, %s)",
-                (timestamp, user_agent)
-            )
-            conn.commit()
-
-        return {"message": os.getenv("APP_GREETING", "Hello World")}
-
-
-    @app.get("/visitors")
-    async def visitors():
-        with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM visitors")
-            total_visitors = cur.fetchone()[0]
-
-        return {"count": total_visitors}
+  .. literalinclude:: code/fastapi/visitors_app.py
+      :language: python
 
 Let's run the pack and upload commands for the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:fastapi-hello-world_0.3_amd64.rock \
-      docker://localhost:32000/fastapi-hello-world:0.3
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:docker-2nd-update]
+    :end-before: [docs:docker-2nd-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``.
 
@@ -658,28 +599,24 @@ The FastAPI app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
 add the following section to the end:
 
-.. code-block:: yaml
-
-    requires:
-      postgresql:
-        interface: postgresql_client
-        optional: false
+.. literalinclude:: code/fastapi/visitors_charmcraft.yaml
+    :language: yaml
 
 We can now pack and deploy the new version of the FastAPI app:
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
-    juju refresh fastapi-hello-world \
-      --path=./fastapi-hello-world_amd64.charm \
-      --resource app-image=localhost:32000/fastapi-hello-world:0.3
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-2nd-deployment]
+    :end-before: [docs:refresh-2nd-deployment-end]
+    :dedent: 2
 
 Now let’s deploy PostgreSQL and integrate it with the FastAPI application:
 
-.. code-block:: bash
-
-    juju deploy postgresql-k8s --trust
-    juju integrate fastapi-hello-world postgresql-k8s
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again. Running
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
@@ -718,17 +655,11 @@ development process, including:
 If you'd like to reset your working environment, you can run the following
 in the rock directory ``fastapi-hello-world`` for the tutorial:
 
-.. code-block:: bash
-
-    # exit and delete the virtual environment
-    deactivate
-    rm -rf charm .venv __pycache__
-    # delete all the files created during the tutorial
-    rm fastapi-hello-world_0.1_amd64.rock fastapi-hello-world_0.2_amd64.rock \
-      fastapi-hello-world_0.3_amd64.rock rockcraft.yaml app.py \
-      requirements.txt migrate.py
-    # Remove the juju model
-    juju destroy-model fastapi-hello-world --destroy-storage
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
 
 You can also clean up your Multipass instance. Start by exiting it:
 

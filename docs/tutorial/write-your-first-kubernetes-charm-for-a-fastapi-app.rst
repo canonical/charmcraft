@@ -267,9 +267,9 @@ Create a new directory for the charm and go inside it:
     mkdir charm
     cd charm
 
-We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code for the
-charm. The source code contains the logic required to operate the FastAPI application.
-Charmcraft will automate the creation of these files by using the
+We'll need a project file named ``charmcraft.yaml``, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the FastAPI
+application. Charmcraft will automate the creation of these files by using the
 ``fastapi-framework`` profile:
 
 .. code-block:: bash
@@ -300,8 +300,8 @@ working directory with the ``.charm`` extension. View its contents:
 
 .. note::
 
-    If you changed the name in ``charmcraft.yaml`` or are not on the ``amd64``
-    platform, the name of the ``.charm`` file will be different for you.
+    If you changed the project name or are not on the ``amd64`` platform, the name of
+    the ``.charm`` file will be different for you.
 
 
 Deploy the FastAPI application
@@ -410,9 +410,9 @@ then upload the new OCI image to the MicroK8s registry:
       docker://localhost:32000/fastapi-hello-world:0.2
 
 Change back into the charm directory using ``cd charm``. The ``fastapi-framework``
-Charmcraft extension supports adding configurations to ``charmcraft.yaml`` which
-will be passed as environment variables to the FastAPI application. Add the
-following to the end of the ``charmcraft.yaml`` file:
+Charmcraft extension supports adding configurations to the project file which will be
+passed as environment variables to the FastAPI application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 
@@ -566,10 +566,9 @@ the newly created rock to the MicroK8s registry:
       oci-archive:fastapi-hello-world_0.3_amd64.rock \
       docker://localhost:32000/fastapi-hello-world:0.3
 
-The FastAPI app now requires a database which needs to be declared in the
-``charmcraft.yaml`` file. Go back into the charm directory using ``cd charm``.
-Open ``charmcraft.yaml`` in a text editor and add the following section at the
-end of the file:
+The FastAPI app now requires a database which needs to be declared in the project file.
+Go back into the charm directory using ``cd charm``. Open the project file in a text
+editor and add the following section at the end of the file:
 
 .. code-block:: yaml
 

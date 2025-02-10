@@ -36,7 +36,7 @@ Edit this file to write your library.
 
 ..
 
-    See next: :external+ops:ref:`manage-libraries`
+    See next: :external+ops:ref:`Ops | Manage libraries <manage-libraries>`
 
 
 .. _publish-a-library:
@@ -115,7 +115,7 @@ Another good way to search for libraries is to explore the charm collection on
 Use a library
 -------------
 
-In your charm's ``charmcraft.yaml``, specify the ``charm-libs`` key with the desired
+In your charm's project file, specify the ``charm-libs`` key with the desired
 libraries.
 
     See more: :ref:`recipe-key-charm-libs`

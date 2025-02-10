@@ -15,7 +15,7 @@ Current releases
 Charmcraft 3
 ~~~~~~~~~~~~
 
-- :doc:`Charmcraft 3.4 <charmcraft-3.4.0>`
+- :doc:`Charmcraft 3.4 <charmcraft-3.4>`
 
 
 Charmcraft 2

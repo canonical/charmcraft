@@ -4,7 +4,7 @@ Platforms
 Platforms
 ---------
 
-The ``platforms`` key in a ``charmcraft.yaml`` determines where charms are
+The project's ``platforms`` key determines where charms are
 built and where they run.
 
 For more information on how to build charms for specific bases and
@@ -166,7 +166,7 @@ Bases
 .. important::
 
    The bases described in this section are a different concept than the
-   deprecated ``bases`` key in a ``charmcraft.yaml``.
+   deprecated ``bases`` key in a project.
 
 The ``base`` and ``build-base`` keys determine the environments where the charm
 is built and where it is run.
@@ -214,10 +214,10 @@ Build plans
 A build plan is a list of what charms Charmcraft will build, the environments
 where the charms will build, and the environments where the charms will run.
 Build plans are determined by the ``platforms``, ``base``, and ``build-base``
-keys in a ``charmcraft.yaml``. The build plan can be filtered with
+keys in a project. The build plan can be filtered with
 command-line arguments or environment variables.
 
-Consider the following ``charmcraft.yaml`` snippet:
+Consider the following snippet:
 
 .. code-block:: yaml
 

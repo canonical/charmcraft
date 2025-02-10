@@ -170,7 +170,7 @@ These endpoint definitions are as below:
     get blocked and stop the services if the integration is not provided.
 
 To add one of these integrations, e.g., PostgreSQL, in the
-``charmcraft.yaml`` file include the appropriate requires block and
+project file, include the appropriate requires block and
 integrate with ``juju integrate <django charm> postgresql`` as usual.
 
 After the integration has been established, the connection string will
@@ -273,11 +273,10 @@ than one unit in the application, the services with the name ending in
 Secrets
 -------
 
-Juju secrets can be passed as environment variables to your Django
-application. The secret ID has to be passed to the application as a
-config option in the file ``charmcraft.yaml`` file of type ``secret``.
-This config option has to be populated with the secret ID, in the format
-``secret:<secret ID>``.
+Juju secrets can be passed as environment variables to your Django application. The
+secret ID has to be passed to the application as a config option in the project file of
+type ``secret``. This config option has to be populated with the secret ID, in the
+format ``secret:<secret ID>``.
 
 The environment variable name passed to the application will be:
 

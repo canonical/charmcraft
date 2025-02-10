@@ -11,11 +11,11 @@ Declare a resource
 ------------------
 
 To declare a resource required by your charm, set the :ref:`recipe-key-resources` key in
-its recipe.
+its project file.
 
     See more: :ref:`recipe-key-resources`
 
-    See next: :external+ops:ref:`manage-resources`
+    See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 
 .. tip::
 

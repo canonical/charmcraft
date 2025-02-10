@@ -185,16 +185,19 @@ parts:
     after: [charmcraft]
     plugin: nil
     build-environment:
-      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/x86_64-linux-gnu
+      - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
       - PYTHONPATH: $CRAFT_STAGE/lib/python3.10/site-packages
     override-build: |
       python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
         > $CRAFT_PART_INSTALL/completion.sh
 
-  skopeo:  # Copied from Rockcraft
+  skopeo:
     plugin: nil
     source: https://github.com/containers/skopeo.git
-    source-tag: v1.15.1
+    source-tag: v1.17.0
+    build-environment:
+      - DISABLE_DOCS: "1"
+      - CGO_ENABLED: "1"
     override-build: |
       CGO=1 go build -ldflags -linkmode=external ./cmd/skopeo
       mkdir "$CRAFT_PART_INSTALL"/bin

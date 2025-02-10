@@ -144,8 +144,8 @@ These endpoint definitions are as below:
     The key optional with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
 
-To add one of these integrations, e.g., Postgresql, in the ``charmcraft.yaml`` file
-include the appropriate requires block and integrate with ``juju integrate <flask charm>
+To add one of these integrations, e.g., Postgresql, in the project file, include the
+appropriate requires block and integrate with ``juju integrate <flask charm>
 postgresql`` as usual.
 
 After the integration has been established, the connection string will be available as
@@ -256,9 +256,9 @@ Secrets
 -------
 
 Juju secrets can be passed as environment variables to your Flask application. The
-secret ID has to be passed to the application as a config option in the file
-``charmcraft.yaml`` file of type ``secret``. This config option has to be populated with
-the secret ID, in the format ``secret:<secret ID>``.
+secret ID has to be passed to the application as a config option in the project file of
+type ``secret``. This config option has to be populated with the secret ID, in the
+format ``secret:<secret ID>``.
 
 The environment variable name passed to the application will be:
 

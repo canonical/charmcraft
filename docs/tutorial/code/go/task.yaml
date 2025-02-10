@@ -228,7 +228,7 @@ execute: |
 
   # [docs:clean-environment]
   # exit and delete the charm dir
-  rm -rf charm 
+  rm -rf charm
   # delete all the files created during the tutorial
   rm go-hello-world_0.1_$(dpkg --print-architecture).rock \
     go-hello-world_0.2_$(dpkg --print-architecture).rock \

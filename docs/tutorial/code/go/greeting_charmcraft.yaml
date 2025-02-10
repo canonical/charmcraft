@@ -1,4 +1,4 @@
-# configuration snippet for Go application with a configuration
+# configuration snippet for Go application
 
 config:
   options:

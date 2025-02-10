@@ -56,10 +56,11 @@ Set things up
 Finally, let's create a new directory for this tutorial and
 change into it:
 
-.. code-block:: bash
-
-    mkdir go-hello-world
-    cd go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-working-dir]
+    :end-before: [docs:create-working-dir-end]
+    :dedent: 2
 
 Create the Go application
 -------------------------
@@ -69,34 +70,17 @@ used for this tutorial.
 
 Install ``go`` and initialize the Go module:
 
-.. code-block:: bash
-
-    sudo snap install go --classic
-    go mod init go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:install-init-go]
+    :end-before: [docs:install-init-go-end]
+    :dedent: 2
 
 Create a ``main.go`` file, copy the following text into it and then
 save it:
 
-.. code-block:: python
-
-    package main
-
-    import (
-      "fmt"
-      "log"
-      "net/http"
-    )
-
-    func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request")
-      fmt.Fprintln(w, "Hello, world!")
-    }
-
-    func main() {
-      log.Printf("starting hello world application")
-      http.HandleFunc("/", helloWorldHandler)
-      http.ListenAndServe(":8080", nil)
-    }
+.. literalinclude:: code/go/main.go
+    :language: go
 
 
 Run the Go application locally
@@ -104,9 +88,11 @@ Run the Go application locally
 
 First, we need to build the Go application so it can run:
 
-.. code-block:: bash
-
-    go build .
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:build-go]
+    :end-before: [docs:build-go-end]
+    :dedent: 2
 
 Now that we have a binary compiled, let's run the Go application to verify
 that it works:
@@ -119,9 +105,11 @@ Test the Go application by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
 
-.. code-block:: bash
-
-    curl localhost:8080
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:curl-go]
+    :end-before: [docs:curl-go-end]
+    :dedent: 2
 
 The Go application should respond with ``Hello, world!``.
 
@@ -137,9 +125,11 @@ First, we'll need a ``rockcraft.yaml`` file. Using the
 ``rockcraft.yaml`` and tailor the file for a Go application.
 From the ``go-hello-world`` directory, initialize the rock:
 
-.. code-block:: bash
-
-    rockcraft init --profile go-framework
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-rockcraft-yaml]
+    :end-before: [docs:create-rockcraft-yaml-end]
+    :dedent: 2
 
 The ``rockcraft.yaml`` file will automatically be created and set the name
 based on your working directory.
@@ -191,9 +181,11 @@ text editor and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -216,11 +208,11 @@ The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.
 Copy the rock:
 
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.1_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.1
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
 
 .. seealso::
 
@@ -233,10 +225,11 @@ Create the charm
 From the ``go-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
-.. code-block:: bash
-
-    mkdir charm
-    cd charm
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
 
 Using the ``go-framework`` profile, Charmcraft will automate the
 creation of the files needed for our charm, including a
@@ -246,9 +239,11 @@ application.
 
 Initialize a charm named ``go-hello-world``:
 
-.. code-block:: bash
-
-    charmcraft init --profile go-framework --name go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
 
 The files will automatically be created in your working directory.
 
@@ -289,12 +284,13 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor and include ``arm64``
 in ``platforms``.
 
-The charm depends on several libraries. Download the libraries and pack the charm:
+Let's pack the charm:
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft fetch-libs
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
 
 .. note::
 
@@ -320,9 +316,11 @@ Deploy the Go application
 A Juju model is needed to handle Kubernetes resources while deploying
 the Go application. Let's create a new model:
 
-.. code-block:: bash
-
-    juju add-model go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
 
 If you are not on a host with the ``amd64`` architecture, you will need to include
 to include a constraint to the Juju model to specify your architecture.
@@ -331,19 +329,21 @@ You can check the architecture of your system using
 
 Set the Juju model constraints using
 
-.. code-block:: bash
-
-    juju set-model-constraints -m go-hello-world \
-         arch=$(dpkg --print-architecture)
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:add-model-constraints]
+    :end-before: [docs:add-model-constraints-end]
+    :dedent: 2
 
 Now let’s use the OCI image we previously uploaded to deploy the Go
 application. Deploy using Juju by specifying the OCI image name with the
 ``--resource`` option:
 
-.. code-block:: bash
-
-    juju deploy ./go-hello-world_amd64.charm \
-      go-hello-world \ --resource app-image=localhost:32000/go-hello-world:0.1
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-go-app]
+    :end-before: [docs:deploy-go-app-end]
+    :dedent: 2
 
 It will take a few minutes to deploy the Go application. You can monitor the
 progress using
@@ -380,18 +380,20 @@ following output:
 Let's expose the application using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Go app:
 
-.. code-block:: bash
-
-    juju deploy nginx-ingress-integrator --trust
-    juju integrate nginx-ingress-integrator go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
 the ingress. We will also set the default route to be the root endpoint:
 
-.. code-block:: bash
-
-    juju config nginx-ingress-integrator \
-      service-hostname=go-hello-world path-routes=/
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
 
 .. note::
 
@@ -420,31 +422,8 @@ configuration option to be available in the Go app configuration under the
 keyword ``GREETING``. Change back to the ``go-hello-world`` directory using
 ``cd ..`` and copy the following code into ``main.go``:
 
-.. code-block:: c
-
-    package main
-
-    import (
-      "fmt"
-      "log"
-      "os"
-      "net/http"
-    )
-
-    func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request")
-      greeting, found := os.LookupEnv("APP_GREETING")
-      if !found {
-            greeting = "Hello, world!"
-      }
-      fmt.Fprintln(w, greeting)
-    }
-
-    func main() {
-      log.Printf("starting hello world application")
-      http.HandleFunc("/", helloWorldHandler)
-      http.ListenAndServe(":8080", nil)
-    }
+.. literalinclude:: code/go/greeting_main.txt
+    :language: go
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -476,12 +455,11 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
 Let's run the pack and upload commands for the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.2_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.2
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:docker-update]
+    :end-before: [docs:docker-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``.
 
@@ -490,15 +468,8 @@ to ``charmcraft.yaml``, which will be passed as environment variables to
 the Go application. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
-.. code-block:: yaml
-
-    config:
-      options:
-        greeting:
-          description: |
-            The greeting to be returned by the Go application.
-          default: "Hello, world!"
-          type: string
+.. literalinclude:: code/go/greeting_charmcraft.yaml
+    :language: yaml
 
 .. note::
 
@@ -508,12 +479,11 @@ the Go application. Add the following to the end of the
 
 We can now pack and deploy the new version of the Go app:
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
-    juju refresh go-hello-world \
-      --path=./go-hello-world_amd64.charm \ --resource
-      app-image=localhost:32000/go-hello-world:0.2
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
 
 After we wait for a bit monitoring ``juju status`` the application
 should go back to ``active`` again. Verify that the new configuration
@@ -531,9 +501,11 @@ shows that the response is still ``Hello, world!`` as expected.
 
 Now let's change the greeting:
 
-.. code-block:: bash
-
-    juju config go-hello-world greeting='Hi!'
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
 
 After we wait for a moment for the app to be restarted, using
 ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
@@ -562,11 +534,8 @@ Go back out to the ``go-hello-world`` directory using ``cd ..``.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
-.. code-block:: bash
-
-    #!/bin/bash
-
-    PGPASSWORD="${POSTGRESQL_DB_PASSWORD}" psql -h "${POSTGRESQL_DB_HOSTNAME}" -U "${POSTGRESQL_DB_USERNAME}" "${POSTGRESQL_DB_NAME}" -c "CREATE TABLE IF NOT EXISTS visitors (timestamp TIMESTAMP NOT NULL, user_agent TEXT NOT NULL);"
+.. literalinclude:: code/go/visitors_migrate.sh
+    :language: bash
 
 .. note::
 
@@ -576,9 +545,11 @@ following code into it:
 
 Change the permissions of the file ``migrate.sh`` so that it is executable:
 
-.. code-block:: bash
-
-    chmod u+x migrate.sh
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:change-migrate-permissions]
+    :end-before: [docs:change-migrate-permissions-end]
+    :dedent: 2
 
 For the migrations to work, we need the ``postgresql-client`` package
 installed in the rock. By default, the ``go-framework`` uses the ``base``
@@ -587,15 +558,8 @@ slice, so that the rock does not include unnecessary files. Open the
 ``rockcraft.yaml`` file using a text editor and add the following to the
 end of the file:
 
-.. code-block:: yaml
-
-    parts:
-      runtime-debs:
-        plugin: nil stage-packages:
-          - postgresql-client
-      runtime-slices:
-        plugin: nil stage-packages:
-          - bash_bins
+.. literalinclude:: code/go/visitors_rockcraft.yaml
+    :language: yaml
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -633,86 +597,25 @@ replace its content with the following code:
 
 .. dropdown:: main.go
 
-    .. code-block:: c
-
-        package main
-
-        import (
-                "database/sql"
-                "fmt"
-                "log"
-                "net/http"
-                "os"
-                "time"
-
-                _ "github.com/jackc/pgx/v5/stdlib"
-        )
-
-        func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("new hello world request")
-                postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
-                db, err := sql.Open("pgx", postgresqlURL)
-                if err != nil {
-                        log.Printf("An error occurred while connecting to postgresql: %v", err)
-                        return
-                } defer db.Close()
-
-                ua := req.Header.Get("User-Agent")
-                timestamp := time.Now() _,
-                err = db.Exec("INSERT into visitors (timestamp, user_agent) VALUES ($1, $2)", timestamp, ua)
-                if err != nil {
-                        log.Printf("An error occurred while executing query: %v", err)
-                        return
-                }
-
-                greeting, found := os.LookupEnv("APP_GREETING")
-                if !found {
-                        greeting = "Hello, world!"
-                }
-
-                fmt.Fprintln(w, greeting)
-        }
-
-        func visitorsHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("visitors request")
-                postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
-                db, err := sql.Open("pgx", postgresqlURL)
-                if err != nil {
-                        return
-                }
-                defer db.Close()
-
-                var numVisitors
-                int err = db.QueryRow("SELECT count(*) from visitors").Scan(&numVisitors)
-                if err != nil {
-                        log.Printf("An error occurred while executing query: %v", err)
-                        return
-                }
-                fmt.Fprintf(w, "Number of visitors %d\n", numVisitors)
-        }
-
-        func main() {
-                log.Printf("starting hello world application")
-                http.HandleFunc("/", helloWorldHandler)
-                http.HandleFunc("/visitors", visitorsHandler)
-                http.ListenAndServe(":8080", nil)
-        }
+    .. literalinclude:: code/go/visitors_main.txt
+        :language: go
 
 Check all the packages and their dependencies in the Go project with the
 following command:
 
-.. code-block:: bash
-
-    go mod tidy
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:check-go-app]
+    :end-before: [docs:check-go-app-end]
+    :dedent: 2
 
 Let's run the pack and upload commands for the rock:
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.3_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.3
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:docker-2nd-update]
+    :end-before: [docs:docker-2nd-update-end]
+    :dedent: 2
 
 Change back into the charm directory using ``cd charm``.
 
@@ -720,28 +623,24 @@ The Go app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
 add the following section to the end of the file:
 
-.. code-block:: yaml
-
-    requires:
-      postgresql:
-        interface: postgresql_client
-        optional: false
+.. literalinclude:: code/go/visitors_charmcraft.yaml
+    :language: yaml
 
 We can now pack and deploy the new version of the Go app:
 
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
-    juju refresh go-hello-world \
-      --path=./go-hello-world_amd64.charm \
-      --resource app-image=localhost:32000/go-hello-world:0.3
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-2nd-deployment]
+    :end-before: [docs:refresh-2nd-deployment-end]
+    :dedent: 2
 
 Now let’s deploy PostgreSQL and integrate it with the Go application:
 
-.. code-block:: bash
-
-    juju deploy postgresql-k8s --trust
-    juju integrate go-hello-world postgresql-k8s
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
 Running ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
@@ -780,13 +679,11 @@ development process, including:
 If you'd like to reset your working environment, you can run the following
 in the rock directory ``go-hello-world`` for the tutorial:
 
-.. code-block:: bash
-
-    cd .. rm -rf charm # delete all the files created during the tutorial rm
-    go-hello-world_0.1_amd64.rock go-hello-world_0.2_amd64.rock \
-      go-hello-world_0.3_amd64.rock rockcraft.yaml main.go \ migrate.sh go-hello-world
-      go.mod go.sum
-    # Remove the juju model juju destroy-model go-hello-world --destroy-storage
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
 
 You can also clean up your Multipass instance. Start by exiting it:
 
@@ -798,7 +695,8 @@ And then you can proceed with its deletion:
 
 .. code-block:: bash
 
-    multipass delete charm-dev multipass purge
+    multipass delete charm-dev
+    multipass purge
 
 
 Next steps

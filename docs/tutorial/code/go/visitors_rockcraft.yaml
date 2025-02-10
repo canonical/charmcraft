@@ -1,0 +1,11 @@
+parts:
+  runtime-debs:
+    plugin: nil
+    stage-packages:
+      # Added manually for the migrations
+      - postgresql-client
+  runtime-slices:
+    plugin: nil
+    stage-packages:
+      # Added manually for the migrations
+      - bash_bins

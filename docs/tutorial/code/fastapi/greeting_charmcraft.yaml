@@ -1,4 +1,4 @@
-# configuration snippet for FastAPI application with a configuration
+# configuration snippet for FastAPI application
 
 config:
   options:

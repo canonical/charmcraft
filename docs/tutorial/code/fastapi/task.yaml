@@ -87,7 +87,8 @@ execute: |
   # [docs:add-juju-model-end]
 
   #[docs:add-model-constraints]
-  juju set-model-constraints -m fastapi-hello-world arch=$(dpkg --print-architecture)
+  juju set-model-constraints \
+    -m fastapi-hello-world arch=$(dpkg --print-architecture)
   #[docs:add-model-constraints-end]
 
   # [docs:deploy-fastapi-app]

@@ -325,7 +325,7 @@ following output:
     :input: juju status
 
     Model              Controller      Cloud/Region        Version  SLA          Timestamp
-    flask-hello-world  dev-controller  microk8s/localhost  3.1.8    unsupported  17:04:11+10:00
+    flask-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  17:04:11+10:00
 
     App           Version  Status  Scale  Charm              Channel  Rev  Address         Exposed  Message
     flask-hello-world      active      1  flask-hello-world             0  10.152.183.166  no

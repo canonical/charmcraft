@@ -380,7 +380,7 @@ output:
     :input: juju status
 
     Model                Controller      Cloud/Region        Version  SLA          Timestamp
-    fastapi-hello-world  dev-controller  microk8s/localhost  3.5.4    unsupported  13:45:18+10:00
+    fastapi-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  13:45:18+10:00
 
     App                  Version  Status  Scale  Charm                Channel  Rev  Address        Exposed  Message
     fastapi-hello-world           active      1  fastapi-hello-world             0  10.152.183.53  no

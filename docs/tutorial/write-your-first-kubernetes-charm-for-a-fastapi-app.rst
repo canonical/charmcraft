@@ -537,8 +537,8 @@ database is initialized and ready to be used by the application. We will
 create a ``migrate.py`` file containing this logic.
 
 Go back out to the ``fastapi-hello-world`` directory using ``cd ..``,
-open the ``migrate.py`` file using a text editor and paste the
-following code into it:
+create the ``migrate.py`` file, open the file using a text editor
+and paste the following code into it:
 
 .. literalinclude:: code/fastapi/visitors_migrate.py
     :language: python

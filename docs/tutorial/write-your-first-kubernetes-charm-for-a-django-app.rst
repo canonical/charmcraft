@@ -724,8 +724,8 @@ development process, including:
 
 - Creating a Django application
 - Deploying the application locally
-- Building an OCI image using Rockcraft
-- Packaging the application using Charmcraft
+- Packaging the application using Rockcraft
+- Building the application with Ops code using Charmcraft
 - Deplyoing the application using Juju
 - Integrating the application with PostgreSQL to be production ready
 - Exposing the application using an ingress

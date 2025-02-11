@@ -646,8 +646,8 @@ development process, including:
 
 - Creating a FastAPI application
 - Deploying the application locally
-- Building an OCI image using Rockcraft
-- Packaging the application using Charmcraft
+- Packaging the application using Rockcraft
+- Building the application with Ops code using Charmcraft
 - Deplyoing the application using Juju
 - Exposing the application using an ingress
 - Configuring the application

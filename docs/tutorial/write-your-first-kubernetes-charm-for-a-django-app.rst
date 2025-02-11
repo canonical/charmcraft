@@ -259,7 +259,7 @@ to be production ready:
    # SECURITY WARNING: don't run with debug turned on in production!
    DEBUG = os.environ.get('DJANGO_DEBUG', 'false') == 'true'
 
-   ALLOWED_HOSTS = json.loads(os.environ.get('DJANGO_ALLOWED_HOSTS', '{ref}`]'))
+   ALLOWED_HOSTS = json.loads(os.environ.get('DJANGO_ALLOWED_HOSTS', '[]'))
 
 We will also use PostgreSQL as the database for our Django app. In
 ``settings.py``, go further down to the Database section and change the

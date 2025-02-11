@@ -49,7 +49,7 @@ times, mimicking a real development process.
 Set things up
 -------------
 
-.. include:: /reuse/tutorial/setup_edge.rst
+.. include:: /reuse/tutorial/setup_stable.rst
 .. |12FactorApp| replace:: Django
 
 Let’s create a new directory for this tutorial and change into it:

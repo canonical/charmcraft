@@ -165,13 +165,6 @@ execute: |
   # curl the Django app
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
 
-  # [docs:config-allowed-hosts]
-  juju config django-hello-world django-allowed-hosts=django-hello-world
-  # [docs:config-allowed-hosts-end]
-
-  # curl again
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
-
   cd ..
   cd django_hello_world
 
@@ -214,7 +207,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!
-  curl 127.0.0.1 -H "Host: django-hello-world" | grep Hello
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
 
   cd ..
   # Update django_hello_world/greeting/views.py

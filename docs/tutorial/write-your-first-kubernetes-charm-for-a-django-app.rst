@@ -618,15 +618,11 @@ Now that we have the greeting app, we can disable debug mode:
 
 Use ``juju status --watch 2s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
-you can use ``curl 127.0.0.1 -H "Host: django-hello-world"`` inside the
-Multipass VM. Either way, the Django application should respond with
-``Hello, world!``.
+you can use
+``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
+inside the Multipass VM. Either way, the Django application should respond
+with ``Hello, world!``.
 
-.. note::
-
-   The ``-H "Host: django-hello-world"`` option to the ``curl`` command
-   is a way of setting the hostname of the request without setting a
-   DNS record.
 
 Enable a configuration
 ----------------------

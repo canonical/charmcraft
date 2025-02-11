@@ -76,8 +76,9 @@ Create the FastAPI application
 Start by creating the "Hello, world" FastAPI application that will be used for
 this tutorial.
 
-Create a ``requirements.txt`` file, copy the following text into it
-and then save it:
+Create a ``requirements.txt`` file using ``touch requirements.txt``.
+Then, open the file in a text editor using ``nano requirements.txt``,
+copy the following text into it and then save the file:
 
 .. literalinclude:: code/fastapi/requirements.txt
 

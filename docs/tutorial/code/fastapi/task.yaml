@@ -184,6 +184,7 @@ execute: |
   # give Juju some time to deploy and refresh the apps
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 20m | juju status --relations
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 20m | juju status --relations
 
   juju status --relations
 

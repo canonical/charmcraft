@@ -35,7 +35,7 @@ craft-platforms==0.5.0
 craft-providers==2.1.0
 craft-store==3.2.1
 crashtest==0.4.1
-cryptography==44.0.0
+cryptography==44.0.1
 cssutils==2.11.1
 cycler==0.12.1
 dict2css==0.3.0.post1

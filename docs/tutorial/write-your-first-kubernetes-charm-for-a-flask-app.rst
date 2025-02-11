@@ -92,8 +92,8 @@ Install the packages:
     :end-before: [docs:install-requirements-end]
     :dedent: 2
 
-In the same directory, copy and save the following into a text file
-called ``app.py``:
+In the same directory, create the file ``app.py``, copy the
+following text into it and save the file:
 
 .. literalinclude:: code/flask/app.py
     :language: python

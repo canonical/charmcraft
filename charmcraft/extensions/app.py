@@ -241,6 +241,13 @@ class FlaskFramework(_AppBase):
             "type": "string",
             "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Flask application. This configuration will set the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
         },
+        "flask-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `flask-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual Flask secret key. '
+            "To create the secret, run the following command: `juju add-secret my-flask-secret-key value=<secret-string> && juju grant-secret my-flask-secret-key flask-k8s`, "
+            "and use the output secret ID to configure this option.",
+        },
         "flask-session-cookie-secure": {
             "type": "boolean",
             "description": "Set the secure attribute in the Flask application cookies. This configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
@@ -276,6 +283,13 @@ class DjangoFramework(_AppBase):
         "django-secret-key": {
             "type": "string",
             "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Django application. This configuration will set the DJANGO_SECRET_KEY environment variable.",
+        },
+        "django-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `django-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual Django secret key. '
+            "To create the secret, run the following command: `juju add-secret my-django-secret-key value=<secret-string> && juju grant-secret my-django-secret-key django-k8s`, "
+            "and use the output secret ID to configure this option.",
         },
         "django-allowed-hosts": {
             "type": "string",
@@ -313,6 +327,13 @@ class GoFramework(_AppBase):
         "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+        "app-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual application secret key. '
+            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key go-app`, "
+            "and use the output secret ID to configure this option.",
         },
     }
 
@@ -366,6 +387,13 @@ class FastAPIFramework(_AppBase):
         "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+        "app-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual application secret key. '
+            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key fastapi-app`, "
+            "and use the output secret ID to configure this option.",
         },
     }
 

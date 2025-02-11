@@ -45,6 +45,7 @@ ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg
 html_context = {
     "product_page": "github.com/canonical/charmcraft",
     "github_url": "https://github.com/canonical/charmcraft",
+    "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
 }
 
@@ -73,6 +74,7 @@ extensions.extend(
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
+        "sphinxext.rediraffe",
     ]
 )
 
@@ -157,6 +159,9 @@ github_username = "canonical"
 github_repository = "charmcraft"
 
 html_domain_indices = True
+
+# Client-side page redirects.
+rediraffe_redirects = "redirects.txt"
 
 # endregion
 

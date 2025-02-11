@@ -181,10 +181,10 @@ Let's create a new directory for the charm and go inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-We'll need a ``charmcraft.yaml``, ``requirements.txt`` and source code for
-the charm. The source code contains the logic required to operate the Flask
-application. Charmcraft will automate the creation of these files by using
-the ``flask-framework`` profile:
+We'll need the project's ``charmcraft.yaml``, ``requirements.txt`` and source code for
+the charm. The source code contains the logic required to operate the Flask application.
+Charmcraft will automate the creation of these files by using the ``flask-framework``
+profile:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -215,8 +215,8 @@ working directory with the ``.charm`` extension:
 
 .. note::
 
-    If you changed the name in charmcraft.yaml or are not on the amd64 platform,
-    the name of the ``.charm`` file will be different for you.
+    If you changed the project name or are not on the amd64 platform, the name of the
+    ``.charm`` file will be different for you.
 
 Deploy the Flask application
 ============================
@@ -321,9 +321,9 @@ again, then upload the new OCI image to the MicroK8s registry:
     :dedent: 2
 
 Change back into the charm directory using ``cd charm``. The ``flask-framework``
-Charmcraft extension supports adding configurations to ``charmcraft.yaml`` which
-will be passed as environment variables to the Flask application. Add the
-following to the end of the ``charmcraft.yaml`` file:
+Charmcraft extension supports adding configurations to the project file which will be
+passed as environment variables to the Flask application. Add the following to the end
+of the project file:
 
 .. code-block:: yaml
 
@@ -430,9 +430,9 @@ Run ``rockcraft pack`` and upload the newly created rock to the MicroK8s registr
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
 
-Go back into the charm directory using ``cd charm``. The Flask app now requires
-a database which needs to be declared in the ``charmcraft.yaml`` file. Open
-``charmcraft.yaml`` in a text editor and add the following section to the end:
+Go back into the charm directory using ``cd charm``. The Flask app now requires a
+database which needs to be declared in the project file. Open the project file in a text
+editor and add the following section to the end:
 
 .. code-block:: yaml
 

@@ -39,7 +39,7 @@ During the build step, the plugin performs the following actions:
 Example
 -------
 
-The following :file:`charmcraft.yaml` file can be used with a uv project to
+The following project file can be used with a uv project to
 craft a charm with Ubuntu 24.04 as its base:
 
 .. literalinclude:: uv-charmcraft.yaml

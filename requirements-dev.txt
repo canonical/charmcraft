@@ -22,18 +22,18 @@ chardet==5.2.0
 charset-normalizer==3.4.1
 cleo==2.1.0
 click==8.1.8
-codespell==2.4.0
+codespell==2.4.1
 colorama==0.4.6
 contourpy==1.3.1
 coverage==7.6.10
-craft-application==4.8.2
+craft-application==4.8.3
 craft-archives==2.0.2
 craft-cli==2.15.0
 craft-grammar==2.0.1
 craft-parts==2.4.0
 craft-platforms==0.5.0
 craft-providers==2.1.0
-craft-store==3.2.0
+craft-store==3.2.1
 crashtest==0.4.1
 cryptography==44.0.0
 cssutils==2.11.1
@@ -48,7 +48,7 @@ domdf-python-tools==3.9.0
 dulwich==0.22.7
 fastjsonschema==2.21.1
 filelock==3.17.0
-fonttools==4.55.5
+fonttools==4.55.8
 freezegun==1.5.1
 furo==2024.8.6
 gitdb==4.0.12
@@ -118,7 +118,7 @@ pydantic-settings==2.7.1
 pyfakefs==5.7.4
 pygit2==1.14.1
 pygments==2.19.1
-pylint==3.3.3
+pylint==3.3.4
 pymacaroons==0.13.0
 pynacl==1.5.0
 pyparsing==3.2.1
@@ -137,7 +137,7 @@ pytz==2024.2
 pyxdg==0.28
 pyyaml==6.0.2
 rapidfuzz==3.11.0
-referencing==0.36.1
+referencing==0.36.2
 regex==2024.11.6
 requests==2.32.3
 requests-toolbelt==1.0.0
@@ -180,6 +180,7 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
 sphinxext-opengraph==0.9.1
+sphinxext-rediraffe==0.2.7
 starlette==0.45.3
 tabulate==0.9.0
 tomlkit==0.13.2

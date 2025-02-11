@@ -26,7 +26,7 @@ contents will be removed upon a new container being deployed. The
 for every application, such as
 `PostgreSQL <https://www.postgresql.org/>`_ or
 `MySQL <https://www.mysql.com/>`_. See the
-:ref:`how-to guide <manage-a-12-factor-app-charm>` for how to deploy
+:ref:`how-to guide <manage-12-factor-app-charms>` for how to deploy
 a database and integrate the Django application with it.
 
 

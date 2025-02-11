@@ -17,7 +17,7 @@ craft-parts==2.2.2
 craft-platforms==0.5.0
 craft-providers==2.1.0
 craft-store==3.1.0
-cryptography==44.0.0
+cryptography==44.0.1
 dill==0.3.9
 distro==1.9.0
 docker==7.1.0

@@ -521,20 +521,6 @@ Now you can open a new tab and visit http://django-hello-world. The
 Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
 
-We can now also change the Django allowed hosts to
-``django-hello-world`` which is a production ready value (for
-production, you will need to set up a DNS record). Inside the Multipass
-VM, set the configuration:
-
-.. literalinclude:: code/django/task.yaml
-    :language: bash
-    :start-after: [docs:config-allowed-hosts]
-    :end-before: [docs:config-allowed-hosts-end]
-    :dedent: 2
-
-Visiting http://django-hello-world should still respond with
-``The install worked successfully! Congratulations!``.
-
 Add an initial app
 ------------------
 

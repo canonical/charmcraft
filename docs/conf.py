@@ -74,6 +74,7 @@ extensions.extend(
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
+        "sphinxext.rediraffe",
     ]
 )
 
@@ -158,6 +159,9 @@ github_username = "canonical"
 github_repository = "charmcraft"
 
 html_domain_indices = True
+
+# Client-side page redirects.
+rediraffe_redirects = "redirects.txt"
 
 # endregion
 

@@ -26,7 +26,7 @@ contents will be removed upon a new container being deployed. The
 for every application, such as
 `PostgreSQL <https://www.postgresql.org/>`_ or
 `MySQL <https://www.mysql.com/>`_. See the
-:ref:`how-to guide <manage-a-12-factor-app-charm>` for how to deploy
+:ref:`how-to guide <manage-12-factor-app-charms>` for how to deploy
 a database and integrate the Django application with it.
 
 
@@ -105,6 +105,7 @@ the following charms and bundles:
 - `S3 <https://charmhub.io/s3-integrator>`__
 - RabbitMQ: `machine <https://charmhub.io/rabbitmq-server>`__ and
   `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
+- `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
 
 These endpoint definitions are as below:
 
@@ -163,6 +164,14 @@ These endpoint definitions are as below:
        interface: rabbitmq
        optional: True
        limit: 1
+
+.. code-block:: yaml
+
+    requires:
+      tracing:
+        interface: tracing
+        optional: True
+        limit: 1
 
 .. note::
 
@@ -239,6 +248,12 @@ connection string:
 - ``RABBITMQ_PORT``
 - ``RABBITMQ_VHOST``
 
+The Tracing integration creates the following environment variables
+that you can use to configure your application:
+
+- ``OTEL_EXPORTER_OTLP_ENDPOINT``
+- ``OTEL_SERVICE_NAME``
+
 The environment variable ``DJANGO_BASE_URL`` provides the Ingress URL
 for an Ingress integration or the Kubernetes service URL if there is no
 Ingress integration.
@@ -268,6 +283,40 @@ same environment variables as the main application. If there is more
 than one unit in the application, the services with the name ending in
 ``-worker`` will run in all units. The services with name ending in
 ``-scheduler`` will only run in one of the units of the application.
+
+
+Observability
+-------------
+
+12-factor app charms are designed to be easily observable using the
+`Canonical Observability Stack
+<https://charmhub.io/topics/canonical-observability-stack>`__.
+
+You can easily integrate your charm with
+`Loki <https://charmhub.io/loki-k8s>`__,
+`Prometheus <https://charmhub.io/prometheus-k8s>`__ and
+`Grafana <https://charmhub.io/grafana-k8s>`__ using Juju.
+
+.. code-block:: bash
+
+    juju integrate django-k8s grafana
+    juju integrate django-k8s loki
+    juju integrate django-k8s prometheus
+
+After integration, you will be able to observe your workload
+using Grafana dashboards.
+
+In addition to that you can also trace your workload code
+using `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__.
+
+See `Charmed Tempo HA <https://charmhub.io/topics/charmed-tempo-ha>`_ on Discourse to
+learn more about how to deploy Tempo.
+
+OpenTelemetry will automatically read the environment variables
+and configure the OpenTelemetry SDK to use them.
+See the `OpenTelemetry documentation
+<https://opentelemetry-python.readthedocs.io/en/latest/>`__
+for further information about tracing.
 
 
 Secrets

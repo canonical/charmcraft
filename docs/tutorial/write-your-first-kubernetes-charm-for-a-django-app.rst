@@ -630,7 +630,7 @@ Enable a configuration
 To demonstrate how to provide a configuration to the Django application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
-keyword ``GREETING``. Go back out to the rock
+keyword ``DJANGO_GREETING``. Go back out to the rock
 directory ``django-hello-world`` using ``cd ..``. From there, open the
 ``django_hello_world/greeting/views.py`` file and replace the content
 with:

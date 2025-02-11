@@ -24,11 +24,10 @@ Use ``charmcraft init`` and specify the relevant profile:
 
   charmcraft init --profile <profile>
 
-Charmcraft automatically creates ``charmcraft.yaml``,
-``requirements.txt`` and source code for the charm in your
-current directory. You will need to check ``charmcraft.yaml``
-and ``README.md`` to verify that the charm's name and
-description are correct.
+Charmcraft automatically creates a ``charmcraft.yaml`` project file, a
+``requirements.txt`` file and source code for the charm in your current directory. You
+will need to check the project file and ``README.md`` to verify that the charm's name
+and description are correct.
 
     See also: :ref:`ref_commands_init`
 
@@ -154,7 +153,7 @@ Manage relations for a 12-factor app charm
 ------------------------------------------
 
 A charm integration can be added to your charmed 12-factor app by providing
-the integration and endpoint definition in ``charmcraft.yaml``:
+the integration and endpoint definition in your project file:
 
 .. code-block:: yaml
 
@@ -167,7 +166,7 @@ Here, ``<endpoint name>`` corresponds to the endpoint of the application with wh
 you want the integration, and ``<endpoint interface name>`` is the endpoint schema
 to which this relation conforms. Both the ``<endpoint name>`` and
 ``<endpoint interface name>`` must coincide with the structs defined in the
-``charmcraft.yaml`` file of that particular application's charm. The key ``optional``
+pfoject file of that particular application's charm. The key ``optional``
 with value ``False`` means that the charm will get blocked and stop the services if
 the integration is not provided.
 
@@ -184,7 +183,7 @@ use to configure your 12-factor application.
 For example, if you wish to integrate your 12-factor application with PostgreSQL
 (`machine <https://charmhub.io/postgresql>`_ or
 `k8s <https://charmhub.io/postgresql-k8s>`_
-charm), add the following endpoint definition to ``charmcraft.yaml``:
+charm), add the following endpoint definition to your project file:
 
 .. code-block:: yaml
 
@@ -223,7 +222,7 @@ Manage secrets for a 12-factor app charm
 
 A user secret can be added to a charm and all the keys and values
 in the secret will be exposed as environment variables. Add the secret
-configuration option in ``charmcraft.yaml``:
+configuration option in your project file:
 
 .. code-block:: yaml
 

@@ -80,6 +80,7 @@ further integration endpoints, to integrate with the following charms and bundle
 - `S3 <https://charmhub.io/s3-integrator>`__
 - RabbitMQ: `machine <https://charmhub.io/rabbitmq-server>`__ and
   `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
+- `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
 
 These endpoint definitions are as below:
 
@@ -139,13 +140,21 @@ These endpoint definitions are as below:
         optional: True
         limit: 1
 
+.. code-block:: yaml
+
+    requires:
+      tracing:
+        interface: tracing
+        optional: True
+        limit: 1
+
 .. note::
 
     The key optional with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
 
-To add one of these integrations, e.g., Postgresql, in the ``charmcraft.yaml`` file
-include the appropriate requires block and integrate with ``juju integrate <flask charm>
+To add one of these integrations, e.g., Postgresql, in the project file, include the
+appropriate requires block and integrate with ``juju integrate <flask charm>
 postgresql`` as usual.
 
 After the integration has been established, the connection string will be available as
@@ -209,6 +218,12 @@ provided, derived from the connection string:
 - ``RABBITMQ_PORT``
 - ``RABBITMQ_VHOST``
 
+The Tracing integration creates the following environment variables
+that you can use to configure your application:
+
+- ``OTEL_EXPORTER_OTLP_ENDPOINT``
+- ``OTEL_SERVICE_NAME``
+
 The environment variable ``FLASK_BASE_URL`` provides the Ingress URL for an Ingress
 integration or the Kubernetes service URL if there is no Ingress integration.
 
@@ -237,6 +252,40 @@ the services with the name ending in ``-worker`` will run in all units. The serv
 with name ending in ``-scheduler`` will only run in one of the units of the application.
 
 
+Observability
+-------------
+
+12-Factor charms are designed to be easily observable using the
+`Canonical Observability Stack
+<https://charmhub.io/topics/canonical-observability-stack>`__.
+
+You can easily integrate your charm with
+`Loki <https://charmhub.io/loki-k8s>`__,
+`Prometheus <https://charmhub.io/prometheus-k8s>`__ and
+`Grafana <https://charmhub.io/grafana-k8s>`__ using Juju.
+
+.. code-block:: bash
+
+    juju integrate flask-k8s grafana
+    juju integrate flask-k8s loki
+    juju integrate flask-k8s prometheus
+
+After integration, you will be able to observe your workload
+using Grafana dashboards.
+
+In addition to that you can also trace your workload code
+using `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__.
+
+To learn about how to deploy Tempo you can read the
+documentation `here <https://charmhub.io/topics/charmed-tempo-ha>`__.
+
+OpenTelemetry will automatically read the environment variables
+and configure the OpenTelemetry SDK to use them.
+See the `OpenTelemetry documentation
+<https://opentelemetry-python.readthedocs.io/en/latest/>`__
+for further information about tracing.
+
+
 Regarding the ``migrate.sh`` file
 ---------------------------------
 
@@ -256,9 +305,9 @@ Secrets
 -------
 
 Juju secrets can be passed as environment variables to your Flask application. The
-secret ID has to be passed to the application as a config option in the file
-``charmcraft.yaml`` file of type ``secret``. This config option has to be populated with
-the secret ID, in the format ``secret:<secret ID>``.
+secret ID has to be passed to the application as a config option in the project file of
+type ``secret``. This config option has to be populated with the secret ID, in the
+format ``secret:<secret ID>``.
 
 The environment variable name passed to the application will be:
 

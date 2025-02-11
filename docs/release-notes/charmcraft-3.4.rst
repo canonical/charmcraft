@@ -145,6 +145,11 @@ The following issues were resolved in Charmcraft 3.4.1:
 - `#264 (craft-store) <https://github.com/canonical/craft-store/issues/264>`_
   ``charmcraft promote`` errors when promoting certain charm/resource combinations.
 
+The following issues were resolved in Charmcraft 3.4.2:
+
+- `#2149 <https://github.com/canonical/charmcraft/issues/2149>`_ the Charmcraft snap
+  does not build on architectures other than amd64.
+- Some documentation links were mis-formatted.
 
 Contributors
 ------------

@@ -37,6 +37,7 @@ class _AppBase(Extension):
         {"lib": "redis_k8s.redis", "version": "0"},
         {"lib": "data_platform_libs.s3", "version": "0"},
         {"lib": "saml_integrator.saml", "version": "0"},
+        {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
     ]
 
     @staticmethod

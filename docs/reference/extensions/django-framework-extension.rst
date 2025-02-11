@@ -288,7 +288,7 @@ than one unit in the application, the services with the name ending in
 Observability
 -------------
 
-12-Factor charms are designed to be easily observable using the
+12-factor app charms are designed to be easily observable using the
 `Canonical Observability Stack
 <https://charmhub.io/topics/canonical-observability-stack>`__.
 
@@ -309,8 +309,8 @@ using Grafana dashboards.
 In addition to that you can also trace your workload code
 using `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__.
 
-To learn about how to deploy Tempo you can read the
-documentation `here <https://charmhub.io/topics/charmed-tempo-ha>`__.
+See `Charmed Tempo HA <https://charmhub.io/topics/charmed-tempo-ha>`_ on Discourse to
+learn more about how to deploy Tempo.
 
 OpenTelemetry will automatically read the environment variables
 and configure the OpenTelemetry SDK to use them.

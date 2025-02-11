@@ -80,7 +80,7 @@ development controller:
 
 .. code-block:: bash
 
-    sudo snap install juju --channel 3.5/stable
+    sudo snap install juju --channel 3.6/stable
     mkdir -p ~/.local/share
     juju bootstrap microk8s dev-controller
 

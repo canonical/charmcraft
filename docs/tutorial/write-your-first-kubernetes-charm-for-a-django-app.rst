@@ -547,9 +547,9 @@ Create the ``greeting/urls.py`` file with the following contents:
 .. literalinclude:: code/django/urls_greeting.py
    :language: python
 
-Open the ``django_hello_world/urls.py`` file and edit the imports to
-contain ``include`` and the value of ``urlpatterns`` to include
-``path('', include("greeting.urls")`` like in the following example:
+Open the ``django_hello_world/urls.py`` file and edit the imports for
+``django.urls`` to contain ``include`` and the value of ``urlpatterns`` to
+include ``path('', include("greeting.urls")`` like in the following example:
 
 .. code-block:: python
    :emphasize-lines: 2,5

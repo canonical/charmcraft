@@ -699,8 +699,9 @@ We can now pack and deploy the new version of the Django app:
 
 After we wait for a bit monitoring ``juju status`` the application
 should go back to ``active`` again. Sending a request to the root
-endpoint using ``curl 127.0.0.1 -H "Host: django-hello-world"`` or
-visiting http://django-hello-world in a web browser should result in the
+endpoint using
+``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
+or visiting http://django-hello-world in a web browser should result in the
 Django application responding with ``Hello, world!`` again.
 
 Now let’s change the greeting:
@@ -712,8 +713,8 @@ Now let’s change the greeting:
     :dedent: 2
 
 After we wait for a moment for the app to be restarted, using
-``curl 127.0.0.1 -H "Host: django-hello-world"`` or visiting
-http://django-hello-world should now respond with ``Hi!``.
+``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
+or visiting http://django-hello-world should now respond with ``Hi!``.
 
 Tear things down
 ----------------

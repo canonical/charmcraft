@@ -238,7 +238,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is still Hello, world!
-  curl 127.0.0.1 -H "Host: django-hello-world" | grep Hello
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
@@ -249,7 +249,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl 127.0.0.1 -H "Host: django-hello-world" | grep Hi
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
 
   # Back out to main directory for clean-up
   cd ..

@@ -124,7 +124,7 @@ Pack the Go application into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``go-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Go application.
-From the ``go-hello-world`` directory, initialize the rock:
+From the ``/go-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -223,7 +223,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``go-hello-world`` directory, let's create a new directory
+From the ``/go-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/go/task.yaml
@@ -419,7 +419,7 @@ Configure the Go application
 To demonstrate how to provide a configuration to the Go application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Go app configuration under the
-keyword ``GREETING``. Change back to the ``go-hello-world`` directory using
+keyword ``GREETING``. Change back to the ``/go-hello-world`` directory using
 ``cd ..`` and replace the code into ``main.go`` with the following:
 
 .. literalinclude:: code/go/greeting_main.txt
@@ -530,7 +530,7 @@ The charm created by the ``go-framework`` extension will execute the
 database is initialized and ready to be used by the application. We will
 create a ``migrate.sh`` file containing this logic.
 
-Go back out to the ``go-hello-world`` directory using ``cd ..``.
+Go back out to the ``/go-hello-world`` directory using ``cd ..``.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
@@ -677,7 +677,7 @@ development process, including:
 - Integrating the application with a database
 
 If you'd like to reset your working environment, you can run the following
-in the rock directory ``go-hello-world`` for the tutorial:
+in the rock directory ``/go-hello-world`` for the tutorial:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash

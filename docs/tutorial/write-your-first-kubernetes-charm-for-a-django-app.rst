@@ -106,7 +106,7 @@ Run the Django application locally
 We will test the Django application by visiting the app in a web
 browser.
 
-Change into the ``django_hello_world`` directory:
+Change into the ``/django_hello_world`` directory:
 
 .. code:: bash
 
@@ -161,7 +161,7 @@ Pack the Django application into a rock
 First, we’ll need a ``rockcraft.yaml`` file. Using the
 ``django-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Django application. Change
-back into the ``django-hello-world`` directory and initialize the rock:
+back into the ``/django-hello-world`` directory and initialize the rock:
 
 .. code:: bash
 
@@ -169,7 +169,7 @@ back into the ``django-hello-world`` directory and initialize the rock:
    rockcraft init --profile django-framework
 
 The ``rockcraft.yaml`` file will automatically be created and set the
-name based on your working directory, ``django-hello-world``.
+name based on your working directory, ``/django-hello-world``.
 
 Check out the contents of ``rockcraft.yaml``:
 
@@ -221,7 +221,7 @@ upgrade) and this database would not be shared by all containers as the
 application is scaled. We’ll use Juju later to easily deploy a database.
 
 We’ll need to update the ``settings.py`` file to prepare for integrating
-the app with a database. From the ``django-hello-world`` directory, open
+the app with a database. From the ``/django-hello-world`` directory, open
 ``django_hello_world/django_hello_world/settings.py`` and update the
 imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
@@ -324,7 +324,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``django-hello-world`` directory, create a new directory for
+From the ``/django-hello-world`` directory, create a new directory for
 the charm and change inside it:
 
 .. literalinclude:: code/django/task.yaml
@@ -527,8 +527,8 @@ Add an initial app
 The generated Django application does not come with an app, which is why
 we had to initially enable debug mode for testing. Let’s add a greeting
 app that returns a ``Hello, world!`` greeting. We will need to go back
-out to the ``django-hello-world`` directory where the rock is and enter
-into the ``django_hello_world`` directory where the Django application
+out to the ``/django-hello-world`` directory where the rock is and enter
+into the ``/django_hello_world`` directory where the Django application
 is. Let’s add a new Django app:
 
 .. literalinclude:: code/django/task.yaml
@@ -563,7 +563,7 @@ include ``path('', include("greeting.urls")`` like in the following example:
    ]
 
 Since we’re changing the application we should update the version of the
-rock. Go back to the ``django-hello-world`` directory where the rock is
+rock. Go back to the ``/django-hello-world`` directory where the rock is
 and change the ``version`` in ``rockcraft.yaml`` to ``0.2``. The top of
 the ``rockcraft.yaml`` file should look similar to the following:
 
@@ -600,7 +600,7 @@ Now let’s pack and upload the rock using similar commands as before:
     :dedent: 2
 
 Now we can deploy the new version of the Django application from the
-``charm`` directory using:
+``/charm`` directory using:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -631,7 +631,7 @@ To demonstrate how to provide a configuration to the Django application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
 keyword ``DJANGO_GREETING``. Go back out to the rock
-directory ``django-hello-world`` using ``cd ..``. From there, open the
+directory ``/django-hello-world`` using ``cd ..``. From there, open the
 ``django_hello_world/greeting/views.py`` file and replace the content
 with:
 
@@ -732,7 +732,7 @@ development process, including:
 - Adding an initial app and configuring the application
 
 If you’d like to reset your working environment, you can run the
-following in the rock directory ``django-hello-world`` for the tutorial:
+following in the rock directory ``/django-hello-world`` for the tutorial:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

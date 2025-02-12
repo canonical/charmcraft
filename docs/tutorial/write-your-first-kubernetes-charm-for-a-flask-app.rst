@@ -129,7 +129,7 @@ Pack the Flask application into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``flask-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Flask application.
-From the ``flask-hello-world`` directory, initialize the rock:
+From the ``/flask-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -223,7 +223,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``flask-hello-world`` directory, let's create a new directory
+From the ``/flask-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/flask/task.yaml
@@ -370,7 +370,7 @@ Configure the Flask application
 To demonstrate how to provide a configuration to the Flask application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Flask app configuration under the
-keyword ``GREETING``. Change back to the ``flask-hello-world`` directory using
+keyword ``GREETING``. Change back to the ``/flask-hello-world`` directory using
 ``cd ..`` and copy the following code into ``app.py``:
 
 .. literalinclude:: code/flask/greeting_app.py
@@ -480,7 +480,7 @@ The charm created by the ``flask-framework`` extension will execute the
 database is initialized and ready to be used by the application. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``flask-hello-world`` directory using ``cd ..``,
+Go back out to the ``/flask-hello-world`` directory using ``cd ..``,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 
@@ -596,7 +596,7 @@ development process, including:
 - Integrating the application with a database
 
 If you'd like to reset your working environment, you can run the following
-in the rock directory ``flask-hello-world`` for the tutorial:
+in the rock directory ``/flask-hello-world`` for the tutorial:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

@@ -43,11 +43,15 @@ ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
 html_context = {
-    "product_page": "github.com/canonical/charmcraft",
+    "product_page": "https://juju.is/",
+    "product_tag":"_static/logos/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
 }
+
+
+# Template and asset locations
 
 extensions = [
     "canonical_sphinx",

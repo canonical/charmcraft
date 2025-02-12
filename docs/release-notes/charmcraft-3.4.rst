@@ -151,6 +151,11 @@ The following issues were resolved in Charmcraft 3.4.2:
   does not build on architectures other than amd64.
 - Some documentation links were mis-formatted.
 
+The following issues were resolved in Charmcraft 3.4.3:
+
+- `#2158 <https://github.com/canonical/charmcraft/issues/2158>`_ "Invalid hostname"
+  error when packing charm platform with multiple run-on bases.
+
 Contributors
 ------------
 
@@ -159,4 +164,5 @@ this release.
 
 :literalref:`@bepri<https://github.com/bepri>`,
 :literalref:`@dariuszd21<https://github.com/dariuszd21>`,
-and :literalref:`@lengau<https://launchpad.net/~lengau>`
+:literalref:`@lengau<https://launchpad.net/~lengau>` and
+:literalref:`@mr-cal<https://github.com/mr-cal>`

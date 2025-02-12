@@ -330,7 +330,7 @@ following output:
     App           Version  Status  Scale  Charm              Channel  Rev  Address         Exposed  Message
     flask-hello-world      active      1  flask-hello-world             0  10.152.183.166  no
 
-    Unit             Workload  Agent  Address      Ports  Message
+    Unit                  Workload  Agent  Address      Ports  Message
     flask-hello-world/0*  active    idle   10.1.87.213
 
 Let's expose the application using ingress. Deploy the

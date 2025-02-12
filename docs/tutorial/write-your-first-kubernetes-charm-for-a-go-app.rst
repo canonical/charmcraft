@@ -368,15 +368,14 @@ following output:
 .. terminal::
     :input: juju status
 
-    Model              Controller      Cloud/Region        Version  SLA          Timestamp
-    go-hello-world  microk8s    microk8s/localhost  3.6.2    unsupported  14:35:07+02:00
+    Model           Controller      Cloud/Region        Version  SLA          Timestamp
+    go-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  14:35:07+02:00
 
-    App             Version  Status  Scale  Charm           Channel  Rev  Address
-    Exposed  Message go-hello-world           active      1  go-hello-world
-    0  10.152.183.229  no
+    App                 Version  Status  Scale  Charm               Channel    Rev  Address         Exposed  Message
+    go-hello-world               active      1  go-hello-world                   0  10.152.183.229  no
 
-    Unit               Workload  Agent  Address      Ports  Message go-hello-world/0*
-    active    idle   10.1.157.79
+    Unit               Workload  Agent  Address      Ports  Message
+    go-hello-world/0*  active    idle   10.1.157.79
 
 Let's expose the application using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Go app:

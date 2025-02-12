@@ -873,7 +873,7 @@ wheels = [
 
 [[package]]
 name = "craft-providers"
-version = "2.1.0"
+version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
@@ -882,9 +882,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-unixsocket2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/1f/4c0eb72331e11ec8fec5cd24e993fe1e34ca04331251b90b8b6c7b1b72c7/craft_providers-2.1.0.tar.gz", hash = "sha256:9494a70cd0f86c13a746157bc1a54520e867656690f60d07d4ffdce39f60a99a", size = 180276 }
+sdist = { url = "https://files.pythonhosted.org/packages/76/b7/5a5d13f6a73edc8602c96fe041d1528a0ccda8051c326e4b0c7862364073/craft_providers-2.1.1.tar.gz", hash = "sha256:43be90dd78fd8caec7f107183b526d96a3b2bfd5f3efd50247d3ab5bc8526d30", size = 180439 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/53/81f948ad5cd368bd7774b716e9afcae383ac8a389b7b462b214cd8981ade/craft_providers-2.1.0-py2.py3-none-any.whl", hash = "sha256:502e6fbb92435fac0db3bee0fcdaa84f0826880176b4635d896c5e4d429e3c5e", size = 97031 },
+    { url = "https://files.pythonhosted.org/packages/52/95/306ca5b3f386faba7f8d6ff16c8d8f69a0495927611ae6825eed137b6f78/craft_providers-2.1.1-py2.py3-none-any.whl", hash = "sha256:5b94282fb767f7e801e281fb8d648fd292d97b9c1b3eb5700be60ac6aab51eb8", size = 97041 },
 ]
 
 [[package]]

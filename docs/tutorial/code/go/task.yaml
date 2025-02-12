@@ -223,10 +223,9 @@ execute: |
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
   curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 2
 
+  # [docs:clean-environment]
   # Back out to main directory for cleanup
   cd ..
-
-  # [docs:clean-environment]
   # exit and delete the charm dir
   rm -rf charm
   # delete all the files created during the tutorial

@@ -251,10 +251,9 @@ execute: |
   # curl and check that the response is now Hi
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
 
+  # [docs:clean-environment]
   # Back out to main directory for clean-up
   cd ..
-
-  # [docs:clean-environment]
   # exit and delete the virtual environment
   deactivate
   rm -rf .venv

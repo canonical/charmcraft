@@ -420,7 +420,7 @@ To demonstrate how to provide a configuration to the Go application,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Go app configuration under the
 keyword ``GREETING``. Change back to the ``go-hello-world`` directory using
-``cd ..`` and copy the following code into ``main.go``:
+``cd ..`` and replace the code into ``main.go`` with the following:
 
 .. literalinclude:: code/go/greeting_main.txt
     :language: go

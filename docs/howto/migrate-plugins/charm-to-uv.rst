@@ -3,12 +3,16 @@
 Migrate from the Charm plugin to the uv plugin
 ==============================================
 
-For charms that use `uv`_, Charmcraft has a :ref:`craft_parts_uv_plugin`. Migrating
-from the Charm plugin provides some benefits, such as using uv during the build
-process not having to maintain a separate ``requirements.txt`` file. If the
-charm to be migrated does not currently use uv, refer to the
-`uv documentation <https://docs.astral.sh/uv/guides/projects/>`_ for instructions
-on how to use uv for a Python project.
+For charms that use `uv`_, Charmcraft has a :ref:`craft_parts_uv_plugin`. This guide
+shows how to migrate from the default Charm plugin to the uv plugin.
+
+Migrating from the Charm plugin provides some benefits, not having to maintain a
+separate ``requirements.txt`` file and using the much faster ``uv`` for package
+management rather than ``pip``.
+
+If the charm to be migrated does not currently use uv, refer to the
+`uv documentation <https://docs.astral.sh/uv/guides/projects/>`_ for instructions on
+how to use uv for a Python project.
 
 Update the project file
 -----------------------
@@ -26,17 +30,6 @@ can be created as follows:
         plugin: uv
         source: .
 
-Add optional dependency groups
-------------------------------
-
-If the charm has `dependency groups`_ that should be included when creating the virtual
-environment, the ``uv-groups`` key can be used to include those groups when creating
-the virtual environment.
-
-.. note::
-    This is useful and encouraged, though not mandatory, for keeping track of
-    library dependencies, as covered in the next section.
-
 Include charm library dependencies
 ----------------------------------
 
@@ -45,13 +38,13 @@ included charmlibs. If any of the charm libraries used have ``PYDEPS``, these wi
 need to be added to the charm's dependencies, potentially as their own
 `dependency group <dependency groups_>`_.
 
-To find these dependencies, check each library file for its ``PYDEPS``. A command
-that can find these is::
+To find these dependencies, check each loaded library file for its ``PYDEPS`` by running
+the following command at the root of the charm project:
 
+.. code-block:: bash
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
-If run from the base directory of a charm, this will show all the PYDEPS declarations
-from all loaded charm libs. These can then be included in ``pyproject.toml``.
+Next, in ``pyproject.toml``, list them in a ``charmlibs`` dependency group.
 
 .. code-block:: toml
     :caption: pyproject.toml
@@ -65,7 +58,15 @@ from all loaded charm libs. These can then be included in ``pyproject.toml``.
         "ops>=2.0.0",
     ]
 
-Including this dependency group is as easy as adding it to ``charmcraft.yaml``:
+Add dependency groups
+---------------------
+
+If the charm has dependency groups, such as one for charm libraries, that should be
+included when creating the virtual environment, the ``uv-groups`` key can be used to
+include those groups when creating the virtual environment.
+
+Including this dependency group in your charm is as easy as adding it to
+``charmcraft.yaml``:
 
 .. code-block:: yaml
     :caption: charmcraft.yaml

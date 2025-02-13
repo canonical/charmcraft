@@ -10,7 +10,7 @@ Manage resources
 Declare a resource
 ------------------
 
-To declare a resource required by your charm, set the 
+To declare a resource required by your charm, set the
 :ref:`charmcraft-yaml-key-resources` key in its project file.
 
     See more: :ref:`charmcraft-yaml-key-resources`

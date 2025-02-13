@@ -1,3 +1,6 @@
+.. _write-your-first-kubernetes-charm-for-a-flask-app:
+
+
 =================================================
 Write your first Kubernetes charm for a Flask app
 =================================================

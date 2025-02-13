@@ -41,6 +41,7 @@ To find these dependencies, check each loaded library file for its ``PYDEPS`` by
 the following command at the root of the charm project:
 
 .. code-block:: bash
+
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
 Next, in ``pyproject.toml``, list them in a ``charmlibs`` dependency group.
@@ -61,11 +62,8 @@ Add dependency groups
 ---------------------
 
 If the charm has dependency groups that should be included when creating the virtual
-environment, such as one for charm libraries, the ``uv-groups`` key can be set to
-include them.
-
-Including this dependency group in your charm is as easy as adding it to
-``charmcraft.yaml``:
+environment, such as one for charm libraries, the
+:ref:`uv plugin's <craft_parts_uv_plugin>` ``uv-groups`` key can be set to include them:
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
@@ -77,6 +75,9 @@ Including this dependency group in your charm is as easy as adding it to
         source: .
         uv-groups:
           - charmlibs
+
+Likewise, optional dependencies under the ``pyproject.toml`` key
+``project.optional-dependencies`` can be added with the ``uv-extras`` key.
 
 Include extra files
 -------------------

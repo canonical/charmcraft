@@ -52,7 +52,7 @@ In order to create the charm, you'll need to install Charmcraft:
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track:
 
-.. code-block:: bash
+.. code:: 
 
     sudo snap install microk8s --channel 1.31-strict/stable
     sudo adduser $USER snap_microk8s
@@ -80,7 +80,7 @@ Juju is required to deploy the |12FactorApp| application.
 Install Juju using the ``3.6/stable`` track, and bootstrap a
 development controller:
 
-.. code-block:: bash
+.. code::
 
     sudo snap install juju --channel 3.6/stable
     mkdir -p ~/.local/share

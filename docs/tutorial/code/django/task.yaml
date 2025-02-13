@@ -144,9 +144,9 @@ execute: |
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
-  # [docs:config-allowed-hosts-debug]
-  juju config django-hello-world django-allowed-hosts=*  django-debug=true
-  # [docs:config-allowed-hosts-debug-end]
+  # [docs:config-debug]
+  juju config django-hello-world django-debug=true
+  # [docs:config-debug-end]
 
   # [docs:deploy-nginx]
   juju deploy nginx-ingress-integrator --channel=latest/stable --trust

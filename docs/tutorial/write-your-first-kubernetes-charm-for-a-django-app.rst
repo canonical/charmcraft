@@ -469,22 +469,19 @@ following output:
    django-hello-world/0*  active    idle   10.1.157.80
    postgresql-k8s/0*      active    idle   10.1.157.78         Primary
 
-To be able to test the deployment, we need to include the IP address in
-the allowed hosts configuration. We’ll also enable debug mode for now
-whilst we are testing. Set both configurations:
+To be able to test the deployment, we need to enable debug mode for now.
+Set the configuration:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
-    :start-after: [docs:config-allowed-hosts-debug]
-    :end-before: [docs:config-allowed-hosts-debug-end]
+    :start-after: [docs:config-debug]
+    :end-before: [docs:config-debug-end]
     :dedent: 2
 
 .. note::
 
-   Setting the Django allowed hosts to ``*`` and turning on debug mode should not
-   be done in production where you should set the actual hostname of the
-   application and disable debug mode. We will do this in the tutorial for now and
-   later demonstrate how we can set these to production ready values.
+   Turning on debug mode should not be done in production. We will do this in
+   the tutorial for now and later disable debug mode.
 
 Let’s expose the application using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Django app:

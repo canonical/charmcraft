@@ -5,16 +5,7 @@
 
 # Charmcraft -- easily initialise, pack, and publish your charms
 
-Charmcraft is a CLI tool that makes it easy and quick to initialise, package, and publish Kubernetes and machine charms. It is an official component of the Charm SDK, itself a part of [the Juju universe](https://juju.is/).
-
-||||
-|-|-|- |
-|| [Juju](https://juju.is/docs/juju) | Learn how to quickly deploy, integrate, and manage charms on any cloud with Juju. <br>  _It's as simple as `juju deploy foo`, `juju integrate foo bar`, ..., on any cloud._ |
-||||
-|| [Charmhub](https://charmhub.io/) | Sample our existing charms on Charmhub. <br> _A charm can be a cluster ([OpenStack](https://charmhub.io/openstack-base), [Kubernetes](https://charmhub.io/charmed-kubernetes)), a data platform ([PostgreSQL](https://charmhub.io/postgresql-k8s), [MongoDB](https://charmhub.io/mongodb), etc.), an observability stack ([Canonical Observability Stack](https://charmhub.io/cos-lite)), an MLOps solution ([Kubeflow](https://charmhub.io/kubeflow)), and so much more._ |
-||||
-|:point_right:| [Charm SDK](https://juju.is/docs/sdk) | Write your own charm! <br> _Juju is written in Go, but our SDK supports easy charm development in Python._  |
-
+Charmcraft is a CLI tool that makes it easy and quick to initialise, package, and publish Kubernetes and machine charms.
 
 ## Give it a try
 
@@ -22,7 +13,7 @@ Let's use Charmcraft to initialise and pack a Kubernetes charm:
 
 ### Set up
 
-> See [Charm SDK | Set up your development environment automatically > Set up an Ubuntu `charm-dev` VM with Multipass](https://juju.is/docs/sdk/dev-setup#heading--automatic-set-up-an-ubuntu-charm-dev-vm-with-multipass). <br> Choose the MicroK8s track. 
+> See [Juju | Set things up](https://canonical-juju.readthedocs-hosted.com/en/latest/user/howto/manage-your-deployment/manage-your-deployment-environment/#set-things-up). <br> Choose the automatic track and MicroK8s.
 
 ### Initialise and pack your charm
 
@@ -55,13 +46,13 @@ test_charm.py
 test_charm.py
 ```
 
-Poke around: 
+Poke around:
 
 Note that the `charmcraft.yaml` file shows that what we have is an example charm called `my-new-charm`, which builds on Ubuntu 22.04 and which uses an OCI image resource `httpbin` from `kennethreitz/httpbin`.
 
 Note that the `src/charm.py` file contains code scaffolding featuring the Charm SDK's Ops library for writing charms.
 
-Explore further, start editing the files, or skip ahead and pack the charm: 
+Explore further, start editing the files, or skip ahead and pack the charm:
 
 ```
 charmcraft pack
@@ -79,26 +70,10 @@ But Charmcraft goes far beyond `init` and `pack`. For example, when you're ready
 
 ### Clean up
 
-> See [Charm SDK | Set up your development environment automatically > Clean up](https://juju.is/docs/sdk/dev-setup#heading--automatic-set-up-an-ubuntu-charm-dev-vm-with-multipass).
+> See [Juju | Tear things down](https://canonical-juju.readthedocs-hosted.com/en/latest/user/howto/manage-your-deployment/manage-your-deployment-environment/#tear-things-down). <br> Choose the automatic track.
 
 ## Next steps
 
-### Learn more
-
-Read our [user documentation](https://juju.is/docs/sdk/charmcraft), which also includes other guides showing Charmcraft in action
-
-### Chat with us
-
-Read our [Code of conduct](https://ubuntu.com/community/code-of-conduct) and:
-- Join our chat: [Matrix](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com)
-- Join our forum: [Discourse](https://discourse.charmhub.io/)
-
-### File an issue
-
-- Report a Charmcraft bug on [GitHub](https://github.com/canonical/charmcraft/issues)
-- Raise a general https://juju.is/docs documentation issue on [GitHub | juju/docs](https://github.com/juju/docs)
-
-### Make your mark
-
-- Read our [documentation contributor guidelines](https://discourse.charmhub.io/t/documentation-guidelines-for-contributors/1245) and help improve a doc 
-- Read our [codebase contributor guidelines](https://github.com/canonical/charmcraft/blob/main/CONTRIBUTING.md) and help improve the codebase
+- Read the [docs](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/).
+- Read our [Code of conduct](https://ubuntu.com/community/code-of-conduct) and join our [chat](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com) and [forum](https://discourse.charmhub.io/) or [open an issue](https://github.com/canonical/charmcraft/issues).
+- Read our [CONTRIBUTING guide](https://github.com/canonical/charmcraft/blob/main/CONTRIBUTING.md) and contribute!

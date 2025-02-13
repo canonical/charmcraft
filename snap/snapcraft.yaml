@@ -152,7 +152,7 @@ parts:
       uv sync --no-dev --no-editable --no-binary
       . $CRAFT_PART_INSTALL/bin/activate
       uv pip install -r requirements-jammy.txt
-      rm $CRAFT_PART_INSTALL/lib64
+      rm -f $CRAFT_PART_INSTALL/lib64
 
       mkdir -p $CRAFT_PART_INSTALL/libexec/charmcraft
       sed -i 's|#!/bin/sh|#!/snap/charmcraft/current/bin/python3|' $CRAFT_PART_INSTALL/bin/craftctl

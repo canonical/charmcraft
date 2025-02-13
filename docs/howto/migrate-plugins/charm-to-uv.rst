@@ -6,9 +6,8 @@ Migrate from the Charm plugin to the uv plugin
 For charms that use `uv`_, Charmcraft has a :ref:`craft_parts_uv_plugin`. This guide
 shows how to migrate from the default Charm plugin to the uv plugin.
 
-Migrating from the Charm plugin provides some benefits, not having to maintain a
-separate ``requirements.txt`` file and using the much faster ``uv`` for package
-management rather than ``pip``.
+Migrating from the Charm plugin provides some benefits, notably not having to maintain a
+separate ``requirements.txt`` file. For package management, uv is much faster than pip.
 
 If the charm to be migrated does not currently use uv, refer to the
 `uv documentation <https://docs.astral.sh/uv/guides/projects/>`_ for instructions on
@@ -61,9 +60,9 @@ Next, in ``pyproject.toml``, list them in a ``charmlibs`` dependency group.
 Add dependency groups
 ---------------------
 
-If the charm has dependency groups, such as one for charm libraries, that should be
-included when creating the virtual environment, the ``uv-groups`` key can be used to
-include those groups when creating the virtual environment.
+If the charm has dependency groups that should be included when creating the virtual
+environment, such as one for charm libraries, the ``uv-groups`` key can be set to
+include them.
 
 Including this dependency group in your charm is as easy as adding it to
 ``charmcraft.yaml``:

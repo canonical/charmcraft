@@ -43,7 +43,7 @@ In order to create the charm, you'll need to install Charmcraft:
 
 .. warning::
 
-    This tutorial requires version ``3.0.0`` or later of Charmcraft. Check the
+    This tutorial requires version ``3.2.0`` or later of Charmcraft. Check the
     version of Charmcraft using ``charmcraft --version`` If you have an older
     version of Charmcraft installed, use
     ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest

@@ -226,6 +226,9 @@ execute: |
   # [docs:clean-environment]
   # Back out to main directory for cleanup
   cd ..
+  # clean charmcraft and rockcraft
+  charmcraft clean
+  rockcraft clean
   # exit and delete the charm dir
   rm -rf charm
   # delete all the files created during the tutorial

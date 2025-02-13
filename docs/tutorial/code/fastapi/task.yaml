@@ -196,6 +196,9 @@ execute: |
   # [docs:clean-environment]
   # Back out to main directory for cleanup
   cd ..
+  # clean charmcraft and rockcraft
+  charmcraft clean
+  rockcraft clean
   # exit and delete the virtual environment
   deactivate
   rm -rf charm .venv __pycache__

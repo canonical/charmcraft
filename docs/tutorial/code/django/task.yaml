@@ -254,6 +254,9 @@ execute: |
   # [docs:clean-environment]
   # Back out to main directory for clean-up
   cd ..
+  # clean charmcraft and rockcraft
+  charmcraft clean
+  rockcraft clean
   # exit and delete the virtual environment
   deactivate
   rm -rf .venv

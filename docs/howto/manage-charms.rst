@@ -633,12 +633,12 @@ Publish a charm on Charmhub
 
    .. code-block:: bash
 
-       charmcraft upload-resource my-super-charm someresource
+       charmcraft upload-resource my-awesome-charm someresource
        --filepath=/tmp/superdb.bin
 
    .. terminal::
 
-       Revision 1 created of resource 'someresource' for charm 'my-super-charm'
+       Revision 1 created of resource 'someresource' for charm 'my-awesome-charm'
 
    ..
 
@@ -649,18 +649,20 @@ Publish a charm on Charmhub
        Each time you upload a resource to Charmhub, that creates a revision (unless you
        upload the exact same file again). See more: :ref:`manage-resource-revisions`.
 
-5. Release the charm: To release a charm, release your revision of
-   choice to the target release channel. E.g.,
+5. Release the charm: To release a charm, release your revision of choice to the
+   target release channel. For a charm that has a resource, also specify the
+   resource and its revision. E.g.,
 
    .. code-block:: bash
 
        charmcraft release my-awesome-charm --revision=1 --channel=beta
+       --resource someresource:1
 
    .. terminal::
 
-       Revision 1 of charm 'my-awesome-charm' released to beta
+       Revision 1 of charm 'my-awesome-charm' released to beta (attaching resources: 'someresource' r1)
 
-    ..
+..
 
    See more: :ref:`manage-charm-revisions`
 

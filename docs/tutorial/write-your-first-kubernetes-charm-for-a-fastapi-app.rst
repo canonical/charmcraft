@@ -95,8 +95,8 @@ Install the packages:
     :end-before: [docs:install-requirements-end]
     :dedent: 2
 
-In the same directory, create the file ``app.py``, copy the
-following text into it and save the file:
+In the same directory, create a file called ``app.py``.
+Then copy and save the following code into the file:
 
 .. literalinclude:: code/fastapi/app.py
     :language: python

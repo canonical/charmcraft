@@ -194,10 +194,10 @@ execute: |
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
-  charmcraft clean
+  CHARMCRAFTCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
   # Back out to main directory for cleanup
   cd ..
-  rockcraft clean
+  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean
   # exit and delete the virtual environment
   deactivate
   rm -rf charm .venv __pycache__

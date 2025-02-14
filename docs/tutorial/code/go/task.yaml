@@ -224,10 +224,10 @@ execute: |
   curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
-  charmcraft clean
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
   # Back out to main directory for cleanup
   cd ..
-  rockcraft clean
+  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean
   # exit and delete the charm dir
   rm -rf charm
   # delete all the files created during the tutorial

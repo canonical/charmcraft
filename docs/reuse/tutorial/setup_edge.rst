@@ -74,6 +74,9 @@ Wait for MicroK8s to be ready:
 
    sudo microk8s status --wait-ready
 
+If successful, the terminal will output ``microk8s is running``
+along with a list of enabled and disabled add-ons. 
+
 Juju is required to deploy the |12FactorApp| application.
 Install Juju using the ``3.6/stable`` track, and bootstrap a
 development controller:

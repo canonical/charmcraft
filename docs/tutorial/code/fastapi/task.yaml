@@ -188,8 +188,7 @@ execute: |
 
   juju status --relations
 
-  # curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 2

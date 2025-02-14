@@ -162,6 +162,8 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
+  juju status --relations
+
   # curl the Django app
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
 
@@ -252,10 +254,9 @@ execute: |
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
 
   # [docs:clean-environment]
-  # Back out to main directory for clean-up
-  cd ..
-  # clean charmcraft and rockcraft
   charmcraft clean
+  # Back out to main directory for cleanup
+  cd ..
   rockcraft clean
   # exit and delete the virtual environment
   deactivate

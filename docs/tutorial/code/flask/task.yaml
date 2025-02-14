@@ -189,10 +189,9 @@ execute: |
   curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
+  charmcraft clean
   # Back out to main directory for cleanup
   cd ..
-  # clean charmcraft and rockcraft
-  charmcraft clean
   rockcraft clean
   # exit and delete the virtual environment
   deactivate

@@ -7,26 +7,27 @@ Imagine you have a Go application backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
 yourself packaging and deploying your Go application in no time.
-Let's get started!
 
 In this tutorial we will build a Kubernetes charm for a Go
 application using Charmcraft, so we can have a Go application
-up and running with Juju.
+up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
 .. note::
-    If you're new to the charming world: Go applications are
-    specifically supported with a coordinated pair of profiles
-    for an OCI container image (**rock**) and corresponding
-    packaged software (**charm**) that allow for the application
-    to be deployed, integrated and operated on a Kubernetes
-    cluster with the Juju orchestration engine.
+   If you're new to the charming world: Go applications are
+   specifically supported with a template to quickly generate a
+   **rock** (i.e., a special kind of OCI-compliant container image)
+   and a matching template to quickly generate a **charm** (i.e.,
+   a software operator for cloud operations done with the Juju
+   orchestration engine). The result is Go applications that
+   can be easily deployed, configured, scaled, integrated, etc.,
+   on any Kubernetes cluster.
 
 What you'll need:
 -----------------
 
-- A workstation, e.g., a laptop, with amd64 or arm64 architecture which
+- A local system, e.g., a laptop, with amd64 or arm64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
   4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
@@ -54,7 +55,7 @@ Set things up
 .. |12FactorApp| replace:: Go
 
 Finally, let's create a new directory for this tutorial and
-change into it:
+enter into it:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -81,6 +82,7 @@ Then, open the file in a text editor using ``nano main.go``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/go/main.go
+    :caption: main.go
     :language: go
 
 
@@ -144,6 +146,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
+   :caption: rockcraft.yaml
 
    name: go-hello-world
    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
@@ -202,7 +205,7 @@ the terminal will respond with something similar to
 
 .. note::
 
-   If you are not on an ``amd64`` platform, the name of the ``.rock`` file
+   If you are not on the ``amd64`` platform, the name of the ``.rock`` file
    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
@@ -217,7 +220,7 @@ Copy the rock:
 
 .. seealso::
 
-    See more: `Ubuntu manpage | skopeo
+    `Ubuntu manpage | skopeo
     <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
 
 Create the charm
@@ -325,10 +328,8 @@ the Go application. Let's create a new model:
 
 If you are not on a host with the ``amd64`` architecture, you will need to include
 to include a constraint to the Juju model to specify your architecture.
-You can check the architecture of your system using
-``dpkg --print-architecture``.
 
-Set the Juju model constraints using
+Set the Juju model constraints with:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -346,8 +347,8 @@ application. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-go-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Go application. You can monitor the
-progress using
+It will take a few minutes to deploy the Go application. You can monitor its
+progress with:
 
 .. code:: bash
 
@@ -453,7 +454,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
    ...
 
-Let's run the pack and upload commands for the rock:
+Let’s pack and upload the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -490,11 +491,6 @@ should go back to ``active`` again. Verify that the new configuration
 has been added using
 ``juju config go-hello-world | grep -A 6 greeting:``,
 which should show the configuration option.
-
-.. note::
-
-    The ``grep`` command extracts a portion of the configuration to make it easier to
-    check whether the configuration option has been added.
 
 Using ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
 shows that the response is still ``Hello, world!`` as expected.
@@ -609,7 +605,7 @@ following command:
     :end-before: [docs:check-go-app-end]
     :dedent: 2
 
-Let's run the pack and upload commands for the rock:
+Let’s pack and upload the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash

@@ -6,27 +6,28 @@ Write your first Kubernetes charm for a Django app
 Imagine you have a Django application backed up by a database such as
 PostgreSQL and need to deploy it. In a traditional setup, this can be
 quite a challenge, but with Charmcraft you’ll find yourself packaging
-and deploying your Django application in no time. Let’s get started!
+and deploying your Django application in no time.
 
 In this tutorial we will build a Kubernetes charm for a Django
 application using Charmcraft, so we can have a Django application up and
-running with Juju.
+running with Juju. Let’s get started!
 
 This tutorial should take 90 minutes for you to complete.
 
 .. note::
-
    If you're new to the charming world: Django applications are
-   specifically supported with a coordinated pair of profiles
-   for an OCI container image (**rock**) and corresponding
-   packaged software (**charm**) that allow for the application
-   to be deployed, integrated and operated on a Kubernetes
-   cluster with the Juju orchestration engine.
+   specifically supported with a template to quickly generate a
+   **rock** (i.e., a special kind of OCI-compliant container image)
+   and a matching template to quickly generate a **charm** (i.e.,
+   a software operator for cloud operations done with the Juju
+   orchestration engine). The result is Django applications that
+   can be easily deployed, configured, scaled, integrated, etc.,
+   on any Kubernetes cluster.
 
 What you’ll need
 ----------------
 
--  A working station, e.g., a laptop, with amd64 or arm64 architecture
+-  A local system, e.g., a laptop, with amd64 or arm64 architecture
    which has sufficient resources to launch a virtual machine with 4
    CPUs, 4 GB RAM, and a 50 GB disk.
 -  Familiarity with Linux.
@@ -52,7 +53,7 @@ Set things up
 .. include:: /reuse/tutorial/setup_stable.rst
 .. |12FactorApp| replace:: Django
 
-Let’s create a new directory for this tutorial and change into it:
+Let’s create a new directory for this tutorial and enter into it:
 
 .. code:: bash
 
@@ -139,10 +140,6 @@ Multipass VM, run:
 
    multipass info charm-dev | grep IP
 
-.. note::
-
-   The ``grep`` command extracts a portion of the output to highlight the
-   IP address.
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -247,8 +244,9 @@ imports to include ``json``, ``os`` and ``secrets``. The top of the
    import os
    import secrets
 
-Near the top of the ``settings.py`` file change the following settings
-to be production ready:
+We need to change some settings to be production ready.
+Near the top of the ``settings.py`` file, change the ``SECRET_KEY``,
+``DEBUG`` and ``ALLOWED_HOSTS`` variables to:
 
 .. code-block:: python
    :emphasize-lines: 2,5,7
@@ -318,7 +316,7 @@ Copy the rock:
 
 .. seealso::
 
-   See more: `Ubuntu manpage | skopeo
+   `Ubuntu manpage | skopeo
    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 Create the charm
@@ -395,8 +393,6 @@ the Django application. Let’s create a new model:
 
 If you are not on a host with the ``amd64`` architecture, you will need
 to include a constraint to the Juju model to specify your architecture.
-You can check the architecture of your system using
-``dpkg --print-architecture``.
 
 Set the Juju model constraints using
 
@@ -456,7 +452,7 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+   :input: juju status
 
    Model               Controller      Cloud/Region        Version  SLA          Timestamp
    django-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  16:47:01+10:00
@@ -545,8 +541,7 @@ Create the ``greeting/urls.py`` file with the following contents:
    :language: python
 
 Open the ``django_hello_world/urls.py`` file and edit the imports for
-``django.urls`` to contain ``include`` and the value of ``urlpatterns`` to
-include ``path('', include("greeting.urls")`` like in the following example:
+``django.urls`` and the value of ``urlpatterns`` like in the following example:
 
 .. code-block:: python
    :emphasize-lines: 2,5

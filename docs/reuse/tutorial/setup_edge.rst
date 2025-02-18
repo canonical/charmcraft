@@ -1,3 +1,8 @@
+.. warning::
+
+    This tutorial requires version ``3.2.0`` or later of Charmcraft.
+    Check the version of Charmcraft using ``charmcraft --version``.
+
 First, install Multipass.
 
 .. seealso::
@@ -43,10 +48,6 @@ In order to create the charm, you'll need to install Charmcraft:
 
     sudo snap install charmcraft --channel latest/edge --classic
 
-.. warning::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft.
-    Check the version of Charmcraft using ``charmcraft --version``.
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track:
@@ -68,14 +69,14 @@ Several MicroK8s add-ons are required for deployment:
     # Required to expose the application
     sudo microk8s enable ingress
 
-Wait for MicroK8s to be ready:
+Check the status of MicroK8s:
 
 .. code-block:: bash
 
    sudo microk8s status --wait-ready
 
 If successful, the terminal will output ``microk8s is running``
-along with a list of enabled and disabled add-ons. 
+along with a list of enabled and disabled add-ons.
 
 Juju is required to deploy the |12FactorApp| application.
 Install Juju using the ``3.6/stable`` track, and bootstrap a
@@ -87,7 +88,5 @@ development controller:
     mkdir -p ~/.local/share
     juju bootstrap microk8s dev-controller
 
-.. note::
-
-    It could take a few minutes to download the images.
+It could take a few minutes to download the images.
 

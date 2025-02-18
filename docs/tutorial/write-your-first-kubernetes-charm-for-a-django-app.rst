@@ -79,6 +79,7 @@ Then, open the file in a text editor using ``nano requirements.txt``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/django/requirements.txt
+    :caption: requirements.txt
 
 .. note::
 
@@ -176,7 +177,8 @@ Check out the contents of ``rockcraft.yaml``:
 
 The top of the file should look similar to the following snippet:
 
-.. code:: yaml
+.. code-block:: yaml
+   :caption: rockcraft.yaml 
 
    name: django-hello-world
    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
@@ -289,8 +291,8 @@ Now let’s pack the rock:
 
 .. note::
 
-   ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-   in the pack command for older versions of Rockcraft.
+   In older versions of Rockcraft, you might need to set
+   ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` before the pack command.
 
 Depending on your system and network, this step can take several minutes to
 finish.
@@ -301,7 +303,7 @@ terminal will respond with something similar to
 
 .. note::
 
-   If you are not on an ``amd64`` platform, the name of the ``.rock`` file
+   If you are not on the ``amd64`` platform, the name of the ``.rock`` file
    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
@@ -394,7 +396,7 @@ the Django application. Let’s create a new model:
 If you are not on a host with the ``amd64`` architecture, you will need
 to include a constraint to the Juju model to specify your architecture.
 
-Set the Juju model constraints using
+Set the Juju model constraints with:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -429,7 +431,7 @@ Integrate PostgreSQL with the Django application:
     :dedent: 2
 
 It will take a few minutes to deploy the Django application. You can
-monitor the progress using
+monitor its progress with:
 
 .. code:: bash
 
@@ -657,7 +659,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
    ...
 
-Let’s run the pack and upload commands for the rock:
+Let’s pack and upload the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

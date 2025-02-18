@@ -178,7 +178,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-   :caption: rockcraft.yaml 
+   :caption: rockcraft.yaml
 
    name: django-hello-world
    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/

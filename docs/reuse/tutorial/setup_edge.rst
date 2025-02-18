@@ -23,15 +23,15 @@ Once the VM is up, open a shell into it:
 
     multipass shell charm-dev
 
-In order to create the rock, you'll need to install Rockcraft with the
-``--classic`` confinement to allow access to the whole file system:
+In order to create the rock, you need to install Rockcraft with
+classic confinement, which grants it access to the whole file system:
 
 .. code-block:: bash
 
     sudo snap install rockcraft --classic
 
 
-``LXD`` will be required for building the rock.
+LXD will be required for building the rock.
 Make sure it is installed and initialized:
 
 .. code-block:: bash

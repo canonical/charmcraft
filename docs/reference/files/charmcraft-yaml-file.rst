@@ -39,7 +39,7 @@ to declare information about the project in a form that can be used by Charmcraf
         :language: yaml
 
 
-.. _recipe-key-actions:
+.. _charmcraft-yaml-key-actions:
 
 ``actions``
 -----------
@@ -64,7 +64,7 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
         :end-before: analysis:
 
 
-.. _recipe-key-analysis:
+.. _charmcraft-yaml-key-analysis:
 
 ``analysis``
 ------------
@@ -93,7 +93,7 @@ the ``charmcraft analyse`` command.
         :end-before: assumes:
 
 
-.. _recipe-key-assumes:
+.. _charmcraft-yaml-key-assumes:
 
 ``assumes``
 -----------
@@ -163,7 +163,7 @@ block must be satisfied.
 
 
 .. _charmcraft-yaml-base:
-.. _recipe-key-base:
+.. _charmcraft-yaml-key-base:
 
 ``base``
 --------
@@ -185,7 +185,7 @@ block must be satisfied.
     base: ubuntu@24.04
 
 
-.. _recipe-key-bases:
+.. _charmcraft-yaml-key-bases:
 
 ``bases``
 ---------
@@ -301,7 +301,7 @@ to the machine architecture.
                   - armhf
 
 
-.. _recipe-key-build-base:
+.. _charmcraft-yaml-key-build-base:
 
 ``build-base``
 --------------
@@ -323,7 +323,7 @@ to the machine architecture.
     base: ubuntu@devel
 
 
-.. _recipe-key-charm-libs:
+.. _charmcraft-yaml-key-charm-libs:
 
 ``charm-libs``
 --------------
@@ -349,7 +349,7 @@ and the lib version (in ``"<api version>[.<patch version>]"`` string format).
     :end-before: config:
 
 
-.. _recipe-key-charmhub:
+.. _charmcraft-yaml-key-charmhub:
 
 ``charmhub``
 ------------
@@ -388,7 +388,7 @@ the standard Canonical services to operate with charms.
           storage-url: https://storage.staging.snapcraftcontent.com
 
 
-.. _recipe-key-config:
+.. _charmcraft-yaml-key-config:
 
 ``config``
 ----------
@@ -425,7 +425,7 @@ secret URI.
         :end-before: containers:
 
 
-.. _recipe-key-containers:
+.. _charmcraft-yaml-key-containers:
 
 ``containers``
 --------------
@@ -476,7 +476,7 @@ for users) and the default is 0 (root).
         :end-before: description:
 
 
-.. _recipe-key-description:
+.. _charmcraft-yaml-key-description:
 
 ``description``
 ---------------
@@ -490,7 +490,7 @@ for users) and the default is 0 (root).
         :end-before: devices:
 
 
-.. _recipe-key-devices:
+.. _charmcraft-yaml-key-devices:
 
 ``devices``
 -----------
@@ -522,7 +522,7 @@ for users) and the default is 0 (root).
         :end-before: extra-bindings:
 
 
-.. _recipe-key-extra-bindings:
+.. _charmcraft-yaml-key-extra-bindings:
 
 ``extra-bindings``
 ------------------
@@ -545,13 +545,13 @@ for users) and the default is 0 (root).
     :end-before: links:
 
 
-.. _recipe-key-links:
-.. _recipe-key-links-contact:
-.. _recipe-key-links-source:
-.. _recipe-key-links-issues:
-.. _recipe-key-links-website:
-.. _recipe-key-contact:
-.. _recipe-key-documentation:
+.. _charmcraft-yaml-key-links:
+.. _charmcraft-yaml-key-links-contact:
+.. _charmcraft-yaml-key-links-source:
+.. _charmcraft-yaml-key-links-issues:
+.. _charmcraft-yaml-key-links-website:
+.. _charmcraft-yaml-key-contact:
+.. _charmcraft-yaml-key-documentation:
 
 
 ``links``
@@ -568,7 +568,7 @@ for users) and the default is 0 (root).
         :end-before: name:
 
 
-.. _recipe-key-name:
+.. _charmcraft-yaml-key-name:
 
 ``name``
 --------
@@ -593,7 +593,7 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
         :end-before: parts:
 
 
-.. _recipe-key-parts:
+.. _charmcraft-yaml-key-parts:
 
 ``parts``
 ---------
@@ -681,9 +681,9 @@ is a map where keys are part properties.
     The ``reactive_charm_build_arguments`` allows to include extra command line arguments in the underlying ``charm build`` call.
 
 
-.. _recipe-key-peers:
-.. _recipe-key-provides:
-.. _recipe-key-requires:
+.. _charmcraft-yaml-key-peers:
+.. _charmcraft-yaml-key-provides:
+.. _charmcraft-yaml-key-requires:
 
 ``peers``, ``provides``, and ``requires``
 -----------------------------------------
@@ -836,7 +836,7 @@ at least one ``requires`` integration with ``container`` scope.
 
 
 
-.. _recipe-key-resources:
+.. _charmcraft-yaml-key-resources:
 
 ``resources``
 -------------
@@ -882,7 +882,7 @@ at least one ``requires`` integration with ``container`` scope.
 
 
 
-.. _recipe-key-storage:
+.. _charmcraft-yaml-key-storage:
 
 ``storage``
 -----------
@@ -941,7 +941,7 @@ at least one ``requires`` integration with ``container`` scope.
         :end-before: subordinate:
 
 
-.. _recipe-key-subordinate:
+.. _charmcraft-yaml-key-subordinate:
 
 ``subordinate``
 ---------------
@@ -964,12 +964,12 @@ to a principal charm.
     subordinate: false
 
 
-.. _recipe-key-summary:
+.. _charmcraft-yaml-key-summary:
 
 ``summary``
 -----------
 
-**Status:** Required if the :ref:`recipe-key-type` key is set to ``charm``.
+**Status:** Required if the :ref:`charmcraft-yaml-key-type` key is set to ``charm``.
 
 **Structure:** A short, one-line description of the charm. No more than 78 characters.
 
@@ -980,7 +980,7 @@ to a principal charm.
         summary: A Juju charm to run a Traefik-powered ingress controller on Kubernetes.
 
 
-.. _recipe-key-terms:
+.. _charmcraft-yaml-key-terms:
 
 ``terms``
 ---------
@@ -1003,7 +1003,7 @@ to a principal charm.
         :end-before: title: My awesome charm
 
 
-.. _recipe-key-title:
+.. _charmcraft-yaml-key-title:
 
 ``title``
 ---------
@@ -1019,7 +1019,7 @@ to a principal charm.
         :end-before: type:
 
 
-.. _recipe-key-type:
+.. _charmcraft-yaml-key-type:
 
 ``type``
 --------

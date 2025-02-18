@@ -9,7 +9,7 @@ Initialise a library
 
    See also: :ref:`ref_commands_create-lib`
 
-In your charm's root directory, run ``charmcraft create-lib``. In this example we ues
+In your charm's root directory, run ``charmcraft create-lib``. In this example we use
 the name ``demo``.
 
 .. code-block:: bash
@@ -118,7 +118,7 @@ Use a library
 In your charm's project file, specify the ``charm-libs`` key with the desired
 libraries.
 
-    See more: :ref:`recipe-key-charm-libs`
+    See more: :ref:`charmcraft-yaml-key-charm-libs`
 
 
 In your charm's root directory, run ``charmcraft fetch-libs``. Charmcraft will download

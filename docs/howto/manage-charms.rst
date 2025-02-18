@@ -82,7 +82,7 @@ to ``charm`` in your project file:
 
 ..
 
-    See more: :ref:`recipe-key-type`
+    See more: :ref:`charmcraft-yaml-key-type`
 
 .. _specify-a-name:
 
@@ -106,7 +106,7 @@ the ``name`` key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-name`
+    See more: :ref:`charmcraft-yaml-key-name`
 
 
 Specify a title
@@ -122,7 +122,7 @@ specify a value for the ``title`` key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-title`
+    See more: :ref:`charmcraft-yaml-key-title`
 
 
 Add a summary
@@ -138,7 +138,7 @@ value for the ``summary`` key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-summary`
+    See more: :ref:`charmcraft-yaml-key-summary`
 
 
 Add a description
@@ -156,14 +156,14 @@ file, specify a value for the ``description`` key. E.g.,
 ..
 
 
-    See more: :ref:`recipe-key-description`
+    See more: :ref:`charmcraft-yaml-key-description`
 
 
 Add contact information
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 To add maintainer contact information for a charm, in your charm's project
-file, specify a value for the :ref:`links.contact <recipe-key-links-contact>`
+file, specify a value for the :ref:`links.contact <charmcraft-yaml-key-links-contact>`
 key. E.g.,
 
 .. code-block:: yaml
@@ -173,14 +173,14 @@ key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-contact`
+    See more: :ref:`charmcraft-yaml-key-contact`
 
 
 Add a link to source code
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To add a link to the source code for a charm, in your charm's project
-file, specify an item under the :ref:`links.source <recipe-key-links-source>`
+file, specify an item under the :ref:`links.source <charmcraft-yaml-key-links-source>`
 key. E.g.,
 
 .. code-block:: yaml
@@ -191,14 +191,14 @@ key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-links`
+    See more: :ref:`charmcraft-yaml-key-links`
 
 
 Add a link to the bug tracker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To add a link to the bug tracker for a charm, in your charm's project
-file, specify an item under the :ref:`links.issues <recipe-key-links-website>`
+file, specify an item under the :ref:`links.issues <charmcraft-yaml-key-links-website>`
 key. E.g.,
 
 .. code-block:: yaml
@@ -209,7 +209,7 @@ key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-links`
+    See more: :ref:`charmcraft-yaml-key-links`
 
 
 Add a link to the website
@@ -217,7 +217,7 @@ Add a link to the website
 
 If your charm has a website outside of Charmhub, to add a link to this website, in your
 charm's project file, specify an item under the :ref:`links.website
-<recipe-key-links-website>` key. E.g.,
+<charmcraft-yaml-key-links-website>` key. E.g.,
 
 .. code-block:: yaml
 
@@ -227,7 +227,7 @@ charm's project file, specify an item under the :ref:`links.website
 
 ..
 
-    See more: :ref:`recipe-key-links`
+    See more: :ref:`charmcraft-yaml-key-links`
 
 .. _add-docs:
 
@@ -238,7 +238,7 @@ If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is extracted automatically.
 However, you should also aim to add further docs, e.g., a tutorial, how-to guides, etc.
 To provide a link to these docs, in your charm's project file, specify a
-value for the :ref:`links.documentation <recipe-key-documentation>` key. Note
+value for the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. Note
 that at present this must be a Discourse page. E.g.,
 
 .. code-block:: yaml
@@ -248,7 +248,7 @@ that at present this must be a Discourse page. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-links`
+    See more: :ref:`charmcraft-yaml-key-links`
 
 
 Add terms of use
@@ -265,7 +265,7 @@ value for the ``terms`` key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-terms`
+    See more: :ref:`charmcraft-yaml-key-terms`
 
 
 Add an icon
@@ -291,7 +291,7 @@ specify the ``assumes`` key. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-assumes`
+    See more: :ref:`charmcraft-yaml-key-assumes`
 
 
 Require a Kubernetes cloud
@@ -308,7 +308,7 @@ project file, specify the ``assumes`` key. E.g.,
 ..
 
 
-  See more: :ref:`recipe-key-assumes`
+  See more: :ref:`charmcraft-yaml-key-assumes`
 
 Require a specific base and platforms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -348,7 +348,7 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
 
 ..
 
-    See more: :ref:`recipe-key-base`, :ref:`recipe-key-build-base`
+    See more: :ref:`charmcraft-yaml-key-base`, :ref:`charmcraft-yaml-key-build-base`
 
 
 Specify container requirements
@@ -357,7 +357,7 @@ Specify container requirements
 To specify container requirements, in your charm's project file, specify the
 ``containers`` key.
 
-    See more: :ref:`recipe-key-containers`
+    See more: :ref:`charmcraft-yaml-key-containers`
 
 
 Specify associated resources
@@ -375,7 +375,7 @@ Specify device requirements
 To specify device requirements, in your charm's project file, specify the
 ``devices`` key.
 
-    See more: :ref:`recipe-key-devices`
+    See more: :ref:`charmcraft-yaml-key-devices`
 
 .. _manage-storage:
 
@@ -385,7 +385,7 @@ Manage storage
 To specify storage requirements, in your charm's project file, specify
 the ``storage`` key.
 
-    See more: :ref:`recipe-key-storage`
+    See more: :ref:`charmcraft-yaml-key-storage`
 
 
 Specify extra binding requirements
@@ -394,7 +394,7 @@ Specify extra binding requirements
 To specify extra binding requirements, in your charm's project file,
 specify the ``extra-bindings`` key.
 
-    See more: :ref:`recipe-key-extra-bindings`
+    See more: :ref:`charmcraft-yaml-key-extra-bindings`
 
 
 Require subordinate deployment
@@ -404,7 +404,7 @@ To require subordinate deployment for your charm (i.e., for it to be deployed to
 same machine as another charm, called its *principal*), in your charm's
 project file, specify the ``subordinate`` key.
 
-    See more: :ref:`recipe-key-subordinate`
+    See more: :ref:`charmcraft-yaml-key-subordinate`
 
 .. _manage-actions:
 
@@ -417,7 +417,7 @@ Manage actions
 To declare an action in your charm, in your charm's project file,
 specify the ``actions`` key.
 
-    See more: :ref:`recipe-key-actions`
+    See more: :ref:`charmcraft-yaml-key-actions`
 
     See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
@@ -435,7 +435,7 @@ To declare a configuration option for your charm, in your charm's project file,
 specify the ``config`` key.
 
 
-    See more: :ref:`recipe-key-config`
+    See more: :ref:`charmcraft-yaml-key-config`
 
     See next: :external+ops:ref:`Ops | Manage configurations <manage-configurations>`
 
@@ -450,7 +450,7 @@ Manage relations
     To declare a relation endpoint in your charm, in your charm's project file,
     specify the ``peers``, ``provides``, or ``requires`` key.
 
-    See more: :ref:`recipe-key-peers`
+    See more: :ref:`charmcraft-yaml-key-peers`
 
     See more: :external+ops:ref:`Ops | Manage relations <manage-relations>`
 
@@ -472,7 +472,7 @@ To make your charm capable of accepting a user secret, in your charm's
 project file, specify the ``config`` key with the ``type`` subkey set to
 ``secret``.
 
-    See more: :ref:`recipe-key-config`
+    See more: :ref:`charmcraft-yaml-key-config`
 
     See next: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`
 

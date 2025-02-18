@@ -800,7 +800,7 @@ machine. Containers are not valid machines in this context.
 **Status:** Optional. Only used by Charmhub.
 
 **Type:** String with the same limitations as a
-:ref:`charm name <recipe-key-name>`.
+:ref:`charm name <charmcraft-yaml-key-name>`.
 
 
 ``relations``

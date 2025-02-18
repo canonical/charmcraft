@@ -3,6 +3,8 @@
 uv plugin
 =========
 
+    See also: :ref:`howto-migrate-to-uv`
+
 The uv plugin is designed for Python charms that use `uv`_ as the build system
 and are written with the `Operator framework`_.
 

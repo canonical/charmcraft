@@ -1,2 +1,2 @@
-Flask
+Django
 psycopg2-binary

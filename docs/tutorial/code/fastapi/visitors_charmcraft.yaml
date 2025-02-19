@@ -1,0 +1,6 @@
+# requires snippet for FastAPI application with a database
+
+requires:
+  postgresql:
+    interface: postgresql_client
+    optional: false

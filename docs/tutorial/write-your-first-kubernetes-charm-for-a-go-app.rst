@@ -1,356 +1,400 @@
 .. _write-your-first-kubernetes-charm-for-a-go-app:
 
-
 Write your first Kubernetes charm for a Go app
 ==============================================
 
+Imagine you have a Go application backed up by a database
+such as PostgreSQL and need to deploy it. In a traditional setup,
+this can be quite a challenge, but with Charmcraft you'll find
+yourself packaging and deploying your Go application in no time.
+
+In this tutorial we will build a Kubernetes charm for a Go
+application using Charmcraft, so we can have a Go application
+up and running with Juju. Let's get started!
+
+This tutorial should take 90 minutes for you to complete.
+
+.. note::
+   If you're new to the charming world: Go applications are
+   specifically supported with a template to quickly generate a
+   **rock** (i.e., a special kind of OCI-compliant container image)
+   and a matching template to quickly generate a **charm** (i.e.,
+   a software operator for cloud operations done with the Juju
+   orchestration engine). The result is Go applications that
+   can be easily deployed, configured, scaled, integrated, etc.,
+   on any Kubernetes cluster.
 
 What you'll need:
 -----------------
 
-- A working station, e.g., a laptop, with amd64 architecture which has sufficient
-  resources to launch a virtual machine with 4 CPUs, 4GB RAM, and a 50GB disk.
-
-  * Note that a workstation with arm64 architecture can complete the majority of this
-    tutorial.
+- A local system, e.g., a laptop, with amd64 or arm64 architecture which
+  has sufficient resources to launch a virtual machine with 4 CPUs,
+  4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
-- About 90 minutes of free time.
-
 
 What you'll do:
 ---------------
 
-Create a Go application. Use that to create a rock with ``rockcraft``. Use that to
-create a charm with ``charmcraft``. Use that to test-deploy, configure, etc., your Go
-application on a local Kubernetes cloud, ``microk8s``, with ``juju``. All of that
-multiple, times, mimicking a real development process.
-
-.. note::
-
-    **rock**
-
-    An Ubuntu LTS-based OCI compatible container image designed to meet security,
-    stability, and reliability requirements for cloud-native software.
-
-    **charm**
-
-    A package consisting of YAML files + Python code that will automate every aspect of
-    an application's lifecycle so it can be easily orchestrated with Juju.
-
-    **Juju**
-
-    An orchestration engine for charmed applications.
+Create a Go application. Use that to create a rock with
+``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
+to test, deploy, configure, etc., your Go application on a local
+Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
+times, mimicking a real development process.
 
 .. important::
 
-    Should you get stuck or notice issues, please get in touch on `Matrix
-    <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or `Discourse
-    <https://discourse.charmhub.io/>`_
+    Should you get stuck or notice issues, please get in touch on
+    `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
+    `Discourse <https://discourse.charmhub.io/>`_
 
 
-Set things up:
---------------
+Set things up
+-------------
 
-Install Multipass.
+.. include:: /reuse/tutorial/setup_edge.rst
+.. |12FactorApp| replace:: Go
 
-    See more: `Multipass | How to install Multipass
-    <https://multipass.run/docs/install-multipass>`_
+Finally, let's create a new directory for this tutorial and
+enter into it:
 
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev`` from the 22.04
-blueprint.
-
-.. code-block:: bash
-
-    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 22.04
-
-Once the VM is up, open a shell into it:
-
-.. code-block:: bash
-
-    multipass shell charm-dev
-
-In order to create the rock, you'll need to install Rockcraft:
-
-.. code-block:: bash
-
-    sudo snap install rockcraft --classic
-
-``LXD`` will be required for building the rock. Make sure it is installed and
-initialised:
-
-.. code-block:: bash
-
-    sudo snap install lxd lxd init --auto
-
-In order to create the charm, you'll need to install Charmcraft:
-
-.. code-block:: bash
-
-    sudo snap install charmcraft --channel latest/edge --classic
-
-MicroK8s is required to deploy the FastAPI application on Kubernetes. Install MicroK8s:
-
-.. code-block:: bash
-
-    sudo snap install microk8s --channel 1.31-strict/stable sudo adduser $USER
-    snap_microk8s newgrp snap_microk8s
-
-Wait for MicroK8s to be ready using ``sudo microk8s status --wait-ready``. Several
-MicroK8s add-ons are required for deployment:
-
-.. code-block:: bash
-
-    sudo microk8s enable hostpath-storage # Required to host the OCI image of the
-    FastAPI application sudo microk8s enable registry # Required to expose the FastAPI
-    application sudo microk8s enable ingress
-
-Juju is required to deploy the Go application. Install Juju and bootstrap a development
-controller:
-
-.. code-block:: bash
-
-    sudo snap install juju --channel 3.5/stable mkdir -p ~/.local/share juju bootstrap
-    microk8s dev-controller
-
-Finally, create a new directory for this tutorial and go inside it:
-
-.. code-block:: bash
-
-    mkdir go-hello-world cd go-hello-world
-
-.. note::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft. Check which version
-    of Charmcraft you have installed using ``charmcraft --version``. If you have an
-    older version of Charmcraft installed, use ``sudo snap refresh charmcraft --channel
-    latest/edge`` to get the latest edge version of Charmcraft.
-
-    This tutorial requires version ``1.5.4`` or later of Rockcraft. Check which version
-    of Rockcraft you have installed using ``rockcraft --version``. If you have an older
-    version of Rockcraft installed, use ``sudo snap refresh rockcraft --channel
-    latest/edge`` to get the latest edge version of Rockcraft.
-
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-working-dir]
+    :end-before: [docs:create-working-dir-end]
+    :dedent: 2
 
 Create the Go application
 -------------------------
 
-Start by creating the "Hello, world" Go application that will be used for this tutorial.
+Start by creating the "Hello, world" Go application that will be
+used for this tutorial.
 
-Install ``go`` and initialise the Go module:
+Install ``go`` and initialize the Go module:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:install-init-go]
+    :end-before: [docs:install-init-go-end]
+    :dedent: 2
 
-    sudo snap install go --classic go mod init go-hello-world
+Create a ``main.go`` file using ``touch main.go``.
+Then, open the file in a text editor using ``nano main.go``,
+copy the following text into it and then save the file:
 
-Create a ``main.go`` file, copy the following text into it and then save it:
-
-.. code-block:: python
-
-    package main
-
-    import (
-      "fmt" "log" "net/http"
-    )
-
-    func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request") fmt.Fprintln(w, "Hello, world!")
-    }
-
-    func main() {
-      log.Printf("starting hello world application") http.HandleFunc("/",
-      helloWorldHandler) http.ListenAndServe(":8080", nil)
-    }
+.. literalinclude:: code/go/main.go
+    :caption: main.go
+    :language: go
 
 
 Run the Go application locally
 ------------------------------
 
-Build the Go application so it can be run:
+First, we need to build the Go application so it can run:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:build-go]
+    :end-before: [docs:build-go-end]
+    :dedent: 2
 
-    go build .
-
-Now that we have a binary compiled, let's run the Go application to verify that it
-works:
+Now that we have a binary compiled, let's run the Go application to verify
+that it works:
 
 .. code-block:: bash
 
     ./go-hello-world
 
-Test the Go application by using ``curl`` to send a request to the root endpoint. You
-may need a new terminal for this; if you are using Multipass, use ``multipass shell
-charm-dev`` to get another terminal:
+Test the Go application by using ``curl`` to send a request to the root
+endpoint. You will need a new terminal for this; use
+``multipass shell charm-dev`` to open a new terminal in Multipass:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:curl-go]
+    :end-before: [docs:curl-go-end]
+    :dedent: 2
 
-    curl localhost:8080
+The Go application should respond with ``Hello, world!``.
 
-The Go application should respond with ``Hello, world!``. The Go application looks good,
-so we can stop for now using :kbd:`Ctrl` + :kbd:`C`.
+The Go application looks good, so we can stop it for now from the
+original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
 
 Pack the Go application into a rock
 -----------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Rockcraft will automate its creation and
-tailoring for a Go application using the ``go-framework`` profile.
+First, we'll need a ``rockcraft.yaml`` file. Using the
+``go-framework`` profile, Rockcraft will automate the creation of
+``rockcraft.yaml`` and tailor the file for a Go application.
+From the ``/go-hello-world`` directory, initialize the rock:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-rockcraft-yaml]
+    :end-before: [docs:create-rockcraft-yaml-end]
+    :dedent: 2
+
+The ``rockcraft.yaml`` file will automatically be created and set the name
+based on your working directory.
+
+Check out the contents of ``rockcraft.yaml``:
+
+.. code:: bash
+
+    cat rockcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code-block:: yaml
+   :caption: rockcraft.yaml
+
+   name: go-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: bare # as an alternative, a ubuntu base can be used
+   build-base: ubuntu@24.04 # build-base is required when the base is bare
+   version: '0.1' # just for humans. Semantic versioning is recommended
+   summary: A summary of your Go application # 79 char long summary
+   description: |
+       This is go-hello-world's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
+
+   ...
+
+Verfiy that the ``name`` is ``go-hello-world``.
+
+Ensure that ``platforms`` includes the architecture of your host. Check
+the architecture of your system:
 
 .. code-block:: bash
 
-    rockcraft init --profile go-framework
+    dpkg --print-architecture
 
-The ``rockcraft.yaml`` file will be created automatically, with its name being set based
-on your working directory. Open the file in a text editor and check that the ``name`` is
-``go-hello-world``. Ensure that ``platforms`` includes the architecture of your host.
-For example, if your host uses the ARM architecture, include ``arm64`` in ``platforms``.
+
+If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
+text editor and include ``arm64`` in ``platforms``.
+
+Now let's pack the rock:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
 
 .. note::
 
-    For this tutorial, we'll use the name ``go-hello-world`` and assume you are on the
-    ``amd64`` platform. Check the architecture of your system using ``dpkg
-    --print-architecture``. Choosing a different name or running a different platform
-    will influence the names of the files generated by Rockcraft.
+    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
+    extension is experimental.
 
-Pack the rock:
+Depending on your system and network, this step can take several
+minutes to finish.
 
-.. code-block:: bash
-
-    ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-
-.. note::
-
-    Depending on your system and network, this step can take a couple of minutes to
-    finish.
-
-Once Rockcraft has finished packing the Go rock, you'll find a new file in your working
-directory with the ``.rock`` extension. View its contents:
-
-.. code-block:: bash
-
-    ls *.rock -l
+Once Rockcraft has finished packing the Go rock,
+the terminal will respond with something similar to
+``Packed go-hello-world_0.1_amd64.rock``.
 
 .. note::
 
-    If you changed the ``name`` or ``version`` in ``rockcraft.yaml`` or are not on the
-    ``amd64`` platform, the name of the ``.rock`` file will be different for you.
+   If you are not on the ``amd64`` platform, the name of the ``.rock`` file
+   will be different for you.
 
-The rock needs to be copied to the Microk8s registry so that it can be deployed in the
-Kubernetes cluster:
+The rock needs to be copied to the MicroK8s registry, which stores OCI
+archives so they can be downloaded and deployed in the Kubernetes cluster.
+Copy the rock:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
 
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.1_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.1
+.. seealso::
 
+    `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
 
 Create the charm
 ----------------
 
-Create a new directory for the charm and go inside it:
+From the ``/go-hello-world`` directory, let's create a new directory
+for the charm and change inside it:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
 
-    mkdir charm cd charm
+Using the ``go-framework`` profile, Charmcraft will automate the
+creation of the files needed for our charm, including a
+``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
+The source code contains the logic required to operate the Go
+application.
 
-We'll need a project file named ``charmcraft.yaml``, ``requirements.txt`` and source
-code for the charm. The source code contains the logic required to operate the Go
-application. Charmcraft will automate the creation of these files by using the
-``go-framework`` profile:
+Initialize a charm named ``go-hello-world``:
 
-.. code-block:: bash
-
-    charmcraft init --profile go-framework --name go-hello-world
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
 
 The files will automatically be created in your working directory.
 
-The charm depends on several libraries. Download the libraries and pack the charm:
+Check out the contents of ``charmcraft.yaml``:
 
 .. code-block:: bash
 
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft fetch-libs
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+    cat charmcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code:: yaml
+
+    # This file configures Charmcraft.
+    # See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+    name: go-hello-world
+
+    type: charm
+
+    base: ubuntu@24.04
+
+    # the platforms this charm should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+      amd64:
+      # arm64:
+      # ppc64el:
+      # s390x:
+
+    # (Required)
+    summary: A very short one-line summary of the Go application.
+
+    ...
+
+Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
+includes the architecture of your host. If your host uses the ARM architecture,
+open ``charmcraft.yaml`` in a text editor and include ``arm64``
+in ``platforms``.
+
+Let's pack the charm:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
 
 .. note::
 
-    Depending on your system and network, this step can take a couple of minutes to
-    finish.
+    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
+    extension is experimental.
 
-Once Charmcraft has finished packing the charm, you'll find a new file in your working
-directory with the ``.charm`` extension. View its contents:
+Depending on your system and network, this step can take several
+minutes to finish.
 
-.. code-block:: bash
-
-    ls *.charm -l
+Once Charmcraft has finished packing the charm, the terminal will
+respond with something similar to
+``Packed go-hello-world_ubuntu-24.04-amd64.charm``.
 
 .. note::
 
-    If you changed the project name or are not on the ``amd64`` platform, the name of
-    the ``.charm`` file will be different for you.
+    If you are not on the ``amd64`` platform, the name of the ``.charm``
+    file will be different for you.
 
 
 Deploy the Go application
 -------------------------
 
-A Juju model is needed to deploy the application. Let's create a enw model:
+A Juju model is needed to handle Kubernetes resources while deploying
+the Go application. Let's create a new model:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
 
-    juju add-model go-hello-world
+If you are not on a host with the ``amd64`` architecture, you will need to include
+to include a constraint to the Juju model to specify your architecture.
 
-.. note::
+Set the Juju model constraints with:
 
-    If you are not on a host with the ``amd64`` architecture, you will need to include a
-    constraint to the Juju model to specify your architecture. For example, using the
-    ``arm64`` architecture, you would use ``juju set-model-constraints -m
-    django-hello-world arch=arm64``. Check the architecture of your system using ``dpkg
-    --print-architecture``.
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:add-model-constraints]
+    :end-before: [docs:add-model-constraints-end]
+    :dedent: 2
 
-Now the Go application can be deployed using Juju:
+Now let’s use the OCI image we previously uploaded to deploy the Go
+application. Deploy using Juju by specifying the OCI image name with the
+``--resource`` option:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-go-app]
+    :end-before: [docs:deploy-go-app-end]
+    :dedent: 2
 
-    juju deploy ./go-hello-world_amd64.charm \
-      go-hello-world \ --resource app-image=localhost:32000/go-hello-world:0.1
+It will take a few minutes to deploy the Go application. You can monitor its
+progress with:
 
-.. note::
+.. code:: bash
 
-    It will take a few minutes to deploy the FastAPI application. You can monitor the
-    progress using ``juju status --watch 5s``. Once the status of the app changes to
-    ``active``, you can stop watching using :kbd:`Ctrl` + :kbd:`C`.
+   juju status --watch 2s
 
-The Go application should now be running. We can monitor the status of the deployment
-using ``juju status``, which should be similar to the following output:
+It can take a couple of minutes for the app to finish the deployment.
+Once the status of the App has gone to ``active``, you can stop watching
+using :kbd:`Ctrl` + :kbd:`C`.
+
+.. seealso::
+
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+
+The Go application should now be running. We can monitor the status of
+the deployment using ``juju status``, which should be similar to the
+following output:
 
 .. terminal::
     :input: juju status
 
-    go-hello-world  microk8s    microk8s/localhost  3.5.4    unsupported  14:35:07+02:00
+    Model           Controller      Cloud/Region        Version  SLA          Timestamp
+    go-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  14:35:07+02:00
 
-    App             Version  Status  Scale  Charm           Channel  Rev  Address
-    Exposed  Message go-hello-world           active      1  go-hello-world
-    0  10.152.183.229  no
+    App                 Version  Status  Scale  Charm               Channel    Rev  Address         Exposed  Message
+    go-hello-world               active      1  go-hello-world                   0  10.152.183.229  no
 
-    Unit               Workload  Agent  Address      Ports  Message go-hello-world/0*
-    active    idle   10.1.157.79
+    Unit               Workload  Agent  Address      Ports  Message
+    go-hello-world/0*  active    idle   10.1.157.79
 
-The deployment is finished when the status shows ``active``. Let's expose the
-application using ingress. Deploy the ``nginx-ingress-integrator`` charm and integrate
-it with the Go app:
+Let's expose the application using ingress. Deploy the
+``nginx-ingress-integrator`` charm and integrate it with the Go app:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
 
-    juju deploy nginx-ingress-integrator --trust juju integrate nginx-ingress-integrator
-    go-hello-world
+The hostname of the app needs to be defined so that it is accessible via
+the ingress. We will also set the default route to be the root endpoint:
 
-The hostname of the app needs to be defined so that it is accessible via the ingress. We
-will also set the default route to be the root endpoint:
-
-.. code-block:: bash
-
-    juju config nginx-ingress-integrator \
-      service-hostname=go-hello-world path-routes=/
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
 
 .. note::
 
@@ -358,317 +402,322 @@ will also set the default route to be the root endpoint:
     the default port, it can be done with the configuration option ``app-port`` that
     will be exposed as the ``APP_PORT`` to the Go application.
 
-Monitor ``juju status`` until everything has a status of ``active``. Use ``curl
-http://go-hello-world  --resolve go-hello-world:80:127.0.0.1`` to send a request via the
-ingress. The Go application should respond with ``Hello, world~``.
+Monitor ``juju status`` until everything has a status of ``active``.
 
+Use ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
+to send a request via the ingress. It should return the
+``Hello, world!`` greeting.
+
+.. note::
+
+    The ``--resolve go-hello-world:80:127.0.0.1`` option to the ``curl``
+    command is a way of resolving the hostname of the request without
+    setting a DNS record.
 
 Configure the Go application
 ----------------------------
 
-Now let's customise the greeting using a configuration option. We will expect this
-configuration option to be available in the Go app configuration under the keyword
-``GREETING``. Go back out to the root directory of the project using ``cd ..`` and copy
-the following code into ``main.go``:
+To demonstrate how to provide a configuration to the Go application,
+we will make the greeting configurable. We will expect this
+configuration option to be available in the Go app configuration under the
+keyword ``GREETING``. Change back to the ``/go-hello-world`` directory using
+``cd ..`` and replace the code into ``main.go`` with the following:
 
-.. code-block:: c
+.. literalinclude:: code/go/greeting_main.txt
+    :language: go
 
-    package main
-
-    import (
-      "fmt" "log" "os" "net/http"
-    )
-
-    func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-      log.Printf("new hello world request") greeting, found :=
-      os.LookupEnv("APP_GREETING") if !found {
-        greeting = "Hello, world!"
-      } fmt.Fprintln(w, greeting)
-    }
-
-    func main() {
-      log.Printf("starting hello world application") http.HandleFunc("/",
-      helloWorldHandler) http.ListenAndServe(":8080", nil)
-    }
-
-Open ``rockcraft.yaml`` and update the version to ``0.2``. Run
-``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack`` again, then upload the
-new OCI image to the MicroK8s registry.
-
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.2_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.2
-
-Change back into the charm directory using ``cd charm``. The ``go-framework`` Charmcraft
-extension supports adding configurations to the project file, which will be passed as
-environment variables to the Go application. Add the following to the end of the project
-file:
+Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
+top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
+   :emphasize-lines: 6
 
-    config:
-      options:
-        greeting:
-          description: |
-            The greeting to be returned by the Go application.
-          default: "Hello, world!" type: string
+   name: go-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: bare # as an alternative, a ubuntu base can be used
+   build-base: ubuntu@24.04 # build-base is required when the base is bare
+   version: '0.2' # just for humans. Semantic versioning is recommended
+   summary: A summary of your Go application # 79 char long summary
+   description: |
+       This is go-hello-world's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
+
+   ...
+
+Let’s pack and upload the rock:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:docker-update]
+    :end-before: [docs:docker-update-end]
+    :dedent: 2
+
+Change back into the charm directory using ``cd charm``.
+
+The ``go-framework`` Charmcraft extension supports adding configurations
+to ``charmcraft.yaml``, which will be passed as environment variables to
+the Go application. Add the following to the end of the
+``charmcraft.yaml`` file:
+
+.. literalinclude:: code/go/greeting_charmcraft.yaml
+    :language: yaml
 
 .. note::
 
-    Configuration options are automatically capitalised and dashes are replaced by
-    underscores. An ``APP_`` prefix will also be added to ensure that environment
-    variables are namespaced.
+    Configuration options are automatically capitalized and ``-`` are replaced
+    by ``_``. An ``APP_`` prefix will also be added as a namespace
+    for app configurations.
 
-Run ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack`` again. The
-deployment can now be refreshed to make use of the new code:
+We can now pack and deploy the new version of the Go app:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
 
-    juju refresh go-hello-world \
-      --path=./go-hello-world_amd64.charm \ --resource
-      app-image=localhost:32000/go-hello-world:0.2
-
-Wait for ``juju status`` to show that the App is ``active`` again. Verify that the new
-configuration has been added using ``juju config go-hello-world | grep -A 6 greeting:``,
+After we wait for a bit monitoring ``juju status`` the application
+should go back to ``active`` again. Verify that the new configuration
+has been added using
+``juju config go-hello-world | grep -A 6 greeting:``,
 which should show the configuration option.
 
-.. note::
+Using ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
+shows that the response is still ``Hello, world!`` as expected.
 
-    The ``grep`` command extracts a portion of the configuration to make it easier to
-    check whether the configuration option has been added.
+Now let's change the greeting:
 
-Using ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1`` shows that
-the response is still ``Hello, world!`` as expected. The greeting can be changed using
-Juju:
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
 
-.. code-block:: bash
-
-    juju config go-hello-world greeting='Hi!'
-
-``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1`` now returns the
-updated ``Hi!`` greeting.
-
-.. note::
-
-    It might take a short time for the configuration to take effect.
-
+After we wait for a moment for the app to be restarted, using
+``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
+should now return the updated ``Hi!`` greeting.
 
 Integrate with a database
 -------------------------
 
-Now let's keep track of how many visitors your application has received. This will
-require integration with a database to keep the visitor count. This will require a few
-changes:
+Now let's keep track of how many visitors your application has received.
+This will require integration with a database to keep the visitor count.
+This will require a few changes:
 
 - We will need to create a database migration that creates the ``visitors`` table.
-- We will need to keep track how many times the root endpoint has been called in the
-  database.
-- We will need to add a new endpoint to retrieve the number of visitors from the
-- database.
+- We will need to keep track how many times the root endpoint has been called
+  in the database.
+- We will need to add a new endpoint to retrieve the number of visitors from
+  the database.
 
-The charm created by the ``go-framework`` extension will execute the ``migrate.sh``
-script if it exists. This script should ensure that the database is initialised and
-ready to be used by the application. We will create a ``migrate.sh`` file containing the
-logic.
+Let's start with the database migration to create the required tables.
+The charm created by the ``go-framework`` extension will execute the
+``migrate.sh`` script if it exists. This script should ensure that the
+database is initialized and ready to be used by the application. We will
+create a ``migrate.sh`` file containing this logic.
 
-Go back out to the tutorial root directory using ``cd ..``. Create the ``migrate.sh``
-file using a text editor and paste the following code into it:
+Go back out to the ``/go-hello-world`` directory using ``cd ..``.
+Create the ``migrate.sh`` file using a text editor and paste the
+following code into it:
 
-.. code-block:: bash
-
-    #!/bin/bash
-
-    PGPASSWORD="${POSTGRESQL_DB_PASSWORD}" psql -h "${POSTGRESQL_DB_HOSTNAME}" -U
-    "${POSTGRESQL_DB_USERNAME}" "${POSTGRESQL_DB_NAME}" -c "CREATE TABLE IF NOT EXISTS
-    visitors (timestamp TIMESTAMP NOT NULL, user_agent TEXT NOT NULL);"
+.. literalinclude:: code/go/visitors_migrate.sh
+    :language: bash
 
 .. note::
 
     The charm will pass the Database connection string in the
-    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has been
-    integrated with the charm.
+    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
+    PostgreSQL has been integrated with the charm.
 
 Change the permissions of the file ``migrate.sh`` so that it is executable:
 
-.. code-block:: bash
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:change-migrate-permissions]
+    :end-before: [docs:change-migrate-permissions-end]
+    :dedent: 2
 
-    chmod u+x migrate.sh
+For the migrations to work, we need the ``postgresql-client`` package
+installed in the rock. By default, the ``go-framework`` uses the ``base``
+base, so we will also need to install a shell interpreter. Let's do it as a
+slice, so that the rock does not include unnecessary files. Open the
+``rockcraft.yaml`` file using a text editor and add the following to the
+end of the file:
 
-For the migrations to work, we need the ``postgresql-client`` package installed in the
-rock. By default, the ``go-framework`` uses the ``base`` base, so we will also need to
-install a shell interpreter. Let's do it as a slice, so that the rock does not include
-unnecessary files. Open the ``rockcraft.yaml`` file using a text editor, update the
-version to ``0.3`` and add the following to the end of the file:
+.. literalinclude:: code/go/visitors_rockcraft.yaml
+    :language: yaml
+
+Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
+top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
+   :emphasize-lines: 6
 
-    parts:
-      runtime-debs:
-        plugin: nil stage-packages:
-          - postgresql-client
-      runtime-slices:
-        plugin: nil stage-packages:
-          - bash_bins
+   name: go-hello-world
+   # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+   # for more information about bases and using 'bare' bases for chiselled rocks
+   base: bare # as an alternative, a ubuntu base can be used
+   build-base: ubuntu@24.04 # build-base is required when the base is bare
+   version: '0.3' # just for humans. Semantic versioning is recommended
+   summary: A summary of your Go application # 79 char long summary
+   description: |
+       This is go-hello-world's description. You have a paragraph or two to tell the
+       most important story about it. Keep it under 100 words though,
+       we live in tweetspace and your description wants to look good in the
+       container registries out there.
+   # the platforms this rock should be built on and run on.
+   # you can check your architecture with `dpkg --print-architecture`
+   platforms:
+       amd64:
+       # arm64:
+       # ppc64el:
+       # s390x:
 
-To be able to connect to PostgreSQL from the Go app, the library ``pgx`` will be used.
-The app code needs to be updated to keep track of the number of visitors and to include
-a new endpoint to retrieve the number of visitors. Open ``main.go`` in a text editor and
+   ...
+
+To be able to connect to PostgreSQL from the Go app, the library
+``pgx`` will be used. The app code needs to be updated to keep track of
+the number of visitors and to include a new endpoint to retrieve the
+number of visitors. Open ``main.go`` in a text editor and
 replace its content with the following code:
 
 .. dropdown:: main.go
 
-    .. code-block:: c
+    .. literalinclude:: code/go/visitors_main.txt
+        :language: go
 
-        package main
+Check all the packages and their dependencies in the Go project with the
+following command:
 
-        import (
-                "database/sql" "fmt" "log" "net/http" "os" "time"
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:check-go-app]
+    :end-before: [docs:check-go-app-end]
+    :dedent: 2
 
-                _ "github.com/jackc/pgx/v5/stdlib"
-        )
+Let’s pack and upload the rock:
 
-        func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("new hello world request") postgresqlURL :=
-                os.Getenv("POSTGRESQL_DB_CONNECT_STRING") db, err := sql.Open("pgx",
-                postgresqlURL) if err != nil {
-                        log.Printf("An error occurred while connecting to postgresql:
-                        %v", err) return
-                } defer db.Close()
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:docker-2nd-update]
+    :end-before: [docs:docker-2nd-update-end]
+    :dedent: 2
 
-                ua := req.Header.Get("User-Agent") timestamp := time.Now() _, err =
-                db.Exec("INSERT into visitors (timestamp, user_agent) VALUES ($1, $2)",
-                timestamp, ua) if err != nil {
-                        log.Printf("An error occurred while executing query: %v", err)
-                        return
-                }
+Change back into the charm directory using ``cd charm``.
 
-                greeting, found := os.LookupEnv("APP_GREETING") if !found {
-                        greeting = "Hello, world!"
-                }
+The Go app now requires a database which needs to be declared in the
+``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
+add the following section to the end of the file:
 
-                fmt.Fprintln(w, greeting)
-        }
+.. literalinclude:: code/go/visitors_charmcraft.yaml
+    :language: yaml
 
-        func visitorsHandler(w http.ResponseWriter, req *http.Request) {
-                log.Printf("visitors request") postgresqlURL :=
-                os.Getenv("POSTGRESQL_DB_CONNECT_STRING") db, err := sql.Open("pgx",
-                postgresqlURL) if err != nil {
-                        return
-                } defer db.Close()
+We can now pack and deploy the new version of the Go app:
 
-                var numVisitors int err = db.QueryRow("SELECT count(*) from
-                visitors").Scan(&numVisitors) if err != nil {
-                        log.Printf("An error occurred while executing query: %v", err)
-                        return
-                } fmt.Fprintf(w, "Number of visitors %d\n", numVisitors)
-        }
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-2nd-deployment]
+    :end-before: [docs:refresh-2nd-deployment-end]
+    :dedent: 2
 
-        func main() {
-                log.Printf("starting hello world application") http.HandleFunc("/",
-                helloWorldHandler) http.HandleFunc("/visitors", visitorsHandler)
-                http.ListenAndServe(":8080", nil)
-        }
+Now let’s deploy PostgreSQL and integrate it with the Go application:
 
-Check all the packages and their dependencies in the Go project with the following
-command:
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
 
-.. code-block:: bash
+Wait for ``juju status`` to show that the App is ``active`` again.
+Running ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
+should still return the ``Hi!`` greeting.
 
-    go mod tidy
-
-Run ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack`` and upload the
-newly created rock to the MicroK8s registry:
-
-.. code-block:: bash
-
-    rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-      oci-archive:go-hello-world_0.3_amd64.rock \
-      docker://localhost:32000/go-hello-world:0.3
-
-Go back into the charm directory using ``cd charm``. The Go app now requires a database
-which needs to be declared in the project file. Open the project file in a text
-editor and add the following section to the end of the file:
-
-.. code-block:: yaml
-
-    requires:
-      postgresql:
-        interface: postgresql_client optional: false
-
-Pack the charm using ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack``
-and refresh the deployment using Juju:
-
-.. code-block:: bash
-
-    juju refresh go-hello-world \
-      --path=./go-hello-world_amd64.charm \ --resource
-      app-image=localhost:32000/go-hello-world:0.3
-
-Deploy ``postgresql-k8s`` using Juju and integrate it with ``go-hello-world``:
-
-.. code-block:: bash
-
-    juju deploy postgresql-k8s --trust juju integrate go-hello-world postgresql-k8s
-
-Wait for ``juju status`` to show that the App is ``active`` again. Executing ``curl
-http://go-hello-world  --resolve go-hello-world:80:127.0.0.1`` should still return the
-``Hi!`` greeting.
-
-To check the local visitors, use ``curl http://go-hello-world/visitors  --resolve
-go-hello-world:80:127.0.0.1``, which should return ``Number of visitors 1`` after the
-previous request to the root endpoint. This should be incremented each time the root
-endpoint is requested. If we repeat this process, the output should be as follows:
+To check the local visitors, use
+``curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1``,
+which should return ``Number of visitors 1`` after the
+previous request to the root endpoint.
+This should be incremented each time the root endpoint is requested. If we
+repeat this process, the output should be as follows:
 
 .. terminal::
     :input: curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
 
-    Hi! :input: curl http://go-hello-world/visitors  --resolve
-    go-hello-world:80:127.0.0.1 Number of visitors 2
+    Hi!
+    :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
+    Number of visitors 2
 
 
 Tear things down
 ----------------
 
-We've reached the end of this tutorial. We have created a Go application, deployed it
-locally, integrated it with a database and exposed it via ingress!
+We’ve reached the end of this tutorial. We went through the entire
+development process, including:
 
-If you'd like to reset your working environment, you can run the following in the root
-directory for the tutorial:
+- Creating a Go application
+- Deploying the application locally
+- Packaging the application using Rockcraft
+- Building the application with Ops code using Charmcraft
+- Deplyoing the application using Juju
+- Exposing the application using an ingress
+- Configuring the application
+- Integrating the application with a database
 
-.. code-block:: bash
+If you'd like to reset your working environment, you can run the following
+in the rock directory ``/go-hello-world`` for the tutorial:
 
-    cd .. rm -rf charm # delete all the files created during the tutorial rm
-    go-hello-world_0.1_amd64.rock go-hello-world_0.2_amd64.rock \
-      go-hello-world_0.3_amd64.rock rockcraft.yaml main.go \ migrate.sh go-hello-world
-      go.mod go.sum
-    # Remove the juju model juju destroy-model go-hello-world --destroy-storage
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
 
-If you created an instance using Multipass, you can also clean it up. Start by exiting
-it:
+You can also clean up your Multipass instance. Start by exiting it:
 
 .. code-block:: bash
 
     exit
 
-You can then proceed with its deletion:
+And then you can proceed with its deletion:
 
 .. code-block:: bash
 
-    multipass delete charm-dev multipass purge
+    multipass delete charm-dev
+    multipass purge
 
 
 Next steps
 ----------
 
-By the end of this tutorial, you will have built a charm and evolved it in a number of
-practical ways, but there is a lot more to explore:
+By the end of this tutorial you will have built a charm and evolved it
+in a number of typical ways. But there is a lot more to explore:
 
-+-------------------------+----------------------+
-| If you are wondering... | Visit...             |
-+=========================+======================+
-| "How do I...?"          | :ref:`how-to-guides` |
-+-------------------------+----------------------+
-| "What is...?"           | :ref:`reference`     |
-+-------------------------+----------------------+
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
+
+    * - If you are wondering...
+      - Visit...
+    * - "How do I...?"
+      - :ref:`How-to guides <how-to-guides>`,
+        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+    * - "How do I debug?"
+      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+    * - "How do I get in touch?"
+      - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
+    * - "What is...?"
+      - :ref:`reference`,
+        :external+ops:ref:`Ops | Reference <reference>`,
+        :external+juju:ref:`Juju | Reference <reference>`
+    * - "Why...?", "So what?"
+      - :external+ops:ref:`Ops | Explanation <explanation>`,
+        :external+juju:ref:`Juju | Explanation <explanation>`

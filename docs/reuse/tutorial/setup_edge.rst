@@ -1,10 +1,7 @@
 .. warning::
 
-    This tutorial requires version ``3.2.0`` or later of Charmcraft. Check the
-    version of Charmcraft using ``charmcraft --version`` If you have an older
-    version of Charmcraft installed, use
-    ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest
-    edge version of Charmcraft.
+    This tutorial requires version ``3.2.0`` or later of Charmcraft.
+    Check the version of Charmcraft using ``charmcraft --version``.
 
 First, install Multipass.
 
@@ -33,6 +30,7 @@ classic confinement, which grants it access to the whole file system:
 
     sudo snap install rockcraft --classic
 
+
 LXD will be required for building the rock.
 Make sure it is installed and initialized:
 
@@ -41,13 +39,15 @@ Make sure it is installed and initialized:
     lxd --version
     lxd init --auto
 
+
 If ``LXD`` is not installed, install it with ``sudo snap install lxd``.
 
 In order to create the charm, you'll need to install Charmcraft:
 
 .. code-block:: bash
 
-    sudo snap install charmcraft --channel latest/stable --classic
+    sudo snap install charmcraft --channel latest/edge --classic
+
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track:
@@ -57,7 +57,6 @@ Let's install MicroK8s using the ``1.31-strict/stable`` track:
     sudo snap install microk8s --channel 1.31-strict/stable
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
-
 
 Several MicroK8s add-ons are required for deployment:
 
@@ -90,3 +89,4 @@ development controller:
     juju bootstrap microk8s dev-controller
 
 It could take a few minutes to download the images.
+

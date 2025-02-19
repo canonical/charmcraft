@@ -8,6 +8,10 @@ PostgreSQL and need to deploy it. In a traditional setup, this can be
 quite a challenge, but with Charmcraft you’ll find yourself packaging
 and deploying your Django application in no time.
 
+
+Introduction
+------------
+
 In this tutorial we will build a Kubernetes charm for a Django
 application using Charmcraft, so we can have a Django application up and
 running with Juju. Let’s get started!
@@ -24,16 +28,18 @@ This tutorial should take 90 minutes for you to complete.
    can be easily deployed, configured, scaled, integrated, etc.,
    on any Kubernetes cluster.
 
+
 What you’ll need
-----------------
+~~~~~~~~~~~~~~~~
 
 -  A local system, e.g., a laptop, with amd64 or arm64 architecture
    which has sufficient resources to launch a virtual machine with 4
    CPUs, 4 GB RAM, and a 50 GB disk.
 -  Familiarity with Linux.
 
+
 What you’ll do
---------------
+~~~~~~~~~~~~~~
 
 Create a Django application. Use that to create a rock with
 ``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
@@ -381,6 +387,7 @@ respond with something similar to
    If you are not on the ``amd64`` platform, the name of the ``.charm``
    file will be different for you.
 
+
 Deploy the Django application
 -----------------------------
 
@@ -516,12 +523,20 @@ Now you can open a new tab and visit http://django-hello-world. The
 Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
 
-Add an initial app
-------------------
+
+The development cycle
+---------------------
+
+So far, we have worked though the entire cycle, from creating an application to deploying it. But now - as in every real-world case - we will go through the experience of iterating to develop the application, and deploy each iteration.
+
+
+Add a "Hello, world" app
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this iteration, we'll add a greeting app that returns a ``Hello, world!`` greeting.
 
 The generated Django application does not come with an app, which is why
-we had to initially enable debug mode for testing. Let’s add a greeting
-app that returns a ``Hello, world!`` greeting. We will need to go back
+we had to initially enable debug mode for testing.  We will need to go back
 out to the ``/django-hello-world`` directory where the rock is and enter
 into the ``/django_hello_world`` directory where the Django application
 is. Let’s add a new Django app:
@@ -555,6 +570,10 @@ Open the ``django_hello_world/urls.py`` file and edit the imports for
        path("", include("greeting.urls")),
        path("admin/", admin.site.urls),
    ]
+
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Since we’re changing the application we should update the version of the
 rock. Go back to the ``/django-hello-world`` directory where the rock is
@@ -593,8 +612,13 @@ Now let’s pack and upload the rock using similar commands as before:
     :end-before: [docs:repack-update-end]
     :dedent: 2
 
-Now we can deploy the new version of the Django application from the
-``/charm`` directory using:
+
+Redeploy the charm
+~~~~~~~~~~~~~~~~~~
+
+We'll redeploy the new version with ``juju refresh``.
+
+In the ``/charm`` directory, run:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -618,8 +642,8 @@ inside the Multipass VM. Either way, the Django application should respond
 with ``Hello, world!``.
 
 
-Enable a configuration
-----------------------
+Provide a configuration
+-----------------------
 
 To demonstrate how to provide a configuration to the Django application,
 we will make the greeting configurable. We will expect this
@@ -631,6 +655,10 @@ with:
 
 .. literalinclude:: code/django/views_greeting_configuration.py
    :language: python
+
+
+Update the rock (again)
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -667,6 +695,10 @@ Let’s pack and upload the rock:
     :end-before: [docs:repack-2nd-update-end]
     :dedent: 2
 
+
+Update the charm
+~~~~~~~~~~~~~~~~
+
 Change back into the charm directory using ``cd charm``.
 
 The ``django-framework`` Charmcraft extension supports adding
@@ -683,7 +715,7 @@ the end of the ``charmcraft.yaml`` file:
    replaced by ``_``. A ``DJANGO_`` prefix will also be added as a
    namespace for app configurations.
 
-We can now pack and deploy the new version of the Django app:
+We can now pack a new version of the charm, and then deploy it once more with ``juju refresh``:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

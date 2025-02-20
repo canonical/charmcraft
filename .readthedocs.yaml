@@ -1,15 +1,13 @@
 # .readthedocs.yaml
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
----
+
 # Required
 version: 2
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: docs/conf.py
-  builder: dirhtml
-  fail_on_warning: false
 
 # Optionally build your docs in additional formats such as PDF
 # formats:
@@ -22,8 +20,7 @@ build:
     python: "3.12"
   jobs:
     post_checkout:
-      - git fetch --tags --unshallow  # Also fetch tags
-      - git describe --always         # Useful for debugging
+      - git fetch --tags --unshallow # Also fetch tags
     post_system_dependencies:
       - asdf plugin add uv
       - asdf install uv latest
@@ -31,4 +28,4 @@ build:
     create_environment:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --extra docs
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group docs

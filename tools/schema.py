@@ -38,5 +38,4 @@ Charm = Annotated[
 Project = Annotated[Charm | Bundle, pydantic.Field(discriminator="type")]
 
 if __name__ == "__main__":
-    pydantic.TypeAdapter(Project).json_schema()
-    print(json.dumps(pydantic.TypeAdapter(Project).json_schema()))
+    print(json.dumps(pydantic.TypeAdapter(Project).json_schema(), indent="	"))

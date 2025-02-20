@@ -1115,17 +1115,7 @@ class PlatformCharm(CharmProject):
         return platforms
 
 
-def _charm_type_discriminator(charm_model: Any) -> str:  # noqa: ANN401
-    if hasattr(charm_model, "platforms") or "platforms" in charm_model:
-        return "platformcharm"
-    return "basescharm"
-
-
-Charm = Annotated[
-    Annotated[PlatformCharm, pydantic.Tag("platformcharm")]
-    | Annotated[BasesCharm, pydantic.Tag("basescharm")],
-    pydantic.Discriminator(_charm_type_discriminator),
-]
+Charm = PlatformCharm | BasesCharm
 
 
 class Bundle(CharmcraftProject):
@@ -1151,7 +1141,3 @@ class Bundle(CharmcraftProject):
             values["name"] = values.get("bundle", {}).get("name")
 
         return values
-
-
-# Used in JSON schema generation
-Project = Annotated[Charm | Bundle, pydantic.Field(discriminator="type")]

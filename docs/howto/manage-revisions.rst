@@ -7,6 +7,7 @@ Manage charm revisions
 
     <!--As opposed to resource revisions. (Or bundle revisions, but that's being phased out.)-->
 
+
 Create a charm revision
 -----------------------
 
@@ -14,6 +15,7 @@ A charm revision is created implicitly every time you upload a charm to
 Charmhub (unless you're uploading the exact same file again).
 
     See more: :ref:`publish-a-charm`
+
 
 View the existing charm revisions
 ---------------------------------
@@ -23,20 +25,31 @@ followed by the name of the charm.
 
     See more: :ref:`ref_commands_revisions`
 
+
 Promote a charm revision to a better risk level
 -----------------------------------------------
 
-To promote a charm revision to a higher-ranking risk level, use the GitHub
-``promote-charm`` action.
+To promote a charm revision to a more stable risk level, run
+:literalref:`charmcraft promote<ref_commands_promote>` with flags specifying the current
+and desired channels. For example, to promote a charm from the ``candidate`` channel to
+the ``stable`` channel, you would run:
+
+.. code-block:: bash
+
+    charmcraft promote --from-channel=candidate --to-channel=stable
+
+If you are looking to promote charm revisions in your CI workflow, the same result can
+be achieved with the ``promote-charm`` GitHub action. Note that this GitHub action
+resides in a separate repository and is therefore maintained separately from Charmcraft.
 
     See more: `GitHub | canonical/charming-actions/promote-charm
     <https://github.com/canonical/charming-actions/tree/2.6.0/promote-charm>`_
 
 .. collapse:: Example outcome
 
-    For example, in the (partial) output of juju info mongodb below, revision 100 has
-    been promoted from ``3.6/edge`` through ``3.6/beta`` and ``3.6/candidate`` all the
-    way to ``3.6/stable``. (The up arrow next to ``3.6/beta`` indicates that that
+    For example, in the (partial) output of ``juju info mongodb`` below, revision 100
+    has been promoted from ``3.6/edge`` through ``3.6/beta`` and ``3.6/candidate`` all
+    the way to ``3.6/stable``. (The up arrow next to ``3.6/beta`` indicates that that
     channel has been closed and, if you try ``juju deploy --channel 3.6/beta``, what
     you'll get is the next higher-ranking risk level of the same track, that is,
     ``3.6/candidate``.)

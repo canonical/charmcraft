@@ -55,8 +55,13 @@ jobs:
 
       - name: Run ajv
         run: |
+          # Don't fail immediately if one validation fails
+          EXIT_CODE=0
           for proj_file in tests/spread/smoketests/basic/*; do
-            ajv validate -s $CHARMCRAFT_JSON \
+            if ! ajv validate -s $CHARMCRAFT_JSON \
               -d $proj_file \
-              --strict=false --spec=draft2020
+              --strict=false --spec=draft2020; then
+              EXIT_CODE=1
+            fi
           done
+          exit $EXIT_CODE

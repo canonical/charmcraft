@@ -21,7 +21,7 @@ Whether to keep Python scripts in the virtual environment's :file:`bin`
 directory.
 
 .. include:: /common/craft-parts/reference/plugins/uv_plugin.rst
-    :start-after: .. _craft_parts_poetry_plugin-environment_variables:
+    :start-after: .. _craft_parts_uv_plugin-environment_variables:
     :end-before: .. _uv-details-end:
 
 How it works

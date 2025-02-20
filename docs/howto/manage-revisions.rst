@@ -39,15 +39,14 @@ the ``stable`` channel, you would run:
     charmcraft promote --from-channel=candidate --to-channel=stable
 
 If you are looking to promote charm revisions in your CI workflow, the same result can
-be achieved with the ``promote-charm`` GitHub action. Note that this GitHub action
-resides in a separate repository and is therefore maintained separately from Charmcraft.
-
-    See more: `GitHub | canonical/charming-actions/promote-charm
-    <https://github.com/canonical/charming-actions/tree/2.6.0/promote-charm>`_
+be achieved with the `Charmhub Promotion
+<https://github.com/canonical/charming-actions/tree/main/promote-charm>`_ GitHub action.
+Note that this GitHub action resides in a separate repository and is therefore
+maintained separately from Charmcraft.
 
 .. collapse:: Example outcome
 
-    For example, in the (partial) output of ``juju info mongodb`` below, revision 100
+    For example, in the following output of ``juju info mongodb``, revision 100
     has been promoted from ``3.6/edge`` through ``3.6/beta`` and ``3.6/candidate`` all
     the way to ``3.6/stable``. (The up arrow next to ``3.6/beta`` indicates that that
     channel has been closed and, if you try ``juju deploy --channel 3.6/beta``, what

@@ -527,7 +527,9 @@ Django app should respond in the browser with
 The development cycle
 ---------------------
 
-So far, we have worked though the entire cycle, from creating an application to deploying it. But now - as in every real-world case - we will go through the experience of iterating to develop the application, and deploy each iteration.
+So far, we have worked though the entire cycle, from creating an application to
+deploying it. But now -- as in every real-world case -- we will go through the
+experience of iterating to develop the application, and deploy each iteration.
 
 
 Add a "Hello, world" app
@@ -715,7 +717,8 @@ the end of the ``charmcraft.yaml`` file:
    replaced by ``_``. A ``DJANGO_`` prefix will also be added as a
    namespace for app configurations.
 
-We can now pack a new version of the charm, and then deploy it once more with ``juju refresh``:
+We can now pack a new version of the charm, and then deploy it once more with ``juju
+refresh``:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

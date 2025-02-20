@@ -15,6 +15,6 @@ Our tutorial comes in multiple flavours -- pick your flavour of choice!
     :maxdepth: 2
 
     write-your-first-kubernetes-charm-for-a-django-app
-    flask
     write-your-first-kubernetes-charm-for-a-fastapi-app
+    write-your-first-kubernetes-charm-for-a-flask-app
     write-your-first-kubernetes-charm-for-a-go-app

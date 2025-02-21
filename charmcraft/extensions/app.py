@@ -114,6 +114,7 @@ class _AppBase(Extension):
                     f"which conflict with the {self.framework}-framework extension, "
                     "please rename or remove it"
                 )
+        invalid_non_optionals = []
         for config in self._get_nested(self.yaml_data, "config.options"):
             for reserved_config_prefix in ("webserver-", f"{self.framework}-"):
                 if config.startswith(reserved_config_prefix):
@@ -122,6 +123,19 @@ class _AppBase(Extension):
                         f" reserved configuration prefix {reserved_config_prefix!r}, "
                         "please rename or remove it"
                     )
+            config_option_dict = self._get_nested(
+                self.yaml_data, f"config.options.{config}"
+            )
+            if config_option_dict.get("optional") is False and config_option_dict.get(
+                "default"
+            ):
+                invalid_non_optionals.append(config)
+
+        if invalid_non_optionals:
+            raise ExtensionError(
+                "Non-optional configuration options can not have default values.\n"
+                f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
+            )
 
     def _get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to be merged into the user charmcraft.yaml.

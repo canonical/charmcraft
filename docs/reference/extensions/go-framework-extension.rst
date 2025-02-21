@@ -48,6 +48,28 @@ charm can set it by running ``juju config <application> token=<token>``.
           description: The token for the service.
           type: string
 
+In addition to this, you can set the configuration options to be
+``non-optional`` by setting the ``optional`` key to ``False``. This will
+block the charm and stop services until the config is supplied. For example,
+if your application needs an ``api-token`` to function correctly you can set
+it ``non-optional``, as below. This will block the charm and stop the
+services until the ``api-token`` is supplied.
+
+.. code-block:: yaml
+
+    config:
+      options:
+        api-token:
+          description: The token necessary for the service to run.
+          type: string
+          optional: false
+
+.. note::
+
+    The ``non-optional`` options can not have ``default`` values. If you
+    set a ``default`` value to a ``non-optional`` configuration option
+    ``charmcraft`` will fail when packing the charm.
+
 
 ``charmcraft.yaml`` > ``peers``, ``provides``, ``requires``
 -----------------------------------------------------------

@@ -404,6 +404,20 @@ INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
         {"config": {"options": {"flask-foobar": {"type": "string"}}}},
         id="reserved-config-prefix-flask",
     ),
+    pytest.param(
+        {
+            "config": {
+                "options": {
+                    "non-optional": {
+                        "type": "string",
+                        "optional": False,
+                        "default": "default value",
+                    }
+                }
+            }
+        },
+        id="non-optional-config-with-defautl",
+    ),
 ]
 
 

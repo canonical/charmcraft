@@ -150,7 +150,7 @@ Check out the contents of ``rockcraft.yaml``:
 
 The top of the file should look similar to the following snippet:
 
-.. code:: yaml
+.. code-block:: yaml
    :caption: rockcraft.yaml
 
    name: flask-hello-world

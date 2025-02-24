@@ -155,7 +155,7 @@ Check out the contents of ``rockcraft.yaml``:
 
 The top of the file should look similar to the following snippet:
 
-.. code:: yaml
+.. code-block:: yaml
    :caption: rockcraft.yaml
 
    name: fastapi-hello-world
@@ -699,4 +699,3 @@ in a number of typical ways, but there is a lot more to explore:
     * - "Why...?", "So what?"
       - :external+ops:ref:`Ops | Explanation <explanation>`,
         :external+juju:ref:`Juju | Explanation <explanation>`
-

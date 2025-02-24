@@ -41,11 +41,12 @@ What you’ll need
 What you’ll do
 ~~~~~~~~~~~~~~
 
-Create a Django application. Use that to create a rock with
-``rockcraft``. Use that to create a charm with ``charmcraft``. Use that
-to test, deploy, configure, etc., your Django application on a local
-Kubernetes cloud, ``microk8s``, with ``juju``. All of that multiple
-times, mimicking a real development process.
+- Create a Django application.
+- Use that to create a rock with ``rockcraft``.
+- Use that to create a charm with ``charmcraft``.
+- Use that to test, deploy, configure, etc., your Django application on a local
+  Kubernetes cloud with ``juju``.
+- Repeat the process, mimicking a real development process.
 
 .. important::
 

@@ -3,42 +3,44 @@
 Write your first Kubernetes charm for a Flask app
 =================================================
 
-Imagine you have a Flask application backed up by a database
+Imagine you have a Flask app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
-yourself packaging and deploying your Flask application in no time.
+yourself packaging and deploying your Flask app in no time.
 
 In this tutorial we will build a Kubernetes charm for a Flask
-application using Charmcraft, so we can have a Flask application
+app using Charmcraft, so we can have a Flask app
 up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
 .. note::
-   If you're new to the charming world: Flask applications are
-   specifically supported with a template to quickly generate a
-   **rock** (i.e., a special kind of OCI-compliant container image)
-   and a matching template to quickly generate a **charm** (i.e.,
-   a software operator for cloud operations done with the Juju
-   orchestration engine). The result is Flask applications that
-   can be easily deployed, configured, scaled, integrated, etc.,
-   on any Kubernetes cluster.
+    If you're new to the charming world, Flask apps are
+    specifically supported with a template to quickly generate a
+    **rock** and a matching template to generate a **charm**.
+    A rock is a special kind of OCI-compliant container image, while a
+    charm is a software operator for cloud operations that use the Juju
+    orchestration engine. The result is a Flask app that
+    can be easily deployed, configured, scaled, integrated, etc.,
+    on any Kubernetes cluster.
+
 
 What you'll need
 ----------------
 
-- A local system, e.g., a laptop, with amd64 or arm64 architecture which
+- A local system, e.g., a laptop, with AMD64 or ARM64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
   4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
+
 What you'll do
 --------------
 
-- Create a Flask application.
+- Create a Flask app.
 - Use that to create a rock with ``rockcraft``.
 - Use that to create a charm with ``charmcraft``.
-- Use that to test, deploy, configure, etc., your Flask application on a local
+- Use that to test, deploy, configure, etc., your Flask app on a local
   Kubernetes cloud with ``juju``.
 - Repeat the process, mimicking a real development process.
 
@@ -47,6 +49,7 @@ What you'll do
     Should you get stuck or notice issues, please get in touch on
     `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
     `Discourse <https://discourse.charmhub.io/>`_
+
 
 Set things up
 -------------
@@ -69,10 +72,11 @@ Finally, install ``python3-venv`` and create a virtual environment:
     :end-before: [docs:create-venv-end]
     :dedent: 2
 
-Create the Flask application
-----------------------------
 
-Let's start by creating the "Hello, world" Flask application that
+Create the Flask app
+--------------------
+
+Let's start by creating the "Hello, world" Flask app that
 will be used for this tutorial.
 
 Create a ``requirements.txt`` file using ``touch requirements.txt``.
@@ -84,8 +88,8 @@ copy the following text into it and then save the file:
 
 .. note::
 
-   The ``psycopg2-binary`` package is needed so the Flask application can
-   connect to PostgreSQL.
+    The ``psycopg2-binary`` package is needed so the Flask app can
+    connect to PostgreSQL.
 
 Install the packages:
 
@@ -101,17 +105,18 @@ Then copy and save the following code into the file:
 .. literalinclude:: code/flask/app.py
     :language: python
 
-Run the Flask application locally
----------------------------------
+
+Run the Flask app locally
+-------------------------
 
 Now that we have a virtual environment with all the dependencies, let's
-run the Flask application to verify that it works:
+run the Flask app to verify that it works:
 
 .. code-block:: bash
 
     flask run -p 8000
 
-Test the Flask application by using ``curl`` to send a request to the root
+Test the Flask app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
 
@@ -121,17 +126,18 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-flask-end]
     :dedent: 2
 
-The Flask application should respond with ``Hello, world!``.
+The Flask app should respond with ``Hello, world!``.
 
-The Flask application looks good, so we can stop it for now from the
+The Flask app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
-Pack the Flask application into a rock
---------------------------------------
+
+Pack the Flask app into a rock
+------------------------------
 
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``flask-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Flask application.
+``rockcraft.yaml`` and tailor the file for a Flask app.
 From the ``/flask-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/flask/task.yaml
@@ -152,29 +158,26 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code:: yaml
-   :caption: rockcraft.yaml
+    :caption: rockcraft.yaml
 
-   name: flask-hello-world
-   # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
-   # for more information about bases and using 'bare' bases for chiselled rocks
-   base: ubuntu@22.04 # the base environment for this Flask application
-   version: '0.1' # just for humans. Semantic versioning is recommended
-   summary: A summary of your Flask application # 79 char long summary
-   description: |
-       This is flask-hello-world's description. You have a paragraph or two to tell the
-       most important story about it. Keep it under 100 words though,
-       we live in tweetspace and your description wants to look good in the
-       container registries out there.
-   # the platforms this rock should be built on and run on.
-   # you can check your architecture with `dpkg --print-architecture`
-   platforms:
-       amd64:
-       # arm64:
-       # ppc64el:
-       # s390x:
-
-   ...
-
+    name: flask-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: ubuntu@22.04 # the base environment for this Flask app
+    version: '0.1' # just for humans. Semantic versioning is recommended
+    summary: A summary of your Flask app # 79 char long summary
+    description: |
+        This is flask-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
 
 Verify that the ``name`` is ``flask-hello-world``.
 
@@ -206,8 +209,8 @@ the terminal will respond with something similar to
 
 .. note::
 
-   If you are not on the ``amd64`` platform, the name of the ``.rock`` file
-   will be different for you.
+    If you aren't on the AMD64 platform, the name of the ``.rock`` file
+    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.
@@ -223,6 +226,7 @@ Copy the rock:
 
     `Ubuntu manpage | skopeo
     <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
+
 
 Create the charm
 ----------------
@@ -240,7 +244,7 @@ Using the ``flask-framework`` profile, Charmcraft will automate the
 creation of the files needed for our charm, including a
 ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
 The source code contains the logic required to operate the Flask
-application.
+app.
 
 Initialize a charm named ``flask-hello-world``:
 
@@ -268,14 +272,15 @@ respond with something similar to
 
 .. note::
 
-    If you are not on the ``amd64`` platform, the name of the ``.charm``
+    If you aren't on the AMD64 platform, the name of the ``.charm``
     file will be different for you.
 
-Deploy the Flask application
-----------------------------
+
+Deploy the Flask app
+--------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Flask application. Let's create a new model:
+the Flask app. Let's create a new model:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -283,7 +288,7 @@ the Flask application. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you are not on a host with the ``amd64`` architecture, you will need to include
+If you aren't on a host with the AMD64 architecture, you will need to include
 to include a constraint to the Juju model to specify your architecture.
 
 Set the Juju model constraints with:
@@ -294,8 +299,8 @@ Set the Juju model constraints with:
     :end-before: [docs:add-model-constraints-end]
     :dedent: 2
 
-Now let’s use the OCI image we previously uploaded to deploy the Flask
-application. Deploy using Juju by specifying the OCI image name with the
+Now let's use the OCI image we previously uploaded to deploy the Flask
+app. Deploy using Juju by specifying the OCI image name with the
 ``--resource`` option:
 
 .. literalinclude:: code/flask/task.yaml
@@ -304,12 +309,12 @@ application. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-flask-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Flask application. You can monitor its
+It will take a few minutes to deploy the Flask app. You can monitor its
 progress with:
 
 .. code:: bash
 
-   juju status --watch 2s
+    juju status --watch 2s
 
 It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
@@ -319,7 +324,7 @@ using :kbd:`Ctrl` + :kbd:`C`.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
-The Flask application should now be running. We can monitor the status of
+The Flask app should now be running. We can monitor the status of
 the deployment using ``juju status`` which should be similar to the
 following output:
 
@@ -335,7 +340,7 @@ following output:
     Unit                  Workload  Agent  Address      Ports  Message
     flask-hello-world/0*  active    idle   10.1.87.213
 
-Let's expose the application using ingress. Deploy the
+Let's expose the app using ingress. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Flask app:
 
 .. literalinclude:: code/flask/task.yaml
@@ -366,10 +371,11 @@ to send a request via the ingress. It should return the
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
-Configure the Flask application
--------------------------------
 
-To demonstrate how to provide a configuration to the Flask application,
+Configure the Flask app
+-----------------------
+
+To demonstrate how to provide a configuration to the Flask app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Flask app configuration under the
 keyword ``GREETING``. Change back to the ``/flask-hello-world`` directory using
@@ -382,30 +388,28 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-   :emphasize-lines: 5
+    :emphasize-lines: 5
 
-   name: flask-hello-world
-   # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
-   # for more information about bases and using 'bare' bases for chiselled rocks
-   base: ubuntu@22.04 # the base environment for this Flask application
-   version: '0.2' # just for humans. Semantic versioning is recommended
-   summary: A summary of your Flask application # 79 char long summary
-   description: |
-       This is flask-hello-world's description. You have a paragraph or two to tell the
-       most important story about it. Keep it under 100 words though,
-       we live in tweetspace and your description wants to look good in the
-       container registries out there.
-   # the platforms this rock should be built on and run on.
-   # you can check your architecture with `dpkg --print-architecture`
-   platforms:
-       amd64:
-       # arm64:
-       # ppc64el:
-       # s390x:
+    name: flask-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: ubuntu@22.04 # the base environment for this Flask app
+    version: '0.2' # just for humans. Semantic versioning is recommended
+    summary: A summary of your Flask app # 79 char long summary
+    description: |
+        This is flask-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
 
-   ...
-
-Let’s pack and upload the rock:
+Let's pack and upload the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -417,7 +421,7 @@ Change back into the charm directory using ``cd charm``.
 
 The ``flask-framework`` Charmcraft extension supports adding
 configurations to ``charmcraft.yaml`` which will be passed as
-environment variables to the Flask application. Add the following to
+environment variables to the Flask app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/flask/greeting_charmcraft.yaml
@@ -437,7 +441,7 @@ We can now pack and deploy the new version of the Flask app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the application
+After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that
 the new configuration has been added using
 ``juju config flask-hello-world | grep -A 6 greeting:`` which should show
@@ -446,7 +450,7 @@ the configuration option.
 Using ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
 shows that the response is still ``Hello, world!`` as expected.
 
-Now let’s change the greeting:
+Now let's change the greeting:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -458,10 +462,11 @@ After we wait for a moment for the app to be restarted, using
 ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
 should now return the updated ``Hi!`` greeting.
 
+
 Integrate with a database
 -------------------------
 
-Now let's keep track of how many visitors your application has received.
+Now let's keep track of how many visitors your app has received.
 This will require integration with a database to keep the visitor count.
 This will require a few changes:
 
@@ -474,7 +479,7 @@ This will require a few changes:
 Let's start with the database migration to create the required tables.
 The charm created by the ``flask-framework`` extension will execute the
 ``migrate.py`` script if it exists. This script should ensure that the
-database is initialized and ready to be used by the application. We will
+database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
 Go back out to the ``/flask-hello-world`` directory using ``cd ..``,
@@ -494,28 +499,26 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-   :emphasize-lines: 5
+    :emphasize-lines: 5
 
-   name: flask-hello-world
-   # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
-   # for more information about bases and using 'bare' bases for chiselled rocks
-   base: ubuntu@22.04 # the base environment for this Flask application
-   version: '0.3' # just for humans. Semantic versioning is recommended
-   summary: A summary of your Flask application # 79 char long summary
-   description: |
-       This is flask-hello-world's description. You have a paragraph or two to tell the
-       most important story about it. Keep it under 100 words though,
-       we live in tweetspace and your description wants to look good in the
-       container registries out there.
-   # the platforms this rock should be built on and run on.
-   # you can check your architecture with `dpkg --print-architecture`
-   platforms:
-       amd64:
-       # arm64:
-       # ppc64el:
-       # s390x:
-
-   ...
+    name: flask-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: ubuntu@22.04 # the base environment for this Flask app
+    version: '0.3' # just for humans. Semantic versioning is recommended
+    summary: A summary of your Flask app # 79 char long summary
+    description: |
+        This is flask-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
 
 The app code also needs to be updated to keep track of the number of visitors
 and to include a new endpoint to retrieve the number of visitors to the
@@ -527,7 +530,7 @@ following code:
   .. literalinclude:: code/flask/visitors_app.py
       :language: python
 
-Let’s pack and upload the rock:
+Let's pack and upload the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -552,7 +555,7 @@ We can now pack and deploy the new version of the Flask app:
     :end-before: [docs:refresh-2nd-deployment-end]
     :dedent: 2
 
-Now let’s deploy PostgreSQL and integrate it with the Flask application:
+Now let's deploy PostgreSQL and integrate it with the Flask app:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -577,20 +580,21 @@ repeat this process, the output should be as follows:
     :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
     2
 
+
 Tear things down
 ----------------
 
-We’ve reached the end of this tutorial. We went through the entire
+We've reached the end of this tutorial. We went through the entire
 development process, including:
 
-- Creating a Flask application
-- Deploying the application locally
-- Packaging the application using Rockcraft
-- Building the application with Ops code using Charmcraft
-- Deplyoing the application using Juju
-- Exposing the application using an ingress
-- Configuring the application
-- Integrating the application with a database
+- Creating a Flask app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
 
 If you'd like to reset your working environment, you can run the following
 in the rock directory ``/flask-hello-world`` for the tutorial:
@@ -613,6 +617,7 @@ And then you can proceed with its deletion:
 
     multipass delete charm-dev
     multipass purge
+
 
 Next steps
 ----------

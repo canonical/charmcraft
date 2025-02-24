@@ -937,7 +937,7 @@ at least one ``requires`` integration with ``container`` scope.
 .. collapse:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
-        :start-at: storage: # Possible storage for the charm
+        :start-at: storage:  # Possible storage for the charm
         :end-before: subordinate:
 
 

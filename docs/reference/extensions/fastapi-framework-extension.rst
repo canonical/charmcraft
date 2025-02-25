@@ -41,7 +41,7 @@ by running ``juju config <application> token=<token>``.
           type: string
           optional: false
 
-In addition to this, you can set the configuration options to be
+In addition to this, you can set the configuration option to be
 mandatory by setting the ``optional`` key to ``false``. This will
 block the charm and stop services until the configuration is supplied. For example,
 if your application needs an ``api-token`` to function correctly you can set
@@ -49,6 +49,7 @@ if your application needs an ``api-token`` to function correctly you can set
 services until the ``api-token`` configuration is supplied.
 
 .. code-block:: yaml
+    :caption: charmcraft.yaml
 
     config:
       options:
@@ -59,9 +60,8 @@ services until the ``api-token`` configuration is supplied.
 
 .. note::
 
-    A configuration with the ``optional: false`` option cannot have a
-     ``default`` value. If you set a ``default`` value to a configuration
-     with ``optional: false`` ``charmcraft`` will fail when packing the charm.
+    A configuration with ``optional: false`` can't also have a ``default`` key.
+    If it has both, the charm will fail to pack.
 
 
 ``charmcraft.yaml`` > ``peers``, ``provides``, ``requires``

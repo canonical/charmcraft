@@ -24,6 +24,7 @@ from charmcraft.extensions.app import (
     GoFramework,
 )
 
+NON_OPTIONAL_OPTIONS = {"options":{"non-optional-string": {"description": "Example of a non-optional string configuration option.", "type": "string", "optional": False}}}
 
 def make_flask_input_yaml():
     return {
@@ -33,6 +34,7 @@ def make_flask_input_yaml():
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
         "extensions": ["flask-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
     }
 
 
@@ -69,7 +71,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
-                    "options": {**FlaskFramework.options},
+                    "options": {**FlaskFramework.options, **NON_OPTIONAL_OPTIONS["options"]},
                 },
                 "parts": {
                     "charm": {
@@ -114,6 +116,7 @@ def flask_input_yaml_fixture():
                     "s390x": None,
                 },
                 "extensions": ["django-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
             },
             False,
             {
@@ -146,7 +149,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
-                    "options": {**DjangoFramework.options},
+                    "options": {**DjangoFramework.options, **NON_OPTIONAL_OPTIONS["options"]},
                 },
                 "parts": {
                     "charm": {
@@ -186,6 +189,7 @@ def flask_input_yaml_fixture():
                     "amd64": None,
                 },
                 "extensions": ["go-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
             },
             True,
             {
@@ -213,7 +217,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
-                    "options": {**GoFramework.options},
+                    "options": {**GoFramework.options, **NON_OPTIONAL_OPTIONS["options"]},
                 },
                 "parts": {
                     "charm": {
@@ -253,6 +257,7 @@ def flask_input_yaml_fixture():
                     "amd64": None,
                 },
                 "extensions": ["fastapi-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
             },
             True,
             {
@@ -280,7 +285,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                 ],
                 "config": {
-                    "options": {**FastAPIFramework.options},
+                    "options": {**FastAPIFramework.options, **NON_OPTIONAL_OPTIONS["options"]},
                 },
                 "parts": {
                     "charm": {
@@ -416,7 +421,7 @@ INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
                 }
             }
         },
-        id="non-optional-config-with-defautl",
+        id="non-optional-config-with-default",
     ),
 ]
 

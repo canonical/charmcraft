@@ -63,7 +63,7 @@ Set things up
 
 Let's create a new directory for this tutorial and enter into it:
 
-.. code:: bash
+.. code-block:: bash
 
     mkdir django-hello-world
     cd django-hello-world
@@ -120,7 +120,7 @@ browser.
 
 Change into the ``/django_hello_world`` directory:
 
-.. code:: bash
+.. code-block:: bash
 
     cd django_hello_world
 
@@ -128,7 +128,7 @@ Open the settings file of the app located at
 ``django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
 
-.. code:: python
+.. code-block:: python
 
     ALLOWED_HOSTS = ['*']
 
@@ -136,7 +136,7 @@ Save and close the ``settings.py`` file.
 
 Now, run the Django app to verify that it works:
 
-.. code:: bash
+.. code-block:: bash
 
     python3 manage.py runserver 0.0.0.0:8000
 
@@ -172,7 +172,7 @@ First, we'll need a ``rockcraft.yaml`` file. Using the
 ``rockcraft.yaml`` and tailor the file for a Django app. Change
 back into the ``/django-hello-world`` directory and initialize the rock:
 
-.. code:: bash
+.. code-block:: bash
 
     cd ..
     rockcraft init --profile django-framework
@@ -182,7 +182,7 @@ name based on your working directory, ``/django-hello-world``.
 
 Check out the contents of ``rockcraft.yaml``:
 
-.. code:: bash
+.. code-block:: bash
 
     cat rockcraft.yaml
 
@@ -215,7 +215,7 @@ Verify that the ``name`` is ``django-hello-world``.
 Ensure that ``platforms`` includes the architecture of your host. Check
 the architecture of your system:
 
-.. code:: bash
+.. code-block:: bash
 
     dpkg --print-architecture
 
@@ -444,7 +444,7 @@ Integrate PostgreSQL with the Django app:
 It will take a few minutes to deploy the Django app. You can
 monitor its progress with:
 
-.. code:: bash
+.. code-block:: bash
 
     juju status --relations --watch 2s
 
@@ -516,7 +516,7 @@ Now we will visit the Django app in a web browser. Outside of the
 Multipass VM, open your machine's ``/etc/hosts`` file in a text editor
 and add a line like the following:
 
-.. code:: bash
+.. code-block:: bash
 
     <MULTIPASS_PRIVATE_IP> django-hello-world
 
@@ -587,6 +587,7 @@ and change the ``version`` in ``rockcraft.yaml`` to ``0.2``. The top of
 the ``rockcraft.yaml`` file should look similar to the following:
 
 .. code-block:: yaml
+    :caption: rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world
@@ -668,6 +669,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
+    :caption: rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world
@@ -772,13 +774,13 @@ following in the rock directory ``/django-hello-world`` for the tutorial:
 
 You can also clean up your Multipass instance. Start by exiting it:
 
-.. code:: bash
+.. code-block:: bash
 
     exit
 
 And then you can proceed with its deletion:
 
-.. code:: bash
+.. code-block:: bash
 
     multipass delete charm-dev
     multipass purge

@@ -151,13 +151,13 @@ based on your working directory.
 
 Check out the contents of ``rockcraft.yaml``:
 
-.. code:: bash
+.. code-block:: bash
 
     cat rockcraft.yaml
 
 The top of the file should look similar to the following snippet:
 
-.. code:: yaml
+.. code-block:: yaml
     :caption: rockcraft.yaml
 
     name: flask-hello-world
@@ -312,7 +312,7 @@ app. Deploy using Juju by specifying the OCI image name with the
 It will take a few minutes to deploy the Flask app. You can monitor its
 progress with:
 
-.. code:: bash
+.. code-block:: bash
 
     juju status --watch 2s
 
@@ -388,6 +388,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
+    :caption: rockcraft.yaml
     :emphasize-lines: 5
 
     name: flask-hello-world
@@ -499,6 +500,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
+    :caption: rockcraft.yaml
     :emphasize-lines: 5
 
     name: flask-hello-world

@@ -41,7 +41,7 @@ by running ``juju config <application> token=<token>``.
           type: string
           optional: false
 
-.. include:: /reuse/reference/extensions/non_optional_config.rst 
+.. include:: /reuse/reference/extensions/non_optional_config.rst
 
 
 ``charmcraft.yaml`` > ``peers``, ``provides``, ``requires``

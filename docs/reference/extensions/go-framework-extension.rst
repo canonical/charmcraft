@@ -48,7 +48,7 @@ charm can set it by running ``juju config <application> token=<token>``.
           description: The token for the service.
           type: string
 
-.. include:: /reuse/reference/extensions/non_optional_config.rst 
+.. include:: /reuse/reference/extensions/non_optional_config.rst
 
 
 ``charmcraft.yaml`` > ``peers``, ``provides``, ``requires``

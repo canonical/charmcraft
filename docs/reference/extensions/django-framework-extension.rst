@@ -61,7 +61,7 @@ will set the ``DJANGO_ALLOWED_HOSTS`` environment variable, the ingress
 URL or the Kubernetes service URL if there is no ingress integration,
 will be set automatically.
 
-.. include:: /reuse/reference/extensions/non_optional_config.rst 
+.. include:: /reuse/reference/extensions/non_optional_config.rst
 
 
 ``peers``, ``provides``, and ``requires`` keys

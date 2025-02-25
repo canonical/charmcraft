@@ -42,10 +42,10 @@ What you'll do
 ~~~~~~~~~~~~~~
 
 - Create a Django app.
-- Use that to create a rock with ``rockcraft``.
-- Use that to create a charm with ``charmcraft``.
+- Use that to create a rock with Rockcraft.
+- Use that to create a charm with Charmcraft.
 - Use that to test, deploy, configure, etc., your Django app on a local
-  Kubernetes cloud with ``juju``.
+  Kubernetes cloud with Juju.
 - Repeat the process, mimicking a real development process.
 
 .. important::

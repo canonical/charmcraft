@@ -346,6 +346,42 @@ and the lib version (in ``"<api version>[.<patch version>]"`` string format).
 
 .. literalinclude:: charmcraft-sample-charm.yaml
     :start-at: charm-libs:
+    :end-before: charm-user:
+
+
+.. _charmcraft-yaml-key-charm-user:
+
+``charm-user``
+--------------
+
+.. important::
+
+    ``charm-user`` was added in Juju 3.6.0. Currently only supported on Kubernetes
+    charms and has no effect on machine charms.
+
+**Status:** Optional. Recommended for Kubernetes charms.
+
+**Purpose:** The ``charm-user`` key  allows charm authors to specify that their charm
+hook code does not need to be run as root. This key, in addition to ``uid`` + ``uid``
+fields in ``containers``, allows charms to be run rootless. The value of ``root``
+ensures the charm runs as root. Both ``sudoer`` and ``non-root`` will run as a user
+other than root. In the case of the value ``sudoer``, the charm will be run as a user
+with access to sudo to elevate its privileges.
+
+**Structure:** The key consists of a single value. One of ``root``, ``sudoer`` or
+``non-root``.
+
+.. code-block:: yaml
+
+    # (Optional) What kind of user is required to run the charm code.
+    # It can be one of root, sudoer or non-root.
+    # Added in Juju 3.6.0. If not specified, root is assumed.
+    charm-user: <one of root, sudoer or non-root>
+
+**Example:**
+
+.. literalinclude:: charmcraft-sample-charm.yaml
+    :start-at: charm-user:
     :end-before: config:
 
 

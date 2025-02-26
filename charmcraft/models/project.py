@@ -1115,7 +1115,7 @@ class PlatformCharm(CharmProject):
         return platforms
 
 
-Charm = BasesCharm | PlatformCharm
+Charm = PlatformCharm | BasesCharm
 
 
 class Bundle(CharmcraftProject):

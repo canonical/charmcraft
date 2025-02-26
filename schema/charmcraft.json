@@ -1,0 +1,1678 @@
+{
+	"$defs": {
+		"AnalysisConfig": {
+			"additionalProperties": false,
+			"description": "Definition of `analysis` configuration.",
+			"properties": {
+				"ignore": {
+					"$ref": "#/$defs/Ignore",
+					"default": {
+						"attributes": [],
+						"linters": []
+					}
+				}
+			},
+			"title": "AnalysisConfig",
+			"type": "object"
+		},
+		"Base": {
+			"additionalProperties": false,
+			"description": "Represents a base.",
+			"properties": {
+				"name": {
+					"title": "Name",
+					"type": "string"
+				},
+				"channel": {
+					"title": "Channel",
+					"type": "string"
+				},
+				"architectures": {
+					"default": [
+						"amd64"
+					],
+					"items": {
+						"type": "string"
+					},
+					"title": "Architectures",
+					"type": "array"
+				}
+			},
+			"required": [
+				"name",
+				"channel"
+			],
+			"title": "Base",
+			"type": "object"
+		},
+		"BasesCharm": {
+			"additionalProperties": false,
+			"description": "A charm using the deprecated ``bases`` keyword.\n\nThis type of charm only supports the following bases:\n    - Ubuntu 18.04\n    - Ubuntu 20.04\n    - Ubuntu 22.04\n    - CentOS 7\n    - Alma Linux 9",
+			"properties": {
+				"name": {
+					"description": "The name of the project on Charmhub.\n\nThis value will be used both in the URL of the charm on Charmhub and when\ndeploying the charm with juju.\n\nCharms should follow the\n`charm naming guidelines <https://juju.is/docs/sdk/naming>`_.",
+					"examples": [
+						"mysql",
+						"mysql-k8s"
+					],
+					"maxLength": 40,
+					"minLength": 1,
+					"pattern": "^([a-z0-9][a-z0-9-]?)*[a-z]+([a-z0-9-]?[a-z0-9])*$",
+					"title": "Project Name",
+					"type": "string"
+				},
+				"title": {
+					"anyOf": [
+						{
+							"description": "A human-readable title.",
+							"examples": [
+								"Ubuntu Linux",
+								"Jupyter Lab Desktop",
+								"LXD",
+								"DigiKam",
+								"Apache Kafka",
+								"MySQL Router K8s charm"
+							],
+							"maxLength": 40,
+							"minLength": 2,
+							"title": "Title",
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Title"
+				},
+				"version": {
+					"const": "unversioned",
+					"default": "unversioned",
+					"enum": [
+						"unversioned"
+					],
+					"title": "Version",
+					"type": "string"
+				},
+				"summary": {
+					"description": "A brief (one-line) summary of your charm.",
+					"maxLength": 200,
+					"title": "Summary",
+					"type": "string"
+				},
+				"description": {
+					"description": "A multi-line summary of your charm.",
+					"title": "Description",
+					"type": "string"
+				},
+				"base": {
+					"default": null,
+					"title": "Base",
+					"type": "null"
+				},
+				"build-base": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Build-Base"
+				},
+				"platforms": {
+					"default": null,
+					"title": "Platforms",
+					"type": "null"
+				},
+				"contact": {
+					"default": null,
+					"title": "Contact",
+					"type": "null"
+				},
+				"issues": {
+					"default": null,
+					"title": "Issues",
+					"type": "null"
+				},
+				"source-code": {
+					"default": null,
+					"title": "Source-Code",
+					"type": "null"
+				},
+				"license": {
+					"default": null,
+					"title": "License",
+					"type": "null"
+				},
+				"adopt-info": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Adopt-Info"
+				},
+				"parts": {
+					"additionalProperties": {
+						"type": "object"
+					},
+					"default": {
+						"charm": {
+							"plugin": "charm",
+							"source": "."
+						}
+					},
+					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names. Charmcraft provides 3 plugins: charm, bundle, reactive.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
+					"title": "Parts",
+					"type": "object"
+				},
+				"package-repositories": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "object"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Package-Repositories"
+				},
+				"type": {
+					"const": "charm",
+					"enum": [
+						"charm"
+					],
+					"title": "Type",
+					"type": "string"
+				},
+				"analysis": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/AnalysisConfig"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
+				},
+				"charmhub": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/Charmhub"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"deprecated": true,
+					"description": "(DEPRECATED): Configuration for accessing charmhub."
+				},
+				"charm-libs": {
+					"items": {
+						"$ref": "#/$defs/CharmLib"
+					},
+					"title": "List of libraries to use for this charm",
+					"type": "array"
+				},
+				"actions": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Defines one or more actions.\n\nThis key is equivalent to the\n`actions.yaml file <https://juju.is/docs/sdk/actions-yaml>`_.",
+					"title": "Actions"
+				},
+				"assumes": {
+					"anyOf": [
+						{
+							"items": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"additionalProperties": {
+											"anyOf": [
+												{
+													"items": {},
+													"type": "array"
+												},
+												{
+													"type": "object"
+												}
+											]
+										},
+										"type": "object"
+									}
+								]
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Explicitly state features a Juju model must be able to provide for a\nsuccessful deployment of this charm. When a charm includes such\nrequirements, Juju performs a pre-deployment check and displays\nuser-friendly error messages if a feature requirement cannot be met by the\nmodel that the user is trying to deploy the charm to. If the assumes\nsection of the charm metadata is omitted, Juju will make a best-effort\nattempt to deploy the charm, and users must rely on the output of\n``juju status`` to figure out whether the deployment was successful.\n\nThe key consists of a list of features that can be given either directly\nor, depending on the complexity of the condition you want to enforce,\nnested under one or both of the boolean expressions any-of or all-of,\nas shown below. In order for a charm to be deployed, all entries in the\nassumes block must be satisfied.\n\nStructure::\n\n    assumes:\n      - <feature-1>\n      - any-of:\n        - <feature-2>\n        - <feature-3>\n      - all-of:\n        - <feature-4>\n        - <feature-5>\n\nJuju version requirements can be specified with a string such as\n``juju >= 3.5`` or ``juju < 4.0``. A full list of supported features\ncan be found in the\n`Juju documentation <https://juju.is/docs/juju/supported-features>`_.\n",
+					"title": "Assumes"
+				},
+				"charm-user": {
+					"anyOf": [
+						{
+							"enum": [
+								"root",
+								"sudoer",
+								"non-root"
+							],
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Specifies that the charm code does not need to be run as root. Possible\nvalues are:\n\n- ``root``: the charm will run as root\n- ``sudoer``: the charm will run as a non-root user with access to root\n  privileges using ``sudo``.\n- ``non-root``: the charm will run as a non-root user without ``sudo``.\n\nOnly affects Kubernetes charms on Juju 3.6.0 or later. If not specified,\nJuju will use\n`its default behaviour <https://juju.is/docs/sdk/metadata-yaml#heading--charm-user>`_.\n",
+					"title": "Charm-User"
+				},
+				"containers": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``centos``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
+					"examples": [
+						{
+							"super-app": {
+								"mounts": [
+									{
+										"location": "/logs",
+										"storage": "logs"
+									}
+								],
+								"resource": "super-app-image"
+							}
+						}
+					],
+					"title": "Containers"
+				},
+				"devices": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Devices the charm needs.\n\nStructure::\n\n    devices:\n      <device name>:\n        type: gpu | nvidia.com/gpu | amd.com/gpu\n        description: <Optional description>\n        countmin: <Optional minimum number requested>\n        countmax: <Optional maximum number requested>",
+					"examples": [
+						{
+							"amd-gpu": {
+								"countmax": 100,
+								"countmin": 1,
+								"description": "Some sweet AMD GPU",
+								"type": "amd.com/gpu"
+							},
+							"nvidia-gpu": {
+								"countmin": 20,
+								"description": "Some NVIDIA GPUs",
+								"type": "nvidia.com/gpu"
+							}
+						},
+						{
+							"gpus": {
+								"countmax": 40,
+								"countmin": 2,
+								"description": "A bunch of GPUs",
+								"type": "gpu"
+							}
+						}
+					],
+					"title": "Devices"
+				},
+				"extra-bindings": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A key-only mapping representing extra bindings needed.",
+					"title": "Extra-Bindings"
+				},
+				"peers": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of peer relations.\n\nStructure::\n\n    peers:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"friend": {
+								"interface": "life",
+								"limit": 150,
+								"optional": true,
+								"scope": "container"
+							}
+						}
+					],
+					"title": "Peers"
+				},
+				"provides": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of interfaces this charm provides.\n\nStructure::\n\n    provides:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"self": {
+								"interface": "identity"
+							}
+						}
+					],
+					"title": "Provides"
+				},
+				"requires": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of relations this charm requires.\n\nStructure::\n\n    requires:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"parent": {
+								"interface": "birth",
+								"limit": 2,
+								"optional": false,
+								"scope": "global"
+							}
+						}
+					],
+					"title": "Requires"
+				},
+				"resources": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A mapping of resources that accompany the charm.\n\nSee first: `Juju | Charm resource <https://juju.is/docs/juju/charm-resource>`_\n\nEach resource is made available when the charm is deployed. NOTE:\nKubernetes charms must declare an ``oci-image`` type resource for each\ncontainer declared in ``containers``.\n\nStructure::\n\n    # (Optional) Additional resources that accompany the charm\n    resources:\n      <resource name>:\n        # (Required) The type of the resource\n        type: file | oci-image\n\n        # (Optional) Description of the resource and its purpose\n        description: <description>\n\n        # (Required: when type:file) The filename of the resource as it\n        # should appear in the filesystem.\n        filename: <filename>",
+					"examples": [
+						{
+							"water": {
+								"filename": "/dev/h2o",
+								"type": "file"
+							}
+						},
+						{
+							"super-app-image": {
+								"description": "My app!",
+								"type": "oci-image"
+							}
+						}
+					],
+					"title": "Resources"
+				},
+				"storage": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if all units of the application share the storage.\n        # Defaults to false\n        shared: true | false\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
+					"examples": [
+						{
+							"jbod": {
+								"description": "A block storage to use as swap space",
+								"properties": [
+									"transient"
+								],
+								"shared": false,
+								"type": "block"
+							}
+						}
+					],
+					"title": "Storage"
+				},
+				"subordinate": {
+					"anyOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Optional boolean to declare the charm subordinate.",
+					"examples": [
+						true
+					],
+					"title": "Subordinate"
+				},
+				"terms": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A list of terms to which the user agree by using the charm.\nThese terms are not enforced by the charm, Juju or Canonical.",
+					"examples": [
+						"Post cat pictures on Mastodon",
+						"Tag your cat pictures with #caturday"
+					],
+					"title": "Terms"
+				},
+				"links": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/Links"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "(Recommended) Links to various additional information used by Charmhub.",
+					"examples": [
+						{
+							"contact": "Please send your answer to Old Pink, care of the Funny Farm, Chalfont",
+							"documentation": "https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778",
+							"issues": "https://github.com/canonical/traefik-k8s-operator/issues",
+							"source": "https://github.com/canonical/traefik-k8s-operator",
+							"website": "https://charmed-kubeflow.io/"
+						}
+					]
+				},
+				"config": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "One or more configuration options for your charm.\n\nStructure::\n\n    config:\n      options:\n        # Each option name is the name by which the charm will query the option.\n        <option name>:\n          # (Required) The type of the option\n          type: string | int | float | boolean | secret\n          # (Optional) The default value of the option\n          default: <a reasonable default value of the same type as the option>\n          # (Optional): A string describing the option. Also appears on charmhub.io\n          description: <description string>",
+					"examples": [
+						{
+							"options": {
+								"name": {
+									"default": "Wiki",
+									"description": "The name or title of the Wiki",
+									"type": "string"
+								},
+								"skin": {
+									"default": "vector",
+									"description": "Skin to use for the wiki",
+									"type": "string"
+								}
+							}
+						}
+					],
+					"title": "Config"
+				},
+				"bases": {
+					"items": {
+						"$ref": "#/$defs/BasesConfiguration"
+					},
+					"minItems": 1,
+					"title": "Bases",
+					"type": "array"
+				}
+			},
+			"required": [
+				"name",
+				"summary",
+				"description",
+				"type",
+				"bases"
+			],
+			"title": "BasesCharm",
+			"type": "object"
+		},
+		"BasesConfiguration": {
+			"additionalProperties": false,
+			"description": "Definition of build-on/run-on combinations.\n\nExample::\n\n    bases:\n      - build-on:\n          - name: ubuntu\n            channel: \"20.04\"\n            architectures: [amd64, arm64]\n        run-on:\n          - name: ubuntu\n            channel: \"20.04\"\n            architectures: [amd64, arm64]\n          - name: ubuntu\n            channel: \"22.04\"\n            architectures: [amd64, arm64]",
+			"properties": {
+				"build-on": {
+					"items": {
+						"$ref": "#/$defs/Base"
+					},
+					"title": "Build-On",
+					"type": "array"
+				},
+				"run-on": {
+					"items": {
+						"$ref": "#/$defs/Base"
+					},
+					"title": "Run-On",
+					"type": "array"
+				}
+			},
+			"required": [
+				"build-on",
+				"run-on"
+			],
+			"title": "BasesConfiguration",
+			"type": "object"
+		},
+		"Bundle": {
+			"additionalProperties": false,
+			"description": "Model for defining a bundle.",
+			"properties": {
+				"name": {
+					"anyOf": [
+						{
+							"description": "The name of this project. This is used when uploading, publishing, or installing.\n\nProject name rules:\n* Valid characters are lower-case ASCII letters, numerals and hyphens.\n* Must contain at least one letter\n* May not start or end with a hyphen\n* May not have two hyphens in a row\n",
+							"examples": [
+								"ubuntu",
+								"jupyterlab-desktop",
+								"lxd",
+								"digikam",
+								"kafka",
+								"mysql-router-k8s"
+							],
+							"maxLength": 40,
+							"minLength": 1,
+							"title": "Project Name",
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Name"
+				},
+				"title": {
+					"anyOf": [
+						{
+							"description": "A human-readable title.",
+							"examples": [
+								"Ubuntu Linux",
+								"Jupyter Lab Desktop",
+								"LXD",
+								"DigiKam",
+								"Apache Kafka",
+								"MySQL Router K8s charm"
+							],
+							"maxLength": 40,
+							"minLength": 2,
+							"title": "Title",
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Title"
+				},
+				"version": {
+					"const": "unversioned",
+					"default": "unversioned",
+					"enum": [
+						"unversioned"
+					],
+					"title": "Version",
+					"type": "string"
+				},
+				"summary": {
+					"anyOf": [
+						{
+							"maxLength": 200,
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Summary"
+				},
+				"description": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Description"
+				},
+				"base": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Base"
+				},
+				"build-base": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Build-Base"
+				},
+				"platforms": {
+					"default": null,
+					"title": "Platforms",
+					"type": "null"
+				},
+				"contact": {
+					"default": null,
+					"title": "Contact",
+					"type": "null"
+				},
+				"issues": {
+					"default": null,
+					"title": "Issues",
+					"type": "null"
+				},
+				"source-code": {
+					"default": null,
+					"title": "Source-Code",
+					"type": "null"
+				},
+				"license": {
+					"default": null,
+					"title": "License",
+					"type": "null"
+				},
+				"adopt-info": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Adopt-Info"
+				},
+				"parts": {
+					"additionalProperties": {
+						"type": "object"
+					},
+					"title": "Parts",
+					"type": "object"
+				},
+				"package-repositories": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "object"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Package-Repositories"
+				},
+				"type": {
+					"const": "bundle",
+					"enum": [
+						"bundle"
+					],
+					"title": "Type",
+					"type": "string"
+				},
+				"analysis": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/AnalysisConfig"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
+				},
+				"charmhub": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/Charmhub"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"deprecated": true,
+					"description": "(DEPRECATED): Configuration for accessing charmhub."
+				},
+				"charm-libs": {
+					"items": {
+						"$ref": "#/$defs/CharmLib"
+					},
+					"title": "List of libraries to use for this charm",
+					"type": "array"
+				},
+				"bundle": {
+					"default": {},
+					"title": "Bundle",
+					"type": "object"
+				}
+			},
+			"required": [
+				"type"
+			],
+			"title": "Bundle",
+			"type": "object"
+		},
+		"CharmLib": {
+			"additionalProperties": false,
+			"description": "A Charm library dependency for this charm.",
+			"properties": {
+				"lib": {
+					"pattern": "[a-z][a-z0-9_-]+\\.[a-z][a-z0-9_]+",
+					"title": "Library Path (e.g. my-charm.my_library)",
+					"type": "string"
+				},
+				"version": {
+					"pattern": "[0-9]+(\\.[0-9]+)?",
+					"title": "Version filter for the charm. Either an API version or a specific [api].[patch].",
+					"type": "string"
+				}
+			},
+			"required": [
+				"lib",
+				"version"
+			],
+			"title": "CharmLib",
+			"type": "object"
+		},
+		"Charmhub": {
+			"additionalProperties": false,
+			"description": "Definition of Charmhub endpoint configuration.",
+			"properties": {
+				"api-url": {
+					"default": "https://api.charmhub.io",
+					"format": "uri",
+					"maxLength": 2083,
+					"minLength": 1,
+					"title": "Api-Url",
+					"type": "string"
+				},
+				"storage-url": {
+					"default": "https://storage.snapcraftcontent.com",
+					"format": "uri",
+					"maxLength": 2083,
+					"minLength": 1,
+					"title": "Storage-Url",
+					"type": "string"
+				},
+				"registry-url": {
+					"default": "https://registry.jujucharms.com",
+					"format": "uri",
+					"maxLength": 2083,
+					"minLength": 1,
+					"title": "Registry-Url",
+					"type": "string"
+				}
+			},
+			"title": "Charmhub",
+			"type": "object"
+		},
+		"Ignore": {
+			"additionalProperties": false,
+			"description": "Definition of `analysis.ignore` configuration.",
+			"properties": {
+				"attributes": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"title": "Attributes",
+					"type": "array"
+				},
+				"linters": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"title": "Linters",
+					"type": "array"
+				}
+			},
+			"title": "Ignore",
+			"type": "object"
+		},
+		"Links": {
+			"additionalProperties": false,
+			"description": "Definition of `links` in metadata.",
+			"properties": {
+				"contact": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Contact"
+				},
+				"documentation": {
+					"anyOf": [
+						{
+							"format": "uri",
+							"minLength": 1,
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Documentation"
+				},
+				"issues": {
+					"anyOf": [
+						{
+							"format": "uri",
+							"minLength": 1,
+							"type": "string"
+						},
+						{
+							"items": {
+								"format": "uri",
+								"minLength": 1,
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Issues"
+				},
+				"source": {
+					"anyOf": [
+						{
+							"format": "uri",
+							"minLength": 1,
+							"type": "string"
+						},
+						{
+							"items": {
+								"format": "uri",
+								"minLength": 1,
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Source"
+				},
+				"website": {
+					"anyOf": [
+						{
+							"format": "uri",
+							"minLength": 1,
+							"type": "string"
+						},
+						{
+							"items": {
+								"format": "uri",
+								"minLength": 1,
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Website"
+				}
+			},
+			"title": "Links",
+			"type": "object"
+		},
+		"Platform": {
+			"additionalProperties": false,
+			"description": "Project platform definition.",
+			"properties": {
+				"build-on": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "string"
+							},
+							"minItems": 1,
+							"type": "array",
+							"uniqueItems": true
+						},
+						{
+							"type": "null"
+						}
+					],
+					"title": "Build-On"
+				},
+				"build-for": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "string"
+							},
+							"maxItems": 1,
+							"minItems": 1,
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Build-For"
+				}
+			},
+			"required": [
+				"build-on"
+			],
+			"title": "Platform",
+			"type": "object"
+		},
+		"PlatformCharm": {
+			"additionalProperties": false,
+			"description": "Model for defining a charm using Platforms.",
+			"properties": {
+				"name": {
+					"description": "The name of the project on Charmhub.\n\nThis value will be used both in the URL of the charm on Charmhub and when\ndeploying the charm with juju.\n\nCharms should follow the\n`charm naming guidelines <https://juju.is/docs/sdk/naming>`_.",
+					"examples": [
+						"mysql",
+						"mysql-k8s"
+					],
+					"maxLength": 40,
+					"minLength": 1,
+					"pattern": "^([a-z0-9][a-z0-9-]?)*[a-z]+([a-z0-9-]?[a-z0-9])*$",
+					"title": "Project Name",
+					"type": "string"
+				},
+				"title": {
+					"anyOf": [
+						{
+							"description": "A human-readable title.",
+							"examples": [
+								"Ubuntu Linux",
+								"Jupyter Lab Desktop",
+								"LXD",
+								"DigiKam",
+								"Apache Kafka",
+								"MySQL Router K8s charm"
+							],
+							"maxLength": 40,
+							"minLength": 2,
+							"title": "Title",
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Title"
+				},
+				"version": {
+					"const": "unversioned",
+					"default": "unversioned",
+					"enum": [
+						"unversioned"
+					],
+					"title": "Version",
+					"type": "string"
+				},
+				"summary": {
+					"description": "A brief (one-line) summary of your charm.",
+					"maxLength": 200,
+					"title": "Summary",
+					"type": "string"
+				},
+				"description": {
+					"description": "A multi-line summary of your charm.",
+					"title": "Description",
+					"type": "string"
+				},
+				"base": {
+					"anyOf": [
+						{
+							"enum": [
+								"ubuntu@18.04",
+								"ubuntu@20.04",
+								"ubuntu@22.04",
+								"ubuntu@24.04",
+								"ubuntu@24.10",
+								"ubuntu@25.04",
+								"centos@7",
+								"almalinux@9"
+							],
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Base"
+				},
+				"build-base": {
+					"anyOf": [
+						{
+							"enum": [
+								"ubuntu@18.04",
+								"ubuntu@20.04",
+								"ubuntu@22.04",
+								"ubuntu@24.04",
+								"ubuntu@24.10",
+								"ubuntu@25.04",
+								"centos@7",
+								"almalinux@9"
+							],
+							"type": "string"
+						},
+						{
+							"const": "ubuntu@devel",
+							"enum": [
+								"ubuntu@devel"
+							],
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Build-Base"
+				},
+				"platforms": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/$defs/Platform"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"title": "Platforms",
+					"type": "object"
+				},
+				"contact": {
+					"default": null,
+					"title": "Contact",
+					"type": "null"
+				},
+				"issues": {
+					"default": null,
+					"title": "Issues",
+					"type": "null"
+				},
+				"source-code": {
+					"default": null,
+					"title": "Source-Code",
+					"type": "null"
+				},
+				"license": {
+					"default": null,
+					"title": "License",
+					"type": "null"
+				},
+				"adopt-info": {
+					"anyOf": [
+						{
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Adopt-Info"
+				},
+				"parts": {
+					"additionalProperties": {
+						"type": "object"
+					},
+					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names. Charmcraft provides 3 plugins: charm, bundle, reactive.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
+					"minProperties": 1,
+					"title": "Parts",
+					"type": "object"
+				},
+				"package-repositories": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "object"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"title": "Package-Repositories"
+				},
+				"type": {
+					"const": "charm",
+					"enum": [
+						"charm"
+					],
+					"title": "Type",
+					"type": "string"
+				},
+				"analysis": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/AnalysisConfig"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
+				},
+				"charmhub": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/Charmhub"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"deprecated": true,
+					"description": "(DEPRECATED): Configuration for accessing charmhub."
+				},
+				"charm-libs": {
+					"items": {
+						"$ref": "#/$defs/CharmLib"
+					},
+					"title": "List of libraries to use for this charm",
+					"type": "array"
+				},
+				"actions": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Defines one or more actions.\n\nThis key is equivalent to the\n`actions.yaml file <https://juju.is/docs/sdk/actions-yaml>`_.",
+					"title": "Actions"
+				},
+				"assumes": {
+					"anyOf": [
+						{
+							"items": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"additionalProperties": {
+											"anyOf": [
+												{
+													"items": {},
+													"type": "array"
+												},
+												{
+													"type": "object"
+												}
+											]
+										},
+										"type": "object"
+									}
+								]
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Explicitly state features a Juju model must be able to provide for a\nsuccessful deployment of this charm. When a charm includes such\nrequirements, Juju performs a pre-deployment check and displays\nuser-friendly error messages if a feature requirement cannot be met by the\nmodel that the user is trying to deploy the charm to. If the assumes\nsection of the charm metadata is omitted, Juju will make a best-effort\nattempt to deploy the charm, and users must rely on the output of\n``juju status`` to figure out whether the deployment was successful.\n\nThe key consists of a list of features that can be given either directly\nor, depending on the complexity of the condition you want to enforce,\nnested under one or both of the boolean expressions any-of or all-of,\nas shown below. In order for a charm to be deployed, all entries in the\nassumes block must be satisfied.\n\nStructure::\n\n    assumes:\n      - <feature-1>\n      - any-of:\n        - <feature-2>\n        - <feature-3>\n      - all-of:\n        - <feature-4>\n        - <feature-5>\n\nJuju version requirements can be specified with a string such as\n``juju >= 3.5`` or ``juju < 4.0``. A full list of supported features\ncan be found in the\n`Juju documentation <https://juju.is/docs/juju/supported-features>`_.\n",
+					"title": "Assumes"
+				},
+				"charm-user": {
+					"anyOf": [
+						{
+							"enum": [
+								"root",
+								"sudoer",
+								"non-root"
+							],
+							"type": "string"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Specifies that the charm code does not need to be run as root. Possible\nvalues are:\n\n- ``root``: the charm will run as root\n- ``sudoer``: the charm will run as a non-root user with access to root\n  privileges using ``sudo``.\n- ``non-root``: the charm will run as a non-root user without ``sudo``.\n\nOnly affects Kubernetes charms on Juju 3.6.0 or later. If not specified,\nJuju will use\n`its default behaviour <https://juju.is/docs/sdk/metadata-yaml#heading--charm-user>`_.\n",
+					"title": "Charm-User"
+				},
+				"containers": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``centos``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
+					"examples": [
+						{
+							"super-app": {
+								"mounts": [
+									{
+										"location": "/logs",
+										"storage": "logs"
+									}
+								],
+								"resource": "super-app-image"
+							}
+						}
+					],
+					"title": "Containers"
+				},
+				"devices": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Devices the charm needs.\n\nStructure::\n\n    devices:\n      <device name>:\n        type: gpu | nvidia.com/gpu | amd.com/gpu\n        description: <Optional description>\n        countmin: <Optional minimum number requested>\n        countmax: <Optional maximum number requested>",
+					"examples": [
+						{
+							"amd-gpu": {
+								"countmax": 100,
+								"countmin": 1,
+								"description": "Some sweet AMD GPU",
+								"type": "amd.com/gpu"
+							},
+							"nvidia-gpu": {
+								"countmin": 20,
+								"description": "Some NVIDIA GPUs",
+								"type": "nvidia.com/gpu"
+							}
+						},
+						{
+							"gpus": {
+								"countmax": 40,
+								"countmin": 2,
+								"description": "A bunch of GPUs",
+								"type": "gpu"
+							}
+						}
+					],
+					"title": "Devices"
+				},
+				"extra-bindings": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A key-only mapping representing extra bindings needed.",
+					"title": "Extra-Bindings"
+				},
+				"peers": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of peer relations.\n\nStructure::\n\n    peers:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"friend": {
+								"interface": "life",
+								"limit": 150,
+								"optional": true,
+								"scope": "container"
+							}
+						}
+					],
+					"title": "Peers"
+				},
+				"provides": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of interfaces this charm provides.\n\nStructure::\n\n    provides:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"self": {
+								"interface": "identity"
+							}
+						}
+					],
+					"title": "Provides"
+				},
+				"requires": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A map of relations this charm requires.\n\nStructure::\n\n    requires:\n      <endpoint name>:\n        interface: <Required interface name>\n        limit: <Optional: maximum number of supported connections\n        optional: <Informational only - whether the relation is required.>\n        scope: <\"global\" or \"container\" - the relation scope.>\n\nFor more information, see\n`the Juju documentation <https://juju.is/docs/juju/relation>`_.",
+					"examples": [
+						{
+							"parent": {
+								"interface": "birth",
+								"limit": 2,
+								"optional": false,
+								"scope": "global"
+							}
+						}
+					],
+					"title": "Requires"
+				},
+				"resources": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A mapping of resources that accompany the charm.\n\nSee first: `Juju | Charm resource <https://juju.is/docs/juju/charm-resource>`_\n\nEach resource is made available when the charm is deployed. NOTE:\nKubernetes charms must declare an ``oci-image`` type resource for each\ncontainer declared in ``containers``.\n\nStructure::\n\n    # (Optional) Additional resources that accompany the charm\n    resources:\n      <resource name>:\n        # (Required) The type of the resource\n        type: file | oci-image\n\n        # (Optional) Description of the resource and its purpose\n        description: <description>\n\n        # (Required: when type:file) The filename of the resource as it\n        # should appear in the filesystem.\n        filename: <filename>",
+					"examples": [
+						{
+							"water": {
+								"filename": "/dev/h2o",
+								"type": "file"
+							}
+						},
+						{
+							"super-app-image": {
+								"description": "My app!",
+								"type": "oci-image"
+							}
+						}
+					],
+					"title": "Resources"
+				},
+				"storage": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if all units of the application share the storage.\n        # Defaults to false\n        shared: true | false\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
+					"examples": [
+						{
+							"jbod": {
+								"description": "A block storage to use as swap space",
+								"properties": [
+									"transient"
+								],
+								"shared": false,
+								"type": "block"
+							}
+						}
+					],
+					"title": "Storage"
+				},
+				"subordinate": {
+					"anyOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "Optional boolean to declare the charm subordinate.",
+					"examples": [
+						true
+					],
+					"title": "Subordinate"
+				},
+				"terms": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "A list of terms to which the user agree by using the charm.\nThese terms are not enforced by the charm, Juju or Canonical.",
+					"examples": [
+						"Post cat pictures on Mastodon",
+						"Tag your cat pictures with #caturday"
+					],
+					"title": "Terms"
+				},
+				"links": {
+					"anyOf": [
+						{
+							"$ref": "#/$defs/Links"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "(Recommended) Links to various additional information used by Charmhub.",
+					"examples": [
+						{
+							"contact": "Please send your answer to Old Pink, care of the Funny Farm, Chalfont",
+							"documentation": "https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778",
+							"issues": "https://github.com/canonical/traefik-k8s-operator/issues",
+							"source": "https://github.com/canonical/traefik-k8s-operator",
+							"website": "https://charmed-kubeflow.io/"
+						}
+					]
+				},
+				"config": {
+					"anyOf": [
+						{
+							"type": "object"
+						},
+						{
+							"type": "null"
+						}
+					],
+					"default": null,
+					"description": "One or more configuration options for your charm.\n\nStructure::\n\n    config:\n      options:\n        # Each option name is the name by which the charm will query the option.\n        <option name>:\n          # (Required) The type of the option\n          type: string | int | float | boolean | secret\n          # (Optional) The default value of the option\n          default: <a reasonable default value of the same type as the option>\n          # (Optional): A string describing the option. Also appears on charmhub.io\n          description: <description string>",
+					"examples": [
+						{
+							"options": {
+								"name": {
+									"default": "Wiki",
+									"description": "The name or title of the Wiki",
+									"type": "string"
+								},
+								"skin": {
+									"default": "vector",
+									"description": "Skin to use for the wiki",
+									"type": "string"
+								}
+							}
+						}
+					],
+					"title": "Config"
+				}
+			},
+			"required": [
+				"name",
+				"summary",
+				"description",
+				"platforms",
+				"parts",
+				"type"
+			],
+			"title": "PlatformCharm",
+			"type": "object"
+		}
+	},
+	"discriminator": {
+		"mapping": {
+			"bundle": "#/$defs/Bundle",
+			"charm": {
+				"oneOf": [
+					{
+						"$ref": "#/$defs/PlatformCharm"
+					},
+					{
+						"$ref": "#/$defs/BasesCharm"
+					}
+				]
+			}
+		},
+		"propertyName": "type"
+	},
+	"oneOf": [
+		{
+			"oneOf": [
+				{
+					"$ref": "#/$defs/PlatformCharm"
+				},
+				{
+					"$ref": "#/$defs/BasesCharm"
+				}
+			]
+		},
+		{
+			"$ref": "#/$defs/Bundle"
+		}
+	]
+}

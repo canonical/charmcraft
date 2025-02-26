@@ -13,7 +13,7 @@ First, install Multipass.
 Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
 from the 24.04 blueprint:
 
-.. code-block:: bash
+.. code-block:: text
 
     multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 24.04
 
@@ -52,7 +52,7 @@ In order to create the charm, you'll need to install Charmcraft:
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track:
 
-.. code::
+.. code-block:: text
 
     sudo snap install microk8s --channel 1.31-strict/stable
     sudo adduser $USER snap_microk8s
@@ -82,7 +82,7 @@ Juju is required to deploy the |12FactorApp| application.
 Install Juju using the ``3.6/stable`` track, and bootstrap a
 development controller:
 
-.. code::
+.. code-block:: text
 
     sudo snap install juju --channel 3.6/stable
     mkdir -p ~/.local/share

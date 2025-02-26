@@ -117,3 +117,7 @@ else
 	brew install multipass
 	brew install skopeo
 endif
+
+.PHONY: schema
+schema: install-uv
+	uv run tools/schema.py > schema/charmcraft.json

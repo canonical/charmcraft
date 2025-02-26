@@ -39,7 +39,9 @@ by running ``juju config <application> token=<token>``.
         token:
           description: The token for the service.
           type: string
-          required: true
+          optional: false
+
+.. include:: /reuse/reference/extensions/non_optional_config.rst
 
 
 ``charmcraft.yaml`` > ``peers``, ``provides``, ``requires``

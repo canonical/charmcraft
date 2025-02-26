@@ -431,7 +431,7 @@ Examples:
 
 .. important::
 
-    ``charm-user`` was added in Juju 3.6.0. Currently is only supported on Kubernetes
+    ``charm-user`` was added in Juju 3.6.0. Currently only supported on Kubernetes
     charms and has no effect on machine charms.
 
 **Status:** Optional. Recommended for Kubernetes charms.
@@ -441,7 +441,7 @@ hook code does not need to be run as root. This key, in addition to ``uid`` + ``
 fields in ``containers``, allows charms to be run rootless. The value of ``root``
 ensures the charm runs as root. Both ``sudoer`` and ``non-root`` will run as a user
 other than root. In the case of the value ``sudoer``, the charm will be run as a user
-with access to sudo to elevate it's privileges.
+with access to sudo to elevate its privileges.
 
 **Structure:** The key consists of a single value. One of ``root``, ``sudoer`` or
 ``non-root``.

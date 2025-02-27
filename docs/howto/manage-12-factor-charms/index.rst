@@ -1,30 +1,36 @@
 (manage-12-factor-app-charms)=
+
 How to manage 12-factor app charms
 ==================================
 
-These guides walk you through all steps in working with 12-factor app charms, from initialization to usage. 
+These guides walk you through all ways you can manage 12-factor app charms,
+from initialization to usage. 
 
-## Initialization
+Initialization
+--------------
 
-You need both an OCI image (rock) and a charm to have a deployable 12-factor app on Juju.
+You need both an rock and a charm to have a deployable 12-factor app on Juju.
 
 .. toctree::
    :maxdepth: 2
 
    Initialize your 12-factor app charm <init-12-factor-charms>
 
-## Customization
+Configuration
+-------------
 
-Once your 12-factor app charm has been set up, you can customize many aspects of the charm using Juju.
+Once your 12-factor app charm has been set up, you can customize many aspects
+of the charm using Juju.
 
 .. toctree::
    :maxdepth: 2
 
-   Customize your 12-factor app charm <customize-12-factor-charms>
+   Configure your 12-factor app charm <configure-12-factor-charms>
 
-## Usage
+Usage
+-----
 
-Now that you've initialized and customized your 12-factor app charm, you're ready to use it!
+Now that you've initialized and configured your 12-factor app charm, you're ready to use it!
 
 
 .. toctree::

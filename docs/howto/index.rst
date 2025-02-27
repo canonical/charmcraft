@@ -23,3 +23,4 @@ How-to guides
    flask-async
    Migrate plugins <migrate-plugins/index>
    Build <build-guides/index>
+   Manage 12-factor app charms <manage-12-factor-charms/index>

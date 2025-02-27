@@ -27,6 +27,17 @@ of the charm using Juju.
 
    Configure your 12-factor app charm <configure-12-factor-charms>
 
+Integration
+-----------
+
+Once deployed, your 12-factor app can be integrated to nearly anything in the
+charm ecosystem. 
+
+.. toctree::
+   :maxdepth: 2
+
+   Integrate your 12-factor app charm <integrate-12-factor-charms>
+
 Usage
 -----
 

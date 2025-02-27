@@ -1,4 +1,4 @@
-(integrate-12-factor-charms)=
+.. _integrate-12-factor-charms:
 
 Manage relations for a 12-factor app charm
 ==========================================

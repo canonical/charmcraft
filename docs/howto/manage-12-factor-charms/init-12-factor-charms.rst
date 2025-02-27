@@ -1,4 +1,4 @@
-(init-12-factor-charms)=
+.. _init-12-factor-charms:
 
 Initialize a 12-factor app charm
 ================================

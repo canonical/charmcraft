@@ -1,4 +1,4 @@
-(use-12-factor-charms)=
+.. _use-12-factor-charms:
 
 Use 12-factor app charms
 ========================

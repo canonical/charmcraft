@@ -1,4 +1,4 @@
-(configure-12-factor-charms)=
+.. _configure-12-factor-charms:
 
 Manage configurations for a 12-factor app charm
 ===============================================

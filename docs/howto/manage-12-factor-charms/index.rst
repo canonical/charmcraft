@@ -1,4 +1,4 @@
-(manage-12-factor-app-charms)=
+.. _manage-12-factor-app-charms:
 
 How to manage 12-factor app charms
 ==================================

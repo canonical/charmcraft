@@ -3,6 +3,9 @@
 Manage configurations for a 12-factor app charm
 ===============================================
 
+Add a new configuration
+-----------------------
+
 A charm configuration can be added if your 12-factor app
 requires environment variables, for example, to pass a
 token for a service. Add the configuration in ``charmcraft.yaml``:
@@ -81,3 +84,82 @@ The configuration can be set on the deployed charm using:
 .. code-block:: bash
 
     juju config <app name> token=<token>
+
+Manage secrets for a 12-factor app charm
+----------------------------------------
+
+A user secret can be added to a charm and all the keys and values
+in the secret will be exposed as environment variables. Add the secret
+configuration option in your project file:
+
+.. code-block:: yaml
+
+    config:
+      options:
+        api-token:
+          type: secret
+          description: Secret needed to access some API secret information
+
+Once the charm is deployed, you can add a juju secret to the model:
+
+.. terminal::
+    :input: juju add-secret my-api-token value=1234 othervalue=5678
+
+    secret:cru00lvmp25c77qa0qrg
+
+From this output, you can get the Juju secret ID. Grant the application
+access to view the value of the secret:
+
+.. code-block:: bash
+
+    juju grant-secret my-api-token <app name>
+
+Add the Juju secret ID to the application:
+
+.. code-block:: bash
+
+    juju config <app name> api-token=secret:cru00lvmp25c77qa0qrg
+
+.. tabs::
+
+    .. group-tab:: Flask
+
+        The following environment variables are available for the application:
+
+        - ``APP_API_TOKEN_VALUE: "1234"``
+        - ``APP_API_TOKEN_OTHERVALUE: "5678"``
+
+            See also: `How to manage secrets
+            <https://juju.is/docs/juju/manage-secrets>`_
+
+
+    .. group-tab:: Django
+
+        The following environment variables are available for the application:
+
+        - ``DJANGO_API_TOKEN_VALUE: "1234"``
+        - ``DJANGO_API_TOKEN_OTHERVALUE: "5678"``
+
+            See also: `How to manage secrets
+            <https://juju.is/docs/juju/manage-secrets>`_
+
+
+    .. group-tab:: FastAPI
+
+        The following environment variables are available for the application:
+
+        - ``APP_API_TOKEN_VALUE: "1234"``
+        - ``APP_API_TOKEN_OTHERVALUE: "5678"``
+
+            See also: `How to manage secrets
+            <https://juju.is/docs/juju/manage-secrets>`_
+
+    .. group-tab:: Go
+
+        The following environment variables are available for the application:
+
+        - ``APP_API_TOKEN_VALUE: "1234"``
+        - ``APP_API_TOKEN_OTHERVALUE: "5678"``
+
+            See also: `How to manage secrets
+            <https://juju.is/docs/juju/manage-secrets>`_

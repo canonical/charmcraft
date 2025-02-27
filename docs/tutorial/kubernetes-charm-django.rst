@@ -279,12 +279,12 @@ We will also use PostgreSQL as the database for our Django app. In
 
     DATABASES = {
        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRESQL_DB_NAME'),
-            'USER': os.environ.get('POSTGRESQL_DB_USERNAME'),
-            'PASSWORD': os.environ.get('POSTGRESQL_DB_PASSWORD'),
-            'HOST': os.environ.get('POSTGRESQL_DB_HOSTNAME'),
-            'PORT': os.environ.get('POSTGRESQL_DB_PORT'),
+               'ENGINE': 'django.db.backends.postgresql',
+               'NAME': os.environ.get('POSTGRESQL_DB_NAME'),
+               'USER': os.environ.get('POSTGRESQL_DB_USERNAME'),
+               'PASSWORD': os.environ.get('POSTGRESQL_DB_PASSWORD'),
+               'HOST': os.environ.get('POSTGRESQL_DB_HOSTNAME'),
+               'PORT': os.environ.get('POSTGRESQL_DB_PORT'),
         }
     }
 

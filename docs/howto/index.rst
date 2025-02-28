@@ -8,7 +8,7 @@ How-to guides
 
    manage-charmcraft
    manage-charms
-   manage-12-factor-app-charms
+   Manage 12-factor app charms <manage-12-factor-charms/index>
    manage-extensions
    manage-resources
    manage-libraries
@@ -20,7 +20,5 @@ How-to guides
    manage-tracks
    manage-icons
    manage-bundles
-   flask-async
    Migrate plugins <migrate-plugins/index>
    Build <build-guides/index>
-   Manage 12-factor app charms <manage-12-factor-charms/index>

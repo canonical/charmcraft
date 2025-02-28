@@ -4,7 +4,7 @@ How to manage 12-factor app charms
 ==================================
 
 These guides walk you through all ways you can manage 12-factor app charms,
-from initialization to usage. 
+from initialization to usage.
 
 Initialization
 --------------
@@ -31,7 +31,7 @@ Integration
 -----------
 
 Once deployed, your 12-factor app can be integrated to nearly anything in the
-charm ecosystem. 
+charm ecosystem.
 
 .. toctree::
    :maxdepth: 2
@@ -41,7 +41,8 @@ charm ecosystem.
 Usage
 -----
 
-Now that you've initialized and configured your 12-factor app charm, you're ready to use it!
+Now that you've initialized and configured your 12-factor app charm, you're
+ready to use it!
 
 
 .. toctree::

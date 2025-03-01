@@ -7,7 +7,7 @@ astroid==3.3.8
 attrs==24.3.0
 autodoc-pydantic==2.2.0
 autodocsumm==0.2.14
-babel==2.16.0
+babel==2.17.0
 backports-tarfile==1.2.0
 beautifulsoup4==4.12.3
 boolean-py==4.0

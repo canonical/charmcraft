@@ -66,4 +66,3 @@ configure your 12-factor application.
 
     See also: `How to add an integration to a charm
     <https://juju.is/docs/sdk/implement-integrations-in-a-charm>`_
-  

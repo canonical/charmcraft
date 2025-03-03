@@ -8,7 +8,7 @@ How-to guides
 
    manage-charmcraft
    manage-charms
-   Manage 12-factor app charms <manage-12-factor-charms/index>
+   Manage 12-factor app charms <manage-web-app-charms/index>
    manage-extensions
    manage-resources
    manage-libraries

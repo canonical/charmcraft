@@ -5,8 +5,6 @@
 Your charm already has some ``peers``, ``provides``, and ``requires``
 integrations, for internal purposes.
 
-.. dropdown:: Pre-populated integrations
-
 .. code-block:: yaml
 
     peers:
@@ -150,9 +148,7 @@ PostgreSQL, MySQL, MongoDB or Redis:
 - ``<integration>_DB_NAME``
 
 Here, ``<integration>`` is replaced by ``POSTGRESQL``, ``MYSQL``
-``MONGODB`` or ``REDIS`` for the relevant integration. The key
-``optional`` with value ``False`` means that the charm will get blocked
-and stop the services if the integration is not provided.
+``MONGODB`` or ``REDIS`` for the relevant integration.
 
 The provided SAML environment variables are as follows:
 

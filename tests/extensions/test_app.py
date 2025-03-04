@@ -78,6 +78,7 @@ def flask_input_yaml_fixture():
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -159,6 +160,7 @@ def flask_input_yaml_fixture():
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -230,6 +232,7 @@ def flask_input_yaml_fixture():
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -301,6 +304,7 @@ def flask_input_yaml_fixture():
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
                 ],
                 "config": {
                     "options": {

@@ -5,17 +5,14 @@ include:
 
 prepare: |
   tests.pkgs install unzip
+  snap install --devmode --channel=v4/stable yq
   charmcraft init --project-dir=charm
   cd charm
   echo "bump2version" > req.txt
-
-  cat <<- EOF >> charmcraft.yaml
-  parts:
-    charm:
-      charm-binary-python-packages: [pytest]
-      charm-python-packages: [fades]
-      charm-requirements: [req.txt]
-  EOF
+  yq '.parts.charm = {"charm-binary-python-packages": ["pytest"], "charm-python-packages": ["fades"], "charm-requirements": ["req.txt"]}' \
+    < charmcraft.yaml > charmcraft-2.yaml
+  rm charmcraft.yaml
+  mv charmcraft-2.yaml charmcraft.yaml
 
 restore: |
   pushd charm

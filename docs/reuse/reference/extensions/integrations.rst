@@ -162,7 +162,7 @@ The provided SAML environment variables are as follows:
 - ``SAML_SIGNING_CERTIFICATE`` (required)
 
 The S3 integration creates the following environment variables that you
-may use to configure your Flask application:
+may use to configure your |framework| application:
 
 - ``S3_ACCESS_KEY`` (required)
 - ``S3_SECRET_KEY`` (required)

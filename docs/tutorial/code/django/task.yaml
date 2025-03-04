@@ -70,7 +70,7 @@ execute: |
   cat $HOME/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # Run Django app locally
-  python3 manage.py runserver 0.0.0.0:8000 &
+  ./manage.py runserver 0.0.0.0:8000 &
 
   # Test the Django app
   retry -n 5 --wait 2 curl --fail localhost:8000

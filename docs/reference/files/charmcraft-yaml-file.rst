@@ -914,9 +914,6 @@ at least one ``requires`` integration with ``container`` scope.
         # the location acts as the parent directory for each mounted store.
         location: <location>
 
-        # (Optional) Indicates if all units of the application share the storage
-        shared: true | false
-
         # (Optional) Indicates if the storage should be made read-only (where possible)
         read-only: true | false
 

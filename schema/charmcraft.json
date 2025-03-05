@@ -471,7 +471,7 @@
 						}
 					],
 					"default": null,
-					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if all units of the application share the storage.\n        # Defaults to false\n        shared: true | false\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
+					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
 					"examples": [
 						{
 							"jbod": {
@@ -479,7 +479,6 @@
 								"properties": [
 									"transient"
 								],
-								"shared": false,
 								"type": "block"
 							}
 						}
@@ -1530,7 +1529,7 @@
 						}
 					],
 					"default": null,
-					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if all units of the application share the storage.\n        # Defaults to false\n        shared: true | false\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
+					"description": "Storage devices requested by the charm.\n\nStructure::\n\n    storage:\n      # Each key represents the name of the storage\n      <storage name>:\n\n        # (Required) Type of the requested storage\n        type: filesystem | block\n\n        # (Optional) Description of the storage requested\n        description: <description>\n\n        # (Optional) The mount location for filesystem stores. For\n        # multi-stores the location acts as the parent directory for each\n        # mounted store.\n        location: <location>\n\n        # Indicates if the storage should be made read-only (where\n        # possible). Defaults to false\n        read-only: true | false\n\n        # (Optional) The number of storage instances to be requested\n        multiple:\n          range: <n> | <n>-<m> | <n>- | <n>+\n\n        # (Optional) Minimum size of requested storage in forms G, GiB, GB.\n        # Size multipliers are M, G, T, P, E, Z or Y. With no multiplier\n        # supplied, M is implied.\n        minimum-size: <n> | <n><multiplier>\n\n        # (Optional) List of properties, only supported value is \"transient\"\n        properties:\n          - transient\n",
 					"examples": [
 						{
 							"jbod": {
@@ -1538,7 +1537,6 @@
 								"properties": [
 									"transient"
 								],
-								"shared": false,
 								"type": "block"
 							}
 						}

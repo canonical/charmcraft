@@ -43,6 +43,7 @@ charm-libs:
     version: "1"
   - lib: mysql.mysql
     version: "0.5"
+charm-user: sudoer
 config:
   options:
     name:

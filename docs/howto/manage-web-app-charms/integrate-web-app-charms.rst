@@ -64,5 +64,4 @@ configure your 12-factor application.
 - ``POSTGRESQL_DB_HOSTNAME``
 - ``POSTGRESQL_DB_PORT``
 
-    See also: `How to add an integration to a charm
-    <https://juju.is/docs/sdk/implement-integrations-in-a-charm>`_
+    See also: :external+ops:doc:`Ops | How to manage relations <howto/manage-relations>`

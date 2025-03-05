@@ -63,6 +63,14 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
         :start-at: actions:
         :end-before: analysis:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some action names be dashed and some be underscored.
+
 
 .. _charmcraft-yaml-key-analysis:
 
@@ -424,6 +432,45 @@ secret URI.
         :start-at: config:
         :end-before: containers:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Make the user experience of the operator as smooth as possible. The
+    application should be deployable without providing any further configuration
+    options: ``juju deploy foo`` is preferable to
+    ``juju deploy foo --config required-option=value``.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Just like Juju, a charm is an opinionated tool. Configure the application
+    with the best defaults, and only expose application configuration options
+    when necessary.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some config names be dashed and some be underscored.
+
+.. admonition:: Best practice
+    :class: hint
+
+    The description is a string type. YAML supports two types of formats for
+    that: ``block scalar`` and ``flow scalar``. Prefer the block style
+    (using ``|``) to keep newlines. Using ``>`` will replace newlines with
+    spaces and make the result harder to read on Charmhub.
+
+.. tip::
+
+  For very complex applications, consider providing "configuration profiles",
+  which can group values for large configs together. For example,
+  "profile: large" that tweaks multiple options under the hood to optimise for
+  larger deployments, or "profile: ci" for limited resource usage during
+  testing.
+
 
 .. _charmcraft-yaml-key-containers:
 
@@ -567,6 +614,12 @@ for users) and the default is 0 (root).
         :start-at: links:
         :end-before: name:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Documentation links should apply to the charm, and not to the application that
+    is being charmed. Assume that the user already has basic competency in the use
+    of the application.
 
 .. _charmcraft-yaml-key-name:
 
@@ -591,6 +644,18 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: name:
         :end-before: parts:
+
+.. admonition:: Best practice
+    :class: hint
+
+    The name should be slug-oriented (ASCII lowercase letters, numbers, and
+    hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
+    For example, ``argo-server-k8s``.
+
+    Don't include an organisation or publisher in the name.
+
+    Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a
+    repository, see :ref:`initialise-a-charm`.
 
 
 .. _charmcraft-yaml-key-parts:

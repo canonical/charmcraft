@@ -11,10 +11,11 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. note::
+.. admonition:: Best practice
+    :class: hint
 
-    **Best practice:** If you're setting up a git repository: Name it on the pattern
-     ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
+    If you're setting up a git repository: name it using the pattern
+    ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
@@ -65,6 +66,28 @@ in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`manage-extensions`
 
+The profiles also all provide the recommended tooling and configuration for
+developing charms. You'll need to install [`tox`](https://tox.wiki/en/stable/),
+and can then run ``tox list`` in the root folder to see the available commands.
+
+.. admonition:: Best practice
+    :class: hint
+
+    The quality assurance pipeline of a charm should be automated using a
+    continuous integration (CI) system.
+
+.. tip::
+
+    To prepare an environment for running integration tests, such as in CI, use
+    the `concierge tool <https://github.com/jnsgruk/concierge>`_ or the
+    `actions-operator <https://github.com/charmed-kubernetes/actions-operator>`_.
+
+.. tip::
+
+    The `charming-actions <https://github.com/canonical/charming-actions>`_
+    repository includes actions to ensure that libraries are up-to-date, publish
+    charms and libraries, and more.
+
 
 Add charm project metadata, an icon, docs
 -----------------------------------------
@@ -88,14 +111,6 @@ to ``charm`` in your project file:
 
 Specify a name
 ~~~~~~~~~~~~~~
-
-.. note::
-
-    **Best practice:** The name should be slug-oriented (ASCII lowercase letters,
-    numbers, and hyphens) and follow the pattern
-    ``<workload name in full>[<function>][-k8s]``. E.g., ``argo-server-k8s``.
-
-.. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 .
 
 To specify a pack-and-deploy name for your charm, in your charm's project file, specify
 the ``name`` key. E.g.,

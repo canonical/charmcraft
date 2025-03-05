@@ -1,14 +1,17 @@
 PROJECT=charmcraft
+UV_TEST_GROUPS := "--group=dev"
+UV_DOCS_GROUPS := "--group=docs"
+UV_LINT_GROUPS := "--group=lint" "--group=types"
+
+# If you have dev dependencies that depend on your distro version, uncomment these:
 ifneq ($(wildcard /etc/os-release),)
 include /etc/os-release
-export
 endif
-
-ifneq ($(VERSION_CODENAME),)
-SETUP_TESTS_EXTRA_ARGS=--extra apt-$(VERSION_CODENAME)
+ifdef VERSION_CODENAME
+UV_TEST_GROUPS += "--group=dev-$(VERSION_CODENAME)"
+UV_DOCS_GROUPS += "--group=dev-$(VERSION_CODENAME)"
+UV_LINT_GROUPS += "--group=dev-$(VERSION_CODENAME)"
 endif
-
-UV_FROZEN=true
 
 include common.mk
 
@@ -34,10 +37,6 @@ publish: publish-pypi  ## Publish packages
 .PHONY: publish-pypi
 publish-pypi: clean package-pip lint-twine  ##- Publish Python packages to pypi
 	uv tool run twine upload dist/*
-
-.PHONY: setup
-setup: install-uv setup-precommit ## Set up a development environment
-	uv sync --frozen $(SETUP_TESTS_EXTRA_ARGS) --extra docs --extra lint --extra types
 
 # Find dependencies that need installing
 APT_PACKAGES :=

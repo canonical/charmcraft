@@ -1,73 +1,10 @@
-.. _manage-12-factor-app-charms:
-
-
-Manage 12-factor app charms
-===========================
-
-    See also: :external+juju:ref:`Juju | Charm taxonomy <charm-taxonomy>`
-
-
-Prepare an OCI image for a 12-factor app charm
-----------------------------------------------
-
-    See more:
-    :external+rockcraft:doc:`Rockcraft | How to build a 12-factor app rock
-    <how-to/build-a-12-factor-app-rock>`
-
-
-Initialise a 12-factor app charm
---------------------------------
-
-Use ``charmcraft init`` and specify the relevant profile:
-
-.. code-block:: bash
-
-  charmcraft init --profile <profile>
-
-Charmcraft automatically creates a ``charmcraft.yaml`` project file, a
-``requirements.txt`` file and source code for the charm in your current directory. You
-will need to check the project file and ``README.md`` to verify that the charm's name
-and description are correct.
-
-    See also: :ref:`ref_commands_init`
-
-.. tabs::
-
-    .. group-tab:: Flask
-
-        Specify the ``flask-framework`` profile:
-
-        .. code-block:: bash
-
-            charmcraft init --profile flask-framework
-
-    .. group-tab:: Django
-
-        Specify the ``django-framework`` profile:
-
-        .. code-block:: bash
-
-            charmcraft init --profile django-framework
-
-    .. group-tab:: FastAPI
-
-        Specify the ``fastapi-framework`` profile:
-
-        .. code-block:: bash
-
-            charmcraft init --profile fastapi-framework
-
-    .. group-tab:: Go
-
-        Specify the ``go-framework`` profile:
-
-        .. code-block:: bash
-
-            charmcraft init --profile go-framework
-
+.. _configure-12-factor-charms:
 
 Manage configurations for a 12-factor app charm
------------------------------------------------
+===============================================
+
+Add a new configuration
+-----------------------
 
 A charm configuration can be added if your 12-factor app
 requires environment variables, for example, to pass a
@@ -148,75 +85,6 @@ The configuration can be set on the deployed charm using:
 
     juju config <app name> token=<token>
 
-
-Manage relations for a 12-factor app charm
-------------------------------------------
-
-A charm integration can be added to your charmed 12-factor app by providing
-the integration and endpoint definition in your project file:
-
-.. code-block:: yaml
-
-    requires:
-      <endpoint name>:
-        interface: <endpoint interface name>
-        optional: false
-
-Here, ``<endpoint name>`` corresponds to the endpoint of the application with which
-you want the integration, and ``<endpoint interface name>`` is the endpoint schema
-to which this relation conforms. Both the ``<endpoint name>`` and
-``<endpoint interface name>`` must coincide with the structs defined in the
-pfoject file of that particular application's charm. The key ``optional``
-with value ``False`` means that the charm will get blocked and stop the services if
-the integration is not provided.
-
-You can provide the integration to your deployed 12-factor app using:
-
-.. code-block:: bash
-
-    juju integrate <app charm> <endoint name>
-
-After the integration has been established, the connection string and other
-configuration options will be available as environment variables that you may
-use to configure your 12-factor application.
-
-For example, if you wish to integrate your 12-factor application with PostgreSQL
-(`machine <https://charmhub.io/postgresql>`_ or
-`k8s <https://charmhub.io/postgresql-k8s>`_
-charm), add the following endpoint definition to your project file:
-
-.. code-block:: yaml
-
-    requires:
-      postgresql:
-        interface: postgresql_client
-        optional: True
-
-Provide the integration to your deployed 12-factor app with:
-
-.. code-block:: bash
-
-    juju integrate <app charm> postgresql
-
-This integration creates the following environment variables you may use to
-configure your 12-factor application.
-
-- ``POSTGRESQL_DB_CONNECT_STRING``
-- ``POSTGRESQL_DB_SCHEME``
-- ``POSTGRESQL_DB_NETLOC``
-- ``POSTGRESQL_DB_PATH``
-- ``POSTGRESQL_DB_PARAMS``
-- ``POSTGRESQL_DB_QUERY``
-- ``POSTGRESQL_DB_FRAGMENT``
-- ``POSTGRESQL_DB_USERNAME``
-- ``POSTGRESQL_DB_PASSWORD``
-- ``POSTGRESQL_DB_HOSTNAME``
-- ``POSTGRESQL_DB_PORT``
-
-    See also: `How to add an integration to a charm
-    <https://juju.is/docs/sdk/implement-integrations-in-a-charm>`_
-
-
 Manage secrets for a 12-factor app charm
 ----------------------------------------
 
@@ -296,33 +164,66 @@ Add the Juju secret ID to the application:
             See also: `How to manage secrets
             <https://juju.is/docs/juju/manage-secrets>`_
 
+Write a Kubernetes charm for an async Flask app
+-----------------------------------------------
 
+In this how-to guide you will configure a 12-factor Flask
+application to use asynchronous Gunicorn workers to be
+able to serve to multiple users easily.
 
-Use 12-factor app charms
-------------------------
+Make the rock async
+~~~~~~~~~~~~~~~~~~~
 
+To make the rock async, make sure to put the following in its ``requirements.txt``
+file:
 
-(If your charm is a Django charm) Create an admin user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. literalinclude:: ../code/flask-async/requirements.txt
 
-Use the ``create-superuser`` action to create a new Django admin account:
+Pack the rock using ``rockcraft pack`` and redeploy the charm with the new rock using
+:external+juju:ref:`command-juju-refresh`.
 
-.. code-block:: bash
+Configure the async application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    juju run <app name> create-superuser username=<username> email=<email>
+Now let's enable async Gunicorn workers. We will
+expect this configuration option to be available in the Flask app configuration
+under the ``webserver-worker-class`` key. Verify that the new configuration
+has been added by running:
 
+.. code:: bash
 
-(If your workload depends on a database) Migrate the database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  juju config flask-async-app | grep -A 6 webserver-worker-class:
 
-If your app depends on a database, it is common to run a database migration
-script before app startup which, for example, creates or modifies tables. This
-can be done by including the ``migrate.sh`` script in the root of your project.
-It will be executed with the same environment variables and context as the
-12-factor app.
+The result should contain the key.
 
-If the migration script fails, it will retry upon ``update-status``. The migration
-script will run on every unit. The script is assumed to be idempotent (in other words,
-can be run multiple times) and that it can be run on multiple units simultaneously
-without issue. Handling multiple migration scripts that run concurrently
-can be achieved by, for example, locking any tables during the migration.
+The worker class can be changed using Juju:
+
+.. literalinclude:: ../code/flask-async/task.yaml
+    :language: bash
+    :start-after: [docs:config-async]
+    :end-before: [docs:config-async-end]
+    :dedent: 2
+
+Test that the workers are operating in parallel by sending multiple
+simultaneous requests with curl:
+
+.. code:: bash
+
+  curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
+  http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
+  http://flask-async-app/io http://flask-async-app/io
+
+and they will all return at the same time.
+
+The results should arrive simultaneously and contain five instances of ``ok``:
+
+.. terminal::
+
+   ok
+   ok
+   ok
+   ok
+   ok
+
+It can take up to a minute for the configuration to take effect. When the
+configuration changes, the charm will re-enter the active state.

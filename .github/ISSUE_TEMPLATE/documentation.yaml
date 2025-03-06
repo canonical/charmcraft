@@ -1,0 +1,27 @@
+name: Documentation
+description: Request a change to the documentation
+labels: "Documentation"
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to fill out this documentation request! Before
+        submitting your issue, please make sure there isn't already a prior issue
+        concerning this. If there is, please join that discussion instead.
+  - type: textarea
+    id: enhancement-proposal-what
+    attributes:
+      label: What needs to get done
+      description: >
+        Describe the documentation that is missing, incorrect or outdated
+    validations:
+      required: true
+  - type: textarea
+    id: enhancement-proposal-why
+    attributes:
+      label: User story
+      description: >
+        If new documentation is needed, describe what you were trying to do when you
+        found this documentation gap
+    validations:
+      required: false

@@ -1,23 +1,9 @@
 # This file configures Charmcraft.
-# See https://juju.is/docs/sdk/charmcraft-config for guidance.
-
-# (Required)
-name: {{ name }}
-
-
-# (Required)
+# See https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/
 type: charm
-
-
-# (Recommended)
+name: {{ name }}
 title: Charm Template
-
-
-# (Required)
 summary: A very short one-line summary of the charm.
-
-
-# (Required)
 description: |
   A single sentence that says what the charm is, concisely and memorably.
 
@@ -27,22 +13,26 @@ description: |
 
   Finally, a paragraph that describes whom the charm is useful for.
 
+# Documentation:
+# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/build-guides/select-platforms/
+base: ubuntu@22.04
+platforms:
+  amd64:
+  arm64:
 
-# (Required for 'charm' type)
-bases:
-  - build-on:
-    - name: ubuntu
-      channel: "22.04"
-    run-on:
-    - name: ubuntu
-      channel: "22.04"
 
+parts:
+  charm:
+    plugin: charm
+    source: .
 
 # (Optional) Configuration options for the charm
 # This config section defines charm config options, and populates the Configure
 # tab on Charmhub.
-# More information on this section at https://juju.is/docs/sdk/charmcraft-yaml#heading--config
-# General configuration documentation: https://juju.is/docs/sdk/config
+# More information on this section at:
+# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#config
+# General configuration documentation:
+# https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/configuration/#application-configuration
 config:
   options:
     # An example config option to customise the log level of the workload
@@ -55,23 +45,22 @@ config:
       type: string
 
 
-# The containers and resources metadata apply to Kubernetes charms only.
-# See https://juju.is/docs/sdk/metadata-reference for a checklist and guidance.
-
 # Your workload’s containers.
+# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#containers
 containers:
   some-container:
     resource: some-container-image
 
 
 # This field populates the Resources tab on Charmhub.
+# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#resources
 resources:
   # An OCI image resource for each container listed above.
   # You may remove this if your charm will run without a workload sidecar container.
   some-container-image:
     type: oci-image
     description: OCI image for the 'some-container' container
-    # The upstream-source field is ignored by Juju. It is included here as a reference
-    # so the integration testing suite knows which image to deploy during testing. This field
-    # is also used by the 'canonical/charming-actions' Github action for automated releasing.
+    # The upstream-source field is ignored by Charmcraft and Juju, but it can be
+    # useful to developers in identifying the source of the OCI image.  It is also
+    # used by the 'canonical/charming-actions' Github action for automated releases.
     upstream-source: some-repo/some-image:some-tag

@@ -8,11 +8,6 @@ prepare: |
   charmcraft init --project-dir=charm
   cd charm
   echo "ops==2.0.0" > requirements.txt
-  cat <<- EOF >> charmcraft.yaml
-  parts:
-    charm:
-      charm-requirements: [requirements.txt]
-  EOF
   mkdir -p lib/charms/charm/v0/
   cat <<- EOF > lib/charms/charm/v0/my_lib.py
   PYDEPS = ["ops"]

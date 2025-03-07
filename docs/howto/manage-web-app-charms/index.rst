@@ -9,7 +9,7 @@ from initialization to usage.
 Initialization
 --------------
 
-You need both an rock and a charm to have a deployable 12-factor app on Juju.
+You need both an rock and a charm to have a deployable 12-factor app in Juju.
 
 .. toctree::
    :maxdepth: 2

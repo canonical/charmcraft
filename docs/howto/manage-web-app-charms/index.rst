@@ -1,7 +1,7 @@
 .. _manage-12-factor-app-charms:
 
-Manage 12-factor app charms
-===========================
+Manage a 12-factor app charm
+============================
 
 These guides walk you through all ways you can manage 12-factor app charms,
 from initialization to usage.

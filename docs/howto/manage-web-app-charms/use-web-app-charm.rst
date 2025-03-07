@@ -1,7 +1,7 @@
 .. _use-12-factor-charms:
 
-Use 12-factor app charms
-========================
+Use a 12-factor app charm
+=========================
 
 
 (If your charm is a Django charm) Create an admin user

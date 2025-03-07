@@ -20,15 +20,11 @@ and description are correct.
 
     .. group-tab:: Flask
 
-        Specify the ``flask-framework`` profile:
-
         .. code-block:: bash
 
             charmcraft init --profile flask-framework
 
     .. group-tab:: Django
-
-        Specify the ``django-framework`` profile:
 
         .. code-block:: bash
 
@@ -36,15 +32,11 @@ and description are correct.
 
     .. group-tab:: FastAPI
 
-        Specify the ``fastapi-framework`` profile:
-
         .. code-block:: bash
 
             charmcraft init --profile fastapi-framework
 
     .. group-tab:: Go
-
-        Specify the ``go-framework`` profile:
 
         .. code-block:: bash
 

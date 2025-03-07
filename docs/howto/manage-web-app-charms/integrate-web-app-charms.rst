@@ -7,6 +7,7 @@ A charm integration can be added to your charmed 12-factor app by providing
 the integration and endpoint definition in your project file:
 
 .. code-block:: yaml
+    :caption: charmcraft.yaml
 
     requires:
       <endpoint name>:

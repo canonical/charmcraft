@@ -54,6 +54,5 @@ and description are correct.
 Prepare an OCI image for a 12-factor app charm
 ----------------------------------------------
 
-    See more:
-    :external+rockcraft:doc:`Rockcraft | How to build a 12-factor app rock
-    <how-to/build-a-12-factor-app-rock>`
+ Next, :external+rockcraft:doc:`prepare a rock for your 12-factor app charm
+ <how-to/build-a-12-factor-app-rock>` with Rockcraft.

@@ -3,6 +3,9 @@
 Initialize a 12-factor app charm
 ================================
 
+Prepare a 12-factor app charm
+-----------------------------
+
 Use ``charmcraft init`` and specify the relevant profile:
 
 .. code-block:: bash

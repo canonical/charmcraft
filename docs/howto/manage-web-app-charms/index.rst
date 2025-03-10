@@ -14,7 +14,7 @@ You need both an rock and a charm to have a deployable 12-factor app in Juju.
 .. toctree::
    :maxdepth: 2
 
-   Initialize your 12-factor app charm <init-web-app-charms>
+   Initialize your 12-factor app charm <init-web-app-charm>
 
 Configuration
 -------------
@@ -25,7 +25,7 @@ of it using Juju.
 .. toctree::
    :maxdepth: 2
 
-   Configure your 12-factor app charm <configure-web-app-charms>
+   Configure your 12-factor app charm <configure-web-app-charm>
 
 Integration
 -----------
@@ -36,7 +36,7 @@ Juju ecosystem.
 .. toctree::
    :maxdepth: 2
 
-   Integrate your 12-factor app charm <integrate-web-app-charms>
+   Integrate your 12-factor app charm <integrate-web-app-charm>
 
 Usage
 -----
@@ -48,5 +48,5 @@ ready to use it.
 .. toctree::
    :maxdepth: 2
 
-   Use your 12-factor app charm <use-web-app-charms>
+   Use your 12-factor app charm <use-web-app-charm>
 

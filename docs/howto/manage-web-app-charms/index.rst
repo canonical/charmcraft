@@ -31,7 +31,7 @@ Integration
 -----------
 
 Once deployed, your 12-factor app can be integrated into nearly anything in the
-charm ecosystem.
+Juju ecosystem.
 
 .. toctree::
    :maxdepth: 2

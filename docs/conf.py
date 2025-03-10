@@ -43,11 +43,12 @@ ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
 html_context = {
-    "product_page": "https://juju.is/",
+    "product_page": "juju.is",
     "product_tag": "_static/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
+    "matrix": "https://matrix.to/#/#charmhub-charmcraft:ubuntu.com",
 }
 
 # Template and asset locations

@@ -32,7 +32,14 @@ After the integration has been established, the connection string and other
 configuration options will be available as environment variables that you may
 use to configure your 12-factor application.
 
-For example, if you wish to integrate your 12-factor application with PostgreSQL
+.. seealso:: 
+  
+  :external+ops:doc:`Ops | How to manage relations <howto/manage-relations>`
+
+Integrate with a database
+-------------------------
+
+If you wish to integrate your 12-factor web app with PostgreSQL
 (`machine <https://charmhub.io/postgresql>`_ or
 `k8s <https://charmhub.io/postgresql-k8s>`_
 charm), add the following endpoint definition to your project file:
@@ -65,4 +72,3 @@ configure your 12-factor application.
 - ``POSTGRESQL_DB_HOSTNAME``
 - ``POSTGRESQL_DB_PORT``
 
-    See also: :external+ops:doc:`Ops | How to manage relations <howto/manage-relations>`

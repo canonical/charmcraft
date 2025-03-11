@@ -29,7 +29,7 @@ Charmcraft's seamless integration with tools such as :external+ops:doc:`Ops <ind
 Charmhub provides charm authors with a truly comprehensive toolkit for charm
 development.
 
-For those looking to add your applications to a Juju deployment, Charmcraft will prove
+For those looking to add their applications to a Juju deployment, Charmcraft will prove
 to be an invaluable tool.
 
 

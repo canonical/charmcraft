@@ -72,3 +72,17 @@ configure your 12-factor application.
 - ``POSTGRESQL_DB_HOSTNAME``
 - ``POSTGRESQL_DB_PORT``
 
+Integrate with ingress
+----------------------
+
+If you wish to integrate your 12-factor web app with an ingress,
+for instance
+`Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_,
+provide the integration to your deployed 12-factor app with:
+
+.. code-block:: bash
+
+    juju integrate <app charm> nginx-ingress-integrator
+
+You do not need to add an endpoint definition to your web app charm's
+project file.

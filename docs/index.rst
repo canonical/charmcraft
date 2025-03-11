@@ -12,24 +12,25 @@ Charmcraft
     reference/index
     release-notes/index
 
-Charmcraft is a tool designed to simplify the creation, building, and sharing of a
-:external+juju:ref:`Juju charm <charm>`.
+Charmcraft is the official command-line tool for initializing, packaging, and publishing
+:external+juju:ref:`Juju charms <charm>`.
 
-When you initialise a charm with Charmcraft, you automatically get all the crucial
-project files, pre-populated with helpful template content. These files are such that
-they can be packed right away; however, to make them meaningul for the application you
-are charming, you'll want to customise the YAML and
-:external+ops:doc:`ops <index>`-powered Python in these files. For certain types of
-applications (Django, FastAPI, Flask, Go), if you initialise with a suitable
-Charmcraft extension, things are even easier -- just tweak a few values in the
-YAML and you get a fully functioning charm. Either way, once you're pleased with
-what you've got, you can again use Charmcraft to publish your charm
-on `Charmhub`_.
+When initializing a project, Charmcraft generates all the necessary files, pre-populated
+with template content, which can be further catered to an application using Charmcraft's
+array of extensions. Packing a charm is similarly streamlined, as Charmcraft will
+automatically fetch project dependencies and compile any modules before producing the
+final charm artifact. When it comes time to publish a charm on `Charmhub`_, Charmcraft
+provides tools for charm authors to register a charm's name, upload its associated
+resources, and release revisions to channels.
 
-You can create, build, and share a charm any way you want, but with Charmcraft you get
-state-of-the-art results in record time.
+Charmcraft simplifies every step of the charming process, enabling charm authors to
+bypass boilerplate steps and focus on the contents of their charms. Additionally,
+Charmcraft's seamless integration with tools such as :external+ops:doc:`Ops <index>` and
+Charmhub provides charm authors with a truly comprehensive toolkit for charm
+development.
 
-If you're a charm author, you *must* use Charmcraft!
+For those looking to add your applications to a Juju deployment, Charmcraft will prove
+to be an invaluable tool.
 
 
 In this documentation

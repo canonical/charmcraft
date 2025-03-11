@@ -32,8 +32,8 @@ After the integration has been established, the connection string and other
 configuration options will be available as environment variables that you may
 use to configure your 12-factor application.
 
-.. seealso:: 
-  
+.. seealso::
+
   :external+ops:doc:`Ops | How to manage relations <howto/manage-relations>`
 
 Integrate with a database

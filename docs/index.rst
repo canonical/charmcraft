@@ -16,18 +16,17 @@ Charmcraft is the official command-line tool for initializing, packaging, and pu
 :external+juju:ref:`Juju charms <charm>`.
 
 When initializing a project, Charmcraft generates all the necessary files, pre-populated
-with template content, which can be further catered to an application using Charmcraft's
-array of extensions. Packing a charm is similarly streamlined, as Charmcraft will
-automatically fetch project dependencies and compile any modules before producing the
-final charm artifact. When it comes time to publish a charm on `Charmhub`_, Charmcraft
-provides tools for charm authors to register a charm's name, upload its associated
-resources, and release revisions to channels.
+with template content, which can be further catered to a web application using
+Charmcraft's array of extensions. Packing a charm is similarly streamlined, as
+Charmcraft automatically fetches project dependencies and compile any modules before
+producing the final charm artifact. When it comes time to publish a charm on
+`Charmhub`_, Charmcraft provides tools for charm authors to register a charm's name,
+upload its associated resources, and release revisions to channels.
 
 Charmcraft simplifies every step of the charming process, enabling charm authors to
 bypass boilerplate steps and focus on the contents of their charms. Additionally,
-Charmcraft's seamless integration with tools such as :external+ops:doc:`Ops <index>` and
-Charmhub provides charm authors with a truly comprehensive toolkit for charm
-development.
+Charmcraft's integration with tools such as :external+ops:doc:`Ops <index>` and Charmhub
+provides charm authors with a truly comprehensive toolkit for charm development.
 
 For those looking to add their applications to a Juju deployment, Charmcraft will prove
 to be an invaluable tool.

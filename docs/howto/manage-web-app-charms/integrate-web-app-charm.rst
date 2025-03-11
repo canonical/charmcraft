@@ -86,3 +86,21 @@ provide the integration to your deployed 12-factor app with:
 
 You do not need to add an endpoint definition to your web app charm's
 project file.
+
+Integrate with observability
+----------------------------
+
+If you wish to integrate your 12-factor web app with the `Canonical
+Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+deploy and integrate to the 12-factor app with:
+
+.. code-block:: bash
+
+  juju deploy cos-lite --trust
+  juju integrate <app charm> grafana
+  juju integrate <app charm> prometheus
+  juju integrate <app charm> loki
+
+You do not need to add endpoint definitions to your web app charm's
+project file.

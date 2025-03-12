@@ -140,7 +140,7 @@ Pack the FastAPI app into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``fastapi-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a FastAPI app.
-From the ``/fastapi-hello-world`` directory, initialize the rock:
+From the ``~/fastapi-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -655,7 +655,7 @@ development process, including:
 - Integrating the app with a database
 
 If you'd like to reset your working environment, you can run the following
-in the rock directory ``/fastapi-hello-world`` for the tutorial:
+in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

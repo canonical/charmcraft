@@ -1,3 +1,10 @@
+## Canonical Contributor License Agreement
+
+All open source projects at Canonical share and abide by the [Canonical Contributors License Agreement (CCLA)](https://ubuntu.com/legal/contributors). Code authored by GitHub accounts without a CCLA signature can't be merged into Charmcraft.
+
+Before contributing to Charmcraft, please [sign the CCLA](https://ubuntu.com/legal/contributors/agreement) as an individual. If you wish to sign on behalf of your organization, we recommend you consult your legal department first.
+
+
 ## Set up the development environment
 
 We recommend uv for setting up your local development environment:

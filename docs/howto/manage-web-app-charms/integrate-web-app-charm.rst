@@ -78,13 +78,13 @@ Integrate with ingress
 If you wish to integrate your 12-factor web app with an ingress,
 for instance
 `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_,
-provide the integration to your deployed 12-factor app with:
+provide the integration to your deployed app with:
 
 .. code-block:: bash
 
     juju integrate <app charm> nginx-ingress-integrator
 
-You do not need to add an endpoint definition to your web app charm's
+You don't need to add an endpoint definition to your charm's
 project file.
 
 Integrate with observability
@@ -106,10 +106,10 @@ Deploy and integrate observability to the 12-factor app with:
 
 .. code-block:: bash
 
-  juju deploy cos-lite --trust
-  juju integrate <app charm> grafana
-  juju integrate <app charm> prometheus
-  juju integrate <app charm> loki
+    juju deploy cos-lite --trust
+    juju integrate <app charm> grafana
+    juju integrate <app charm> prometheus
+    juju integrate <app charm> loki
 
-You do not need to add endpoint definitions to your web app charm's
+You don't need to add endpoint definitions to your charm's
 project file.

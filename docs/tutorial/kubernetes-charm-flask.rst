@@ -37,12 +37,12 @@ What you'll need
 What you'll do
 --------------
 
-- Create a Flask app.
-- Use that to create a rock with Rockcraft.
-- Use that to create a charm with Charmcraft.
-- Use that to test, deploy, configure, etc., your Flask app on a local
-  Kubernetes cloud with Juju.
-- Repeat the process, mimicking a real development process.
+#. Create a Flask app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your Flask app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
 
 .. important::
 
@@ -84,7 +84,7 @@ Then, open the file in a text editor using ``nano requirements.txt``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/flask/requirements.txt
-    :caption: requirements.txt
+    :caption: ~/flask-hello-world/requirements.txt
 
 .. note::
 
@@ -103,6 +103,7 @@ In the same directory, create a file called ``app.py``.
 Then copy and save the following code into the file:
 
 .. literalinclude:: code/flask/app.py
+    :caption: ~/flask-hello-world/app.py
     :language: python
 
 
@@ -138,7 +139,7 @@ Pack the Flask app into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``flask-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Flask app.
-From the ``/flask-hello-world`` directory, initialize the rock:
+From the ``~/flask-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -158,7 +159,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/flask-hello-world/rockcraft.yaml
 
     name: flask-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
@@ -231,7 +232,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``/flask-hello-world`` directory, let's create a new directory
+From the ``~/flask-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/flask/task.yaml
@@ -378,17 +379,18 @@ Configure the Flask app
 To demonstrate how to provide a configuration to the Flask app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Flask app configuration under the
-keyword ``GREETING``. Change back to the ``/flask-hello-world`` directory using
+keyword ``GREETING``. Change back to the ``~/flask-hello-world`` directory using
 ``cd ..`` and copy the following code into ``app.py``:
 
 .. literalinclude:: code/flask/greeting_app.py
+    :caption: ~/flask-hello-world/app.py
     :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/flask-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: flask-hello-world
@@ -483,11 +485,12 @@ The charm created by the ``flask-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``/flask-hello-world`` directory using ``cd ..``,
+Go back out to the ``~/flask-hello-world`` directory using ``cd ..``,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 
 .. literalinclude:: code/flask/visitors_migrate.py
+    :caption: ~/flask-hello-world/migrate.py
     :language: python
 
 .. note::
@@ -500,7 +503,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/flask-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: flask-hello-world
@@ -527,7 +530,7 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: visitors_app.py
+.. collapse:: app.py
 
   .. literalinclude:: code/flask/visitors_app.py
       :language: python
@@ -599,7 +602,7 @@ development process, including:
 - Integrating the app with a database
 
 If you'd like to reset your working environment, you can run the following
-in the rock directory ``/flask-hello-world`` for the tutorial:
+in the rock directory ``~/flask-hello-world`` for the tutorial:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

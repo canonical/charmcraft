@@ -830,7 +830,8 @@ is a map where keys are part properties.
             # endpoint. This field is an integer
             limit: <n>
 
-            # (Optional) Defines if the relation is required. Informational only.
+            # (Optional) Defines if the relation is required. Not enforced by
+            # Juju, but used by other tools and should always be included.
             optional: true | false
 
             # (Optional) The scope of the relation. Defaults to "global"
@@ -909,13 +910,21 @@ endpoint.
 
 **Status:** Optional.
 
-**Purpose:** To define if the relation is required. Informational only.
+**Purpose:** To define if the relation is required. Not enforced by Juju.
 
 **Structure:**
 
 *Type:* Boolean.
 
 *Default value:* ``false``
+
+.. admonition:: Best practice
+    :class: hint
+
+    Always include the ``optional`` key, rather than relying on the default
+    value to indicate that the relation is required. Although this field is
+    not enforced by Juju, including it makes it clear to users (and other tools)
+    whether the relation is required.
 
 
 ``<endpoint role>.<endpoint name>.scope``

@@ -19,6 +19,7 @@ import argparse
 import json
 import pathlib
 from collections.abc import Container
+from typing import Any, cast
 
 from craft_cli import emit
 from pydantic.json import pydantic_encoder
@@ -26,6 +27,7 @@ from pydantic.json import pydantic_encoder
 from charmcraft import errors, linters
 from charmcraft.application.commands import base
 from charmcraft.models import lint
+from charmcraft.services.analysis import AnalysisService
 
 OVERVIEW = """\
 Analyze a charm.
@@ -42,6 +44,10 @@ class Analyse(base.CharmcraftCommand):
     help_msg = "Analyse a charm"
     overview = OVERVIEW
     format_option = True
+
+    def __init__(self, config: dict[str, Any] | None) -> None:
+        super().__init__(config)
+        self._analysis_service = cast(AnalysisService, self._services.get("analysis"))
 
     def fill_parser(self, parser) -> None:
         """Add command-specific parameters."""
@@ -72,7 +78,7 @@ class Analyse(base.CharmcraftCommand):
 
     def _run_formatted(self, filepath: pathlib.Path, *, ignore: Container[str]) -> int:
         """Run the command, formatting the output into JSON or similar at the end."""
-        results = list(self._services.analysis.lint_file(filepath))
+        results = list(self._analysis_service.lint_file(filepath))
         emit.message(json.dumps(results, indent=4, default=pydantic_encoder))
         return max(r.level for r in results).return_code
 
@@ -82,7 +88,7 @@ class Analyse(base.CharmcraftCommand):
         with emit.progress_bar(
             f"Linting {filepath.name}...", total=len(linters.CHECKERS)
         ) as progress:
-            for result in self._services.analysis.lint_file(
+            for result in self._analysis_service.lint_file(
                 filepath, ignore=ignore, include_ignored=False
             ):
                 emit.progress(str(result), permanent=True)

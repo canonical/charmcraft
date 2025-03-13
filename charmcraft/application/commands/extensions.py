@@ -92,4 +92,4 @@ class ExpandExtensionsCommand(base.CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Print the project's specification with the extensions expanded."""
-        emit.message(utils.dump_yaml(self._services.project.marshal()))
+        emit.message(utils.dump_yaml(self._services.project.marshal()))  # type: ignore[union-attr]

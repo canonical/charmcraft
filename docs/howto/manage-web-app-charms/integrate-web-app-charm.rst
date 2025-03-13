@@ -98,8 +98,8 @@ of your machine to MicroK8s through the MetalLB addon:
 
 .. code-block:: bash
 
-  IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
-  microk8s enable metallb:$IPADDR-$IPADDR
+    IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+    microk8s enable metallb:$IPADDR-$IPADDR
 
 
 Deploy and integrate observability to the 12-factor app with:

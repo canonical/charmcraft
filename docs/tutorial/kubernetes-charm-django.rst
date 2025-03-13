@@ -41,12 +41,12 @@ What you'll need
 What you'll do
 ~~~~~~~~~~~~~~
 
-- Create a Django app.
-- Use that to create a rock with Rockcraft.
-- Use that to create a charm with Charmcraft.
-- Use that to test, deploy, configure, etc., your Django app on a local
-  Kubernetes cloud with Juju.
-- Repeat the process, mimicking a real development process.
+#. Create a Django app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your Django app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
 
 .. important::
 
@@ -88,7 +88,7 @@ Then, open the file in a text editor using ``nano requirements.txt``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/django/requirements.txt
-    :caption: requirements.txt
+    :caption: ~/django-hello-world/requirements.txt
 
 .. note::
 
@@ -125,7 +125,7 @@ Change into the ``~/django_hello_world`` directory:
     cd django_hello_world
 
 Open the settings file of the app located at
-``django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
+``~/django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
 
 .. code-block:: python
@@ -189,7 +189,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/django-hello-world/rockcraft.yaml
 
     name: django-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
@@ -544,7 +544,7 @@ In this iteration, we'll add a greeting app that returns a ``Hello, world!`` gre
 The generated Django app doesn't come with an app, which is why
 we had to initially enable debug mode for testing.  We will need to go back
 out to the ``~/django-hello-world`` directory where the rock is and enter
-into the ``/django_hello_world`` directory where the Django app
+into the ``./django_hello_world`` directory where the Django app
 is. Let's add a new Django app:
 
 .. literalinclude:: code/django/task.yaml
@@ -587,7 +587,7 @@ and change the ``version`` in ``rockcraft.yaml`` to ``0.2``. The top of
 the ``rockcraft.yaml`` file should look similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/django-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world
@@ -623,7 +623,7 @@ Redeploy the charm
 
 We'll redeploy the new version with ``juju refresh``.
 
-In the ``/charm`` directory, run:
+In the ``./charm`` directory, run:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -655,7 +655,7 @@ we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
 keyword ``DJANGO_GREETING``. Go back out to the rock
 directory ``~/django-hello-world`` using ``cd ..``. From there, open the
-``django_hello_world/greeting/views.py`` file and replace the content
+``./django_hello_world/greeting/views.py`` file and replace the content
 with:
 
 .. literalinclude:: code/django/views_greeting_configuration.py
@@ -669,7 +669,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/django-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world

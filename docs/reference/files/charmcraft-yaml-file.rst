@@ -688,6 +688,10 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
     hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
     For example, ``argo-server-k8s``.
 
+    Include the '-k8s' suffix on all charms that run on a Kubernetes cloud,
+    unless the charm has no workload or you know that there will never be
+    a machine version of the charm.
+
     Don't include an organisation or publisher in the name.
 
     Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a

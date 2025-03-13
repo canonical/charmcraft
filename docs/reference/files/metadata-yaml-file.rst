@@ -437,10 +437,10 @@ Examples:
 **Status:** Optional. Recommended for Kubernetes charms.
 
 **Purpose:** The ``charm-user`` key  allows charm authors to specify that their charm
-hook code does not need to be run as root. This key, in combination with ``uid`` + ``gid``
-fields in ``containers``, allows the charm to be run rootless. If set to ``root``,
-the charm runs as root. If set to ``sudoer`` or ``non-root``, the charm runs as a user
-other than root. If the value is ``sudoer``, the charm will be run as a user
+hook code does not need to be run as root. This key, in combination with ``uid`` and
+``gid`` fields in ``containers``, allows the charm to be run rootless. If set to
+``root``, the charm runs as root. If set to ``sudoer`` or ``non-root``, the charm runs
+as a user other than root. If the value is ``sudoer``, the charm will be run as a user
 with access to sudo to elevate its privileges.
 
 **Structure:** The key consists of a single value. One of ``root``, ``sudoer`` or

@@ -15,21 +15,20 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the lifecycle service."""
 
+import craft_application
 import distro
 import pytest
 from craft_application import errors, models, util
 from craft_providers import bases
 
-from charmcraft.services import CharmcraftServiceFactory
 
-
-def test_init_lifecycle(service_factory: CharmcraftServiceFactory):
+def test_init_lifecycle(service_factory: craft_application.ServiceFactory):
     """Test the setup of a parts lifecycle, implicitly testing setup."""
 
     service_factory.lifecycle._init_lifecycle_manager()
 
 
-def test_lifecycle_build_for_invalid(service_factory: CharmcraftServiceFactory):
+def test_lifecycle_build_for_invalid(service_factory: craft_application.ServiceFactory):
     lifecycle = service_factory.lifecycle
 
     lifecycle._build_plan = [
@@ -47,7 +46,7 @@ def test_lifecycle_build_for_invalid(service_factory: CharmcraftServiceFactory):
         lifecycle._init_lifecycle_manager()
 
 
-def test_lifecycle_build_for_all(service_factory: CharmcraftServiceFactory):
+def test_lifecycle_build_for_all(service_factory: craft_application.ServiceFactory):
     lifecycle = service_factory.lifecycle
 
     lifecycle._build_plan = [
@@ -64,7 +63,7 @@ def test_lifecycle_build_for_all(service_factory: CharmcraftServiceFactory):
     assert lcm._target_arch == util.get_host_architecture()
 
 
-def test_lifecycle_build_for_multi(service_factory: CharmcraftServiceFactory):
+def test_lifecycle_build_for_multi(service_factory: craft_application.ServiceFactory):
     lifecycle = service_factory.lifecycle
 
     host_arch = util.get_host_architecture()

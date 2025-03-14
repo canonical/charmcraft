@@ -12,24 +12,24 @@ Charmcraft
     reference/index
     release-notes/index
 
-Charmcraft is a tool designed to simplify the creation, building, and sharing of a
-:external+juju:ref:`Juju charm <charm>`.
+Charmcraft is the command-line tool for initializing, packaging, and publishing
+:external+juju:ref:`Juju charms <charm>`.
 
-When you initialise a charm with Charmcraft, you automatically get all the crucial
-project files, pre-populated with helpful template content. These files are such that
-they can be packed right away; however, to make them meaningul for the application you
-are charming, you'll want to customise the YAML and
-:external+ops:doc:`ops <index>`-powered Python in these files. For certain types of
-applications (Django, FastAPI, Flask, Go), if you initialise with a suitable
-Charmcraft extension, things are even easier -- just tweak a few values in the
-YAML and you get a fully functioning charm. Either way, once you're pleased with
-what you've got, you can again use Charmcraft to publish your charm
-on `Charmhub`_.
+When initializing a project, Charmcraft generates all the necessary files, which can be
+further catered to an application by modifying the YAML and :external+ops:doc:`Ops
+<index>`-powered Python in the pre-populated template content. For Django, FastAPI,
+Flask, and Go applications, Charmcraft's extensions simplify this process further by
+only requiring minor YAML changes after initialization. With just a few simple commands,
+charm authors can then use Charmcraft to package a charm and publish it to `Charmhub`_.
 
-You can create, build, and share a charm any way you want, but with Charmcraft you get
-state-of-the-art results in record time.
+Charmcraft simplifies every step of the charming process, enabling charm authors to
+bypass boilerplate steps and focus on the contents of their charms. Additionally,
+Charmcraft's integration with tools and platforms such as Ops and Charmhub provides
+charm authors with a complete charm development experience.
 
-If you're a charm author, you *must* use Charmcraft!
+Charmcraft offers an efficient and straightforward way for anyone to charm an
+application for their Juju deployment, regardless of that application's complexity or
+scope.
 
 
 In this documentation
@@ -41,8 +41,7 @@ In this documentation
         :link: tutorial/index
         :link-type: doc
 
-        **Start here**: a hands-on introduction to Example Product for new users
-
+        **Get started** - a hands-on introduction to Charmcraft for new users
 
     .. grid-item-card:: How-to guides
         :link: howto/index
@@ -57,7 +56,7 @@ In this documentation
         :link: reference/index
         :link-type: doc
 
-        **Technical information** - specifications, APIs, architecture
+        **Technical information**, including commands, extensions, and project files
 
 .. grid-item-card: Explanation
     :link: explanation/index
@@ -70,11 +69,11 @@ Project and community
 ---------------------
 
 Charmcraft is a member of the Canonical family. It's an open source project
-that warmly welcomes community projects, contributions, suggestions, fixes
+that warmly welcomes community projects, contributions, suggestions, fixes,
 and constructive feedback.
 
-- `Ubuntu Code of Conduct <https://ubuntu.com/community/code-of-conduct>`_.
-- `Canonical contributor licenses agreement <https://ubuntu.com/legal/contributors>`_.
+- `Ubuntu Code of Conduct <https://ubuntu.com/community/code-of-conduct>`_
+- `Canonical contributor licence agreement <https://ubuntu.com/legal/contributors>`_
 
 
 Indices and tables

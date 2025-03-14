@@ -15,18 +15,17 @@ Charmcraft
 Charmcraft is the command-line tool for initializing, packaging, and publishing
 :external+juju:ref:`Juju charms <charm>`.
 
+When initializing a project, Charmcraft generates all the necessary files, which can be
+further catered to an application by modifying the YAML and :external+ops:doc:`Ops
+<index>`-powered Python in the pre-populated template content. For Django, FastAPI,
+Flask, and Go applications, Charmcraft's extensions simplify this process further by
+only requiring minor YAML changes after initialization. With just a few simple commands,
+charm authors can then use Charmcraft to package a charm and publish it to `Charmhub`_.
+
 Charmcraft simplifies every step of the charming process, enabling charm authors to
 bypass boilerplate steps and focus on the contents of their charms. Additionally,
-Charmcraft's integration with tools and platforms such as :external+ops:doc:`Ops
-<index>` and `Charmhub`_ provides charm authors with a complete charm development
-experience.
-
-When initializing a project, Charmcraft generates all the necessary files, which can be
-further catered to an application by modifying the YAML and Ops-powered Python in the
-pre-populated template content. For Django, FastAPI, Flask, and Go applications,
-Charmcraft's extensions simplify this process further by only requiring minor YAML
-changes after initialization. With just a few simple commands, charm authors can then
-use Charmcraft to package a charm and publish it to Charmhub.
+Charmcraft's integration with tools and platforms such as Ops and Charmhub provides
+charm authors with a complete charm development experience.
 
 Charmcraft offers an efficient and straightforward way for anyone to charm an
 application for their Juju deployment, regardless of that application's complexity or

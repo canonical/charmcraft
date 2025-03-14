@@ -105,7 +105,6 @@ to keep track of other choices a charmer might make.
             type: filesystem
             location: /logs
             description: Storage mount for application logs
-            shared: true
 
         assumes:
           - juju >= 3.6.0
@@ -291,9 +290,6 @@ to find out more.
             # the location acts as the parent directory for each mounted store.
             location: <location>
 
-            # (Optional) Indicates if all units of the application share the storage
-            shared: true | false
-
             # (Optional) Indicates if the storage should be made read-only (where possible)
             read-only: true | false
 
@@ -437,7 +433,7 @@ Examples:
 **Status:** Optional. Recommended for Kubernetes charms.
 
 **Purpose:** The ``charm-user`` key  allows charm authors to specify that their charm
-hook code does not need to be run as root. This key, in combination with ``uid`` +
+hook code does not need to be run as root. This key, in combination with ``uid`` and
 ``gid`` fields in ``containers``, allows the charm to be run rootless. If set to
 ``root``, the charm runs as root. If set to ``sudoer`` or ``non-root``, the charm runs
 as a user other than root. If the value is ``sudoer``, the charm will be run as a user
@@ -825,9 +821,6 @@ configuration layer.
         # (Optional) The mount location for filesystem stores. For multi-stores
         # the location acts as the parent directory for each mounted store.
         location: <location>
-
-        # (Optional) Indicates if all units of the application share the storage
-        shared: true | false
 
         # (Optional) Indicates if the storage should be made read-only (where possible)
         read-only: true | false

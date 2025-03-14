@@ -29,8 +29,8 @@ changes after initialization. With just a few simple commands, charm authors can
 use Charmcraft to package a charm and publish it to Charmhub.
 
 Charmcraft offers an efficient and straightforward way for anyone to charm an
-application for their Juju deployment, regardless of whether that application is a
-simple web service, a database, or a full 5G core network.
+application for their Juju deployment, regardless of that application's complexity or
+scope.
 
 
 In this documentation

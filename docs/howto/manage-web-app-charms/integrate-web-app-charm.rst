@@ -93,8 +93,9 @@ Integrate with observability
 If you wish to integrate your 12-factor web app with the `Canonical
 Observability Stack
 (COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
-you need to set up an ingress for COS and provide the IP address
-of your machine to MicroK8s through the MetalLB addon:
+you must first prepare an ingress for COS as it relies on Traefik.
+Traefik requires the MetalLB Loadbalancer addon on MicroK8s which requires
+an IP range. Provide the IP range and enable the addon with:
 
 .. code-block:: bash
 

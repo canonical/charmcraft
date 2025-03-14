@@ -13,4 +13,3 @@ parts:
     plugin: charm
     source: .
 charm-user: sudoer
-

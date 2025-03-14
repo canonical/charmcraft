@@ -90,12 +90,12 @@ project file.
 Integrate with observability
 ----------------------------
 
-If you wish to integrate your 12-factor web app with the `Canonical
-Observability Stack
-(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
-you must first prepare an ingress for COS as it relies on Traefik.
-Traefik requires the MetalLB Loadbalancer addon on MicroK8s which requires
-an IP range. Provide the IP range and enable the addon with:
+You must prepare an ingress if you wish to integrate your 12-factor web app
+with the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_.
+COS relies on the Traefik ingress to expose, for example, Grafana.
+On MicroK8s, Traefik requires the MetalLB loadbalancer to be enabled which
+requires an IP range. Provide the IP range and enable the addon with:
 
 .. code-block:: bash
 

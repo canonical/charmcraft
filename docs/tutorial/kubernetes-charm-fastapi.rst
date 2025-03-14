@@ -38,12 +38,12 @@ What you'll need
 What you'll do
 --------------
 
-- Create a FastAPI app.
-- Use that to create a rock with Rockcraft.
-- Use that to create a charm with Charmcraft.
-- Use that to test, deploy, configure, etc., your FastAPI app on a local
-  Kubernetes cloud with Juju.
-- Repeat the process, mimicking a real development process.
+#. Create a FastAPI app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your FastAPI app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
 
 .. important::
 
@@ -85,7 +85,7 @@ Then, open the file in a text editor using ``nano requirements.txt``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/fastapi/requirements.txt
-    :caption: requirements.txt
+    :caption: ~/fastapi-hello-world/requirements.txt
 
 .. note::
 
@@ -104,6 +104,7 @@ In the same directory, create a file called ``app.py``.
 Then copy and save the following code into the file:
 
 .. literalinclude:: code/fastapi/app.py
+    :caption: ~/fastapi-hello-world/app.py
     :language: python
 
 
@@ -139,7 +140,7 @@ Pack the FastAPI app into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``fastapi-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a FastAPI app.
-From the ``/fastapi-hello-world`` directory, initialize the rock:
+From the ``~/fastapi-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -159,7 +160,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
 
     name: fastapi-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
@@ -236,7 +237,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``/fastapi-hello-world`` direcotyr, let's create a new directory
+From the ``~/fastapi-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -270,7 +271,7 @@ Check out the contents of ``charmcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: charmcraft.yaml
+    :caption: ~/fastapi-hello-world/charm/charmcraft.yaml
 
     # This file configures Charmcraft.
     # See https://juju.is/docs/sdk/charmcraft-config for guidance.
@@ -299,7 +300,7 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor and include ``arm64``
 in ``platforms``.
 
-Let's pack the charm
+Let's pack the charm:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -430,17 +431,18 @@ Configure the FastAPI app
 To demonstrate how to provide a configuration to the FastAPI app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the FastAPI app configuration under the
-keyword ``APP_GREETING``. Change back to the ``/fastapi-hello-world`` directory
+keyword ``APP_GREETING``. Change back to the ``~/fastapi-hello-world`` directory
 using ``cd ..`` and copy the following code into ``app.py``:
 
 .. literalinclude:: code/fastapi/greeting_app.py
+    :caption: ~/fastapi-hello-world/app.py
     :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: fastapi-hello-world
@@ -535,11 +537,12 @@ The charm created by the ``fastapi-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``/fastapi-hello-world`` directory using ``cd ..``,
+Go back out to the ``~/fastapi-hello-world`` directory using ``cd ..``,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 
 .. literalinclude:: code/fastapi/visitors_migrate.py
+    :caption: ~/fastapi-hello-world/migrate.py
     :language: python
 
 .. note::
@@ -552,7 +555,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: fastapi-hello-world
@@ -579,7 +582,7 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: visitors_app.py
+.. collapse:: app.py
 
   .. literalinclude:: code/fastapi/visitors_app.py
       :language: python
@@ -652,7 +655,7 @@ development process, including:
 - Integrating the app with a database
 
 If you'd like to reset your working environment, you can run the following
-in the rock directory ``/fastapi-hello-world`` for the tutorial:
+in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

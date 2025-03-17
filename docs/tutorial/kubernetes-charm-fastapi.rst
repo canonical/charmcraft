@@ -620,7 +620,13 @@ Now let's deploy PostgreSQL and integrate it with the FastAPI app:
     :end-before: [docs:deploy-postgres-end]
     :dedent: 2
 
-Wait for ``juju status`` to show that the App is ``active`` again. Running
+Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the FastAPI app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the FastAPI app will not
+start until the database is ready.
+
+Running
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
 should still return the ``{"message":"Hi!"}`` greeting.
 

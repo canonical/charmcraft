@@ -569,6 +569,11 @@ Now let's deploy PostgreSQL and integrate it with the Flask app:
     :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the Flask app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the Flask app will not
+start until the database is ready.
+
 Running ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 

@@ -451,7 +451,9 @@ monitor its progress with:
 The ``--relations`` flag will list the currently enabled integrations.
 It can take a couple of minutes for the apps to finish the deployment.
 During this time, the Django app may enter a ``blocked`` state as it
-waits to become integrated with the PostgreSQL database.
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the Django app will not
+start until the database is ready.
 
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.

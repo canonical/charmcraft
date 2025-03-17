@@ -1132,6 +1132,10 @@ class Bundle(CharmcraftProject):
     @classmethod
     def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
+        emit.progress(
+            "Packing bundles is deprecated and will be removed in Charmcraft 4.",
+            permanent=True,
+        )
         if "name" not in values:
             values["name"] = values.get("bundle", {}).get("name")
 

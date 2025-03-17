@@ -219,8 +219,8 @@ the architecture of your system:
 
     dpkg --print-architecture
 
-If your host uses ARM64 architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` under ``platforms``.
+If your host uses ARM architecture, open ``rockcraft.yaml`` in a
+text editor, comment out ``amd64``, and include ``arm64`` under ``platforms``.
 
 Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database

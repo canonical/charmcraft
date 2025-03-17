@@ -191,7 +191,7 @@ the architecture of your system:
 
 
 If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` under ``platforms``.
+text editor, comment out ``amd64``, and include ``arm64`` under ``platforms``.
 
 Now let's pack the rock:
 

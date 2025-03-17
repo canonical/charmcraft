@@ -183,7 +183,7 @@ the architecture of your system:
 
 
 If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` in ``platforms``.
+text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
@@ -289,8 +289,8 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor and include ``arm64``
-in ``platforms``.
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
 
 Let's pack the charm:
 

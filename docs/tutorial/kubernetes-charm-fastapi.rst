@@ -660,8 +660,21 @@ development process, including:
 - Configuring the app
 - Integrating the app with a database
 
-If you'd like to reset your working environment, you can run the following
-in the rock directory ``~/fastapi-hello-world`` for the tutorial:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
+
+.. code-block:: bash
+
+    exit
+
+And then you can proceed with its deletion:
+
+.. code-block:: bash
+
+    multipass delete charm-dev
+    multipass purge
+
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -669,19 +682,8 @@ in the rock directory ``~/fastapi-hello-world`` for the tutorial:
     :end-before: [docs:clean-environment-end]
     :dedent: 2
 
-You can also clean up your Multipass instance. Start by exiting it:
-
-.. code-block:: bash
-
-    exit
-
-You can then proceed with its deletion:
-
-.. code-block:: bash
-
-    multipass delete charm-dev
-    multipass purge
-
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

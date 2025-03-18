@@ -183,7 +183,7 @@ the architecture of your system:
 
 
 If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` in ``platforms``.
+text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
@@ -289,8 +289,8 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor and include ``arm64``
-in ``platforms``.
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
 
 Let's pack the charm:
 
@@ -645,6 +645,11 @@ Now let's deploy PostgreSQL and integrate it with the Go app:
     :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the Go app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the Go app will not
+start until the database is ready.
+
 Running ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 
@@ -678,16 +683,7 @@ development process, including:
 - Configuring the app
 - Integrating the app with a database
 
-If you'd like to reset your working environment, you can run the following
-in the rock directory ``~/go-hello-world`` for the tutorial:
-
-.. literalinclude:: code/go/task.yaml
-    :language: bash
-    :start-after: [docs:clean-environment]
-    :end-before: [docs:clean-environment-end]
-    :dedent: 2
-
-You can also clean up your Multipass instance. Start by exiting it:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
 .. code-block:: bash
 
@@ -700,6 +696,17 @@ And then you can proceed with its deletion:
     multipass delete charm-dev
     multipass purge
 
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/go-hello-world`` for the tutorial:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
+
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

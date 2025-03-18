@@ -219,8 +219,8 @@ the architecture of your system:
 
     dpkg --print-architecture
 
-If your host uses ARM64 architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` under ``platforms``.
+If your host uses ARM architecture, open ``rockcraft.yaml`` in a
+text editor, comment out ``amd64``, and include ``arm64`` under ``platforms``.
 
 Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database
@@ -451,7 +451,9 @@ monitor its progress with:
 The ``--relations`` flag will list the currently enabled integrations.
 It can take a couple of minutes for the apps to finish the deployment.
 During this time, the Django app may enter a ``blocked`` state as it
-waits to become integrated with the PostgreSQL database.
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the Django app will not
+start until the database is ready.
 
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
@@ -763,16 +765,7 @@ development process, including:
 - Exposing the app using an ingress
 - Adding an initial app and configuring the app
 
-If you'd like to reset your working environment, you can run the
-following in the rock directory ``~/django-hello-world`` for the tutorial:
-
-.. literalinclude:: code/django/task.yaml
-    :language: bash
-    :start-after: [docs:clean-environment]
-    :end-before: [docs:clean-environment-end]
-    :dedent: 2
-
-You can also clean up your Multipass instance. Start by exiting it:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
 .. code-block:: bash
 
@@ -785,6 +778,17 @@ And then you can proceed with its deletion:
     multipass delete charm-dev
     multipass purge
 
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/django-hello-world`` for the tutorial:
+
+.. literalinclude:: code/django/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
+
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

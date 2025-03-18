@@ -191,7 +191,7 @@ the architecture of your system:
     dpkg --print-architecture
 
 If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` in ``platforms``.
+text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
@@ -297,8 +297,8 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``fastapi-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor and include ``arm64``
-in ``platforms``.
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
 
 Let's pack the charm:
 
@@ -620,7 +620,13 @@ Now let's deploy PostgreSQL and integrate it with the FastAPI app:
     :end-before: [docs:deploy-postgres-end]
     :dedent: 2
 
-Wait for ``juju status`` to show that the App is ``active`` again. Running
+Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the FastAPI app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the FastAPI app will not
+start until the database is ready.
+
+Running
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
 should still return the ``{"message":"Hi!"}`` greeting.
 
@@ -654,8 +660,21 @@ development process, including:
 - Configuring the app
 - Integrating the app with a database
 
-If you'd like to reset your working environment, you can run the following
-in the rock directory ``~/fastapi-hello-world`` for the tutorial:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
+
+.. code-block:: bash
+
+    exit
+
+And then you can proceed with its deletion:
+
+.. code-block:: bash
+
+    multipass delete charm-dev
+    multipass purge
+
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -663,19 +682,8 @@ in the rock directory ``~/fastapi-hello-world`` for the tutorial:
     :end-before: [docs:clean-environment-end]
     :dedent: 2
 
-You can also clean up your Multipass instance. Start by exiting it:
-
-.. code-block:: bash
-
-    exit
-
-You can then proceed with its deletion:
-
-.. code-block:: bash
-
-    multipass delete charm-dev
-    multipass purge
-
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

@@ -54,6 +54,7 @@ def test_get_package_install_commands(
     constraints: list[str],
     requirements: list[str],
     packages: list[str],
+    check,
 ):
     spec = {
         "plugin": "python",
@@ -73,9 +74,9 @@ def test_get_package_install_commands(
 
     actual = python_plugin._get_package_install_commands()
 
-    with pytest_check.check():
+    with check():
         assert actual[0].startswith("/python -m pip")
-    with pytest_check.check():
+    with check():
         assert actual[1].startswith("/python -m pip")
     split_install_command = shlex.split(actual[0])
     for constraints_file in constraints:

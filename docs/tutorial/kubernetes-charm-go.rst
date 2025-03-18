@@ -37,12 +37,12 @@ What you'll need
 What you'll do
 --------------
 
-- Create a Go app.
-- Use that to create a rock with Rockcraft.
-- Use that to create a charm with Charmcraft.
-- Use that to test, deploy, configure, etc., your Go app on a local
-  Kubernetes cloud with Juju.
-- Repeat the process, mimicking a real development process.
+#. Create a Go app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your Go app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
 
 .. important::
 
@@ -86,7 +86,7 @@ Then, open the file in a text editor using ``nano main.go``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/go/main.go
-    :caption: main.go
+    :caption: ~/go-hello-world/main.go
     :language: go
 
 
@@ -130,7 +130,7 @@ Pack the Go app into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``go-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a Go app.
-From the ``/go-hello-world`` directory, initialize the rock:
+From the ``~/go-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -150,7 +150,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/go-hello-world/rockcraft.yaml
 
     name: go-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
@@ -183,7 +183,7 @@ the architecture of your system:
 
 
 If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` in ``platforms``.
+text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
 
 Now let's pack the rock:
 
@@ -229,7 +229,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``/go-hello-world`` directory, let's create a new directory
+From the ``~/go-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/go/task.yaml
@@ -263,7 +263,7 @@ Check out the contents of ``charmcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: charmcraft.yaml
+    :caption: ~/go-hello-world/charm/charmcraft.yaml
 
     # This file configures Charmcraft.
     # See https://juju.is/docs/sdk/charmcraft-config for guidance.
@@ -289,8 +289,8 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor and include ``arm64``
-in ``platforms``.
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
 
 Let's pack the charm:
 
@@ -425,17 +425,18 @@ Configure the Go app
 To demonstrate how to provide a configuration to the Go app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Go app configuration under the
-keyword ``GREETING``. Change back to the ``/go-hello-world`` directory using
+keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory using
 ``cd ..`` and replace the code into ``main.go`` with the following:
 
 .. literalinclude:: code/go/greeting_main.txt
+    :caption: ~/go-hello-world/main.go
     :language: go
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/go-hello-world/rockcraft.yaml
     :emphasize-lines: 6
 
     name: go-hello-world
@@ -531,11 +532,12 @@ The charm created by the ``go-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.sh`` file containing this logic.
 
-Go back out to the ``/go-hello-world`` directory using ``cd ..``.
+Go back out to the ``~/go-hello-world`` directory using ``cd ..``.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
 .. literalinclude:: code/go/visitors_migrate.sh
+    :caption: ~/go-hello-world/migrate.sh
     :language: bash
 
 .. note::
@@ -566,7 +568,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/go-hello-world/rockcraft.yaml
     :emphasize-lines: 6
 
     name: go-hello-world
@@ -643,6 +645,11 @@ Now let's deploy PostgreSQL and integrate it with the Go app:
     :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the Go app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the Go app will not
+start until the database is ready.
+
 Running ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 
@@ -676,16 +683,7 @@ development process, including:
 - Configuring the app
 - Integrating the app with a database
 
-If you'd like to reset your working environment, you can run the following
-in the rock directory ``/go-hello-world`` for the tutorial:
-
-.. literalinclude:: code/go/task.yaml
-    :language: bash
-    :start-after: [docs:clean-environment]
-    :end-before: [docs:clean-environment-end]
-    :dedent: 2
-
-You can also clean up your Multipass instance. Start by exiting it:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
 .. code-block:: bash
 
@@ -698,6 +696,17 @@ And then you can proceed with its deletion:
     multipass delete charm-dev
     multipass purge
 
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/go-hello-world`` for the tutorial:
+
+.. literalinclude:: code/go/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
+
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

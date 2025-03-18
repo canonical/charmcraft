@@ -140,7 +140,6 @@ storage:
   jbod:
     type: block
     description: A nice block storage for me to use as swap space
-    shared: false
     properties:
     - transient
 subordinate: false

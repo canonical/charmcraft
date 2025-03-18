@@ -21,7 +21,6 @@ from unittest import mock
 
 import craft_cli
 import pytest
-import pytest_check
 from craft_cli.pytest_plugin import RecordingEmitter
 
 from charmcraft import application, models, services, utils
@@ -135,6 +134,7 @@ def test_pack_update_charm_libs_empty(
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
     mock_store_anonymous_client: mock.Mock,
+    check,
 ):
     simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
@@ -143,7 +143,7 @@ def test_pack_update_charm_libs_empty(
 
     pack._update_charm_libs()
 
-    with pytest_check.check():
+    with check():
         emitter.assert_debug(repr(store_lib))
 
     path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)

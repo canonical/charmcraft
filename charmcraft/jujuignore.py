@@ -220,16 +220,18 @@ class JujuIgnore:
 # juju itself always includes these before adding the contents of .jujuignore
 # NOTE that this diverges from Juju ignore list, which also ignores "version",
 # because we need the version file to populate the store
-default_juju_ignore = """
-.git
-.svn
-.hg
-.bzr
-.tox
-
-/build/
-/revision
-/venv
-
-.jujuignore
-""".split("\n")
+default_juju_ignore = [
+    "",
+    ".git",
+    ".svn",
+    ".hg",
+    ".bzr",
+    ".tox",
+    "",
+    "/build/",
+    "/revision",
+    "/venv",
+    "",
+    ".jujuignore",
+    "",
+]

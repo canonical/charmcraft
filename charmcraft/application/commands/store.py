@@ -2411,7 +2411,9 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
         updates = store.set_resource_revisions_architectures(
             name=parsed_args.charm_name,
             resource_name=parsed_args.resource_name,
-            updates=dict.fromkeys(parsed_args.revisions, parsed_args.arch),
+            updates=dict.fromkeys(
+                parsed_args.revisions, cast("list[str]", parsed_args.arch)
+            ),
         )
 
         fmt = parsed_args.format or cli.OutputFormat.TABLE

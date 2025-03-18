@@ -1037,6 +1037,11 @@ class PromoteBundleCommand(CharmcraftCommand):
 
     def run(self, parsed_args: "Namespace") -> None:
         """Run the command."""
+        emit.progress(
+            "Bundle commands are deprecated and will be removed in Charmcraft 4.",
+            permanent=True,
+        )
+
         if not isinstance(self._services.project, project.Bundle):
             raise CraftError("promote-bundle must be run on a bundle.")
 

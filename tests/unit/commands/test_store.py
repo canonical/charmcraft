@@ -22,6 +22,7 @@ import textwrap
 import types
 from unittest import mock
 
+import craft_application
 import craft_cli.pytest_plugin
 import craft_store
 import freezegun
@@ -41,7 +42,6 @@ from charmcraft.application.commands.store import (
 )
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
-from charmcraft.services import CharmcraftServiceFactory
 from charmcraft.store.models import Library
 from charmcraft.utils import cli
 from tests import get_fake_revision
@@ -130,7 +130,7 @@ def test_set_resource_architectures_output_json(emitter, updates, expected):
 
 
 def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
-    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
+    mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
     mock_service_factory.project.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
@@ -166,7 +166,7 @@ def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
 def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
     # Publishing the same version of a library with the same hash should not result
     # in an error return.
-    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
+    mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
     mock_service_factory.project.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
@@ -404,7 +404,7 @@ def test_register_bundle_error(monkeypatch: pytest.MonkeyPatch, emitter):
 
 def test_promote_no_track_inference_noninteractive(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway,
 ):
     mock_publisher_gateway.get_package_metadata.return_value = types.SimpleNamespace(
@@ -429,7 +429,7 @@ def test_promote_no_track_inference_noninteractive(
 )
 def test_promote_to_same_channel(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     channel: str,
 ):
@@ -458,7 +458,7 @@ def test_promote_to_same_channel(
 )
 def test_promote_infers_channel(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -494,7 +494,7 @@ def test_promote_infers_channel(
 )
 def test_promote_not_demote(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -529,7 +529,7 @@ def test_promote_not_demote(
 )
 def test_promote_cross_track_cannot_be_different_risk(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -557,7 +557,7 @@ def test_promote_cross_track_cannot_be_different_risk(
 )
 def test_promote_cross_track_defaults_no(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -583,7 +583,7 @@ def test_promote_cross_track_defaults_no(
 )
 def test_promote_defaults_no(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -606,7 +606,7 @@ def test_promote_defaults_no(
 
 def test_promote_revisions(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
 ):
     mock_publisher_gateway.list_releases.return_value = Releases(

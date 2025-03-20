@@ -29,7 +29,6 @@ from overrides import override
 
 from charmcraft import extensions, models, parts, preprocess, services
 from charmcraft.application import commands
-from charmcraft.services import CharmcraftServiceFactory
 
 GENERAL_SUMMARY = """
 Charmcraft helps build, package and publish operators on Charmhub.
@@ -63,7 +62,7 @@ class Charmcraft(craft_application.Application):
     def __init__(
         self,
         app: craft_application.AppMetadata,
-        services: CharmcraftServiceFactory,
+        services: craft_application.ServiceFactory,
     ) -> None:
         super().__init__(app=app, services=services, extra_loggers={"charmcraft"})
         self._global_args: dict[str, Any] = {}
@@ -113,7 +112,7 @@ class Charmcraft(craft_application.Application):
 
     def _configure_services(self, provider_name: str | None) -> None:
         super()._configure_services(provider_name)
-        self.services.set_kwargs(
+        self.services.update_kwargs(
             "package",
             project_dir=self.project_dir,
             build_plan=self._build_plan,
@@ -191,7 +190,8 @@ class Charmcraft(craft_application.Application):
 
 def create_app() -> Charmcraft:
     """Create the Charmcraft application with its commands."""
-    charmcraft_services = services.CharmcraftServiceFactory(app=APP_METADATA)
+    services.register_services()
+    charmcraft_services = craft_application.ServiceFactory(app=APP_METADATA)
     app = Charmcraft(app=APP_METADATA, services=charmcraft_services)
     commands.fill_command_groups(app)
 

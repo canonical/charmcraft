@@ -4,8 +4,8 @@ Use a 12-factor app charm
 =========================
 
 
-(If your charm is a Django charm) Create an admin user
-------------------------------------------------------
+Create an admin user for a Django app charm
+-------------------------------------------
 
 Use the ``create-superuser`` action to create a new Django admin account:
 
@@ -14,8 +14,8 @@ Use the ``create-superuser`` action to create a new Django admin account:
     juju run <app name> create-superuser username=<username> email=<email>
 
 
-(If your workload depends on a database) Migrate the database
--------------------------------------------------------------
+Migrate the workload database
+-----------------------------
 
 If your app depends on a database, it is common to run a database migration
 script before app startup which, for example, creates or modifies tables. This

@@ -61,7 +61,7 @@ framework of your web app.
 View application logs
 ~~~~~~~~~~~~~~~~~~~~~
 
-Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``. 
+Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``.
 At the top of the page, set the label filters to ``juju_application`` and then
 pick ``JUJU_MODEL_NAME`` from the dropdown menu on the right.
 To view the logs, click :guilabel:`Run query`.

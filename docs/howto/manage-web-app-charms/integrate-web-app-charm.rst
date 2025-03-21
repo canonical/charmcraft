@@ -87,6 +87,8 @@ provide the integration to your deployed app with:
 You don't need to add an endpoint definition to your charm's
 project file.
 
+.. _integrate_web_app_cos:
+
 Integrate with observability
 ----------------------------
 

@@ -35,10 +35,10 @@ Use observability
 First, :ref:`integrate your web app with the Canonical Observability
 Stack <integrate_web_app_cos>`.
 
-View Grafana dashboard
-~~~~~~~~~~~~~~~~~~~~~~
+Get Grafana login details
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To view the dashboard, get the endpoints:
+View the endpoints by running:
 
 .. code-block::
 
@@ -50,7 +50,10 @@ with the Grafana postfix with the syntax
 ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana``. Here, ``JUJU_MODEL_NAME``
 is the name of the Juju model on which you deployed your web app.
 
-Append the ``/dashboards``
+View Grafana dashboard
+~~~~~~~~~~~~~~~~~~~~~~
+
+To view the dashboard, append the ``/dashboards``
 postfix to the URL and log in using the admin password to view the dashboards
 overview page.
 

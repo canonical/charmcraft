@@ -17,7 +17,7 @@ bracex==2.5.post1
 build==1.2.2.post1
 cachecontrol==0.14.2
 canonical-sphinx==0.4.0
-canonical-sphinx-extensions==0.0.26
+canonical-sphinx-extensions==0.0.27
 certifi==2025.1.31
 cffi==1.17.1
 chardet==5.2.0
@@ -31,7 +31,7 @@ coverage==7.6.12
 craft-application==4.10.0
 craft-archives==2.1.0
 craft-cli==2.15.0
-craft-grammar==2.0.2
+craft-grammar==2.0.3
 craft-parts==2.6.2
 craft-platforms==0.6.0
 craft-providers==2.2.0
@@ -63,7 +63,7 @@ httpcore==1.0.7
 httplib2==0.22.0
 httpx==0.28.1
 humanize==4.12.1
-hypothesis==6.129.1
+hypothesis==6.129.4
 idna==3.10
 imagesize==1.4.1
 importlib-metadata==8.6.1 ; python_full_version < '3.12'
@@ -100,16 +100,16 @@ mypy==1.15.0
 mypy-extensions==1.0.0
 myst-parser==4.0.1
 natsort==8.4.0
-numpy==2.2.3
+numpy==2.2.4
 oauthlib==3.2.2
 overrides==7.7.0
 packaging==24.2
 pathspec==0.12.1
-pbs-installer==2025.3.11
+pbs-installer==2025.3.17
 pillow==11.1.0
 pip==25.0.1
 pkginfo==1.12.1.2
-platformdirs==4.3.6
+platformdirs==4.3.7
 pluggy==1.5.0
 poetry==2.1.1
 poetry-core==2.1.1
@@ -123,7 +123,7 @@ pydantic-settings==2.8.1
 pyfakefs==5.8.0
 pygit2==1.14.1
 pygments==2.19.1
-pylint==3.3.5
+pylint==3.3.6
 pymacaroons==0.13.0
 pynacl==1.5.0
 pyparsing==3.2.1
@@ -131,7 +131,7 @@ pyproject-hooks==1.2.0
 pyrfc3339==1.1
 pyspelling==2.10
 pytest==8.3.5
-pytest-check==2.5.0
+pytest-check==2.5.1
 pytest-cov==6.0.0
 pytest-mock==3.14.0
 pytest-subprocess==1.5.3
@@ -176,7 +176,7 @@ sphinx-notfound-page==1.1.0
 sphinx-prompt==1.8.0
 sphinx-pydantic==0.1.1
 sphinx-reredirects==0.1.5
-sphinx-tabs==3.4.5
+sphinx-tabs==3.4.7
 sphinx-toolbox==3.9.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-details-directive==0.1.0
@@ -193,7 +193,7 @@ starlette==0.46.1
 tabulate==0.9.0
 tomli==2.2.1 ; python_full_version < '3.11'
 tomlkit==0.13.2
-trove-classifiers==2025.3.13.13
+trove-classifiers==2025.3.19.19
 types-python-dateutil==2.9.0.20241206
 types-pyyaml==6.0.12.20241230
 types-requests==2.31.0.20240311
@@ -211,6 +211,6 @@ wcmatch==10.0
 webencodings==0.5.1
 websockets==15.0.1
 xattr==1.1.4 ; sys_platform == 'darwin'
-yamllint==1.36.0
+yamllint==1.36.2
 zipp==3.21.0 ; python_full_version < '3.12'
 zstandard==0.23.0

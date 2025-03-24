@@ -61,6 +61,9 @@ To view the specific dashboard for your web app, click :guilabel:`General` and
 then on :guilabel:`WebApp Operator`, where "WebApp" is a stand-in for the
 framework of your web app.
 
+For Flask and Django apps, the dashboard displays default graphs such as status
+codes, requests per second, and request average duration.
+
 View application logs
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -68,3 +71,6 @@ Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``.
 At the top of the page, set the label filters to ``juju_application`` and then
 pick ``JUJU_MODEL_NAME`` from the dropdown menu on the right.
 To view the logs, click :guilabel:`Run query`.
+
+The logs show the history of the requests sent to your web app and their
+status codes. 

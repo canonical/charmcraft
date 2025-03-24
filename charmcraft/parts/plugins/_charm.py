@@ -195,6 +195,7 @@ class CharmPlugin(plugins.Plugin):
                 "python3-wheel",
                 "libffi-dev",
                 "libyaml-dev",
+                "cargo",
             }
         elif platform.is_yum_based():
             try:

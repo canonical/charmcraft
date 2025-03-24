@@ -88,6 +88,35 @@ and can then run ``tox list`` in the root folder to see the available commands.
     repository includes actions to ensure that libraries are up-to-date, publish
     charms and libraries, and more.
 
+Use the provided tooling to maintain style and detect issues early
+------------------------------------------------------------------
+
+The Charmcraft profile you've chosen has configured a number of recommended
+tools for developing charms. To use these, [install
+`tox`](https://tox.wiki/en/stable/installation.html#as-tool) on your development
+server.
+
+```{tip}
+If you use the `charm-dev` [Multipass](https://canonical.com/multipass)
+blueprint or the [`concierge`](https://github.com/jnsgruk/concierge) tool to
+configure your development environment, you'll already have `tox` installed.
+```
+
+- Run `tox` to format and lint the code, and run static type checking and the
+  charm unit tests.
+- Run `tox -e integration` to run the charm integration tests.
+- Run `tox list` to see the available commands.
+
+```{admonition} Best practice
+:class: hint
+
+All charms should provide the commands configured by the charmcraft profiles, to
+allow easily testing across the charm ecosystem. It's fine to tweak the
+configuration of individual tools, or to add additional commands, but keep the
+command names and meanings that the profiles provide.
+```
+
+.. _add-charm-project-metadata-an-icon-docs:
 
 Add charm project metadata, an icon, docs
 -----------------------------------------
@@ -288,6 +317,8 @@ Add an icon
 
     See more: :ref:`manage-icons`
 
+
+.. _add-runtime-details-to-a-charm:
 
 Add runtime details to a charm
 ------------------------------

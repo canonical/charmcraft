@@ -73,4 +73,4 @@ pick ``JUJU_MODEL_NAME`` from the dropdown menu on the right.
 To view the logs, click :guilabel:`Run query`.
 
 The logs show the history of the requests sent to your web app and their
-status codes. 
+status codes.

@@ -64,8 +64,8 @@ framework of your web app.
 For Flask and Django apps, the dashboard displays default graphs such as:
 
 * Requests: number of requests over time
-* Status code count: the number of requests with the 200 status code 
-* Requests per second: number of requests/second over time 
+* Status code count: the number of requests with the 200 status code
+* Requests per second: number of requests/second over time
 * 2XX, 3XX, etc. Rate: ??
 * Request average duration: average duration of the requests over time
 * Request duration percentile: ??
@@ -74,7 +74,7 @@ For Flask and Django apps, the dashboard displays default graphs such as:
 View application logs
 ~~~~~~~~~~~~~~~~~~~~~
 
-Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``, where 
+Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``, where
 the URL is the one you fetched after running
 ``juju show-unit catalogue/0 | grep url``.
 

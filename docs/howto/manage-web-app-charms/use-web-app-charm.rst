@@ -63,13 +63,18 @@ framework of your web app.
 
 For Flask and Django apps, the dashboard displays default graphs such as:
 
-* Requests: number of requests over time
-* Status code count: the number of requests with the 200 status code
-* Requests per second: number of requests/second over time
-* 2XX, 3XX, etc. Rate: ??
-* Request average duration: average duration of the requests over time
-* Request duration percentile: ??
-
+* Requests: Number of requests over time.
+* Status code count: Number of requests broken by responses status code.
+* Requests per second: Number of requests per second over time.
+* 2XX Rate: Portion of responses that were successful (in the 200 range).
+* 3XX Rate: Portion of responses that were redirects (in the 300 range).
+* 4XX Rate: Portion of responses that were client errors (in the 400 range).
+* 5XX Rate: Portion of responses that were server errors (in the 500 range).
+* Request average duration: Average duration of the requests over time.
+* Request duration percentile: The 50th, 90th, and 99th percentile of all the
+  request duration lengths after sorting them from slowest to fastest. For
+  example, the 50th percentile represents the length of time (or less) that
+  50\% of the requests lasted.
 
 View application logs
 ~~~~~~~~~~~~~~~~~~~~~
@@ -82,5 +87,6 @@ At the top of the page, set the label filters to ``juju_application`` and then
 pick ``JUJU_MODEL_NAME`` from the dropdown menu on the right.
 To view the logs, click :guilabel:`Run query`.
 
-The logs show the history of the requests sent to your web app and their
-status codes.
+The logs shown in the dashboard depend on the web framework, but they are
+typically access logs, or the history of the requests sent to your web
+app and their status codes.

@@ -38,6 +38,7 @@ Make changes as appropriate. Some existing ideas are in the
 To test locally:
 
 ```bash
+source .venv/bin/activate
 CHARMCRAFT_DEVELOPER=1 python -m charmcraft
 ```
 

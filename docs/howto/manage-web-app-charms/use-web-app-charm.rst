@@ -71,6 +71,12 @@ To view the specific dashboard for your web app, click **General** and
 then on **WebApp Operator**, where "WebApp" is a stand-in for the
 framework of your web app.
 
+.. seealso::
+
+  :ref:`Flask framework extension | Grafana dashboard graphs <flask-grafana-graphs>`
+
+  :ref:`Django framework extension | Grafana dashboard graphs <django-grafana-graphs>`
+
 View application logs
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -79,7 +85,7 @@ the URL is the one you fetched previously.
 
 Filter for the label ``juju_application`` and then
 select your Juju model name from the dropdown.
-Then, click :guilabel:`Run query`.
+Then, click **Run query**.
 
 The logs shown in the dashboard depend on the web framework, but they are
 typically access logs, or the history of the requests sent to your web

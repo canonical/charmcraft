@@ -150,6 +150,8 @@ underscores and all the letters capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
 
+.. _django-grafana-graphs:
+
 Grafana dashboard graphs
 ------------------------
 

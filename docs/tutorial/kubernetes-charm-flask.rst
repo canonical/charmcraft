@@ -206,7 +206,8 @@ minutes to finish.
 
 Once Rockcraft has finished packing the Flask rock,
 the terminal will respond with something similar to
-``Packed flask-hello-world_0.1_amd64.rock``.
+``Packed flask-hello-world_0.1_amd64.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -276,7 +277,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed flask-hello-world_ubuntu-24.04-amd64.charm``.
+``Packed flask-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 

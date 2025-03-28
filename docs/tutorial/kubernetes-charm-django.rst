@@ -308,7 +308,8 @@ finish.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_amd64.rock``.
+``Packed django-hello-world_0.1_amd64.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -390,7 +391,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-amd64.charm``.
+``Packed django-hello-world_ubuntu-22.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 

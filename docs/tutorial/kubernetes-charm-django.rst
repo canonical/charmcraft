@@ -464,9 +464,12 @@ start until the database is ready.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
 
-    See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal. 
+
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
 The Django app should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the

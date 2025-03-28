@@ -366,6 +366,12 @@ of the file:
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
     :language: yaml
 
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``django-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/django-hello-world/charm/`` directory. 
+
 Now let's pack the charm:
 
 .. literalinclude:: code/django/task.yaml

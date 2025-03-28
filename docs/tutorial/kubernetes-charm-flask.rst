@@ -256,6 +256,13 @@ Initialize a charm named ``flask-hello-world``:
     :dedent: 2
 
 The files will automatically be created in your working directory.
+
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``flask-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/flask-hello-world/charm/`` directory. 
+
 Let's pack the charm:
 
 .. literalinclude:: code/flask/task.yaml

@@ -300,6 +300,12 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
 ``arm64`` in ``platforms``.
 
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``fastapi-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/fastapi-hello-world/charm/`` directory. 
+
 Let's pack the charm:
 
 .. literalinclude:: code/fastapi/task.yaml

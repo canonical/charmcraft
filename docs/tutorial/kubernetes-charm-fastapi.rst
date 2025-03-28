@@ -305,7 +305,7 @@ open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
 
     Want to learn more about all the configurations in the
     ``fastapi-framework`` profile? Run ``charmcraft expand-extensions``
-    from the ``~/fastapi-hello-world/charm/`` directory. 
+    from the ``~/fastapi-hello-world/charm/`` directory.
 
 Let's pack the charm:
 
@@ -381,7 +381,7 @@ using :kbd:`Ctrl` + :kbd:`C`.
 .. tip::
 
     To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal. 
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 

@@ -262,7 +262,7 @@ The files will automatically be created in your working directory.
 
     Want to learn more about all the configurations in the
     ``flask-framework`` profile? Run ``charmcraft expand-extensions``
-    from the ``~/flask-hello-world/charm/`` directory. 
+    from the ``~/flask-hello-world/charm/`` directory.
 
 Let's pack the charm:
 
@@ -331,7 +331,7 @@ using :kbd:`Ctrl` + :kbd:`C`.
 .. tip::
 
     To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal. 
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 

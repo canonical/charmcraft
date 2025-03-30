@@ -110,7 +110,27 @@ README.md
 
 
 def _make_workload_module_name(charm_name: str) -> str:
-    return "workload"
+    module_name = charm_name.replace("-", "_")
+    generic_names = [  # put names with more components at the beginning of the list
+        "k8s_charm",
+        "k8s_operator",
+        "machine_charm",
+        "machine_operator",
+        "vm_charm",
+        "vm_operator",
+        "charm",
+        "operator",
+        "k8s",
+        "machine",
+        "vm",
+    ]
+    if module_name in generic_names:
+        return "workload"
+    for generic_name in generic_names:
+        generic_suffix = f"_{generic_name}"
+        if module_name.endswith(generic_suffix):
+            return module_name[: -len(generic_suffix)]
+    return module_name
 
 
 def _get_users_full_name_gecos() -> str | None:

@@ -94,16 +94,23 @@ framework from https://github.com/canonical/operator and there are some
 example unit and integration tests with a harness to run them.
 """
 
-SUCCESS_MESSAGE = """\
+
+def _make_success_message(src_files: list[str]) -> str:
+    src_files_str = "\n".join(src_files)
+    return f"""\
 Charmed operator package file and directory tree initialised.
 
 Now edit the following package files to provide fundamental charm metadata
 and other information:
 
 charmcraft.yaml
-src/charm.py
+{src_files_str}
 README.md
 """
+
+
+def _make_workload_module_name(charm_name: str) -> str:
+    return "workload"
 
 
 def _get_users_full_name_gecos() -> str | None:
@@ -185,12 +192,14 @@ class InitCommand(base.CharmcraftCommand):
             "author": parsed_args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", parsed_args.name.title())) + "Charm",
+            "workload_module": _make_workload_module_name(parsed_args.name),
         }
 
         template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
         executables = ["run_tests", "src/charm.py", "tests/spread/lib/tools/retry"]
+        src_files = ["src/charm.py"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):
                 continue
@@ -207,5 +216,10 @@ class InitCommand(base.CharmcraftCommand):
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     emit.debug("  made executable")
-        for line in SUCCESS_MESSAGE.split("\n"):
+            if path.name == "workload.py" and path.parent.name == "src":
+                workload_module = context["workload_module"]
+                workload_module_path = path.with_name(f"{workload_module}.py")
+                path.rename(workload_module_path)
+                src_files.append(f"src/{workload_module}.py")
+        for line in _make_success_message(src_files).split("\n"):
             emit.message(line)

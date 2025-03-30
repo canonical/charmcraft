@@ -79,7 +79,9 @@ files and directories:
     ├── README.md                  - Frontpage for your charmhub.io/charm/
     ├── requirements.txt           - PyPI dependencies for your charm, with `ops`
     ├── src
-    │   └── charm.py               - Minimal operator using Python operator framework
+    │   ├── charm.py               - Python code that operates your charm's workload
+    │   └── <workload>.py          - Standalone module for workload-specific logic,
+    │                                created if profile is 'kubernetes' or 'machine'
     ├── tests
     │   ├── integration
     │   │   └── test_charm.py      - Integration tests
@@ -89,9 +91,9 @@ files and directories:
 
 You will need to edit at least charmcraft.yaml and README.md.
 
-Your minimal operator code is in src/charm.py which uses the Python operator
-framework from https://github.com/canonical/operator and there are some
-example unit and integration tests with a harness to run them.
+Your minimal operator code is in src/charm.py, which uses the 'ops' Python framework.
+See https://ops.readthedocs.io/en/latest/. There are also some sample unit and
+integration tests, which you can run using 'tox -e unit' and 'tox -e integration'.
 """
 
 

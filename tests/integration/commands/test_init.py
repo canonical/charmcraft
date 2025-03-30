@@ -96,11 +96,11 @@ def create_namespace(
 
 
 @pytest.mark.parametrize(
-    ("profile", "expected_files"),
+    ("profile", "base_expected_files", "has_workload_module"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, id="simple"),
-        pytest.param("machine", BASIC_INIT_FILES, id="machine"),
-        pytest.param("kubernetes", BASIC_INIT_FILES, id="kubernetes"),
+        pytest.param("simple", BASIC_INIT_FILES, False, id="simple"),
+        pytest.param("machine", BASIC_INIT_FILES, True, id="machine"),
+        pytest.param("kubernetes", BASIC_INIT_FILES, True, id="kubernetes"),
     ],
 )
 @pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])
@@ -109,12 +109,18 @@ def test_files_created_correct(
     new_path,
     init_command,
     profile: str,
-    expected_files: set[pathlib.Path],
+    base_expected_files: set[pathlib.Path],
+    has_workload_module: bool,
     charm_name,
     author,
 ):
     params = create_namespace(name=charm_name, author=author, profile=profile)
     init_command.run(params)
+
+    if has_workload_module:
+        expected_files = base_expected_files.union({pathlib.Path("src/workload.py")})
+    else:
+        expected_files = base_expected_files
 
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 

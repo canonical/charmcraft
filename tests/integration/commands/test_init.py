@@ -107,7 +107,11 @@ def create_namespace(
     ("charm_name", "workload_module_filename"),
     [
         pytest.param("machine", "workload.py", id="generic_name"),
-        pytest.param("foo-bar-k8s-operator", "foo_bar.py", id="generic_suffix"),
+        pytest.param(
+            "foo-bar-k8s-operator", "foo_bar.py", id="generic_suffix_k8s_operator"
+        ),
+        pytest.param("foo-bar-k8s", "foo_bar.py", id="generic_suffix_k8s"),
+        pytest.param("foo-bar-operator", "foo_bar.py", id="generic_suffix_operator"),
         pytest.param("charm123", "charm123.py", id="name_with_numbers"),
     ],
 )

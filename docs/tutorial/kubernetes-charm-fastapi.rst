@@ -211,7 +211,8 @@ minutes to finish.
 
 Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
-``Packed fastapi-hello-world_0.1_amd64.rock``.
+``Packed fastapi-hello-world_0.1_<architecture>.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -300,6 +301,12 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
 ``arm64`` in ``platforms``.
 
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``fastapi-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/fastapi-hello-world/charm/`` directory.
+
 Let's pack the charm:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -318,7 +325,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed fastapi-hello-world_ubuntu-24.04-amd64.charm``.
+``Packed fastapi-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 
@@ -338,11 +346,8 @@ the FastAPI app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will
-need to include a constraint to the Juju model to specify your
-architecture.
-
-Set the Juju model constraints with:
+Include a constraint to the Juju model to specify your architecture if you
+aren't on a host with AMD64:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -373,7 +378,10 @@ It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
+
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 

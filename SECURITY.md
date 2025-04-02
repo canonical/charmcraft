@@ -2,9 +2,9 @@
 
 ## Charmcraft and charms
 
-Charmcraft is a tool to create and publish charms. A charm is a software artifact that
-contains instructions to manage a separate application in the context of a [Juju] model,
-and without regular maintenance and updates it can become vulnerable.
+Charmcraft is a tool to create and publish charms. A component of the [Juju]
+ecosystem, a charm is a piece of software that orchestrates and manages software
+services, and without regular maintenance and updates it can become vulnerable.
 
 A charm's author or maintainer is the sole party responsible for its security. Charm
 authors should be diligent and keep the software inside their charms up-to-date with the

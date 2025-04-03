@@ -19,6 +19,7 @@ from charmcraft.errors import ExtensionError
 from charmcraft.extensions import apply_extensions
 from charmcraft.extensions.app import (
     DjangoFramework,
+    ExpressJSFramework,
     FastAPIFramework,
     FlaskFramework,
     GoFramework,
@@ -332,6 +333,78 @@ def flask_input_yaml_fixture():
                 "resources": {
                     "app-image": {
                         "description": "fastapi application image.",
+                        "type": "oci-image",
+                    },
+                },
+                "summary": "test summary",
+                "type": "charm",
+            },
+        ),
+        (
+            {
+                "type": "charm",
+                "name": "test-expressjs",
+                "summary": "test summary",
+                "description": "test description",
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "amd64": None,
+                },
+                "extensions": ["expressjs-framework"],
+                "config": NON_OPTIONAL_OPTIONS,
+            },
+            True,
+            {
+                "actions": ExpressJSFramework.actions,
+                "assumes": ["k8s-api"],
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "amd64": None,
+                },
+                "containers": {
+                    "app": {"resource": "app-image"},
+                },
+                "description": "test description",
+                "name": "test-expressjs",
+                "charm-libs": [
+                    {"lib": "traefik_k8s.ingress", "version": "2"},
+                    {"lib": "observability_libs.juju_topology", "version": "0"},
+                    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+                    {"lib": "loki_k8s.loki_push_api", "version": "1"},
+                    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+                    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "data_platform_libs.s3", "version": "0"},
+                    {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
+                ],
+                "config": {
+                    "options": {
+                        **ExpressJSFramework.options,
+                        **NON_OPTIONAL_OPTIONS["options"],
+                    },
+                },
+                "parts": {
+                    "charm": {
+                        "plugin": "charm",
+                        "source": ".",
+                        "build-snaps": ["rustup"],
+                        "override-build": "rustup default stable\ncraftctl default",
+                    }
+                },
+                "peers": {"secret-storage": {"interface": "secret-storage"}},
+                "provides": {
+                    "metrics-endpoint": {"interface": "prometheus_scrape"},
+                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                },
+                "requires": {
+                    "logging": {"interface": "loki_push_api"},
+                    "ingress": {"interface": "ingress", "limit": 1},
+                },
+                "resources": {
+                    "app-image": {
+                        "description": "expressjs application image.",
                         "type": "oci-image",
                     },
                 },

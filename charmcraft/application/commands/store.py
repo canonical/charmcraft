@@ -1037,6 +1037,11 @@ class PromoteBundleCommand(CharmcraftCommand):
 
     def run(self, parsed_args: "Namespace") -> None:
         """Run the command."""
+        emit.progress(
+            "Bundle commands are deprecated and will be removed in Charmcraft 4.",
+            permanent=True,
+        )
+
         if not isinstance(self._services.project, project.Bundle):
             raise CraftError("promote-bundle must be run on a bundle.")
 
@@ -2411,7 +2416,9 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
         updates = store.set_resource_revisions_architectures(
             name=parsed_args.charm_name,
             resource_name=parsed_args.resource_name,
-            updates={revision: parsed_args.arch for revision in parsed_args.revisions},
+            updates=dict.fromkeys(
+                parsed_args.revisions, cast("list[str]", parsed_args.arch)
+            ),
         )
 
         fmt = parsed_args.format or cli.OutputFormat.TABLE

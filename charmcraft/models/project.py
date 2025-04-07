@@ -880,10 +880,6 @@ class CharmProject(CharmcraftProject):
                     # mounted store.
                     location: <location>
 
-                    # Indicates if all units of the application share the storage.
-                    # Defaults to false
-                    shared: true | false
-
                     # Indicates if the storage should be made read-only (where
                     # possible). Defaults to false
                     read-only: true | false
@@ -907,7 +903,6 @@ class CharmProject(CharmcraftProject):
                 "jbod": {
                     "type": "block",
                     "description": "A block storage to use as swap space",
-                    "shared": False,
                     "properties": ["transient"],
                 },
             },
@@ -1137,6 +1132,10 @@ class Bundle(CharmcraftProject):
     @classmethod
     def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Preprocess any values that charmcraft infers, before attribute validation."""
+        emit.progress(
+            "Packing bundles is deprecated and will be removed in Charmcraft 4.",
+            permanent=True,
+        )
         if "name" not in values:
             values["name"] = values.get("bundle", {}).get("name")
 

@@ -12,3 +12,4 @@ parts:
   my-charm:
     plugin: charm
     source: .
+charm-user: sudoer

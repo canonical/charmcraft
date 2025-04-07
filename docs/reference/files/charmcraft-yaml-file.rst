@@ -346,6 +346,42 @@ and the lib version (in ``"<api version>[.<patch version>]"`` string format).
 
 .. literalinclude:: charmcraft-sample-charm.yaml
     :start-at: charm-libs:
+    :end-before: charm-user:
+
+
+.. _charmcraft-yaml-key-charm-user:
+
+``charm-user``
+--------------
+
+.. important::
+
+    ``charm-user`` was added in Juju 3.6.0. It's currently only supported by
+    Kubernetes charms and has no effect on machine charms.
+
+**Status:** Optional. Recommended for Kubernetes charms.
+
+**Purpose:** The ``charm-user`` key  allows charm authors to specify that their charm
+hook code does not need to be run as root. This key, in combination with ``uid`` and
+``gid`` fields in ``containers``, allows the charm to be run rootless. If set to
+``root``, the charm runs as root. If set to ``sudoer`` or ``non-root``, the charm runs
+as a user other than root. If the value is ``sudoer``, the charm will be run as a user
+with access to sudo to elevate its privileges.
+
+**Structure:** The key consists of a single value. One of ``root``, ``sudoer`` or
+``non-root``.
+
+.. code-block:: yaml
+
+    # (Optional) What kind of user is required to run the charm code.
+    # It can be one of root, sudoer or non-root.
+    # Added in Juju 3.6.0. If not specified, root is assumed.
+    charm-user: <one of root, sudoer or non-root>
+
+**Example:**
+
+.. literalinclude:: charmcraft-sample-charm.yaml
+    :start-at: charm-user:
     :end-before: config:
 
 
@@ -913,9 +949,6 @@ at least one ``requires`` integration with ``container`` scope.
         # (Optional) The mount location for filesystem stores. For multi-stores
         # the location acts as the parent directory for each mounted store.
         location: <location>
-
-        # (Optional) Indicates if all units of the application share the storage
-        shared: true | false
 
         # (Optional) Indicates if the storage should be made read-only (where possible)
         read-only: true | false

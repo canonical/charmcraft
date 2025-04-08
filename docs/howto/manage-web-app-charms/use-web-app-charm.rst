@@ -35,8 +35,8 @@ Troubleshoot the charm
 This guide provides helpful commands to run in situations where your web app
 deployment is not successful (for instance, if your app crashes).
 
-Get the application logs
-~~~~~~~~~~~~~~~~~~~~~~~~
+Get the app logs
+~~~~~~~~~~~~~~~~
 
 The first step of troubleshooting is to review the logs for errors. They are
 your first course of action because they flag simple errors caught in the
@@ -121,8 +121,8 @@ use).
 SSH into the Juju container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to check the logs and status of your web app, or if you
-want to debug the app directly, you can SSH into the Juju container:
+You can debug the app directly and monitor its status by SSHing into the
+Juju container:
 
 .. tabs::
 

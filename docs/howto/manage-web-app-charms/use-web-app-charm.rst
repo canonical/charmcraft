@@ -72,9 +72,9 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
-If your application is :ref:`integrated with the Canonical Observability
+If your app is :ref:`integrated with the Canonical Observability
 Stack <integrate_web_app_cos>`, then these logs will be sent to Grafana or Loki
-and can be viewable in the web application dashboard.
+and can be viewable in the web app dashboard.
 
 .. seealso::
 
@@ -121,8 +121,8 @@ use).
 SSH into the Juju container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to check the logs and status of your web application, or if you
-want to debug the application directly, you can SSH into the Juju container:
+If you want to check the logs and status of your web app, or if you
+want to debug the app directly, you can SSH into the Juju container:
 
 .. tabs::
 
@@ -301,8 +301,8 @@ framework of your web app.
 
   :ref:`Django framework extension | Grafana dashboard graphs <django-grafana-graphs>`
 
-View application logs
-~~~~~~~~~~~~~~~~~~~~~
+View app logs
+~~~~~~~~~~~~~
 
 Go to ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore``, where
 the URL is the one you fetched previously.

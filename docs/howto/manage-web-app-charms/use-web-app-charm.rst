@@ -38,8 +38,11 @@ deployment is not successful (for instance, if your app crashes).
 Get the application logs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to check the logs of your web application, use Pebble to view
-the logs.
+The first step of troubleshooting is to review the logs for errors. They are
+your first course of action because they flag simple errors caught in the
+stack, but they are also a constant touchpoint when diagnosing and debugging
+issues. You'll first need to obtain the logs for your particular framework
+using Pebble.
 
 To view the Pebble logs for a deployed web app, run:
 

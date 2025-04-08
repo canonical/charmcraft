@@ -29,8 +29,8 @@ can be run multiple times) and that it can be run on multiple units simultaneous
 without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
 
-Troubleshoot
-------------
+Troubleshoot the charm
+----------------------
 
 This guide provides helpful commands to run in situations where your web app
 deployment is not successful (for instance, if your app crashes).

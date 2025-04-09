@@ -133,30 +133,37 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 3.4:
 
+Charmcraft 3.4.0
+~~~~~~~~~~~~~~~~
+
 - `#2081 <https://github.com/canonical/charmcraft/issues/2081>`_
   ``charmcraft pack`` fails because ``libffi-dev`` is missing.
 - `#2058 <https://github.com/canonical/charmcraft/issues/2058>`_ Multi-base charm
   uses the same LXD container for different bases
 
-The following issues were resolved in Charmcraft 3.4.1:
+Charmcraft 3.4.1
+~~~~~~~~~~~~~~~~
 
 - `#2125 <https://github.com/canonical/charmcraft/issues/2125>`_
   ``charmcraft pack`` fails under certain instances when packing in parallel.
 - `#264 (craft-store) <https://github.com/canonical/craft-store/issues/264>`_
   ``charmcraft promote`` errors when promoting certain charm/resource combinations.
 
-The following issues were resolved in Charmcraft 3.4.2:
+Charmcraft 3.4.2
+~~~~~~~~~~~~~~~~
 
 - `#2149 <https://github.com/canonical/charmcraft/issues/2149>`_ the Charmcraft snap
   does not build on architectures other than amd64.
 - Some documentation links were mis-formatted.
 
-The following issues were resolved in Charmcraft 3.4.3:
+Charmcraft 3.4.3
+~~~~~~~~~~~~~~~~
 
 - `#2158 <https://github.com/canonical/charmcraft/issues/2158>`_ "Invalid hostname"
   error when packing charm platform with multiple run-on bases.
 
-The following issues were resolved in Charmcraft 3.4.4:
+Charmcraft 3.4.4
+~~~~~~~~~~~~~~~~
 
 - `#2194 <https://github.com/canonical/charmcraft/issues/2194>`_ Charmcraft overwrites reactive charm's ``config.yaml``
 

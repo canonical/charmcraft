@@ -156,6 +156,10 @@ The following issues were resolved in Charmcraft 3.4.3:
 - `#2158 <https://github.com/canonical/charmcraft/issues/2158>`_ "Invalid hostname"
   error when packing charm platform with multiple run-on bases.
 
+The following issues were resolved in Charmcraft 3.4.4:
+
+- `#2194 <https://github.com/canonical/charmcraft/issues/2194>`_ Charmcraft overwrites reactive charm's ``config.yaml``
+
 Contributors
 ------------
 

@@ -38,11 +38,11 @@ deployment is not successful (for instance, if your app crashes).
 Get the app logs
 ~~~~~~~~~~~~~~~~
 
-The first step of troubleshooting is to review the logs for errors. They are
-your first course of action because they flag simple errors caught in the
-stack, but they are also a constant touchpoint when diagnosing and debugging
-issues. You'll first need to obtain the logs for your particular framework
-using Pebble.
+One important step of troubleshooting is to review the app logs for errors.
+They are a vital course of action because they flag any uncaught exceptions in
+your code, but they are also a constant touchpoint when diagnosing and
+debugging issues. You'll first need to obtain the logs for your particular
+framework using Pebble.
 
 To view the Pebble logs for a deployed web app, run:
 

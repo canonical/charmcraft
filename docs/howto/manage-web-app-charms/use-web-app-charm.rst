@@ -163,7 +163,8 @@ Juju container:
 
 If successful, the command opens a SSH shell into the web app. From there,
 you can debug the app itself, manually run an action, or attempt to
-manually start the web app.
+manually start the web app. The web app can be found in the ``/`` directory
+of the container, for instance, ``/django/app``.
 
 .. seealso::
 

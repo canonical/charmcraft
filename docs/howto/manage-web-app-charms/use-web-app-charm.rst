@@ -77,6 +77,9 @@ To view the Pebble logs for a deployed web app, run:
    `Pebble CLI commands | logs
    <https://documentation.ubuntu.com/pebble/reference/cli-commands/#logs>`_
 
+View app details
+~~~~~~~~~~~~~~~~
+
 To view more details about the web app itself, run:
 
 .. tabs::
@@ -158,7 +161,7 @@ Juju container:
     app has not been properly integrated to the PostgreSQL database), then this
     command will fail as the context does not exist.
 
-If successful, the command opens an SSH shell into the web app. From there,
+If successful, the command opens a SSH shell into the web app. From there,
 you can debug the app itself, manually run an action, or attempt to
 manually start the web app.
 
@@ -171,13 +174,14 @@ manually start the web app.
 Check MicroK8s pod services and logs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Check the currently deployed MicroK8s services with the Kubernetes CLI:
+Check the currently deployed Kubernetes resources in the
+``<model-namespace>``, which is the same as the Juju model name:
 
 .. code::
 
    microk8s.kubectl get all -n <model-namespace>
 
-This command outputs a list of all the MicroK8s services in the web app's
+This command outputs a list of all the MicroK8s resources in the web app's
 Juju model.
 
 Check the logs for a specific MicroK8s pod:

@@ -72,10 +72,6 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
-If your app is :ref:`integrated with the Canonical Observability
-Stack <integrate_web_app_cos>`, then these logs will be sent to Grafana or Loki
-and can be viewable in the web app dashboard.
-
 .. seealso::
 
    `Pebble CLI commands | logs
@@ -314,3 +310,8 @@ Then, click **Run query**.
 The logs shown in the dashboard depend on the web framework, but they are
 typically access logs, or the history of the requests sent to your web
 app and their status codes.
+
+The Pebble logs are available via Grafana or Loki and can be viewed in
+the **WebApp Operator** dashboard for Flask and Django.
+For other frameworks, you may access the logs by picking ``loki`` in the
+``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore`` page.

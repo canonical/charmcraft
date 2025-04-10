@@ -25,10 +25,11 @@ import shlex
 import subprocess
 import sys
 import typing
-from collections.abc import Generator
+from collections.abc import Collection, Generator
 from typing import final
 
 import yaml
+from craft_cli import emit
 
 from charmcraft import const, utils
 from charmcraft.models.lint import CheckResult, CheckType, LintResult
@@ -36,6 +37,12 @@ from charmcraft.models.metadata import CharmMetadataLegacy
 
 # the documentation page for "Analyzers and linters"
 BASE_DOCS_URL = "https://juju.is/docs/sdk/charmcraft-analyzers-and-linters"
+PYTHON_NAME_REGEX = re.compile(
+    r"^([A-Z0-9]([A-Z0-9._-]*[A-Z0-9])?)", flags=re.IGNORECASE
+)
+MIN_VERSION_REGEX = re.compile(r">=\s*([\d.]+)")
+APPROX_VERSION_REGEX = re.compile(r"(?:~=\s*([\d.]+)\.\d|==\s*([\d.]+)\.\*)")
+EXACT_VERSION_REGEX = re.compile(r"==\s*([\d.]+)")
 
 
 def get_entrypoint_from_dispatch(basedir: pathlib.Path) -> pathlib.Path | None:
@@ -748,6 +755,119 @@ class PipCheck(Linter):
         return result
 
 
+class PyDeps(Linter):
+    """Check that all pydeps from all libs are available."""
+
+    name = "pydeps"
+    text = "All charmlibs dependencies are included"
+    url = "https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/manage-libraries/"
+
+    @staticmethod
+    def convert_to_fs(name: str) -> str:
+        """Convert a package name into its on-disk form.
+
+        This turns "craft-cli", "craft_cli", "Craft-Cli" and "craft.cli" all into "craft_cli".
+        """
+        return re.sub(r"[-_.]+", "_", name).lower()
+
+    @staticmethod
+    def get_version_tuple(version_str: str) -> tuple[int | str, ...]:
+        """Get a version tuple from a version string."""
+
+        def coerce_to_int(s: str) -> str | int:
+            try:
+                return int(s)
+            except ValueError:
+                return s
+
+        return tuple(coerce_to_int(s) for s in version_str.split("."))
+
+    @classmethod
+    def version_matches(
+        cls, dep_spec: str, version: tuple[int | str, ...]
+    ) -> bool | None:
+        """Check if the given version matches the dependency specifier."""
+        spec_matched = False
+        for match in MIN_VERSION_REGEX.finditer(dep_spec):
+            spec_matched = True
+            if version >= cls.get_version_tuple(match.group(1)):
+                return True
+        for match in EXACT_VERSION_REGEX.finditer(dep_spec):
+            spec_matched = True
+            if version == cls.get_version_tuple(match.group(1)):
+                return True
+        for match in APPROX_VERSION_REGEX.finditer(dep_spec):
+            spec_matched = True
+            versions = set(match.group(1, 2)) - {None}
+            match_version = cls.get_version_tuple(versions.pop())
+            if version[: len(match_version)] == match_version:
+                return True
+
+        return not spec_matched
+
+    @classmethod
+    def _get_missing_deps(
+        cls, deps: Collection[str], venv_path: pathlib.Path
+    ) -> tuple[set[str], set[str]]:
+        """Get the missing dependencies for a charmlib."""
+        libs_path = next((venv_path / "lib").glob("python*")) / "site-packages"
+
+        missing = set()
+        non_matching_version = set()
+        for dep in deps:
+            match = PYTHON_NAME_REGEX.match(dep)
+            if not match:
+                continue
+            name = cls.convert_to_fs(match.group(1))
+
+            # If the package is installed as a distribution, we'll check the version.
+            if infos := set(libs_path.glob(f"{name}*.dist-info")):
+                info = infos.pop()
+                version_str = info.name[:-10].rpartition("-")[2]
+                version = cls.get_version_tuple(version_str)
+                if cls.version_matches(dep, version):
+                    continue
+                non_matching_version.add(dep)
+                continue
+            # Check if dependency exists as a top-level module
+            if (libs_path / name).is_dir() or (libs_path / f"{name}.py").is_file():
+                continue
+            missing.add(match.group(1))
+
+        return missing, non_matching_version
+
+    def run(self, basedir: pathlib.Path) -> str:
+        """Run the pydeps checker."""
+        venv_dir = basedir / "venv"
+        if not venv_dir.is_dir():
+            self.text = "Charm does not contain a Python venv."
+            return self.Result.NONAPPLICABLE
+        lib_dir = basedir / "lib/charms"
+        if not lib_dir.is_dir():
+            self.text = "Charm does not have any charmlibs."
+            return self.Result.NONAPPLICABLE
+
+        deps = utils.collect_charmlib_pydeps(basedir=basedir)
+        try:
+            missing_deps, non_matching_versions = self._get_missing_deps(deps, venv_dir)
+        except Exception as exc:
+            self.text = str(exc)
+            emit.debug(exc)
+            return self.Result.UNKNOWN
+
+        if missing_deps:
+            missing_deps_str = ",".join(sorted(missing_deps))
+            self.text = f"Missing charmlibs dependencies: {missing_deps_str}"
+            return self.Result.ERROR
+
+        if non_matching_versions:
+            non_matching_versions_str = "\n".join(sorted(non_matching_versions))
+            self.text = f"Installed packages don't match charmlibs PYDEPS:\n{non_matching_versions_str}"
+            return self.Result.WARNING
+
+        return self.Result.OK
+
+
 # all checkers to run; the order here is important, as some checkers depend on the
 # results from others
 CHECKERS: list[type[BaseChecker]] = [
@@ -761,4 +881,5 @@ CHECKERS: list[type[BaseChecker]] = [
     OpsMainCall,
     AdditionalFiles,
     PipCheck,
+    PyDeps,
 ]

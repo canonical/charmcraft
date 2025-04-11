@@ -80,9 +80,8 @@ Create the FastAPI app
 Start by creating the "Hello, world" FastAPI app that will be used for
 this tutorial.
 
-Create and open a new file ``requirements.txt`` in a text editor using
-``nano requirements.txt``, copy the following text into it and then
-save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
     :caption: ~/fastapi-hello-world/requirements.txt

@@ -79,9 +79,8 @@ Create the Flask app
 Let's start by creating the "Hello, world" Flask app that
 will be used for this tutorial.
 
-Create and open a new file ``requirements.txt`` in a text editor using
-``nano requirements.txt``, copy the following text into it and then
-save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/flask/requirements.txt
     :caption: ~/flask-hello-world/requirements.txt

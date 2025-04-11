@@ -25,7 +25,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is Django apps that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, etc.,
     on any Kubernetes cluster.
 
 
@@ -226,7 +226,7 @@ Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
-app is scaled. We'll use Juju later to easily deploy a database.
+app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
 the app with a database. From the ``~/django-hello-world`` directory, open

@@ -298,11 +298,6 @@ Now let's pack the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    In older versions of Rockcraft, you might need to set
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` before the pack command.
-
 Depending on your system and network, this step can take several minutes to
 finish.
 

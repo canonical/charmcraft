@@ -21,7 +21,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is a Go app that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 
@@ -81,9 +81,8 @@ Install ``go`` and initialize the Go module:
     :end-before: [docs:install-init-go-end]
     :dedent: 2
 
-Create a ``main.go`` file using ``touch main.go``.
-Then, open the file in a text editor using ``nano main.go``,
-copy the following text into it and then save the file:
+Create a new Go program file with ``nano main.go``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/go/main.go
     :caption: ~/go-hello-world/main.go

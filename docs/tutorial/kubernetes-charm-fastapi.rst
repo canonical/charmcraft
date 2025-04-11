@@ -22,7 +22,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is a FastAPI app that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 
@@ -80,9 +80,8 @@ Create the FastAPI app
 Start by creating the "Hello, world" FastAPI app that will be used for
 this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
     :caption: ~/fastapi-hello-world/requirements.txt

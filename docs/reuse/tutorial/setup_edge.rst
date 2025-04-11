@@ -1,8 +1,3 @@
-.. warning::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft.
-    Check the version of Charmcraft using ``charmcraft --version``.
-
 First, install Multipass.
 
 .. seealso::
@@ -28,7 +23,7 @@ classic confinement, which grants it access to the whole file system:
 
 .. code-block:: bash
 
-    sudo snap install rockcraft --classic
+    sudo snap install rockcraft --channel latest/edge --classic
 
 
 LXD will be required for building the rock.

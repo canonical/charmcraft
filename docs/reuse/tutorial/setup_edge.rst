@@ -28,7 +28,7 @@ classic confinement, which grants it access to the whole file system:
 
 .. code-block:: bash
 
-    sudo snap install rockcraft --classic
+    sudo snap install rockcraft --channel latest/edge --classic
 
 
 LXD will be required for building the rock.

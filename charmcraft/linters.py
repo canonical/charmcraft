@@ -766,6 +766,9 @@ class PyDeps(Linter):
     def convert_to_fs(name: str) -> str:
         """Convert a package name into its on-disk form.
 
+        This method will match the appearance a module's name would have in
+        a site-packages directory.
+
         This turns "craft-cli", "craft_cli", "Craft-Cli" and "craft.cli" all into "craft_cli".
         """
         return re.sub(r"[-_.]+", "_", name).lower()

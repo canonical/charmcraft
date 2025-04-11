@@ -823,6 +823,8 @@ class PyDeps(Linter):
             # If the package is installed as a distribution, we'll check the version.
             if infos := set(libs_path.glob(f"{name}*.dist-info")):
                 info = infos.pop()
+                # Trim the ".dist-info" off of the directory name, then extract
+                # everything past the last "-" as that will always be the version.
                 version_str = info.name[:-10].rpartition("-")[2]
                 version = cls.get_version_tuple(version_str)
                 if cls.version_matches(dep, version):
@@ -856,7 +858,7 @@ class PyDeps(Linter):
             return self.Result.UNKNOWN
 
         if missing_deps:
-            missing_deps_str = ",".join(sorted(missing_deps))
+            missing_deps_str = ", ".join(sorted(missing_deps))
             self.text = f"Missing charmlibs dependencies: {missing_deps_str}"
             return self.Result.ERROR
 

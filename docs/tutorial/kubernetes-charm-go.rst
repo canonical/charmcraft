@@ -81,8 +81,7 @@ Install ``go`` and initialize the Go module:
     :end-before: [docs:install-init-go-end]
     :dedent: 2
 
-Create a ``main.go`` file using ``touch main.go``.
-Then, open the file in a text editor using ``nano main.go``,
+Create and open a ``main.go`` file in a text editor using ``nano main.go``,
 copy the following text into it and then save the file:
 
 .. literalinclude:: code/go/main.go

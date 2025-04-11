@@ -83,9 +83,9 @@ Create the Django app
 Let's start by creating the "Hello, world" Django app that
 will be used for this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create and open a new file ``requirements.txt`` in a text editor using
+``nano requirements.txt``, copy the following text into it and then
+save the file:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-hello-world/requirements.txt

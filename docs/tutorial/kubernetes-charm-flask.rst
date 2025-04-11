@@ -21,7 +21,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is a Flask app that
-    can be deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 

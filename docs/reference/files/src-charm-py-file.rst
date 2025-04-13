@@ -8,8 +8,13 @@ The ``src/charm.py`` file is the default entry point for a charm. This file must
 executable, and should include a `shebang
 <https://en.wikipedia.org/wiki/Shebang_(Unix)>`_ to indicate the desired interpreter.
 
-This file may contain all of the charm code. However, if possible, you should use a
-separate module for workload-specific logic. See :ref:`src-workload-py-file`.
+This file may contain all of the charm's code. It's better practice, however, to use a
+separate module for workload-specific logic. If you don't already have a Python module
+for interacting with your charm's workload, we recommend that you store workload code in
+a :ref:`workload file <src-workload-py-file>`.
 
-It is possible to rename ``src/charm.py``, but additional changes are then required to
+    See more: :external+ops:ref:`Ops | Design your Python modules
+    <design-your-python-modules>`
+
+It's possible to rename ``src/charm.py``, but additional changes are then required to
 build the charm with Charmcraft.

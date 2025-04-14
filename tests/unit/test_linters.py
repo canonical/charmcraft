@@ -16,13 +16,72 @@
 """Unit tests for linters."""
 
 import pathlib
+import string
 import subprocess
 import sys
 
 import pytest
+from hypothesis import given, strategies
 
 from charmcraft import linters
 from charmcraft.models.lint import LintResult
+
+
+@given(
+    name=strategies.text(
+        strategies.characters(
+            codec="ascii",  # Only ASCII characters are valid in Python names
+            categories=["L", "N"],  # Letters and numbers
+            include_characters="._-",  # Or hyphens, underscores, periods
+        ),
+        min_size=1,  # At least one character
+    ).filter(lambda x: x[0] not in "._-" and x[-1] not in "._-"),
+    next_char=strategies.sampled_from(string.whitespace + "<>=~!"),
+    further_garbage=strategies.text(),
+)
+def test_fuzz_python_name_regex(name, next_char, further_garbage):
+    assert linters.PYTHON_NAME_REGEX.match(name).group(0) == name
+    assert linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}").group(0) == name
+    assert (
+        linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}{further_garbage}").group(0)
+        == name
+    )
+
+
+@pytest.mark.parametrize(
+    ("string", "expected"),
+    [
+        (
+            r'requests [security,tests] >= 2.8.1, == 2.8.* ; python_version < "2.7"',
+            "2.8.1",
+        ),
+        (">=1.0.0", "1.0.0"),
+    ],
+)
+def test_min_version_regex_matches(string, expected):
+    assert linters.MIN_VERSION_REGEX.search(string).group(1) == expected
+
+
+@pytest.mark.parametrize(
+    ("string", "expected"),
+    [
+        (
+            r'requests [security,tests] >= 2.8.1, == 2.8.* ; python_version < "2.7"',
+            "2.8",
+        ),
+        ("~=1.0.0", "1.0"),
+    ],
+)
+def test_approx_version_regex_matches(string, expected):
+    assert expected in linters.APPROX_VERSION_REGEX.search(string).group(1, 2)
+
+
+@pytest.mark.parametrize(
+    ("string", "expected"),
+    [("==1.0.0", "1.0.0")],
+)
+def test_exact_version_regex_matches(string, expected):
+    assert linters.EXACT_VERSION_REGEX.search(string).group(1) == expected
 
 
 @pytest.fixture
@@ -136,3 +195,55 @@ def test_pip_check_repair_all(valid_venv_path: pathlib.Path, fp):
     assert lint.run(valid_venv_path) == LintResult.OK
     assert lint.text == "Virtual environment is valid."
     assert (valid_venv_path / "venv" / "bin" / "python").is_file()
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("cryptography", "cryptography"),
+        (
+            "opentelemetry.exporter.otlp.proto.http",
+            "opentelemetry_exporter_otlp_proto_http",
+        ),
+        ("poetry-core", "poetry_core"),
+    ],
+)
+def test_pydeps_fs(name, expected):
+    assert linters.PyDeps.convert_to_fs(name) == expected
+
+
+@pytest.mark.parametrize(
+    ("spec", "version", "expected"),
+    [
+        (">=1.0.0", (1, 0, 0), True),
+        (">= 2.0.0, == 1.2.3, ==1.2.4, ~=1.4.0", (1, 2, 3), True),
+        (">= 2.0.0, == 1.2.3, ==1.2.4, ~=1.4.0", (1, 2, 4), True),
+        (">= 2.0.0, == 1.2.3, ==1.2.4, ~=1.4.0, ==1.5.*", (1, 4, 10), True),
+        ("==1.5.*", (1, 5, 10), True),
+        (">= 2.0.0, == 1.2.3, ==1.2.4, ~=1.4.0", (2, 2, 4), True),
+    ],
+)
+def test_pydeps_version_matches(spec, version, expected):
+    assert linters.PyDeps.version_matches(spec, version) == expected
+
+
+@pytest.mark.parametrize(
+    ("deps", "expected"),
+    [
+        (set(), (set(), set())),
+        ({"existing"}, (set(), set())),
+        ({"existing.child.package>=1.0.0"}, (set(), set())),
+        ({"existing.child.package==1.0.0"}, (set(), {"existing.child.package==1.0.0"})),
+        ({"existing-package"}, (set(), set())),
+        ({"existing-module"}, (set(), set())),
+        ({"nope"}, ({"nope"}, set())),
+    ],
+)
+def test_pydeps_get_missing_deps(tmp_path, mocker, deps, expected):
+    packages_path = tmp_path / "lib/python3.14/site-packages"
+    (packages_path / "existing").mkdir(parents=True)
+    (packages_path / "existing_child_package-1.0.1.dist-info").mkdir(parents=True)
+    (packages_path / "existing_package").mkdir(parents=True)
+    (packages_path / "existing_module.py").touch()
+
+    assert linters.PyDeps._get_missing_deps(deps, tmp_path) == expected

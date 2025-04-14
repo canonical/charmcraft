@@ -17,4 +17,6 @@ a :ref:`workload file <src-workload-py-file>`.
     <design-your-python-modules>`
 
 It's possible to rename ``src/charm.py``, but additional changes are then required to
-build the charm with Charmcraft.
+build the charm with Charmcraft. Specifically, you'll need to use the ``charm`` plugin
+and specify ``charm-entrypoint``. For more information, see
+:ref:`charmcraft-yaml-key-parts`.

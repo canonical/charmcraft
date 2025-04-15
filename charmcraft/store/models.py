@@ -307,3 +307,4 @@ LibraryMetadataRequest = TypedDict(
         "patch": NotRequired[int],
     },
 )
+LibraryMetadataIdRequest = TypedDict("LibraryMetadataIdRequest", {"library-id": str})

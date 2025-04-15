@@ -18,14 +18,16 @@
 import pathlib
 
 import pytest
+import pytest_mock
 
 from charmcraft import services, utils
+from charmcraft.services.charmlibs import CharmLibDelta
 from charmcraft.store.models import Library
 
 
 @pytest.fixture
 def service(service_factory):
-    return service_factory.charm_libs
+    return service_factory.get("charm_libs")
 
 
 @pytest.fixture(params=["my-charm", "your-charm"])
@@ -158,3 +160,65 @@ def test_write_error(
 ):
     with pytest.raises(ValueError, match="Library has no content"):
         service.write(lib)
+
+
+@pytest.mark.parametrize(
+    ("store_libs", "expected"),
+    [
+        pytest.param(
+            {
+                "abc": Library(
+                    "abc",
+                    "test-lib",
+                    "charmcraft-test-charm",
+                    0,
+                    1000,
+                    content=None,
+                    content_hash="hash",
+                )
+            },
+            [],
+            id="all-up-to-date",
+        ),
+        pytest.param(
+            {}, [CharmLibDelta("test_lib", (0, 1000), None)], id="all-unpublished"
+        ),
+        pytest.param(
+            {
+                "abc": Library(
+                    "abc",
+                    "test-lib",
+                    "charmcraft-test-charm",
+                    0,
+                    999,
+                    content=None,
+                    content_hash="hash",
+                )
+            },
+            [CharmLibDelta("test_lib", (0, 1000), (0, 999))],
+            id="out-of-date",
+        ),
+    ],
+)
+def test_get_unpublished_libs(
+    fake_project_dir: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    service: services.CharmLibsService,
+    mocker: pytest_mock.MockerFixture,
+    store_libs: dict[str, Library],
+    expected: list[CharmLibDelta],
+):
+    service._project_dir = fake_project_dir
+    service._project.name = "charmcraft-test-charm"
+    local_lib_dir = fake_project_dir / "lib/charms/charmcraft_test_charm/v0"
+    local_lib_dir.mkdir(parents=True)
+    local_lib_file = local_lib_dir / "test_lib.py"
+    local_lib_file.write_text("LIBID='abc'\nLIBAPI=0\nLIBPATCH=1000")
+
+    mocker.patch.object(
+        service._services.get("store"),
+        "get_libraries_metadata_by_id",
+        return_value=store_libs,
+    )
+
+    assert service.get_unpublished_libs() == expected

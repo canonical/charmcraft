@@ -58,6 +58,8 @@ from charmcraft.utils import cli
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
+    from charmcraft.services.charmlibs import CharmLibsService
+
 
 # some types
 class _EntityType(typing.NamedTuple):
@@ -586,6 +588,15 @@ class UploadCommand(CharmcraftCommand):
     common = True
     format_option = True
 
+    @override
+    def needs_project(self, parsed_args: argparse.Namespace) -> bool:
+        """Determine whether this command needs a project.
+
+        The implementation here is that we need a project if we're in a project
+        directory, allowing us to examine unpublished libraries.
+        """
+        return pathlib.Path("charmcraft.yaml").exists()
+
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         super().fill_parser(parser)
@@ -614,7 +625,7 @@ class UploadCommand(CharmcraftCommand):
             ),
         )
 
-    def run(self, parsed_args):
+    def run(self, parsed_args: argparse.Namespace) -> int:
         """Run the command."""
         if parsed_args.name:
             name = parsed_args.name
@@ -635,6 +646,42 @@ class UploadCommand(CharmcraftCommand):
                 for error in result.errors:
                     emit.message(f"- {error.code}: {error.message}")
             return 1
+
+        if self._services.project:
+            libs_service = cast("CharmLibsService", self._services.get("charm_libs"))
+            unpublished_libs = libs_service.get_unpublished_libs()
+            if unpublished_libs:
+                emit.progress(
+                    "WARNING: some local charmlibs owned by this charm are not published on the store",
+                    permanent=True,
+                )
+                display_libs = [
+                    {
+                        "name": f"{self._services.project.name}.{lib.lib_name}",
+                        "local": "-"
+                        if not lib.local_version
+                        else ".".join(str(i) for i in lib.local_version),
+                        "store": "-"
+                        if not lib.store_version
+                        else ".".join(str(i) for i in lib.store_version),
+                    }
+                    for lib in unpublished_libs
+                ]
+                emit.progress(
+                    tabulate(
+                        display_libs,
+                        headers={
+                            "name": "Name",
+                            "local": "Local version",
+                            "store": "Store version",
+                        },
+                        tablefmt="plain",
+                        disable_numparse=True,
+                    ),
+                    permanent=True,
+                )
+        else:
+            emit.verbose("Not examining on-disk project.")
 
         if parsed_args.release:
             # also release!

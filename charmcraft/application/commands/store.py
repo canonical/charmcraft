@@ -658,10 +658,10 @@ class UploadCommand(CharmcraftCommand):
                 display_libs = [
                     {
                         "name": f"{self._services.project.name}.{lib.lib_name}",
-                        "local": "N/A"
+                        "local": "-"
                         if not lib.local_version
                         else ".".join(str(i) for i in lib.local_version),
-                        "store": "N/A"
+                        "store": "-"
                         if not lib.store_version
                         else ".".join(str(i) for i in lib.store_version),
                     }

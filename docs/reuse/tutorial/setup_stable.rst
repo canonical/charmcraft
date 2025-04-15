@@ -1,11 +1,3 @@
-.. warning::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft. Check the
-    version of Charmcraft using ``charmcraft --version`` If you have an older
-    version of Charmcraft installed, use
-    ``sudo snap refresh charmcraft --channel latest/edge`` to get the latest
-    edge version of Charmcraft.
-
 First, install Multipass.
 
 .. seealso::

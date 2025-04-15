@@ -32,7 +32,11 @@ from requests_toolbelt import (  # type: ignore[import]
 )
 
 from charmcraft import __version__, const, utils
-from charmcraft.store.models import Library, LibraryMetadataRequest
+from charmcraft.store.models import (
+    Library,
+    LibraryMetadataIdRequest,
+    LibraryMetadataRequest,
+)
 
 TESTING_ENV_PREFIXES = ["TRAVIS", "AUTOPKGTEST_TMP"]
 
@@ -106,7 +110,7 @@ class AnonymousClient:
         )
 
     def fetch_libraries_metadata(
-        self, libs: Sequence[LibraryMetadataRequest]
+        self, libs: Sequence[LibraryMetadataRequest | LibraryMetadataIdRequest]
     ) -> Sequence[Library]:
         """Fetch the metadata for one or more charm libraries.
 

@@ -17,12 +17,25 @@
 
 from __future__ import annotations
 
+import dataclasses
 import pathlib
+from collections.abc import Collection
+from typing import cast
 
 import craft_application
 
 from charmcraft import models, utils
+from charmcraft.services.store import StoreService
 from charmcraft.store.models import Library
+
+
+@dataclasses.dataclass
+class CharmLibDelta:
+    """The difference between a local charmlib and a store charmlib."""
+
+    lib_name: str
+    local_version: tuple[int, int] | None
+    store_version: tuple[int, int] | None
 
 
 class CharmLibsService(craft_application.ProjectService):
@@ -96,3 +109,30 @@ class CharmLibsService(craft_application.ProjectService):
         )
         lib_path.parent.mkdir(parents=True, exist_ok=True)
         lib_path.write_text(library.content)
+
+    def get_unpublished_libs(self) -> Collection[CharmLibDelta]:
+        """Get this charm's unpublished charmlibs.
+
+        Get the charmlibs owned by this charm that are newer on disk than on Charmhub.
+        """
+        local_libs = utils.get_libs_from_tree(self._project.name, self._project_dir)
+
+        store = cast(StoreService, self._services.get("store"))
+        store_libs = store.get_libraries_metadata_by_id(
+            *(lib.lib_id for lib in local_libs if lib.lib_id)
+        )
+        unpublished_libs = []
+        for lib in local_libs:
+            local_version = (lib.api, lib.patch)
+            store_lib = store_libs.get(str(lib.lib_id))
+            store_version = (store_lib.api, store_lib.patch) if store_lib else None
+            if store_version is None or local_version > store_version:
+                unpublished_libs.append(
+                    CharmLibDelta(
+                        lib_name=lib.lib_name,
+                        local_version=local_version,
+                        store_version=store_version,
+                    )
+                )
+
+        return unpublished_libs

@@ -25,7 +25,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is Django apps that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 
@@ -83,9 +83,8 @@ Create the Django app
 Let's start by creating the "Hello, world" Django app that
 will be used for this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-hello-world/requirements.txt
@@ -226,7 +225,7 @@ Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
-app is scaled. We'll use Juju later to easily deploy a database.
+app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
 the app with a database. From the ``~/django-hello-world`` directory, open
@@ -297,11 +296,6 @@ Now let's pack the rock:
     :start-after: [docs:pack]
     :end-before: [docs:pack-end]
     :dedent: 2
-
-.. note::
-
-    In older versions of Rockcraft, you might need to set
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` before the pack command.
 
 Depending on your system and network, this step can take several minutes to
 finish.

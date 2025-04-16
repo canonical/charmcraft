@@ -8,6 +8,9 @@ import logging
 
 import ops
 
+# A standalone module for workload-specific logic (no charming concerns):
+import {{ workload_module }}
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,10 +19,20 @@ class {{ class_name }}(ops.CharmBase):
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
+        framework.observe(self.on.install, self._on_install)
         framework.observe(self.on.start, self._on_start)
+
+    def _on_install(self, event: ops.InstallEvent):
+        """Install the workload on the machine."""
+        {{ workload_module }}.install()
 
     def _on_start(self, event: ops.StartEvent):
         """Handle start event."""
+        self.unit.status = ops.MaintenanceStatus("starting workload")
+        {{ workload_module }}.start()
+        version = {{ workload_module }}.get_version()
+        if version is not None:
+            self.unit.set_workload_version(version)
         self.unit.status = ops.ActiveStatus()
 
 

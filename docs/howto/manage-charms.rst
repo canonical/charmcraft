@@ -234,12 +234,17 @@ charm's project file, specify an item under the :ref:`links.website
 Add docs
 ~~~~~~~~
 
-If you publish your charm on Charmhub, reference documentation about the charm's
-resources, actions, configurations, relations, and libraries is extracted automatically.
-However, you should also aim to add further docs, e.g., a tutorial, how-to guides, etc.
-To provide a link to these docs, in your charm's project file, specify a
-value for the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. Note
-that at present this must be a Discourse page. E.g.,
+When you publish your charm on Charmhub, reference documentation about the charm's
+resources, actions, configurations, relations, and libraries is generated and 
+published automatically in respective tabs.
+Use the Description tab to add additional documentation, such as tutorials or 
+how-to guides, focusing specifically on the charm itself. 
+For workload-specific or Juju-related content, 
+link to the appropriate upstream documentation.
+
+To add content to the Description tab, create a Discourse topic and include its URL 
+in your charm's project file under the 
+:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
 
 .. code-block:: yaml
 
@@ -250,6 +255,26 @@ that at present this must be a Discourse page. E.g.,
 
     See more: :ref:`charmcraft-yaml-key-links`
 
+Smaller charms can have a single-page documentation in the Description tab. 
+Bigger charms with multi-page documentation, should have a full
+[Diátaxis](https://diataxis.fr/) navigation tree in the Description tab, 
+or just provide a brief description with a link to an external documentation set. 
+
+.. admonition:: Best practice
+    :class: hint
+
+    Smaller charm documentation exemplars:
+
+    * [Azure storage integrator](https://charmhub.io/azure-storage-integrator) charm
+    * [Repo policy compliance](https://charmhub.io/repo-policy-compliance) charm
+
+.. admonition:: Best practice
+    :class: hint
+
+    Bigger charm documentation exemplars:
+
+    * [OpenSearch](https://charmhub.io/opensearch) charm 
+    * [Wordpress-k8s](https://charmhub.io/wordpress-k8s) charm
 
 Add terms of use
 ~~~~~~~~~~~~~~~~

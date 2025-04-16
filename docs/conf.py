@@ -139,7 +139,7 @@ autodoc_default_options = {"exclude-members": "model_post_init"}
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
-    "juju": ("https://canonical-juju.readthedocs-hosted.com/en/latest/", None),
+    "juju": ("https://canonical-juju.readthedocs-hosted.com/3.6/", None),
     "ops": ("https://ops.readthedocs.io/en/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/en/stable/", None),
 }

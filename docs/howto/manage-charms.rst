@@ -234,16 +234,12 @@ charm's project file, specify an item under the :ref:`links.website
 Add docs
 ~~~~~~~~
 
-When you publish your charm on Charmhub, reference documentation about the charm's
+If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is generated and 
 published automatically in respective tabs.
-Use the Description tab to add additional documentation, such as tutorials or 
-how-to guides, focusing specifically on the charm itself. 
-For workload-specific or Juju-related content, 
-link to the appropriate upstream documentation.
 
-To add content to the Description tab, create a Discourse topic and include its URL 
-in your charm's project file under the 
+To add content to the Description tab, 
+create a Discourse topic and include its URL in your charm's project file under the 
 :ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
 
 .. code-block:: yaml
@@ -255,15 +251,23 @@ in your charm's project file under the
 
     See more: :ref:`charmcraft-yaml-key-links`
 
-Smaller charms can have a single-page documentation in the Description tab. 
-Bigger charms with multi-page documentation, should have a full
-[Diátaxis](https://diataxis.fr/) navigation tree in the Description tab, 
-or just provide a brief description with a link to an external documentation set. 
+The Description tab can contain additional documentation, such as tutorials or 
+how-to guides.
+
+.. note::
+   A charm's documentation should focus on the charm itself.
+   For workload-specific or Juju-related content, link to the appropriate upstream 
+   documentation.
+
+A smaller charm can have a single-page documentation for its description. 
+A bigger charm, that needs a multi-page documentation, can have either
+a brief description with a link to an external documentation set, or
+a full [Diátaxis](https://diataxis.fr/) navigation tree in the Description tab.
 
 .. admonition:: Best practice
     :class: hint
 
-    Smaller charm documentation exemplars:
+    Smaller charm documentation examples:
 
     * [Azure storage integrator](https://charmhub.io/azure-storage-integrator) charm
     * [Repo policy compliance](https://charmhub.io/repo-policy-compliance) charm
@@ -271,7 +275,7 @@ or just provide a brief description with a link to an external documentation set
 .. admonition:: Best practice
     :class: hint
 
-    Bigger charm documentation exemplars:
+    Bigger charm documentation examples:
 
     * [OpenSearch](https://charmhub.io/opensearch) charm 
     * [Wordpress-k8s](https://charmhub.io/wordpress-k8s) charm

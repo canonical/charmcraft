@@ -259,8 +259,8 @@ how-to guides.
    For workload-specific or Juju-related content, link to the appropriate upstream 
    documentation.
 
-A smaller charm can have a single-page documentation for its description. 
-A bigger charm, that needs a multi-page documentation, can have either
+A smaller charm can have single-page documentation for its description. 
+A bigger charm, that needs multi-page documentation, can have either
 a brief description with a link to an external documentation set, or
 a full [Diátaxis](https://diataxis.fr/) navigation tree in the **Description** tab.
 

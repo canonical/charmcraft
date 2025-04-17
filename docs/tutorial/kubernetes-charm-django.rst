@@ -544,7 +544,7 @@ Add a "Hello, world" app
 
 In this iteration, we'll add a greeting app that returns a ``Hello, world!`` greeting.
 
-The generated Django app doesn't come with an app, which is why
+The generated Django project doesn't come with an app, which is why
 we had to initially enable debug mode for testing.  We will need to go back
 out to the ``~/django-hello-world`` directory where the rock is and enter
 into the ``./django_hello_world`` directory where the Django app

@@ -345,8 +345,7 @@ the FastAPI app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-Include a constraint to the Juju model to specify your architecture if you
-aren't on a host with AMD64:
+Include a constraint to the Juju model to specify your architecture:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

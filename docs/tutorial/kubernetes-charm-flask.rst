@@ -181,7 +181,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``flask-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
+The ``platforms`` must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash

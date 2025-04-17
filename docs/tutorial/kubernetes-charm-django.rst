@@ -153,8 +153,8 @@ Multipass VM, run:
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
-``http://<MULTIPASS_PRIVATE_IP>:8000``, replacing
-``<MULTIPASS_PRIVATE_IP>`` with your VM's private IP address.
+``http://<Multipass private IP>:8000``, replacing
+``<Multipass private IP>`` with your VM's private IP address.
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
@@ -521,9 +521,9 @@ and add a line like the following:
 
 .. code-block:: bash
 
-    <MULTIPASS_PRIVATE_IP> django-hello-world
+    <Multipass private IP> django-hello-world
 
-Here, replace ``<MULTIPASS_PRIVATE_IP>`` with the same Multipass VM
+Here, replace ``<Multipass private IP>`` with the same Multipass VM
 private IP address you previously used.
 
 Now you can open a new tab and visit http://django-hello-world. The

@@ -136,7 +136,7 @@ suites:
     summary: tests howto from the docs
     systems:
       - ubuntu-22.04-64
-    manual: true
+    manual: false
     prepare: |
       juju_channel=3.5/stable
       microk8s_channel=1.31-strict/stable

@@ -1,0 +1,6 @@
+actions:
+  updatelogfile:
+    description: Checks the running app and updates the log file.
+    params:
+      logfile:
+        type: string

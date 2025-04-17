@@ -181,8 +181,7 @@ the architecture of your system:
     dpkg --print-architecture
 
 
-If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
+Edit the ``platforms`` entry in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 

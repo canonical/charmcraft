@@ -14,15 +14,14 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, Flask apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is a Flask app that
-    can be deployed, configured, scaled, integrated, and so on,
-    on any Kubernetes cluster.
+If you're new to the charming world, Flask apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The result is a Flask app that
+can be deployed, configured, scaled, integrated, and so on,
+on any Kubernetes cluster.
 
 
 What you'll need

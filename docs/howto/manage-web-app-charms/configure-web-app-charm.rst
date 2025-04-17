@@ -120,52 +120,21 @@ app that removes expired session cookies.
 
 Add the custom action in ``charmcraft.yaml``:
 
-.. code::
+.. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charmcraft.yaml
     :language: yaml
-
-    actions:
-      clearsession:
-        description: Clear the session cookies.
 
 Modify the ``src/charm.py`` to define your custom action as part of the class
 and provide the function definition:
 
-.. code-block::
+.. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charm.py
     :language: python
-    :emphasize-lines: 8-28
-
-    def __init__(self, *args: typing.Any) -> None:
-        """Initialize the instance.
-
-        Args:
-            args: passthrough to CharmBase.
-        """
-        super().__init__(*args)
-        self.framework.observe(self.on.clearsession_action, self._on_clearsession_action)
-
-    def _on_clearsession_action(self, event: ops.ActionEvent) -> None:
-        """Handle the clearsession action.
-        Args:
-            event: the action event object.
-        """
-        if not self.is_ready():
-            event.fail("django-app container is not ready")
-        try:
-            self._container.exec(
-                ["python3", "manage.py", "clearsessions"],
-                service_context="django",
-                combine_stderr=True,
-                working_dir=str(self._workload_config.app_dir),
-            ).wait_output()
-            event.set_results({"result": "session cleared!"})
-        except ops.pebble.ExecError as e:
-            event.fail(str(e.stdout))
+    :lines: 20-46
+    :emphasize-lines: 8-27
 
 Build the charm using ``charmcraft pack`` and deploy the app with Juju.
 Finally, call the action using:
 
-.. code::
-    :language: bash
+.. code-block:: bash
 
     juju run <django unit name> clearsession
 
@@ -194,59 +163,21 @@ logfile in the app container. The action performs the following steps:
 
 Add the custom action in ``charmcraft.yaml``:
 
-.. code::
+.. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charmcraft.yaml
     :language: yaml
 
-    actions:
-      updatelogfile:
-        description: Checks the running app and updates the log file in the app container.
-        params:
-          logfile:
-            type: string
+Modify the ``src/charm.py`` to include ``import requests`` at the top, define
+your custom action as part of the class and provide the function definition:
 
-Modify the ``src/charm.py`` to define your custom action as part of the class
-and provide the function definition:
-
-.. code-block::
+.. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
     :language: python
-    :emphasize-lines: 8
-
-     def __init__(self, *args: typing.Any) -> None:
-         """Initialize the instance.
-
-         Args:
-             args: passthrough to CharmBase.
-         """
-         super().__init__(*args)
-         self.framework.observe(self.on.updatelogfile_action, self._on_updatelogfile_action)
-
-     def _on_updatelogfile_action(self, event: ops.ActionEvent) -> None:
-         """Handle the updatelogfile action.
-
-         Args:
-             event: the action event object.
-         """
-         if not self.is_ready():
-             event.fail("flask-app container is not ready")
-         try:
-             response = requests.get(
-                     f"http://127.0.0.1:{self._workload_config.port}", timeout=5
-                     )
-             response.raise_for_status()
-             self._container.push(event.params["logfile"], response.text)
-             output = response.text + " written to file " + event.params["logfile"] + " in app container"
-             event.set_results({"result": output})
-         except ops.pebble.ExecError as e:
-             event.fail(str(e.stdout))
-         except requests.exceptions.RequestException as e:
-             # if it failed with http bad status code or the connection failed
-             event.fail(str(e.stdout))
+    :lines: 22-54
+    :emphasize-lines: 8-33
 
 Build the charm using ``charmcraft pack`` and deploy the app with Juju.
 Finally, call the action using:
 
-.. code::
-   :language: bash
+.. code:: bash
 
    juju run <flask unit name> updatelogfile logfile=<full path to logfile>
 
@@ -265,18 +196,18 @@ If successful, the terminal will output something like:
 
 Check that the file was updated using Pebble:
 
-.. code::
-    :language: bash
+.. code:: bash
 
-    juju ssh --container flask-app <flask unit name> pebble exec cat <full path to logfile>
+    juju ssh --container flask-app <flask unit name> \
+      pebble exec cat <full path to logfile>
 
 The terminal should output ``Hello, world!`` as expected.
 
 .. warning::
 
     Writing to a file in the app container is unstable because the Juju units
-    are ephemeral, meaning that any files are not persistent in the case of the
-    unit's restart or deletion.
+    are ephemeral, meaning that container files are not persistent in the case
+    of the unit's restart or deletion.
 
 Manage secrets
 --------------

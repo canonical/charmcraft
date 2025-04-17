@@ -24,7 +24,8 @@ class DjangoHelloWorldCharm(paas_charm.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
-        self.framework.observe(self.on.clearsession_action, self._on_clearsession_action)
+        self.framework.observe(self.on.clearsession_action,
+                               self._on_clearsession_action)
 
     def _on_clearsession_action(self, event: ops.ActionEvent) -> None:
         """Handle the clearsession action.
@@ -37,7 +38,7 @@ class DjangoHelloWorldCharm(paas_charm.django.Charm):
             self._container.exec(
                 ["python3", "manage.py", "clearsessions"],
                 service_context="django",
-                combine_stderr=True, 
+                combine_stderr=True,
                 working_dir=str(self._workload_config.app_dir),
             ).wait_output()
             event.set_results({"result": "session cleared!"})

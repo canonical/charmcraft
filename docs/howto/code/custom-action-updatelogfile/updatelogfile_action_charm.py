@@ -26,7 +26,8 @@ class FlaskHelloWorldCharm(paas_charm.flask.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
-        self.framework.observe(self.on.updatelogfile_action, self._on_updatelogfile_action)
+        self.framework.observe(self.on.updatelogfile_action,
+                               self._on_updatelogfile_action)
 
     def _on_updatelogfile_action(self, event: ops.ActionEvent) -> None:
         """Handle the updatelogfile action.
@@ -43,7 +44,8 @@ class FlaskHelloWorldCharm(paas_charm.flask.Charm):
                     )
             response.raise_for_status()
             self._container.push(event.params["logfile"], response.text)
-            output = response.text + " written to file " + event.params["logfile"] + " in app container"
+            output = response.text
+            output += " written to file " + event.params["logfile"]
             event.set_results({"result": output})
         except ops.pebble.ExecError as e:
             event.fail(str(e.stdout))

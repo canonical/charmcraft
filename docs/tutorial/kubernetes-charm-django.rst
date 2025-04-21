@@ -25,7 +25,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is Django apps that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 
@@ -83,9 +83,8 @@ Create the Django app
 Let's start by creating the "Hello, world" Django app that
 will be used for this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-hello-world/requirements.txt
@@ -226,7 +225,7 @@ Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
-app is scaled. We'll use Juju later to easily deploy a database.
+app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
 the app with a database. From the ``~/django-hello-world`` directory, open
@@ -298,17 +297,13 @@ Now let's pack the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    In older versions of Rockcraft, you might need to set
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` before the pack command.
-
 Depending on your system and network, this step can take several minutes to
 finish.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_amd64.rock``.
+``Packed django-hello-world_0.1_<architecture>.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -366,6 +361,12 @@ of the file:
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
     :language: yaml
 
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``django-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/django-hello-world/charm/`` directory.
+
 Now let's pack the charm:
 
 .. literalinclude:: code/django/task.yaml
@@ -384,7 +385,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-amd64.charm``.
+``Packed django-hello-world_ubuntu-22.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 
@@ -404,10 +406,8 @@ the Django app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will need
-to include a constraint to the Juju model to specify your architecture.
-
-Set the Juju model constraints with:
+Include a constraint to the Juju model to specify your architecture if you
+aren't on a host with AMD64:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -458,9 +458,12 @@ start until the database is ready.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
 
-    See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
+
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
 The Django app should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the

@@ -21,7 +21,7 @@ This tutorial should take 90 minutes for you to complete.
     A rock is a special kind of OCI-compliant container image, while a
     charm is a software operator for cloud operations that use the Juju
     orchestration engine. The result is a Go app that
-    can be easily deployed, configured, scaled, integrated, etc.,
+    can be deployed, configured, scaled, integrated, and so on,
     on any Kubernetes cluster.
 
 
@@ -81,9 +81,8 @@ Install ``go`` and initialize the Go module:
     :end-before: [docs:install-init-go-end]
     :dedent: 2
 
-Create a ``main.go`` file using ``touch main.go``.
-Then, open the file in a text editor using ``nano main.go``,
-copy the following text into it and then save the file:
+Create a new Go program file with ``nano main.go``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/go/main.go
     :caption: ~/go-hello-world/main.go
@@ -203,7 +202,8 @@ minutes to finish.
 
 Once Rockcraft has finished packing the Go rock,
 the terminal will respond with something similar to
-``Packed go-hello-world_0.1_amd64.rock``.
+``Packed go-hello-world_0.1_<architecture>.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -292,6 +292,12 @@ includes the architecture of your host. If your host uses the ARM architecture,
 open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
 ``arm64`` in ``platforms``.
 
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``go-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/go-hello-world/charm/`` directory.
+
 Let's pack the charm:
 
 .. literalinclude:: code/go/task.yaml
@@ -310,7 +316,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed go-hello-world_ubuntu-24.04-amd64.charm``.
+``Packed go-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 
@@ -330,10 +337,8 @@ the Go app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will need to include
-to include a constraint to the Juju model to specify your architecture.
-
-Set the Juju model constraints with:
+Include a constraint to the Juju model to specify your architecture if you
+aren't on a host with AMD64:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -362,7 +367,10 @@ It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
+
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 

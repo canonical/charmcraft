@@ -88,18 +88,18 @@ The configuration can be set on the deployed charm using:
 Add a custom action
 -------------------
 
-For certain commands or processes that you will run many times, you can set up
-custom Juju actions to expedite your workflow. Actions are handled in the Ops
+For commands and processes that see shared or frequent use, custom Juju actions
+can expedite your workflow. Actions are handled in the Ops
 library, and Juju manages the action's workflow via tasks and operations. To
 implement a custom action, you need to declare the action in
-``charmcraft.yaml`` and define an event handler into the Ops framework of your
+``charmcraft.yaml`` and add an event handler to the Ops framework of your
 charm.
 
 .. seealso::
 
     :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
-The custom action must be defined in ``charmcraft.yaml`` under the
+The custom action must be defined in the project file under the
 ``actions`` section. You should provide a name, a description, and any
 associated parameters.
 
@@ -118,20 +118,23 @@ Example: clear cookies in a Django app
 For example, let's say you want to add a custom action to your charmed Django
 app that removes expired session cookies.
 
-Add the custom action in ``charmcraft.yaml``:
+Add the custom action in the project file:
 
 .. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charmcraft.yaml
     :language: yaml
+    :caption: charmcraft.yaml
 
 Modify the ``src/charm.py`` to define your custom action as part of the class
 and provide the function definition:
 
 .. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charm.py
     :language: python
+    :caption: src/charm.py
     :lines: 20-46
     :emphasize-lines: 8-27
 
 Build the charm using ``charmcraft pack`` and deploy the app with Juju.
+
 Finally, call the action using:
 
 .. code-block:: bash
@@ -155,22 +158,24 @@ Example: check Flask app status and write output to container file
 
 As another example, let's say you want to add a custom action to your charmed
 Flask app that checks the status of the running app and writes the status to a
-logfile in the app container. The action performs the following steps:
+log file in the app container. The action performs the following steps:
 
 - Sends a request to the Flask app at its available port.
 - If the request is successful, updates the event container with the status
   message in a logfile.
 
-Add the custom action in ``charmcraft.yaml``:
+Add the custom action to the project file:
 
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charmcraft.yaml
     :language: yaml
+    :caption: charmcraft.yaml
 
-Modify the ``src/charm.py`` to include ``import requests`` at the top, define
+Add ``import requests`` to the start of ``src/charm.py``, then define
 your custom action as part of the class and provide the function definition:
 
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
     :language: python
+    :caption: src/charm.py
     :lines: 22-54
     :emphasize-lines: 8-33
 
@@ -194,7 +199,7 @@ If successful, the terminal will output something like:
       Hello, world!
        written to file /tmp/example.log in app container
 
-Check that the file was updated using Pebble:
+Finally, check that the file was updated using Pebble:
 
 .. code:: bash
 

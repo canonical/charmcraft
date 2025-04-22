@@ -235,11 +235,11 @@ Add docs
 ~~~~~~~~
 
 If you publish your charm on Charmhub, reference documentation about the charm's
-resources, actions, configurations, relations, and libraries is generated and 
+resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
-To add content to the **Description** tab, 
-create a Discourse topic and include its URL in your charm's project file under the 
+To add content to the **Description** tab,
+create a Discourse topic and include its URL in your charm's project file under the
 :ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
 
 .. code-block:: yaml
@@ -251,15 +251,15 @@ create a Discourse topic and include its URL in your charm's project file under 
 
     See more: :ref:`charmcraft-yaml-key-links`
 
-The **Description** tab can contain additional documentation, such as tutorials or 
+The **Description** tab can contain additional documentation, such as tutorials or
 how-to guides.
 
 .. note::
    A charm's documentation should focus on the charm itself.
-   For workload-specific or Juju-related content, link to the appropriate upstream 
+   For workload-specific or Juju-related content, link to the appropriate upstream
    documentation.
 
-A smaller charm can have single-page documentation for its description. 
+A smaller charm can have single-page documentation for its description.
 A bigger charm, that needs multi-page documentation, can have either
 a brief description with a link to an external documentation set, or
 a full [Diátaxis](https://diataxis.fr/) navigation tree in the **Description** tab.
@@ -277,7 +277,7 @@ a full [Diátaxis](https://diataxis.fr/) navigation tree in the **Description** 
 
     Bigger charm documentation examples:
 
-    * [OpenSearch](https://charmhub.io/opensearch) charm 
+    * [OpenSearch](https://charmhub.io/opensearch) charm
     * [Wordpress-k8s](https://charmhub.io/wordpress-k8s) charm
 
 Add terms of use

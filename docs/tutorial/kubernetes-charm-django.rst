@@ -217,7 +217,7 @@ the architecture of your system:
 
     dpkg --print-architecture
 
-Edit the ``platforms`` entry in ``rockcraft.yaml`` if required.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database

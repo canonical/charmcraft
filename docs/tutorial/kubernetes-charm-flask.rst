@@ -188,7 +188,7 @@ the architecture of your system:
     dpkg --print-architecture
 
 
-Edit the ``platforms`` entry in ``rockcraft.yaml`` if required.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 

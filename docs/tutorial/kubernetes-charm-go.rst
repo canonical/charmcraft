@@ -172,7 +172,7 @@ The top of the file should look similar to the following snippet:
 
 Verfiy that the ``name`` is ``go-hello-world``.
 
-The ``platforms`` must match the architecture of your host. Check
+The ``platforms`` key must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash

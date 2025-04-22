@@ -23,7 +23,7 @@ specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.
 A rock is a special kind of OCI-compliant container image, while a
 charm is a software operator for cloud operations that use the Juju
-orchestration engine. The result is Django apps that
+orchestration engine. The combined result is a Django app that
 can be deployed, configured, scaled, integrated, and so on,
 on any Kubernetes cluster.
 

@@ -19,7 +19,7 @@ specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.
 A rock is a special kind of OCI-compliant container image, while a
 charm is a software operator for cloud operations that use the Juju
-orchestration engine. The result is a Flask app that
+orchestration engine. The combined result is a Flask app that
 can be deployed, configured, scaled, integrated, and so on,
 on any Kubernetes cluster.
 

@@ -1,4 +1,3 @@
-# noqa: A005 (This module shadows the stdlib platform module.)
 # Copyright 2023 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

@@ -15,15 +15,14 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, FastAPI apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is a FastAPI app that
-    can be deployed, configured, scaled, integrated, and so on,
-    on any Kubernetes cluster.
+If you're new to the charming world, FastAPI apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The combined result is a FastAPI app that
+can be deployed, configured, scaled, integrated, and so on,
+on any Kubernetes cluster.
 
 
 What you'll need
@@ -182,15 +181,14 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``fastapi-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
+The ``platforms`` key must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash
 
     dpkg --print-architecture
 
-If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 
@@ -345,8 +343,7 @@ the FastAPI app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-Include a constraint to the Juju model to specify your architecture if you
-aren't on a host with AMD64:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

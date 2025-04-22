@@ -404,7 +404,7 @@ the Django app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-Include a constraint to the Juju model to specify your architecture:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

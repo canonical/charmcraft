@@ -48,10 +48,10 @@ class FlaskHelloWorldCharm(paas_charm.flask.Charm):
             output += " written to file " + event.params["logfile"]
             event.set_results({"result": output})
         except ops.pebble.ExecError as e:
-            event.fail(str(e.stdout))
+            event.fail(str(e.stderr))
         except requests.exceptions.RequestException as e:
             # if it failed with http bad status code or the connection failed
-            event.fail(str(e.stdout))
+            event.fail(str(e.stderr))
 
 if __name__ == "__main__":
     ops.main(FlaskHelloWorldCharm)

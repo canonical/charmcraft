@@ -176,10 +176,11 @@ your custom action as part of the class and provide the function definition:
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
     :language: python
     :caption: src/charm.py
-    :lines: 22-54
-    :emphasize-lines: 8-33
+    :lines: 22-64
+    :emphasize-lines: 8-43
 
 Build the charm using ``charmcraft pack`` and deploy the app with Juju.
+
 Finally, call the action using:
 
 .. code:: bash
@@ -196,17 +197,8 @@ If successful, the terminal will output something like:
 
     Waiting for task 2...
     result: |-
-      Hello, world!
-       written to file /tmp/example.log in app container
-
-Finally, check that the file was updated using Pebble:
-
-.. code:: bash
-
-    juju ssh --container flask-app <flask unit name> \
-      pebble exec cat <full path to logfile>
-
-The terminal should output ``Hello, world!`` as expected.
+      App response: Hello, world!
+      Output written to file: Hello, world!
 
 .. warning::
 

@@ -325,7 +325,6 @@ respond with something similar to
 the ``.charm`` file will reflect your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
-
 Deploy the FastAPI app
 ----------------------
 

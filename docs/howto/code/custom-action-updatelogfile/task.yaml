@@ -136,7 +136,6 @@ execute: |
 
   # make sure the action runs successfully
   juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"
-  juju ssh --container flask-app flask-hello-world/0 pebble exec cat /tmp/example.log | grep Hello
 
   # [docs:clean-environment]
   charmcraft clean

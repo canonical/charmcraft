@@ -350,7 +350,8 @@ Initialize a charm named ``django-hello-world``:
 
 The files will automatically be created in your working directory.
 
-We will need to connect the Django app to the PostgreSQL database.
+We will need to integrate our Django app to the PostgreSQL database,
+which means we need to declare a requirement in the charm project file.
 Open the ``charmcraft.yaml`` file and add the following section to the end
 of the file:
 

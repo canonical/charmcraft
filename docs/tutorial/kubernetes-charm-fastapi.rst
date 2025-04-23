@@ -208,13 +208,9 @@ minutes to finish.
 
 Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
-``Packed fastapi-hello-world_0.1_<architecture>.rock``. After the initial
+``Packed fastapi-hello-world_0.1_<architecture>.rock``. The name of the
+``.rock`` file will reflect your system's architecture. After the initial
 pack, subsequent rock packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.

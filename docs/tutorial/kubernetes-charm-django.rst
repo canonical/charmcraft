@@ -372,11 +372,6 @@ Now let's pack the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-    in the pack command for older versions of Charmcraft.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 

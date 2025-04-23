@@ -43,7 +43,7 @@ class DjangoHelloWorldCharm(paas_charm.django.Charm):
             ).wait_output()
             event.set_results({"result": "session cleared!"})
         except ops.pebble.ExecError as e:
-            event.fail(str(e.stderr))
+            event.fail(str(e.stdout))
 
 if __name__ == "__main__":
     ops.main(DjangoHelloWorldCharm)

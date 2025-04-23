@@ -226,8 +226,7 @@ upgrade -- and this database wouldn't be shared by all containers as the
 app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
-the app with a database. From the ``~/django-hello-world`` directory, open
-``django_hello_world/django_hello_world/settings.py`` and update the
+the app with a database. Open the file and update the
 imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 

@@ -313,14 +313,9 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed go-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The name of
+the ``.charm`` file will reflect your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
-
 
 Deploy the Go app
 -----------------

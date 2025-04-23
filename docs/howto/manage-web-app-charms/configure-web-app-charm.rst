@@ -163,6 +163,8 @@ log file in the app container. The action performs the following steps:
 - Sends a request to the Flask app at its available port.
 - If the request is successful, updates the event container with the status
   message in a logfile.
+- Reads the contents of the logfile in the event container and outputs the
+  status message as part of the action result.
 
 Add the custom action to the project file:
 

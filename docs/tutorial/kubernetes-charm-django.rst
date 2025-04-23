@@ -165,9 +165,11 @@ original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Django app into a rock
 -------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``django-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Django app. Change
+First, we'll need a ``rockcraft.yaml`` file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``django-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Django app. Change
 back into the ``~/django-hello-world`` directory and initialize the rock:
 
 .. code-block:: bash
@@ -331,11 +333,12 @@ the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``django-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``django-framework`` profile, Charmcraft
+automates the creation of the files needed for our charm, including a
 ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Django
-app.
+The source code contains the logic required to operate the Django app.
 
 Initialize a charm named ``django-hello-world``:
 

@@ -134,9 +134,11 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Flask app into a rock
 ------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``flask-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Flask app.
+First, we'll need a ``rockcraft.yaml`` file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``flask-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Flask app.
 From the ``~/flask-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/flask/task.yaml
@@ -235,11 +237,12 @@ for the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``flask-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Flask
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``flask-framework`` profile,
+Charmcraft automates the creation of the files needed for our charm,
+including a ``charmcraft.yaml``, ``requirements.txt`` and source code for the
+charm. The source code contains the logic required to operate the Flask app.
 
 Initialize a charm named ``flask-hello-world``:
 

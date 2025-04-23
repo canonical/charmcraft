@@ -54,14 +54,14 @@ class FlaskHelloWorldCharm(paas_charm.flask.Charm):
             event.fail(str(e.message))
         except requests.exceptions.RequestException as e:
             # if it failed with http bad status code or the connection failed
-            if e.response is None:  
+            if e.response is None:
                 event.fail(
                     f"unable to connect on port {self._workload_config.port}"
-                    )  
-            else:  
+                    )
+            else:
                 event.fail(
                     f"workload responded with code {e.response.status_code}"
-                    )  
+                    )
 
 if __name__ == "__main__":
     ops.main(FlaskHelloWorldCharm)

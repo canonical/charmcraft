@@ -30,7 +30,6 @@ environment:
   JUJU_CONTROLLER: k8s
   JUJU_MODEL: k8s-operator-test
 
-
 prepare: |
   git clone --depth=1 "${CHARM}" charm
 

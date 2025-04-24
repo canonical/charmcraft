@@ -52,50 +52,6 @@ jobs:
           snap: ${{ steps.snap-name.outputs.snap }}
           release: edge/pr-${{ github.event.number }}
 
-  snap-tests:
-    needs: [snap-build]
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Download snap artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: snap
-          path: snap-artifacts
-      - name: Install snap
-        run: |
-          sudo snap install --classic --dangerous snap-artifacts/*.snap
-          rm -rf snap-artifacts
-      - name: Install test dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip python3-setuptools python3-wheel python3-distutils
-          sudo snap install charm --classic
-      - name: Refresh LXD dependency on 20.04
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: |
-          sudo snap refresh lxd || echo "Cannot refresh LXD dependency, using $(lxd --version)"
-          snap list lxd
-      - name: Configured LXD
-        run: |
-          sudo groupadd --force --system lxd
-          sudo usermod --append --groups lxd $USER
-          sudo snap start lxd
-          sudo lxd waitready --timeout=30
-          sudo lxd init --auto
-      - name: Validate snap configuration
-        run: |
-          sudo snap set charmcraft provider=lxd
-          sudo snap set charmcraft provider=multipass
-          if sudo snap set charmcraft provider=invalid; then
-            echo "configure script failure"
-            exit 1
-          fi
-          sudo snap set charmcraft provider=lxd
-
   windows-build:
     runs-on: windows-2019
     steps:

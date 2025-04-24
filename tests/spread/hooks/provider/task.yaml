@@ -1,0 +1,15 @@
+summary: switch between valid providers
+
+systems:
+  - ubuntu-20.04-64
+
+restore: |
+  snap set charmcraft provider=lxd
+
+execute: |
+  snap set charmcraft provider=lxd
+  snap set charmcraft provider=multipass
+  if snap set charmcraft provider=invalid; then
+    echo "configure script failure"
+    exit 1
+  fi

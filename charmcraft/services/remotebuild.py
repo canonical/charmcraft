@@ -61,7 +61,7 @@ class RemoteBuildService(remotebuild.RemoteBuildService):
         self,
         name: str,
         repository: launchpad.models.GitRepository,
-        **_: Any,  # noqa: ANN401
+        **_: Any,
     ) -> launchpad.models.Recipe:
         """Create a new recipe."""
         try:

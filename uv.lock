@@ -8,10 +8,10 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 conflicts = [[
-    { package = "charmcraft", extra = "apt-jammy" },
-    { package = "charmcraft", extra = "apt-noble" },
-    { package = "charmcraft", extra = "apt-oracular" },
-    { package = "charmcraft", extra = "apt-plucky" },
+    { package = "charmcraft", group = "dev-jammy" },
+    { package = "charmcraft", group = "dev-noble" },
+    { package = "charmcraft", group = "dev-oracular" },
+    { package = "charmcraft", group = "dev-plucky" },
 ]]
 
 [manifest]
@@ -70,10 +70,10 @@ name = "anyio"
 version = "4.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "idna" },
     { name = "sniffio" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a3/73/199a98fc2dae33535d6b8e8e6ec01f8c1d76c9adb096c6b7d64823038cde/anyio-4.8.0.tar.gz", hash = "sha256:1d9fe889df5212298c0c0723fa20479d1b94883a2df44bd3897aa91083316f7a", size = 181126 }
 wheels = [
@@ -113,7 +113,7 @@ name = "astroid"
 version = "3.3.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/39/33/536530122a22a7504b159bccaf30a1f76aa19d23028bd8b5009eb9b2efea/astroid-3.3.9.tar.gz", hash = "sha256:622cc8e3048684aa42c820d9d218978021c3c3d174fb03a9f0d615921744f550", size = 398731 }
 wheels = [
@@ -208,11 +208,11 @@ name = "build"
 version = "1.2.2.post1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "os_name == 'nt' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
-    { name = "importlib-metadata", marker = "python_full_version < '3.10.2' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "colorama", marker = "os_name == 'nt' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
+    { name = "importlib-metadata", marker = "python_full_version < '3.10.2' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "packaging" },
     { name = "pyproject-hooks" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7d/46/aeab111f8e06793e4f0e421fcad593d547fb8313b50990f31681ee2fb1ad/build-1.2.2.post1.tar.gz", hash = "sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7", size = 46701 }
 wheels = [
@@ -383,23 +383,15 @@ dependencies = [
     { name = "tabulate" },
 ]
 
-[package.optional-dependencies]
-apt-jammy = [
-    { name = "python-apt", version = "2.4.0+ubuntu4", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
-]
-apt-noble = [
-    { name = "python-apt", version = "2.7.7+ubuntu3", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
-]
-apt-oracular = [
-    { name = "python-apt", version = "2.9.0+ubuntu1", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
-]
-apt-plucky = [
-    { name = "python-apt", version = "2.9.0+ubuntu1", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
-]
+[package.dev-dependencies]
 dev = [
+    { name = "codespell", extra = ["toml"] },
     { name = "coverage" },
     { name = "freezegun" },
     { name = "hypothesis" },
+    { name = "mypy", extra = ["reports"] },
+    { name = "poetry" },
+    { name = "poetry-plugin-export" },
     { name = "pyfakefs" },
     { name = "pylint" },
     { name = "pytest" },
@@ -408,6 +400,24 @@ dev = [
     { name = "pytest-mock" },
     { name = "pytest-subprocess" },
     { name = "responses" },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+    { name = "types-setuptools" },
+    { name = "types-tabulate" },
+    { name = "types-urllib3" },
+]
+dev-jammy = [
+    { name = "python-apt", version = "2.4.0+ubuntu4", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
+]
+dev-noble = [
+    { name = "python-apt", version = "2.7.7+ubuntu3", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
+]
+dev-oracular = [
+    { name = "python-apt", version = "2.9.0+ubuntu1", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
+]
+dev-plucky = [
+    { name = "python-apt", version = "2.9.9", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
 ]
 docs = [
     { name = "autodoc-pydantic" },
@@ -423,7 +433,17 @@ docs = [
 ]
 lint = [
     { name = "codespell", extra = ["toml"] },
-    { name = "yamllint" },
+    { name = "mypy", extra = ["reports"] },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+    { name = "types-setuptools" },
+    { name = "types-tabulate" },
+    { name = "types-urllib3" },
+]
+tics = [
+    { name = "flake8" },
+    { name = "pylint" },
 ]
 types = [
     { name = "mypy", extra = ["reports"] },
@@ -435,30 +455,8 @@ types = [
     { name = "types-urllib3" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "charmcraft", extra = ["lint", "types"] },
-    { name = "coverage" },
-    { name = "freezegun" },
-    { name = "hypothesis" },
-    { name = "poetry" },
-    { name = "poetry-plugin-export" },
-    { name = "pyfakefs" },
-    { name = "pylint" },
-    { name = "pytest" },
-    { name = "pytest-check" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "pytest-subprocess" },
-    { name = "responses" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "autodoc-pydantic", marker = "extra == 'docs'", specifier = "~=2.0" },
-    { name = "canonical-sphinx", extras = ["full"], marker = "extra == 'docs'", specifier = "~=0.2" },
-    { name = "codespell", extras = ["toml"], marker = "extra == 'lint'" },
-    { name = "coverage", marker = "extra == 'dev'" },
     { name = "craft-application", specifier = "~=4.8" },
     { name = "craft-cli", specifier = ">=2.15.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
@@ -469,56 +467,26 @@ requires-dist = [
     { name = "craft-store", specifier = "~=3.2" },
     { name = "distro", specifier = ">=1.7.0" },
     { name = "docker", specifier = ">=7.0.0" },
-    { name = "freezegun", marker = "extra == 'dev'" },
     { name = "humanize", specifier = ">=2.6.0" },
-    { name = "hypothesis", marker = "extra == 'dev'" },
     { name = "jinja2" },
     { name = "jsonschema", specifier = "~=4.0" },
-    { name = "matplotlib", marker = "extra == 'docs'" },
-    { name = "mypy", extras = ["reports"], marker = "extra == 'types'", specifier = "~=1.11" },
     { name = "pip", specifier = ">=24.2" },
     { name = "pydantic", specifier = "~=2.0,<2.10" },
-    { name = "pyfakefs", marker = "extra == 'dev'" },
-    { name = "pylint", marker = "extra == 'dev'" },
-    { name = "pyspelling", marker = "extra == 'docs'" },
-    { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-check", marker = "extra == 'dev'" },
-    { name = "pytest-cov", marker = "extra == 'dev'" },
-    { name = "pytest-mock", marker = "extra == 'dev'" },
-    { name = "pytest-subprocess", marker = "extra == 'dev'" },
-    { name = "python-apt", marker = "sys_platform == 'linux' and extra == 'apt-jammy'", specifier = "~=2.4.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" },
-    { name = "python-apt", marker = "sys_platform == 'linux' and extra == 'apt-noble'", specifier = "~=2.7.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" },
-    { name = "python-apt", marker = "sys_platform == 'linux' and extra == 'apt-oracular'", specifier = ">=2.9.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" },
-    { name = "python-apt", marker = "sys_platform == 'linux' and extra == 'apt-plucky'", specifier = ">=2.9.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" },
     { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "requests-toolbelt" },
-    { name = "responses", marker = "extra == 'dev'" },
     { name = "snap-helpers" },
-    { name = "sphinx-autobuild", marker = "extra == 'docs'", specifier = "~=2024.2" },
-    { name = "sphinx-lint", marker = "extra == 'docs'", specifier = "~=1.0" },
-    { name = "sphinx-pydantic", marker = "extra == 'docs'", specifier = "~=0.1" },
-    { name = "sphinx-toolbox", marker = "extra == 'docs'", specifier = "~=3.5" },
-    { name = "sphinxcontrib-details-directive", marker = "extra == 'docs'" },
-    { name = "sphinxext-rediraffe", marker = "extra == 'docs'", specifier = "==0.2.7" },
     { name = "tabulate" },
-    { name = "types-python-dateutil", marker = "extra == 'types'" },
-    { name = "types-pyyaml", marker = "extra == 'types'" },
-    { name = "types-requests", marker = "extra == 'types'", specifier = "<2.31.0.20240312" },
-    { name = "types-setuptools", marker = "extra == 'types'" },
-    { name = "types-tabulate", marker = "extra == 'types'" },
-    { name = "types-urllib3", marker = "extra == 'types'" },
-    { name = "yamllint", marker = "extra == 'lint'" },
 ]
-provides-extras = ["dev", "lint", "types", "apt-jammy", "apt-noble", "apt-oracular", "apt-plucky", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "charmcraft", extras = ["lint", "types"] },
+    { name = "codespell", extras = ["toml"] },
     { name = "coverage", specifier = ">=7.6.8" },
     { name = "freezegun", specifier = ">=1.5.1" },
     { name = "hypothesis", specifier = ">=6.122.1" },
+    { name = "mypy", extras = ["reports"], specifier = "~=1.11" },
     { name = "poetry", specifier = ">=1.8.5" },
     { name = "poetry-plugin-export", specifier = ">=1.8.0" },
     { name = "pyfakefs", specifier = ">=5.7.2" },
@@ -529,6 +497,51 @@ dev = [
     { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "pytest-subprocess", specifier = ">=1.5.2" },
     { name = "responses", specifier = ">=0.25.3" },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-setuptools" },
+    { name = "types-tabulate" },
+    { name = "types-urllib3" },
+]
+dev-jammy = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=2.4.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
+dev-noble = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=2.7.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
+dev-oracular = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = ">=2.9.0,<2.9.9", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
+dev-plucky = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = ">=2.9.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
+docs = [
+    { name = "autodoc-pydantic", specifier = "~=2.0" },
+    { name = "canonical-sphinx", extras = ["full"], specifier = "~=0.2" },
+    { name = "matplotlib" },
+    { name = "pyspelling" },
+    { name = "sphinx-autobuild", specifier = "~=2024.2" },
+    { name = "sphinx-lint", specifier = "~=1.0" },
+    { name = "sphinx-pydantic", specifier = "~=0.1" },
+    { name = "sphinx-toolbox", specifier = "~=3.5" },
+    { name = "sphinxcontrib-details-directive" },
+    { name = "sphinxext-rediraffe", specifier = "==0.2.7" },
+]
+lint = [
+    { name = "codespell", extras = ["toml"] },
+    { name = "mypy", extras = ["reports"], specifier = "~=1.11" },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-setuptools" },
+    { name = "types-tabulate" },
+    { name = "types-urllib3" },
+]
+tics = [
+    { name = "flake8" },
+    { name = "pylint" },
+]
+types = [
+    { name = "mypy", extras = ["reports"], specifier = "~=1.11" },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-setuptools" },
+    { name = "types-tabulate" },
+    { name = "types-urllib3" },
 ]
 
 [[package]]
@@ -610,7 +623,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -628,7 +641,7 @@ wheels = [
 
 [package.optional-dependencies]
 toml = [
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 
 [[package]]
@@ -766,7 +779,7 @@ wheels = [
 
 [package.optional-dependencies]
 toml = [
-    { name = "tomli", marker = "python_full_version <= '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version <= '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 
 [[package]]
@@ -822,7 +835,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "overrides" },
     { name = "platformdirs" },
-    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "pyyaml" },
     { name = "typing-extensions" },
 ]
@@ -927,7 +940,7 @@ name = "cryptography"
 version = "44.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cd/25/4ce80c78963834b8a9fd1cc1266be5ed8d1840785c0f2e1b73b8d128d505/cryptography-44.0.2.tar.gz", hash = "sha256:c63454aa261a0cf0c5b4718349629793e9e634993538db841165b3df74f37ec0", size = 710807 }
 wheels = [
@@ -1033,7 +1046,7 @@ name = "docker"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "requests" },
     { name = "urllib3" },
 ]
@@ -1147,6 +1160,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2d/73/ab2c4fb7972145c1595c07837cffc1456c1510a908f5c8bda9745930ee60/findpython-0.6.3.tar.gz", hash = "sha256:5863ea55556d8aadc693481a14ac4f3624952719efc1c5591abb0b4a9e965c94", size = 17827 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/68/cc/10e4ec45585eba7784a6e86f21990e97b828b8d8927d28ae639b06d50c59/findpython-0.6.3-py3-none-any.whl", hash = "sha256:a85bb589b559cdf1b87227cc233736eb7cad894b9e68021ee498850611939ebc", size = 20564 },
+]
+
+[[package]]
+name = "flake8"
+version = "7.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mccabe" },
+    { name = "pycodestyle" },
+    { name = "pyflakes" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/c4/5842fc9fc94584c455543540af62fd9900faade32511fab650e9891ec225/flake8-7.2.0.tar.gz", hash = "sha256:fa558ae3f6f7dbf2b4f22663e5343b6b6023620461f8d4ff2019ef4b5ee70426", size = 48177 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/5c/0627be4c9976d56b1217cb5187b7504e7fd7d3503f8bfd312a04077bd4f7/flake8-7.2.0-py2.py3-none-any.whl", hash = "sha256:93b92ba5bdb60754a6da14fa3b93a9361fd00a59632ada61fd7b130436c40343", size = 57786 },
 ]
 
 [[package]]
@@ -1318,7 +1345,7 @@ version = "6.129.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "sortedcontainers" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a2/07/848e5e2985e708364d3865e81c2f9b6b5437610201f7e9e1de5cb019c0ce/hypothesis-6.129.1.tar.gz", hash = "sha256:bfffa4e430b7bfcd9d281ccde30c084f794dd54856aa0a895951b80204b39cf6", size = 423833 }
@@ -1349,7 +1376,7 @@ name = "importlib-metadata"
 version = "8.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "python_full_version < '3.12' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "zipp", marker = "python_full_version < '3.12' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/33/08/c1395a292bb23fd03bdf572a1357c5a733d3eecbab877641ceacab23db6e/importlib_metadata-8.6.1.tar.gz", hash = "sha256:310b41d755445d74569f993ccfc22838295d9fe005425094fad953d7f15c8580", size = 55767 }
 wheels = [
@@ -1400,7 +1427,7 @@ name = "jaraco-context"
 version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "backports-tarfile", marker = "python_full_version < '3.12' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "backports-tarfile", marker = "python_full_version < '3.12' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/df/ad/f3777b81bf0b6e7bc7514a1656d3e637b2e8e15fab2ce3235730b3e7a4e6/jaraco_context-6.0.1.tar.gz", hash = "sha256:9bae4ea555cf0b14938dc0aee7c9f32ed303aa20a3b73e7dc80111628792d1b3", size = 13912 }
 wheels = [
@@ -1481,13 +1508,13 @@ name = "keyring"
 version = "25.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata", marker = "python_full_version < '3.12' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "importlib-metadata", marker = "python_full_version < '3.12' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "jaraco-classes" },
     { name = "jaraco-context" },
     { name = "jaraco-functools" },
-    { name = "jeepney", marker = "sys_platform == 'linux' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
-    { name = "pywin32-ctypes", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
-    { name = "secretstorage", marker = "sys_platform == 'linux' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "jeepney", marker = "sys_platform == 'linux' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
+    { name = "pywin32-ctypes", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
+    { name = "secretstorage", marker = "sys_platform == 'linux' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/70/09/d904a6e96f76ff214be59e7aa6ef7190008f52a0ab6689760a98de0bf37d/keyring-25.6.0.tar.gz", hash = "sha256:0b39998aa941431eb3d9b0d4b2460bc773b9df6fed7621c2dfb291a7e0187a66", size = 62750 }
 wheels = [
@@ -1975,7 +2002,7 @@ version = "1.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mypy-extensions" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ce/43/d5e49a86afa64bd3839ea0d5b9c7103487007d728e1293f52525d6d5486a/mypy-1.15.0.tar.gz", hash = "sha256:404534629d51d3efea5c800ee7c42b72a6554d6c400e6a79eafe15d11341fd43", size = 3239717 }
@@ -2137,15 +2164,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pathspec"
-version = "0.12.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ca/bc/f35b8446f4531a7cb215605d100cd88b7ac6f44ab3fc94870c120ab3adbf/pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712", size = 51043 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/20/ff623b09d963f88bfde16306a54e12ee5ea43e9b597108672ff3a408aad6/pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08", size = 31191 },
-]
-
-[[package]]
 name = "pbs-installer"
 version = "2025.3.11"
 source = { registry = "https://pypi.org/simple" }
@@ -2287,11 +2305,11 @@ dependencies = [
     { name = "requests" },
     { name = "requests-toolbelt" },
     { name = "shellingham" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "tomlkit" },
     { name = "trove-classifiers" },
     { name = "virtualenv" },
-    { name = "xattr", marker = "sys_platform == 'darwin' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "xattr", marker = "sys_platform == 'darwin' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a9/69/fbcaa6e878a9e8a9ab86222637f6058b1e611f416c402475b5c9a9dcbca6/poetry-2.1.1.tar.gz", hash = "sha256:d82673865bf13d6cd0dacf28c69a89670456d8df2f9e5da82bfb5f833ba00efc", size = 3433288 }
 wheels = [
@@ -2341,6 +2359,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/22/29dd085f6e828ab0424e73f1bae9dbb9e8bb4087cba5a9e6f21dc614694e/protobuf-6.30.1-cp39-abi3-manylinux2014_aarch64.whl", hash = "sha256:47cd320b7db63e8c9ac35f5596ea1c1e61491d8a8eb6d8b45edc44760b53a4f6", size = 317319 },
     { url = "https://files.pythonhosted.org/packages/26/10/8863ba4baa4660e3f50ad9ae974c47fb63fa6d4089b15f7db82164b1c879/protobuf-6.30.1-cp39-abi3-manylinux2014_x86_64.whl", hash = "sha256:e3083660225fa94748ac2e407f09a899e6a28bf9c0e70c75def8d15706bf85fc", size = 316213 },
     { url = "https://files.pythonhosted.org/packages/a1/d6/683a3d470398e45b4ad9b6c95b7cbabc32f9a8daf454754f0e3df1edffa6/protobuf-6.30.1-py3-none-any.whl", hash = "sha256:3c25e51e1359f1f5fa3b298faa6016e650d148f214db2e47671131b9063c53be", size = 167064 },
+]
+
+[[package]]
+name = "pycodestyle"
+version = "2.13.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/6e/1f4a62078e4d95d82367f24e685aef3a672abfd27d1a868068fed4ed2254/pycodestyle-2.13.0.tar.gz", hash = "sha256:c8415bf09abe81d9c7f872502a6eee881fbe85d8763dd5b9924bb0a01d67efae", size = 39312 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/be/b00116df1bfb3e0bb5b45e29d604799f7b91dd861637e4d448b4e09e6a3e/pycodestyle-2.13.0-py2.py3-none-any.whl", hash = "sha256:35863c5974a271c7a726ed228a14a4f6daf49df369d8c50cd9a6f58a5e143ba9", size = 31424 },
 ]
 
 [[package]]
@@ -2456,12 +2483,21 @@ wheels = [
 ]
 
 [[package]]
+name = "pyflakes"
+version = "3.3.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/cc/1df338bd7ed1fa7c317081dcf29bf2f01266603b301e6858856d346a12b3/pyflakes-3.3.2.tar.gz", hash = "sha256:6dfd61d87b97fba5dcfaaf781171ac16be16453be6d816147989e7f6e6a9576b", size = 64175 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/40/b293a4fa769f3b02ab9e387c707c4cbdc34f073f945de0386107d4e669e6/pyflakes-3.3.2-py2.py3-none-any.whl", hash = "sha256:5039c8339cbb1944045f4ee5466908906180f13cc99cc9949348d10f82a5c32a", size = 63164 },
+]
+
+[[package]]
 name = "pygit2"
 version = "1.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi" },
-    { name = "setuptools", marker = "python_full_version >= '3.12' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "setuptools", marker = "python_full_version >= '3.12' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f0/5e/6e05213a9163bad15489beda5f958500881d45889b0df01d7b8964f031bf/pygit2-1.14.1.tar.gz", hash = "sha256:ec5958571b82a6351785ca645e5394c31ae45eec5384b2fa9c4e05dde3597ad6", size = 765621 }
 wheels = [
@@ -2500,12 +2536,12 @@ version = "3.3.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astroid" },
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "dill" },
     { name = "isort" },
     { name = "mccabe" },
     { name = "platformdirs" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "tomlkit" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d5/e7/3616e8caa61f918c4864db075800a6bd7422621618045c188fd45c3f7a2b/pylint-3.3.5.tar.gz", hash = "sha256:38d0f784644ed493d91f76b5333a0e370a1c1bc97c22068a77523b4bf1e82c31", size = 1519168 }
@@ -2599,12 +2635,12 @@ name = "pytest"
 version = "8.3.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ae/3c/c9d525a414d506893f0cd8a8d0de7706446213181570cdbd766691164e40/pytest-8.3.5.tar.gz", hash = "sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845", size = 1450891 }
 wheels = [
@@ -2617,7 +2653,7 @@ version = "2.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ce/d7/32de906d890e3ccdad421b6db2a67ff94ebecb1f933e5f1038b69f007c30/pytest_check-2.5.0.tar.gz", hash = "sha256:3a6be8431c7720287958436d97a6b823eed5ae5ceb7da5572a0e4a9462feaf88", size = 26844 }
 wheels = [
@@ -2749,6 +2785,23 @@ wheels = [
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.0+ubuntu1-cp313-cp313-manylinux_2_40_ppc64le.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.0+ubuntu1-cp313-cp313-manylinux_2_40_s390x.whl" },
     { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.0+ubuntu1-cp313-cp313-manylinux_2_40_x86_64.whl" },
+]
+
+[[package]]
+name = "python-apt"
+version = "2.9.9"
+source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+wheels = [
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.9-cp310-cp310-manylinux_2_41_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.9-cp311-cp311-manylinux_2_41_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.9-cp312-cp312-manylinux_2_41_x86_64.whl" },
+    { url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/python-apt/python_apt-2.9.9-cp313-cp313-manylinux_2_41_x86_64.whl" },
 ]
 
 [[package]]
@@ -2961,7 +3014,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "rpds-py" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2f/db/98b5c277be99dd18bfd91dd04e1b759cad18d1a338188c936e92f921c7e2/referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa", size = 74744 }
 wheels = [
@@ -3181,7 +3234,7 @@ name = "ruamel-yaml"
 version = "0.18.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ruamel-yaml-clib", marker = "(python_full_version < '3.13' and platform_python_implementation == 'CPython') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (python_full_version >= '3.13' and extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (platform_python_implementation != 'CPython' and extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "ruamel-yaml-clib", marker = "(python_full_version < '3.13' and platform_python_implementation == 'CPython') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version >= '3.13' and extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (platform_python_implementation != 'CPython' and extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ea/46/f44d8be06b85bc7c4d8c95d658be2b68f27711f279bf9dd0612a5e4794f5/ruamel.yaml-0.18.10.tar.gz", hash = "sha256:20c86ab29ac2153f80a428e1254a8adf686d3383df04490514ca3b79a362db58", size = 143447 }
 wheels = [
@@ -3336,7 +3389,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alabaster" },
     { name = "babel" },
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
     { name = "docutils" },
     { name = "imagesize" },
     { name = "jinja2" },
@@ -3350,7 +3403,7 @@ dependencies = [
     { name = "sphinxcontrib-jsmath" },
     { name = "sphinxcontrib-qthelp" },
     { name = "sphinxcontrib-serializinghtml" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/5b/be/50e50cb4f2eff47df05673d361095cafd95521d2a22521b920c67a372dcb/sphinx-7.4.7.tar.gz", hash = "sha256:242f92a7ea7e6c5b406fdc2615413890ba9f699114a9c09192d7dfead2ee9cfe", size = 8067911 }
 wheels = [
@@ -3429,7 +3482,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "markupsafe" },
-    { name = "standard-imghdr", marker = "python_full_version >= '3.13' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "standard-imghdr", marker = "python_full_version >= '3.13' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/26/df/27282da6f8c549f765beca9de1a5fc56f9651ed87711a5cac1e914137753/sphinx_jinja2_compat-0.3.0.tar.gz", hash = "sha256:f3c1590b275f42e7a654e081db5e3e5fb97f515608422bde94015ddf795dfe7c", size = 4998 }
 wheels = [
@@ -3837,7 +3890,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4b/4d/938bd85e5bf2edeec766267a5015ad969730bb91e31b44021dfe8b22df6c/uvicorn-0.34.0.tar.gz", hash = "sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9", size = 76568 }
 wheels = [
@@ -4068,19 +4121,6 @@ wheels = [
 ]
 
 [[package]]
-name = "yamllint"
-version = "1.36.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pathspec" },
-    { name = "pyyaml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/b6/d17e75cc0b1b0a93cb04bb0b350c6ab10f48271f35897849c5d136b7a037/yamllint-1.36.0.tar.gz", hash = "sha256:3835a65994858679ea06fd998dd968c3f71935cd93742990405999d888e21130", size = 131585 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/ae/298aa85e0debef5d2b515f778c8da4062a9d3ed2a66017aad080a6ff611c/yamllint-1.36.0-py3-none-any.whl", hash = "sha256:22ab6a7db9d5f0954bd7a50ef70a41c1465c61f955893070b0767c0ec6693b7b", size = 66827 },
-]
-
-[[package]]
 name = "zipp"
 version = "3.21.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4094,7 +4134,7 @@ name = "zstandard"
 version = "0.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation == 'PyPy' or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-noble') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-jammy' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-oracular') or (extra == 'extra-10-charmcraft-apt-noble' and extra == 'extra-10-charmcraft-apt-plucky') or (extra == 'extra-10-charmcraft-apt-oracular' and extra == 'extra-10-charmcraft-apt-plucky')" },
+    { name = "cffi", marker = "platform_python_implementation == 'PyPy' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ed/f6/2ac0287b442160a89d726b17a9184a4c615bb5237db763791a7fd16d9df1/zstandard-0.23.0.tar.gz", hash = "sha256:b2d8c62d08e7255f68f7a740bae85b3c9b8e5466baa9cbf7f57f1cde0ac6bc09", size = 681701 }
 wheels = [

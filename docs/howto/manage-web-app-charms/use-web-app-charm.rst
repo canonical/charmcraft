@@ -72,6 +72,13 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
+    .. group-tab:: ExpressJS
+
+        .. code-block:: bash
+
+            juju ssh --container app <expressjs-app-name>/0 pebble logs
+
+
 .. seealso::
 
    `Pebble CLI commands | logs
@@ -107,6 +114,12 @@ To view more details about the web app itself, run:
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 pebble plan
+
+    .. group-tab:: ExpressJS
+
+        .. code-block:: bash
+
+            juju ssh --container app <expressjs-app-name>/0 pebble plan
 
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
@@ -152,6 +165,13 @@ Juju container:
 
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
+
+    .. group-tab:: ExpressJS
+
+        .. code-block:: bash
+
+            juju ssh --container app <expressjs-app-name>/0 \
+              pebble exec --context=expressjs -- bash
 
 .. important::
 
@@ -216,6 +236,12 @@ name of the web app with the ``-c`` option.
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. group-tab:: Go
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+    .. group-tab:: ExpressJS
 
         .. code-block:: bash
 

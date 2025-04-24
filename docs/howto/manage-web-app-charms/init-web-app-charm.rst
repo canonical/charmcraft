@@ -51,3 +51,8 @@ and description are correct.
 
             charmcraft init --profile go-framework
 
+    .. group-tab:: ExpressJS
+
+        .. code-block:: bash
+
+            charmcraft init --profile expressjs-framework

@@ -57,7 +57,6 @@ dev = [  # When updating these, also update the dev/lint/types groups in renovat
 ]
 lint = [
     "codespell[toml]",
-    "yamllint",
 ]
 types = [
     "mypy[reports]~=1.11",

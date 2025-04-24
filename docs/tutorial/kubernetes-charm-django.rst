@@ -165,7 +165,7 @@ original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Django app into a rock
 -------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. We'll take advantage of a
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
 pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the
 ``django-framework`` profile, Rockcraft automates the creation of
@@ -301,8 +301,8 @@ finish.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_<architecture>.rock``. The name of the
-``.rock`` file will reflect your system's architecture. After the initial
+``Packed django-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
@@ -351,7 +351,7 @@ Initialize a charm named ``django-hello-world``:
 The files will automatically be created in your working directory.
 
 We will need to integrate our Django app to the PostgreSQL database,
-which means we need to declare a requirement in the charm project file.
+which means we must declare a requirement in the charm project file.
 Open the ``charmcraft.yaml`` file and add the following section to the end
 of the file:
 
@@ -377,8 +377,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The name of
-the ``.charm`` file will reflect your system's architecture. After the initial
+``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
 Deploy the Django app

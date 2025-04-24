@@ -125,7 +125,7 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Go app into a rock
 ---------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. We'll take advantage of a
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
 pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the
 ``go-framework`` profile, Rockcraft automates the creation of
@@ -202,8 +202,8 @@ minutes to finish.
 
 Once Rockcraft has finished packing the Go rock,
 the terminal will respond with something similar to
-``Packed go-hello-world_0.1_<architecture>.rock``. The name of the
-``.rock`` file will reflect your system's architecture. After the initial
+``Packed go-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
@@ -313,8 +313,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The name of
-the ``.charm`` file will reflect your system's architecture. After the initial
+``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
 Deploy the Go app

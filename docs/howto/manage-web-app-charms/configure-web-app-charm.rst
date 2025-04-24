@@ -161,10 +161,11 @@ Flask app that checks the status of the running app and writes the status to a
 log file in the app container. The action performs the following steps:
 
 - Sends a request to the Flask app at its available port.
-- If the request is successful, updates the event container with the status
+- If the request is successful, updates the app container with the status
   message in a logfile.
-- Reads the contents of the logfile in the event container and outputs the
-  status message as part of the action result.
+- As a consistency check, reads the contents of the log file in the app  
+  container and outputs the status message as part of the action result.  
+  In practice, you could create a separate action for reading the log file. 
 
 Add the custom action to the project file:
 
@@ -178,8 +179,8 @@ your custom action as part of the class and provide the function definition:
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
     :language: python
     :caption: src/charm.py
-    :lines: 22-64
-    :emphasize-lines: 8-43
+    :lines: 22-65
+    :emphasize-lines: 8-44
 
 Build the charm using ``charmcraft pack`` and deploy the app with Juju.
 

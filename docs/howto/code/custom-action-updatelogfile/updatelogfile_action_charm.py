@@ -47,10 +47,11 @@ class FlaskHelloWorldCharm(paas_charm.flask.Charm):
             self._container.push(event.params["logfile"], response.text)
             output = "App response: " + response.text
             # access file in container and read its contents
+            # (you could put this part in a separate action called readlogfile)
             output_comp = self._container.pull(event.params["logfile"]).read()
             output += "Output written to file: " + output_comp
             event.set_results({"result": output})
-        except ops.pebble.ExecError as e:
+        except ops.pebble.PathError as e:
             event.fail(str(e.message))
         except requests.exceptions.RequestException as e:
             # if it failed with http bad status code or the connection failed

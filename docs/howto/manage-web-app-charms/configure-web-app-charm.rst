@@ -163,9 +163,9 @@ log file in the app container. The action performs the following steps:
 - Sends a request to the Flask app at its available port.
 - If the request is successful, updates the app container with the status
   message in a logfile.
-- As a consistency check, reads the contents of the log file in the app  
-  container and outputs the status message as part of the action result.  
-  In practice, you could create a separate action for reading the log file. 
+- As a consistency check, reads the contents of the log file in the app
+  container and outputs the status message as part of the action result.
+  In practice, you could create a separate action for reading the log file.
 
 Add the custom action to the project file:
 

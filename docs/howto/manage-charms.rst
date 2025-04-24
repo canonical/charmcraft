@@ -239,7 +239,8 @@ resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
 To add content to the **Description** tab,
-create a Discourse topic and include its URL in your charm's project file under the
+create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
+in your charm's project file under the
 :ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
 
 .. code-block:: yaml
@@ -262,23 +263,23 @@ how-to guides.
 A smaller charm can have single-page documentation for its description.
 A bigger charm, that needs multi-page documentation, can have either
 a brief description with a link to an external documentation set, or
-a full [Diátaxis](https://diataxis.fr/) navigation tree in the **Description** tab.
+a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description** tab.
 
 .. admonition:: Best practice
     :class: hint
 
     Smaller charm documentation examples:
 
-    * [Azure storage integrator](https://charmhub.io/azure-storage-integrator) charm
-    * [Repo policy compliance](https://charmhub.io/repo-policy-compliance) charm
+    * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
+    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
 .. admonition:: Best practice
     :class: hint
 
     Bigger charm documentation examples:
 
-    * [OpenSearch](https://charmhub.io/opensearch) charm
-    * [Wordpress-k8s](https://charmhub.io/wordpress-k8s) charm
+    * `OpenSearch <https://charmhub.io/opensearch>`_ charm
+    * `Wordpress-k8s <https://charmhub.io/wordpress-k8s>`_ charm
 
 Add terms of use
 ~~~~~~~~~~~~~~~~

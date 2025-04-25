@@ -6,7 +6,6 @@ To use this doc: just replace X.Y.Z with the major.minor.patch version of
 the release. The sequence of commands below should be good to copy and
 paste, but do please pay attention to details!
 
-
 ## Preparation
 
 - update `main` and run tests
@@ -44,8 +43,8 @@ paste, but do please pay attention to details!
 
 - cherry pick the needed commits from `main`:
 
-   git cherry-pick -m 1 COMMIT-HASH
-   ...
+    git cherry-pick -m 1 COMMIT-HASH
+    ...
 
 - create release notes from the selected commits
 
@@ -54,7 +53,6 @@ paste, but do please pay attention to details!
 - tag the release (using those release notes)
 
     git tag -s X.Y.Z
-
 
 ## Check all is ready
 
@@ -69,7 +67,7 @@ paste, but do please pay attention to details!
     cp dist/charmcraft-X.Y.Z.tar.gz /tmp/testrelease/
     cd /tmp/testrelease/
     tar -xf charmcraft-X.Y.Z.tar.gz
-    cd ~  # wherever out of the project, to avoid any potential "file mispicking"
+    cd ~ # wherever out of the project, to avoid any potential "file mispicking"
     fades -v -d file:///tmp/testrelease/charmcraft-X.Y.Z/ -x charmcraft version
 
 - back in the project, build all the snaps for different architectures
@@ -79,9 +77,8 @@ paste, but do please pay attention to details!
 - try the snap (for your arch)
 
     sudo snap install --dangerous --classic charmcraft_X.Y.Z_amd64.snap
-    cd ~  # wherever out of the project, to avoid any potential "file mispicking"
+    cd ~ # wherever out of the project, to avoid any potential "file mispicking"
     charmcraft version
-
 
 ## Release
 
@@ -117,7 +114,6 @@ paste, but do please pay attention to details!
 - verify all archs are consistent:
 
     snapcraft status charmcraft
-
 
 ## Final details
 

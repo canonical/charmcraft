@@ -4,7 +4,7 @@ How-to guides
 =============
 
 Charmcraft's how-to guides provide comprehensive, step-by-step instructions for the most
-common charm development tasks--from initializing a project to publishing it on
+common charm development tasks -- from initializing a project to publishing it on
 Charmhub.
 
 
@@ -13,13 +13,8 @@ Install Charmcraft
 
 Charmcraft can be installed in just a few short steps, regardless of if you are
 installing on Linux, macOS, or an isolated environment. Specific instructions for
-installing Charmcraft and setting up your build container can be found in the following
-guide:
-
-.. toctree::
-    :maxdepth: 2
-
-    manage-charmcraft
+installing Charmcraft and setting up your build container can be found in
+:ref:`manage-charmcraft`.
 
 
 Craft charms
@@ -30,34 +25,28 @@ you are charming. Once you initialize the project with either the default profil
 of Charmcraft's web app extensions, you can modify a charm's YAML and Ops-powered Python
 to include any necessary libraries, parts, or other assets your application may require.
 
-.. toctree::
-    :maxdepth: 2
-
-    manage-charms
-    Manage builds <build-guides/index>
-    Manage 12-factor app charms <manage-web-app-charms/index>
-    manage-parts
-    manage-resources
-    manage-libraries
-    manage-extensions
-    manage-bundles
+* :ref:`manage-charms`
+* :ref:`Manage builds <howto-build-guides>`
+* :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`
+* :ref:`manage-parts`
+* :ref:`manage-resources`
+* :ref:`manage-libraries`
+* :ref:`manage-extensions`
+* :ref:`manage-charm-bundles`
 
 
 Publish charms and manage releases
 ----------------------------------
 
-When you're ready to share your charm, Charmcraft provides commands to register its
-name, publish it to Charmhub, and manage subsequent releases.
+When you're ready to distribute your charm, Charmcraft provides commands to register it,
+publish it to Charmhub, and manage its releases.
 
-.. toctree::
-    :maxdepth: 2
-
-    manage-the-current-charmhub-user
-    manage-names
-    manage-icons
-    manage-revisions
-    manage-tracks
-    manage-channels
+* :ref:`manage-the-current-charmhub-user`
+* :ref:`manage-names`
+* :ref:`manage-icons`
+* :ref:`manage-charm-revisions`
+* :ref:`manage-tracks`
+* :ref:`manage-channels`
 
 
 Migrate between plugins
@@ -67,7 +56,27 @@ Certain charms may benefit from using a plugin other than the default Charm plug
 instructions on migrating away from the default Charm plugin, refer to the appropriate
 migration guide for your charm:
 
-.. toctree::
-    :maxdepth: 2
+* :ref:`howto-migrate-to-poetry`
+* :ref:`howto-migrate-to-python`
+* :ref:`howto-migrate-to-uv`
 
-    migrate-plugins/index
+
+.. toctree::
+   :hidden:
+
+   manage-charmcraft
+   manage-charms
+   Manage 12-factor app charms <manage-web-app-charms/index>
+   manage-extensions
+   manage-resources
+   manage-libraries
+   manage-parts
+   manage-the-current-charmhub-user
+   manage-names
+   manage-revisions
+   manage-channels
+   manage-tracks
+   manage-icons
+   manage-bundles
+   Migrate plugins <migrate-plugins/index>
+   Build <build-guides/index>

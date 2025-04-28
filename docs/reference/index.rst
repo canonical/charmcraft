@@ -4,7 +4,7 @@ Reference
 =========
 
 The following reference material describes all of Charmcraft's key components and
-processes. This includes commands, extensions, charm project files, and more.
+processes. It includes commands, extensions, charm project files, and more.
 
 
 Command-line reference
@@ -13,78 +13,65 @@ Command-line reference
 The following pages document all of Charmcraft's commands, including their usage,
 options, and arguments:
 
-.. toctree::
-    :maxdepth: 2
-
-    commands/index
+* :ref:`reference-lifecycle-commands`
+* :ref:`reference-store-commands`
+* :ref:`reference-account-commands`
+* :ref:`reference-charm-commands`
+* :ref:`reference-library-commands`
+* :ref:`reference-extension-commands`
+* :ref:`reference-other-commands`
 
 
 Files
 -----
 
 In the context of Charmcraft, a *file* refers to any file in a project that can be
-initialised or packed. Such files have their contents documented in the following
-pages:
+initialized or packed. The files are documented in the following pages:
 
-.. toctree::
-    :maxdepth: 2
-
-    files/index
+* :ref:`actions-yaml-file`
+* :ref:`bundle-yaml-file`
+* :ref:`charmcraft-yaml-file`
+* :ref:`config-yaml-file`
+* :ref:`contributing-md-file`
+* :ref:`dispath-file`
+* :ref:`icon-svg-file`
+* :ref:`libname-py-file`
+* :ref:`license-file`
+* :ref:`lxd-profile-yaml-file`
+* :ref:`manifest-yaml-file`
+* :ref:`metadata-yaml-file`
+* :ref:`pyproject-toml-file`
+* :ref:`readme-md-file`
+* :ref:`requirements-dev-txt-file`
+* :ref:`requirements-txt-file`
+* :ref:`src-charm-py-file`
+* :ref:`src-workload-py-file`
+* :ref:`tests-integration-test-charm-py-file`
+* :ref:`tests-unit-test-charm-py-file`
+* :ref:`tox-ini-file`
 
 
 Plugins and extensions
 ----------------------
 
-Charmcraft's extensions allow you to initialize your project with template YAML and
-Ops-powered Python to remove the boilerplate steps of crafting charms for Django,
-FastAPI, Flask, and Go applications.
+Extensions help initialize your project with template YAML and Ops-powered Python to
+remove the boilerplate steps of crafting charms for Django, FastAPI, Flask, and Go
+applications.
 
-.. toctree::
-    :maxdepth: 2
-
-    profile
-    extensions/index
-    plugins/index
-
-
-Platforms
----------
-
-A charm project file's ``platforms`` key defines where the charm will be built and
-where it can run.
-
-.. toctree::
-    :maxdepth: 2
-
-    platforms
-
-
-Parts
------
-
-Parts provide a mechanism for your charm to obtain and process data from various
-sources.
-
-.. toctree::
-    :maxdepth: 2
-
-    parts/index
-
-
-Changelog
----------
-
-All changes to Charmcraft prior to version 3.4 are documented in the page below. For any
-newer changes, see :ref:`release-notes`.
-
-.. toctree::
-    :maxdepth: 1
-
-    changelog
+* :ref:`profile`
+* :ref:`extensions`
+* :ref:`plugins`
 
 
 .. toctree::
     :hidden:
 
     analyzers-and-linters
+    commands/index
+    extensions/index
+    files/index
+    parts/index
+    platforms
+    profile
     models/index
+    changelog

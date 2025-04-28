@@ -33,7 +33,7 @@ initialized or packed. The files are documented in the following pages:
 * :ref:`charmcraft-yaml-file`
 * :ref:`config-yaml-file`
 * :ref:`contributing-md-file`
-* :ref:`dispath-file`
+* :ref:`dispatch-file`
 * :ref:`icon-svg-file`
 * :ref:`libname-py-file`
 * :ref:`license-file`

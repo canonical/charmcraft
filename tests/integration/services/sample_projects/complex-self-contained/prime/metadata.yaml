@@ -64,7 +64,6 @@ storage:
     description: A nice block storage for me to use as swap space
     properties:
     - transient
-    shared: false
     type: block
 subordinate: false
 summary: A fully-defined charm, making use of all the available charm keywords.

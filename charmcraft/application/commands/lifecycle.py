@@ -216,7 +216,7 @@ class PackCommand(lifecycle.PackCommand):
         self,
         parsed_args: argparse.Namespace,
         step_name: str | None = None,
-        **kwargs: Any,  # noqa: ANN401 (allow dynamic typing)
+        **kwargs: Any,
     ) -> None:
         self._validate_args(parsed_args)
 

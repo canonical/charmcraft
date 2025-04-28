@@ -15,15 +15,14 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, FastAPI apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is a FastAPI app that
-    can be easily deployed, configured, scaled, integrated, etc.,
-    on any Kubernetes cluster.
+If you're new to the charming world, FastAPI apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The combined result is a FastAPI app that
+can be deployed, configured, scaled, integrated, and so on,
+on any Kubernetes cluster.
 
 
 What you'll need
@@ -38,12 +37,12 @@ What you'll need
 What you'll do
 --------------
 
-- Create a FastAPI app.
-- Use that to create a rock with Rockcraft.
-- Use that to create a charm with Charmcraft.
-- Use that to test, deploy, configure, etc., your FastAPI app on a local
-  Kubernetes cloud with Juju.
-- Repeat the process, mimicking a real development process.
+#. Create a FastAPI app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your FastAPI app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
 
 .. important::
 
@@ -80,12 +79,11 @@ Create the FastAPI app
 Start by creating the "Hello, world" FastAPI app that will be used for
 this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
-    :caption: requirements.txt
+    :caption: ~/fastapi-hello-world/requirements.txt
 
 .. note::
 
@@ -104,6 +102,7 @@ In the same directory, create a file called ``app.py``.
 Then copy and save the following code into the file:
 
 .. literalinclude:: code/fastapi/app.py
+    :caption: ~/fastapi-hello-world/app.py
     :language: python
 
 
@@ -139,7 +138,7 @@ Pack the FastAPI app into a rock
 First, we'll need a ``rockcraft.yaml`` file. Using the
 ``fastapi-framework`` profile, Rockcraft will automate the creation of
 ``rockcraft.yaml`` and tailor the file for a FastAPI app.
-From the ``/fastapi-hello-world`` directory, initialize the rock:
+From the ``~/fastapi-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -159,7 +158,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
 
     name: fastapi-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
@@ -182,15 +181,14 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``fastapi-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
+The ``platforms`` key must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash
 
     dpkg --print-architecture
 
-If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor and include ``arm64`` in ``platforms``.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 
@@ -210,7 +208,8 @@ minutes to finish.
 
 Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
-``Packed fastapi-hello-world_0.1_amd64.rock``.
+``Packed fastapi-hello-world_0.1_<architecture>.rock``. After the initial
+pack, subsequent rock packings are faster.
 
 .. note::
 
@@ -236,7 +235,7 @@ Copy the rock:
 Create the charm
 ----------------
 
-From the ``/fastapi-hello-world`` direcotyr, let's create a new directory
+From the ``~/fastapi-hello-world`` directory, let's create a new directory
 for the charm and change inside it:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -270,7 +269,7 @@ Check out the contents of ``charmcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: charmcraft.yaml
+    :caption: ~/fastapi-hello-world/charm/charmcraft.yaml
 
     # This file configures Charmcraft.
     # See https://juju.is/docs/sdk/charmcraft-config for guidance.
@@ -296,10 +295,16 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``fastapi-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor and include ``arm64``
-in ``platforms``.
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
 
-Let's pack the charm
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``fastapi-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/fastapi-hello-world/charm/`` directory.
+
+Let's pack the charm:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -317,7 +322,8 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed fastapi-hello-world_ubuntu-24.04-amd64.charm``.
+``Packed fastapi-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+pack, subsequent charm packings are faster.
 
 .. note::
 
@@ -337,11 +343,7 @@ the FastAPI app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will
-need to include a constraint to the Juju model to specify your
-architecture.
-
-Set the Juju model constraints with:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -372,7 +374,10 @@ It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
+
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
@@ -430,17 +435,18 @@ Configure the FastAPI app
 To demonstrate how to provide a configuration to the FastAPI app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the FastAPI app configuration under the
-keyword ``APP_GREETING``. Change back to the ``/fastapi-hello-world`` directory
+keyword ``APP_GREETING``. Change back to the ``~/fastapi-hello-world`` directory
 using ``cd ..`` and copy the following code into ``app.py``:
 
 .. literalinclude:: code/fastapi/greeting_app.py
+    :caption: ~/fastapi-hello-world/app.py
     :language: python
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: fastapi-hello-world
@@ -535,11 +541,12 @@ The charm created by the ``fastapi-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``/fastapi-hello-world`` directory using ``cd ..``,
+Go back out to the ``~/fastapi-hello-world`` directory using ``cd ..``,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 
 .. literalinclude:: code/fastapi/visitors_migrate.py
+    :caption: ~/fastapi-hello-world/migrate.py
     :language: python
 
 .. note::
@@ -552,7 +559,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: rockcraft.yaml
+    :caption: ~/fastapi-hello-world/rockcraft.yaml
     :emphasize-lines: 5
 
     name: fastapi-hello-world
@@ -579,7 +586,7 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: visitors_app.py
+.. collapse:: app.py
 
   .. literalinclude:: code/fastapi/visitors_app.py
       :language: python
@@ -617,7 +624,13 @@ Now let's deploy PostgreSQL and integrate it with the FastAPI app:
     :end-before: [docs:deploy-postgres-end]
     :dedent: 2
 
-Wait for ``juju status`` to show that the App is ``active`` again. Running
+Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the FastAPI app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the FastAPI app will not
+start until the database is ready.
+
+Running
 ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
 should still return the ``{"message":"Hi!"}`` greeting.
 
@@ -651,8 +664,21 @@ development process, including:
 - Configuring the app
 - Integrating the app with a database
 
-If you'd like to reset your working environment, you can run the following
-in the rock directory ``/fastapi-hello-world`` for the tutorial:
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
+
+.. code-block:: bash
+
+    exit
+
+And then you can proceed with its deletion:
+
+.. code-block:: bash
+
+    multipass delete charm-dev
+    multipass purge
+
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -660,19 +686,8 @@ in the rock directory ``/fastapi-hello-world`` for the tutorial:
     :end-before: [docs:clean-environment-end]
     :dedent: 2
 
-You can also clean up your Multipass instance. Start by exiting it:
-
-.. code-block:: bash
-
-    exit
-
-You can then proceed with its deletion:
-
-.. code-block:: bash
-
-    multipass delete charm-dev
-    multipass purge
-
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
 
 Next steps
 ----------

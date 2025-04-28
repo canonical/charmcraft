@@ -29,7 +29,6 @@ Otherwise, you can install ruff in your virtual environment with:
 uv tool install ruff
 ```
 
-
 ## Develop for the Charmcraft source
 
 Make changes as appropriate. Some existing ideas are in the
@@ -38,6 +37,7 @@ Make changes as appropriate. Some existing ideas are in the
 To test locally:
 
 ```bash
+source .venv/bin/activate
 CHARMCRAFT_DEVELOPER=1 python -m charmcraft
 ```
 
@@ -52,7 +52,6 @@ uv run pytest
 
 Contributions welcome!
 
-
 ## Contribute to the documentation
 
 Charmcraft stores its documentation source in the repository and tests it for errors.
@@ -60,7 +59,6 @@ Contributing to the documentation is similar to contributing to the code.
 
 Before you begin, [set up the development
 environment](#set-up-the-development-environment).
-
 
 ### Write the docs
 
@@ -74,7 +72,6 @@ style](https://canonical-documentation-with-sphinx-and-readthedocscom.readthedoc
 It uses Sphinx for linting and building, and employs the
 [Intersphinx](https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html)
 extension to link to the related Juju and ops library documentation.
-
 
 ### Build the docs
 
@@ -100,7 +97,6 @@ make docs-auto
 The server can be reached at [`127.0.0.1:8080`](http://127.0.0.1:8080) in a web browser.
 The server dynamically loads any changes you save to the documentation files, so you
 don't have to manually re-build every time you make a change.
-
 
 ### Test your work
 

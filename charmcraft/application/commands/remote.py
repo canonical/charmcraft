@@ -80,7 +80,7 @@ class RemoteBuild(ExtensibleCommand):
             help="Time in seconds to wait for launchpad to build.",
         )
 
-    def _run(self, parsed_args: argparse.Namespace, **kwargs: Any) -> int | None:  # noqa: ANN401
+    def _run(self, parsed_args: argparse.Namespace, **kwargs: Any) -> int | None:
         """Run the remote-build command.
 
         :param parsed_args: parsed argument namespace from craft_cli.

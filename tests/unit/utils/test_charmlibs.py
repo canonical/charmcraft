@@ -446,7 +446,7 @@ def test_getlibinternals_missing_internals_field(
 ):
     """Some internals field is not present."""
     monkeypatch.chdir(tmp_path)
-    kwargs = {arg: "" for arg in empty_args}
+    kwargs = dict.fromkeys(empty_args, "")
     test_path = _create_lib(**kwargs)
     with pytest.raises(CraftError) as err:
         get_lib_internals(lib_path=test_path)

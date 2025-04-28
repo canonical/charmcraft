@@ -66,7 +66,7 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    Prefer lowercase alphanumeric names, and use hyphens (-) to separate words. For
     charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some action names be dashed and some be underscored.
@@ -501,10 +501,10 @@ secret URI.
 
 .. tip::
 
-  For very complex applications, consider providing "configuration profiles",
+  For very complex applications, consider providing configuration profiles,
   which can group values for large configs together. For example,
-  "profile: large" that tweaks multiple options under the hood to optimise for
-  larger deployments, or "profile: ci" for limited resource usage during
+  a ``profile: large`` that tweaks multiple options under the hood to optimize for
+  larger deployments, or a ``profile: ci`` for limited resource usage during
   testing.
 
 
@@ -688,11 +688,11 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
     hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
     For example, ``argo-server-k8s``.
 
-    Include the '-k8s' suffix on all charms that run on a Kubernetes cloud,
+    Include the ``-k8s`` suffix on all charms that run on a Kubernetes cloud,
     unless the charm has no workload or you know that there will never be
     a machine version of the charm.
 
-    Don't include an organisation or publisher in the name.
+    Don't include an organization or publisher in the name.
 
     Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a
     repository, see :ref:`initialise-a-charm`.

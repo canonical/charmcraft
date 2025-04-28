@@ -39,6 +39,7 @@ class _AppBase(Extension):
         {"lib": "saml_integrator.saml", "version": "0"},
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
         {"lib": "smtp_integrator.smtp", "version": "0"},
+        {"lib": "openfga_k8s.openfga", "version": "1"},
     ]
 
     @staticmethod

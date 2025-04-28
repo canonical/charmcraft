@@ -9,7 +9,6 @@ system that charmcraft uses.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    /common/craft-parts/reference/part_properties
    /common/craft-parts/reference/parts_steps

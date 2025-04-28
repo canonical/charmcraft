@@ -471,17 +471,10 @@ secret URI.
 .. admonition:: Best practice
     :class: hint
 
-    Make the user experience of the operator as smooth as possible. The
-    application should be deployable without providing any further configuration
-    options: ``juju deploy foo`` is preferable to
-    ``juju deploy foo --config required-option=value``.
-
-.. admonition:: Best practice
-    :class: hint
-
     Just like Juju, a charm is an opinionated tool. Configure the application
-    with the best defaults, and only expose application configuration options
-    when necessary.
+    with the best defaults (ideally the application is deployable without
+    providing any configuration at deploy time), and only expose application
+    configuration options when necessary.
 
 .. admonition:: Best practice
     :class: hint
@@ -491,21 +484,11 @@ secret URI.
     change them, and it is better to be consistent within a charm then to have
     some config names be dashed and some be underscored.
 
-.. admonition:: Best practice
-    :class: hint
-
-    The description is a string type. YAML supports two types of formats for
-    that: ``block scalar`` and ``flow scalar``. Prefer the block style
-    (using ``|``) to keep newlines. Using ``>`` will replace newlines with
-    spaces and make the result harder to read on Charmhub.
-
-.. tip::
-
-  For very complex applications, consider providing configuration profiles,
-  which can group values for large configs together. For example,
-  a ``profile: large`` that tweaks multiple options under the hood to optimize for
-  larger deployments, or a ``profile: ci`` for limited resource usage during
-  testing.
+For very complex applications, consider providing configuration profiles,
+which can group values for large configs together. For example,
+a ``profile: large`` that tweaks multiple options under the hood to optimize for
+larger deployments, or a ``profile: ci`` for limited resource usage during
+testing.
 
 
 .. _charmcraft-yaml-key-containers:

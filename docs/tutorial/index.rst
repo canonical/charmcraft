@@ -3,18 +3,25 @@
 Tutorial
 ========
 
-Our tutorial comes in multiple flavours -- pick your flavour of choice!
+The Charmcraft tutorials are the best entry point for anyone new to making charms. They
+teach the basics of charming from functional, reproducible examples.
 
-.. note::
 
-    Currently all our tutorial flavours demonstrate Charmcraft in combination with
-    an 12-factor app extension -- a journey that doesn't require any `ops <Operator
-    framework>`_ and which don't currently include publishing the charm. To get a
-    sense of the workflow for other types of apps and including the publication step,
-    see :ref:`manage-charms`.
+12-factor app extensions
+------------------------
+
+Charmcraft's extensions enable you to build Django, FastAPI, Flask, and Go applications
+with just a few modifications to the YAML template content. To familiarize yourself
+with one of these workflows, start with its tutorial:
+
+* :ref:`write-your-first-kubernetes-charm-for-a-django-app`
+* :ref:`write-your-first-kubernetes-charm-for-a-fastapi-app`
+* :ref:`write-your-first-kubernetes-charm-for-a-flask-app`
+* :ref:`write-your-first-kubernetes-charm-for-a-go-app`
+
 
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
     kubernetes-charm-django
     kubernetes-charm-fastapi

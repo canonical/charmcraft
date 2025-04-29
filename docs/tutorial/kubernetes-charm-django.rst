@@ -165,9 +165,11 @@ original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Django app into a rock
 -------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``django-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Django app. Change
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``django-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Django app. Change
 back into the ``~/django-hello-world`` directory and initialize the rock:
 
 .. code-block:: bash
@@ -226,8 +228,7 @@ upgrade -- and this database wouldn't be shared by all containers as the
 app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
-the app with a database. From the ``~/django-hello-world`` directory, open
-``django_hello_world/django_hello_world/settings.py`` and update the
+the app with a database. Open the file and update the
 imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
@@ -300,13 +301,9 @@ finish.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_<architecture>.rock``. After the initial
+``Packed django-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in a Kubernetes cluster.
@@ -336,11 +333,12 @@ the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``django-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``django-framework`` profile, Charmcraft
+automates the creation of the files needed for our charm, including a
 ``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Django
-app.
+The source code contains the logic required to operate the Django app.
 
 Initialize a charm named ``django-hello-world``:
 
@@ -352,7 +350,8 @@ Initialize a charm named ``django-hello-world``:
 
 The files will automatically be created in your working directory.
 
-We will need to connect the Django app to the PostgreSQL database.
+We will need to integrate our Django app to the PostgreSQL database,
+which means we must declare a requirement in the charm project file.
 Open the ``charmcraft.yaml`` file and add the following section to the end
 of the file:
 
@@ -373,24 +372,14 @@ Now let's pack the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-    in the pack command for older versions of Charmcraft.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-amd64.charm``. After the initial
+``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
-
 
 Deploy the Django app
 ---------------------

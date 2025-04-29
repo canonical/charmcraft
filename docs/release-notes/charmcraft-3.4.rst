@@ -167,6 +167,12 @@ Charmcraft 3.4.4
 
 - `#2194 <https://github.com/canonical/charmcraft/issues/2194>`_ Charmcraft overwrites reactive charm's ``config.yaml``
 
+Charmcraft 3.4.5
+~~~~~~~~~~~~~~~~
+
+- Snap dependencies were updated to resolve `CVE-2025-43859
+  <https://www.cve.org/CVERecord?id=CVE-2025-43859>`_
+
 Contributors
 ------------
 

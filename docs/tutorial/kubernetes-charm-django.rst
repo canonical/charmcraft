@@ -286,7 +286,9 @@ We will also use PostgreSQL as the database for our Django app. In
         }
     }
 
-Save and close the ``settings.py`` file.
+Save and close the ``settings.py`` file. The app will no longer run locally
+due to these changes, and we can't test the app until we've deployed
+the app and connected it to the PostgreSQL database.
 
 Now let's pack the rock:
 

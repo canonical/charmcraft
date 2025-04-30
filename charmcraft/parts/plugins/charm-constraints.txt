@@ -1,0 +1,4 @@
+# Constraint to work around circular dependencies in setuptools-scm:
+# https://github.com/pypa/setuptools-scm/issues/1131
+# https://github.com/canonical/charmcraft/issues/2259
+setuptools_scm < 8.2.0; python_version < "3.10"

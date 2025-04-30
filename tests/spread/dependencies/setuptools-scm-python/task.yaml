@@ -1,0 +1,13 @@
+summary: Test workaround for setuptools-scm circular dependencies
+
+environment:
+  PLUGIN/charm: charm
+
+prepare: |
+  cp charmcraft-${PLUGIN}.yaml charmcraft.yaml
+
+execute: |
+  charmcraft pack
+
+restore: |
+  charmcraft clean

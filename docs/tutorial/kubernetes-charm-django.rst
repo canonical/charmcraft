@@ -337,8 +337,8 @@ Similar to the rock, we'll take advantage of a pre-defined extension in
 Charmcraft with the ``--profile`` flag that caters initial charm files for
 specific web app frameworks. Using the ``django-framework`` profile, Charmcraft
 automates the creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Django app.
+``charmcraft.yaml`` project file, ``requirements.txt`` and source code for the
+charm. The source code contains the logic required to operate the Django app.
 
 Initialize a charm named ``django-hello-world``:
 
@@ -352,10 +352,10 @@ The files will automatically be created in your working directory.
 
 We will need to integrate our Django app to the PostgreSQL database,
 which means we must declare a requirement in the charm project file.
-Open the ``charmcraft.yaml`` file and add the following section to the end
-of the file:
+Edit the project file by adding the following section to the end:
 
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
+    :caption: ~/django-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. tip::

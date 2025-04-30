@@ -135,6 +135,9 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the FastAPI app into a rock
 --------------------------------
 
+Now let's create a container image for our FastAPI app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
 First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
 pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the

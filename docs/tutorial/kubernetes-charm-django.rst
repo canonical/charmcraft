@@ -381,6 +381,10 @@ respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
+.. seealso::
+
+    :ref:`ref_commands_pack`
+
 Deploy the Django app
 ---------------------
 

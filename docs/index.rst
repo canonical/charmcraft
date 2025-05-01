@@ -9,6 +9,7 @@ Charmcraft
 
     tutorial/index
     howto/index
+    explanation/index
     reference/index
     release-notes/index
 
@@ -58,11 +59,11 @@ In this documentation
 
         **Technical information**, including commands, extensions, and project files
 
-.. grid-item-card: Explanation
-    :link: explanation/index
-    :link-type: doc
+    .. grid-item-card:: Explanation
+        :link: explanation/index
+        :link-type: doc
 
-    **Discussion and clarification** of key topics
+        **Discussion and clarification** of key topics
 
 
 Project and community

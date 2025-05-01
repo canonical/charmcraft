@@ -19,11 +19,9 @@ parts:
     after: [python-deps]
     plugin: python
     source: .
-    # build-environment:
-    #   - PIP_CONSTRAINT: constraints.txt
+    build-environment:
+      - PIP_CONSTRAINT: constraints.txt
     build-packages:
       - python3-pip
     python-requirements:
       - requirements.txt
-    python-constraints:
-      - constraints.txt

@@ -289,7 +289,11 @@ Deploy the Flask app
 --------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Flask app. Let's create a new model:
+the Flask app. The Juju model holds the application along any supporting
+components. In this tutorial, our model will hold the Flask app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

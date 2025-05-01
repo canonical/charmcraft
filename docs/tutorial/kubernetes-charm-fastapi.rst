@@ -337,7 +337,11 @@ Deploy the FastAPI app
 ----------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the FastAPI app. Let's create a new model:
+the FastAPI app. The Juju model holds the application along any supporting
+components. In this tutorial, our model will hold the FastAPI app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

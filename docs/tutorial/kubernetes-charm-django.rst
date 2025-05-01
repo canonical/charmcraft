@@ -394,7 +394,11 @@ Deploy the Django app
 ---------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Django app. Let's create a new model:
+the Django app. The Juju model holds the application along any supporting
+components. In this tutorial, our model will hold the Django app, the
+PostgreSQL database, and ingress.
+
+Let's create a new model:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

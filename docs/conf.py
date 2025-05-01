@@ -133,6 +133,18 @@ exclude_patterns = [
     "reuse/tutorial/*"
 ]
 
+# Adds custom CSS files, located under 'html_static_path'
+
+html_css_files = [
+    "cookie-banner.css",
+]
+
+# Adds custom JavaScript files, located under 'html_static_path'
+
+html_js_files = [
+    'js/bundle.js',
+]
+
 rst_epilog = """
 .. include:: /reuse/links.txt
 """

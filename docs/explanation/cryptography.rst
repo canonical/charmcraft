@@ -7,7 +7,7 @@ Charmcraft uses cryptographic technologies to fetch arbitrary files over the int
 communicate with local processes, and store credentials. It does not directly implement
 its own cryptography, but it does depend on external libraries to do so.
 
-Charmcraft is built upon `Craft Application`_ and derives much of its functionality from
+Charmcraft is built on `Craft Application`_ and derives much of its functionality from
 it, so much of Charmcraft's cryptographic functionality is described in `Cryptographic
 technology in Craft Application`_. The additional cryptography functionality in
 Charmcraft is documented below.
@@ -15,9 +15,10 @@ Charmcraft is documented below.
 Local Docker images
 ~~~~~~~~~~~~~~~~~~~
 
-Charmcraft uses the `Docker SDK for Python`_ to communicate with a local Docker instance
-(if one is installed or running). This communicates with Docker over a Unix-domain
-socket if the user running Charmcraft has the necessary permission.
+If a Docker instance is installed or running on the host and a user references a local
+Docker image in the ``upload-resource`` command, Charmcraft uses the `Docker SDK for
+Python`_ to communicate with it. The SDK communicates with Docker over a
+Unix-domain socket if the user running Charmcraft has the necessary permission.
 
 Container image registries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

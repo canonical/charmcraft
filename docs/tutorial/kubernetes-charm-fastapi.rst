@@ -249,8 +249,9 @@ Similar to the rock, we'll take advantage of a pre-defined extension in
 Charmcraft with the ``--profile`` flag that caters initial charm files for
 specific web app frameworks. Using the ``fastapi-framework`` profile,
 Charmcraft automates the creation of the files needed for our charm,
-including a ``charmcraft.yaml``, ``requirements.txt`` and source code for the
-charm. The source code contains the logic required to operate the FastAPI app.
+including a ``charmcraft.yaml`` project file, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the
+FastAPI app.
 
 Initialize a charm named ``fastapi-hello-world``:
 
@@ -296,9 +297,8 @@ The top of the file should look similar to the following snippet:
     ...
 
 Verify that the ``name`` is ``fastapi-hello-world``. Ensure that ``platforms``
-includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
-``arm64`` in ``platforms``.
+includes the architecture of your host. Edit the ``platforms`` key in the
+project file if required.
 
 .. tip::
 

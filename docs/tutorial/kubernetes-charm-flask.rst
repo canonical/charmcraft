@@ -244,8 +244,9 @@ Similar to the rock, we'll take advantage of a pre-defined extension in
 Charmcraft with the ``--profile`` flag that caters initial charm files for
 specific web app frameworks. Using the ``flask-framework`` profile,
 Charmcraft automates the creation of the files needed for our charm,
-including a ``charmcraft.yaml``, ``requirements.txt`` and source code for the
-charm. The source code contains the logic required to operate the Flask app.
+including a ``charmcraft.yaml`` project file, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the
+Flask app.
 
 Initialize a charm named ``flask-hello-world``:
 

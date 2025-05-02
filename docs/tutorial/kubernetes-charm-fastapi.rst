@@ -328,9 +328,9 @@ respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
-.. seealso::
+.. admonition:: For more options when packing charms
 
-    :ref:`ref_commands_pack`
+    See the :literalref:`ref_commands_pack` command reference.
 
 
 Deploy the FastAPI app

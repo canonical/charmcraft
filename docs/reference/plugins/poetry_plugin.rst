@@ -49,3 +49,7 @@ the charm for Ubuntu 24.04:
 .. _Poetry: https://python-poetry.org
 .. _dependency groups: https://python-poetry.org/docs/managing-dependencies#dependency-groups
 .. _environment variables to configure Poetry: https://python-poetry.org/docs/configuration/#using-environment-variables
+
+
+.. include:: /common/craft-parts/reference/plugins/poetry_plugin.rst
+    :start-after: .. _craft_parts_poetry_links:

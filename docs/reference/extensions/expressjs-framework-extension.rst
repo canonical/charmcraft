@@ -26,26 +26,30 @@ The predefined configuration options for the ``expressjs-framework`` are:
   using this port. The environment variable passed to the app is ``PORT``. Default value
   is 8080.
 
-* **app-secret-key**: Long secret you can use for sessions, csrf or any other thing
+* **app-secret-key**: A secret you can use for sessions, csrf or any other thing
   where you need a random secret shared by all units. The environment variable passed to
-  the app is ``APP_SECRET_KEY``. The default value is random.
+  the app is ``APP_SECRET_KEY``. The default value is a 64 byte Base64 encoded random
+  string.
 
-* **metrics-port**: Port where the prometheus metrics will be scraped. The environment
+* **metrics-port**: Port where the Prometheus metrics will be scraped. The environment
   variable passed to the app is ``METRICS_PORT``. Default value is 8080.
 
-* **metrics-path**: Path where the prometheus metrics will be scraped. The environment
+* **metrics-path**: Path where the Prometheus metrics will be scraped. The environment
   variable passed to the app is ``METRICS_PATH``. Default value is ``/metrics``.
 
 .. note::
 
     The ``metrics-port`` and ``metrics-path`` options are not mandatory. If you don't
-    define them, the charm will use the default values. If you want to use them you need
-    to use it in your application code, charm only defines the environment variables.
+    define the ``metrics-port`` and ``metrics-path`` options, the charm will use the
+    default values. If you want to make use of these configuration options you need
+    to use them in your application code. The charm only defines the environment
+    variables.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
 generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where the option name
-is converted to upper case and dashes are converted to underscores.
+is converted to upper case, dashes are converted to underscores and ``APP_`` is added at
+the front.
 
 In either case, you will be able to set it in the usual way by running ``juju config
 <application> <option>=<value>``. For example, if you define an option called ``token``,
@@ -53,6 +57,8 @@ as below, this will generate a ``APP_TOKEN`` environment variable, and a user of
 charm can set it by running ``juju config <application> token=<token>``.
 
 .. code-block:: yaml
+
+    :caption: charmcraft.yaml
 
     config:
       options:

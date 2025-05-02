@@ -128,9 +128,14 @@ def test_charmplugin_get_build_commands_ubuntu(
     mock_id.return_value = "ubuntu"
     mock_version.return_value = "22.04"
 
+    pip_constraint_file = (
+        pathlib.Path(parts.plugins.__file__).parent / "charm-constraints.txt"
+    )
+
     assert charm_plugin.get_build_commands() == [
         "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
         "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        f"PIP_CONSTRAINT={pip_constraint_file} "
         "PATH=/some/path SNAP=snap_value "
         "SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "
@@ -176,9 +181,14 @@ def test_charmplugin_get_build_commands_centos_7(
     mock_id.return_value = "centos"
     mock_version.return_value = "7"
 
+    pip_constraint_file = (
+        pathlib.Path(parts.plugins.__file__).parent / "charm-constraints.txt"
+    )
+
     assert charm_plugin.get_build_commands() == [
         "env -i LANG=C.UTF-8 LC_ALL=C.UTF-8 "
         "CRYPTOGRAPHY_OPENSSL_NO_LEGACY=true "
+        f"PIP_CONSTRAINT={pip_constraint_file} "
         "PATH=/opt/rh/rh-python38/root/usr/bin:/some/path "
         "SNAP=snap_value SNAP_ARCH=snap_arch_value SNAP_NAME=snap_name_value "
         "SNAP_VERSION=snap_version_value http_proxy=http_proxy_value "

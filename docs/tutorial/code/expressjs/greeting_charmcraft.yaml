@@ -1,0 +1,9 @@
+# configuration snippet for ExpressJS application
+
+config:
+  options:
+    greeting:
+      description: |
+        The greeting to be returned by the ExpressJS application.
+      default: "Hello, world!"
+      type: string

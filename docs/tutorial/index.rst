@@ -17,6 +17,7 @@ Our tutorial comes in multiple flavours -- pick your flavour of choice!
     :maxdepth: 2
 
     kubernetes-charm-django
+    kubernetes-charm-expressjs
     kubernetes-charm-fastapi
     kubernetes-charm-flask
     kubernetes-charm-go

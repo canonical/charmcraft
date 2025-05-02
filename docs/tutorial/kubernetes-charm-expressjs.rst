@@ -1,0 +1,758 @@
+.. _write-your-first-kubernetes-charm-for-a-expressjs-app:
+
+Write your first Kubernetes charm for an ExpressJS app
+======================================================
+
+Imagine you have an ExpressJS app backed up by a database
+such as PostgreSQL and need to deploy it. In a traditional setup,
+this can be quite a challenge, but with Charmcraft you'll find
+yourself packaging and deploying your ExpressJS app in no time.
+
+
+In this tutorial we will build a Kubernetes charm for an ExpressJS
+app using Charmcraft, so we can have an ExpressJS app
+up and running with Juju. Let's get started!
+
+This tutorial should take 90 minutes for you to complete.
+
+.. note::
+    If you're new to the charming world, ExpressJS apps are
+    specifically supported with a template to quickly generate a
+    **rock** and a matching template to generate a **charm**.
+    A rock is a special kind of OCI-compliant container image, while a
+    charm is a software operator for cloud operations that use the Juju
+    orchestration engine. The result is a ExpressJS app that
+    can be easily deployed, configured, scaled, integrated, etc.,
+    on any Kubernetes cluster.
+
+
+What you'll need
+----------------
+
+- A local system, e.g., a laptop, with AMD64 or ARM64 architecture which
+  has sufficient resources to launch a virtual machine with 4 CPUs,
+  4 GB RAM, and a 50 GB disk.
+- Familiarity with Linux.
+
+
+What you'll do
+--------------
+
+#. Create an ExpressJS app.
+#. Use that to create a rock with Rockcraft.
+#. Use that to create a charm with Charmcraft.
+#. Use that to test, deploy, configure, etc., your ExpressJS app on a local
+   Kubernetes cloud with Juju.
+#. Repeat the process, mimicking a real development process.
+
+.. important::
+
+    Should you get stuck or notice issues, please get in touch on
+    `Matrix <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_ or
+    `Discourse <https://discourse.charmhub.io/>`_
+
+
+Set things up
+-------------
+
+.. include:: /reuse/tutorial/setup_edge.rst
+.. |12FactorApp| replace:: ExpressJS
+
+Finally, let's create a new directory for this tutorial and
+enter into it:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:create-working-dir]
+    :end-before: [docs:create-working-dir-end]
+    :dedent: 2
+
+
+Create the ExpressJS app
+-----------------
+
+Start by creating the "Hello, world" ExpressJS app that will be
+used for this tutorial.
+
+Install ``npm`` and ``express-generator`` to initialize the ExpressJS module:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:install-init-expressjs]
+    :end-before: [docs:install-init-expressjs-end]
+    :dedent: 2
+
+
+Run the ExpressJS app locally
+----------------------
+
+First, we need to install the necessary packages for the ExpressJS app so it can run:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:build-expressjs]
+    :end-before: [docs:build-expressjs-end]
+    :dedent: 2
+
+Now that we have the packages installed, let's run the ExpressJS app to verify
+that it works:
+
+.. code-block:: bash
+
+   npm start
+
+Test the ExpressJS app by using ``curl`` to send a request to the root
+endpoint. You will need a new terminal for this; use
+``multipass shell charm-dev`` to open a new terminal in Multipass:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:curl-expressjs]
+    :end-before: [docs:curl-expressjs-end]
+    :dedent: 2
+
+The ExpressJS app should respond with ``Welcome to Express`` web page.
+
+.. note::
+
+    The response from the ExpressJS application includes HTML and CSS
+    which makes it difficult to read on a terminal. Visit http://localhost:3000
+    using a browser to see the fully rendered page. If you are using
+    Multipass, you can use the IP address of the VM to access the
+    ExpressJS app. You can find the IP address of the VM using
+    ``multipass list``. For example, http://vm-ip:3000
+
+The ExpressJS app looks good, so we can stop it for now from the
+original terminal using :kbd:`Ctrl` + :kbd:`C`.
+
+
+Pack the ExpressJS app into a rock
+---------------------------
+
+First, we'll need a ``rockcraft.yaml`` file. Using the
+``expressjs-framework`` profile, Rockcraft will automate the creation of
+``rockcraft.yaml`` and tailor the file for an ExpressJS app.
+From the ``~/expressjs-hello-world`` directory, initialize the rock:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:create-rockcraft-yaml]
+    :end-before: [docs:create-rockcraft-yaml-end]
+    :dedent: 2
+
+The ``rockcraft.yaml`` file will automatically be created and set the name
+based on your working directory.
+
+Check out the contents of ``rockcraft.yaml``:
+
+.. code-block:: bash
+
+    cat rockcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code-block:: yaml
+    :caption: ~/expressjs-hello-world/rockcraft.yaml
+
+    name: expressjs-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: bare # as an alternative, a ubuntu base can be used
+    build-base: ubuntu@24.04 # build-base is required when the base is bare
+    version: '0.1' # just for humans. Semantic versioning is recommended
+    summary: A summary of your ExpressJS app # 79 char long summary
+    description: |
+        This is expressjs-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
+
+Verfiy that the ``name`` is ``expressjs-hello-world``.
+
+Ensure that ``platforms`` includes the architecture of your host. Check
+the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
+
+If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
+text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
+
+Now let's pack the rock:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:pack]
+    :end-before: [docs:pack-end]
+    :dedent: 2
+
+.. note::
+
+    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the ExpressJS
+    extension is experimental.
+
+Depending on your system and network, this step can take several
+minutes to finish.
+
+Once Rockcraft has finished packing the ExpressJS rock,
+the terminal will respond with something similar to
+``Packed expressjs-hello-world_0.1_amd64.rock``.
+
+.. note::
+
+    If you aren't on AMD64 architecture, the name of the ``.rock`` file
+    will be different for you.
+
+The rock needs to be copied to the MicroK8s registry, which stores OCI
+archives so they can be downloaded and deployed in the Kubernetes cluster.
+Copy the rock:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:skopeo-copy]
+    :end-before: [docs:skopeo-copy-end]
+    :dedent: 2
+
+.. seealso::
+
+    `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
+
+
+Create the charm
+----------------
+
+From the ``~/expressjs-hello-world`` directory, let's create a new directory
+for the charm and change inside it:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:create-charm-dir]
+    :end-before: [docs:create-charm-dir-end]
+    :dedent: 2
+
+Using the ``expressjs-framework`` profile, Charmcraft will automate the
+creation of the files needed for our charm, including a
+``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
+The source code contains the logic required to operate the ExpressJS
+app.
+
+Initialize a charm named ``expressjs-hello-world``:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:charm-init]
+    :end-before: [docs:charm-init-end]
+    :dedent: 2
+
+The files will automatically be created in your working directory.
+
+Check out the contents of ``charmcraft.yaml``:
+
+.. code-block:: bash
+
+    cat charmcraft.yaml
+
+The top of the file should look similar to the following snippet:
+
+.. code-block:: yaml
+    :caption: ~/expressjs-hello-world/charm/charmcraft.yaml
+
+    # This file configures Charmcraft.
+    # See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+    name: expressjs-hello-world
+
+    type: charm
+
+    base: ubuntu@24.04
+
+    # the platforms this charm should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+      amd64:
+      # arm64:
+      # ppc64el:
+      # s390x:
+
+    # (Required)
+    summary: A very short one-line summary of the ExpressJS app.
+
+    ...
+
+Verify that the ``name`` is ``expressjs-hello-world``. Ensure that ``platforms``
+includes the architecture of your host. If your host uses the ARM architecture,
+open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
+``arm64`` in ``platforms``.
+
+Let's pack the charm:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:charm-pack]
+    :end-before: [docs:charm-pack-end]
+    :dedent: 2
+
+.. note::
+
+    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the ExpressJS
+    extension is experimental.
+
+Depending on your system and network, this step can take several
+minutes to finish.
+
+Once Charmcraft has finished packing the charm, the terminal will
+respond with something similar to
+``Packed expressjs-hello-world_ubuntu-24.04-amd64.charm``.
+
+.. note::
+
+    If you aren't on AMD64 architecture, the name of the ``.charm``
+    file will be different for you.
+
+
+Deploy the ExpressJS app
+-----------------
+
+A Juju model is needed to handle Kubernetes resources while deploying
+the ExpressJS app. Let's create a new model:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:add-juju-model]
+    :end-before: [docs:add-juju-model-end]
+    :dedent: 2
+
+If you aren't on a host with the AMD64 architecture, you will need to include
+to include a constraint to the Juju model to specify your architecture.
+
+Set the Juju model constraints with:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:add-model-constraints]
+    :end-before: [docs:add-model-constraints-end]
+    :dedent: 2
+
+Now let's use the OCI image we previously uploaded to deploy the ExpressJS
+app. Deploy using Juju by specifying the OCI image name with the
+``--resource`` option:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-expressjs-app]
+    :end-before: [docs:deploy-expressjs-app-end]
+    :dedent: 2
+
+It will take a few minutes to deploy the ExpressJS app. You can monitor its
+progress with:
+
+.. code-block:: bash
+
+    juju status --watch 2s
+
+It can take a couple of minutes for the app to finish the deployment.
+Once the status of the App has gone to ``active``, you can stop watching
+using :kbd:`Ctrl` + :kbd:`C`.
+
+.. seealso::
+
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+
+The ExpressJS app should now be running. We can monitor the status of
+the deployment using ``juju status``, which should be similar to the
+following output:
+
+.. terminal::
+    :input: juju status
+
+    Model                  Controller      Cloud/Region        Version  SLA          Timestamp
+    expressjs-hello-world  dev-controller  microk8s/localhost  3.6.5    unsupported  12:24:51+03:00
+
+    App                    Version  Status  Scale  Charm                  Channel  Rev  Address        Exposed  Message
+    expressjs-hello-world           active      1  expressjs-hello-world             0  10.152.183.38  no
+
+    Unit                      Workload  Agent  Address      Ports  Message
+    expressjs-hello-world/0*  active    idle   10.1.157.75
+
+Let's expose the app using ingress. Deploy the
+``nginx-ingress-integrator`` charm and integrate it with the ExpressJS app:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-nginx]
+    :end-before: [docs:deploy-nginx-end]
+    :dedent: 2
+
+The hostname of the app needs to be defined so that it is accessible via
+the ingress. We will also set the default route to be the root endpoint:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:config-nginx]
+    :end-before: [docs:config-nginx-end]
+    :dedent: 2
+
+.. note::
+
+    By default, the port for the ExpressJS app should be 8080. If you want to change
+    the default port, it can be done with the configuration option ``port`` that
+    will be exposed as the ``PORT`` to the ExpressJS app.
+
+Monitor ``juju status`` until everything has a status of ``active``.
+
+Use ``curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
+to send a request via the ingress. It should return the
+``Hello, world!`` greeting.
+
+.. note::
+
+    The ``--resolve expressjs-hello-world:80:127.0.0.1`` option to the ``curl``
+    command is a way of resolving the hostname of the request without
+    setting a DNS record.
+
+
+Configure the ExpressJS app
+--------------------
+
+To demonstrate how to provide a configuration to the ExpressJS app,
+we will make the greeting configurable. We will expect this
+configuration option to be available in the ExpressJS app configuration under the
+keyword ``GREETING``. Change to the ``~/expressjs-hello-world/app/routes``
+directory using ``cd ../app/routes`` and replace the code into ``index.js`` with
+the following:
+
+.. literalinclude:: code/expressjs/greeting_index.js
+    :caption: ~/expressjs-hello-world/app/routes/index.js
+    :language: javascript
+
+Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
+top of the ``rockcraft.yaml`` file looks similar to the following:
+
+.. code-block:: yaml
+    :caption: ~/expressjs-hello-world/rockcraft.yaml
+    :emphasize-lines: 6
+
+    name: expressjs-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: bare # as an alternative, a ubuntu base can be used
+    build-base: ubuntu@24.04 # build-base is required when the base is bare
+    version: '0.2' # just for humans. Semantic versioning is recommended
+    summary: A summary of your ExpressJS app # 79 char long summary
+    description: |
+        This is expressjs-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
+
+Let's pack and upload the rock:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:docker-update]
+    :end-before: [docs:docker-update-end]
+    :dedent: 2
+
+Change back into the charm directory using ``cd charm``.
+
+The ``expressjs-framework`` Charmcraft extension supports adding configurations
+to ``charmcraft.yaml``, which will be passed as environment variables to
+the ExpressJS app. Add the following to the end of the
+``charmcraft.yaml`` file:
+
+.. literalinclude:: code/expressjs/greeting_charmcraft.yaml
+    :language: yaml
+
+.. note::
+
+    Configuration options are automatically capitalized and ``-`` are replaced
+    by ``_``. An ``APP_`` prefix will also be added as a namespace
+    for app configurations.
+
+We can now pack and deploy the new version of the ExpressJS app:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-deployment]
+    :end-before: [docs:refresh-deployment-end]
+    :dedent: 2
+
+After we wait for a bit monitoring ``juju status`` the app
+should go back to ``active`` again. Verify that the new configuration
+has been added using
+``juju config expressjs-hello-world | grep -A 6 greeting:``,
+which should show the configuration option.
+
+Using ``curl http://expressjs-hello-world  --resolve \
+expressjs-hello-world:80:127.0.0.1``
+shows that the response is still ``Hello, world!`` as expected.
+
+Now let's change the greeting:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:change-config]
+    :end-before: [docs:change-config-end]
+    :dedent: 2
+
+After we wait for a moment for the app to be restarted, using
+``curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
+should now return the updated ``Hi!`` greeting.
+
+
+Integrate with a database
+-------------------------
+
+Now let's keep track of how many visitors your app has received.
+This will require integration with a database to keep the visitor count.
+This will require a few changes:
+
+- We will need to create a database migration that creates the ``visitors`` table.
+- We will need to keep track how many times the root endpoint has been called
+  in the database.
+- We will need to add a new endpoint to retrieve the number of visitors from
+  the database.
+
+Let's start with the database migration to create the required tables.
+The charm created by the ``expressjs-framework`` extension will execute the
+``migrate.sh`` script if it exists. This script should ensure that the
+database is initialized and ready to be used by the app. We will
+create a ``migrate.sh`` file containing this logic.
+
+ExpressJS back out to the ``~/expressjs-hello-world/app`` directory using ``cd ../app``.
+Create the ``migrate.sh`` file using a text editor and paste the
+following code into it:
+
+.. literalinclude:: code/expressjs/visitors_migrate.sh
+    :caption: ~/expressjs-hello-world/app/migrate.sh
+    :language: bash
+
+.. note::
+
+    The charm will pass the Database connection string in the
+    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
+    PostgreSQL has been integrated with the charm.
+
+Change the permissions of the file ``migrate.sh`` so that it is executable:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:change-migrate-permissions]
+    :end-before: [docs:change-migrate-permissions-end]
+    :dedent: 2
+
+For the migrations to work, we need the ``postgresql-client`` package
+installed in the rock. By default, the ``expressjs-framework`` uses the ``bare``
+base, so we will also need to install a shell interpreter. Let's do it as a
+slice, so that the rock doesn't include unnecessary files. Open the
+``rockcraft.yaml`` file using a text editor and add the following to the
+end of the file:
+
+.. literalinclude:: code/expressjs/visitors_rockcraft.yaml
+    :language: yaml
+
+Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
+top of the ``rockcraft.yaml`` file looks similar to the following:
+
+.. code-block:: yaml
+    :caption: ~/expressjs-hello-world/rockcraft.yaml
+    :emphasize-lines: 6
+
+    name: expressjs-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: bare # as an alternative, a ubuntu base can be used
+    build-base: ubuntu@24.04 # build-base is required when the base is bare
+    version: '0.3' # just for humans. Semantic versioning is recommended
+    summary: A summary of your ExpressJS app # 79 char long summary
+    description: |
+        This is expressjs-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
+
+To be able to connect to PostgreSQL from the ExpressJS app, the library
+``pg-promise`` will be used. The app code needs to be updated to keep track of
+the number of visitors and to include a new endpoint to retrieve the
+number of visitors. Create a new file called
+``visitors.js`` in the ``~/expressjs-hello-world/app/routes`` directory
+and paste the following code into it:
+
+.. literalinclude:: code/expressjs/visitors.js
+    :caption: ~/expressjs-hello-world/app/routes/visitors.js
+    :language: javascript
+
+Open ``index.js`` in a text editor and
+replace the code in it with the following to record the number of
+visitors:
+
+.. literalinclude:: code/expressjs/visitors_index.js
+    :caption: ~/expressjs-hello-world/app/routes/index.js
+    :language: javascript
+
+go back to the ``~/expressjs-hello-world/app`` directory and
+open ``app.js`` in a text editor and replace its content with the following
+code to add the new route:
+
+.. literalinclude:: code/expressjs/visitors_app.js
+    :caption: ~/expressjs-hello-world/app/app.js
+    :language: javascript
+
+Add the new package in the ExpressJS project with the
+following command:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:check-expressjs-app]
+    :end-before: [docs:check-expressjs-app-end]
+    :dedent: 2
+
+Let's go back to the ``~/expressjs-hello-world`` directory and pack and
+upload the rock:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:docker-2nd-update]
+    :end-before: [docs:docker-2nd-update-end]
+    :dedent: 2
+
+Change back into the charm directory using ``cd charm``.
+
+The ExpressJS app now requires a database which needs to be declared in the
+``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
+add the following section to the end of the file:
+
+.. literalinclude:: code/expressjs/visitors_charmcraft.yaml
+    :language: yaml
+
+We can now pack and deploy the new version of the ExpressJS app:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:refresh-2nd-deployment]
+    :end-before: [docs:refresh-2nd-deployment-end]
+    :dedent: 2
+
+Now let's deploy PostgreSQL and integrate it with the ExpressJS app:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:deploy-postgres]
+    :end-before: [docs:deploy-postgres-end]
+    :dedent: 2
+
+Wait for ``juju status`` to show that the App is ``active`` again.
+During this time, the ExpressJS app may enter a ``blocked`` state as it
+waits to become integrated with the PostgreSQL database. Due to the
+``optional: false`` key in the endpoint definition, the ExpressJS app will not
+start until the database is ready.
+
+Running ``curl http://expressjs-hello-world  --resolve \
+expressjs-hello-world:80:127.0.0.1``
+should still return the ``Hi!`` greeting.
+
+To check the local visitors, use
+``curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1``,
+which should return ``Number of visitors 1`` after the
+previous request to the root endpoint.
+This should be incremented each time the root endpoint is requested. If we
+repeat this process, the output should be as follows:
+
+.. terminal::
+    :input: curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1
+
+    Hi!
+    :input: curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1
+    Number of visitors 2
+
+
+Tear things down
+----------------
+
+We've reached the end of this tutorial. We went through the entire
+development process, including:
+
+- Creating a ExpressJS app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+If you'd like to quickly tear things down, start by exiting the Multipass VM:
+
+.. code-block:: bash
+
+    exit
+
+And then you can proceed with its deletion:
+
+.. code-block:: bash
+
+    multipass delete charm-dev
+    multipass purge
+
+If you'd like to manually reset your working environment, you can run the
+following in the rock directory ``~/expressjs-hello-world`` for the tutorial:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:clean-environment]
+    :end-before: [docs:clean-environment-end]
+    :dedent: 2
+
+You can also clean up your Multipass instance by exiting and deleting it
+using the same commands as above.
+
+Next steps
+----------
+
+By the end of this tutorial you will have built a charm and evolved it
+in a number of typical ways. But there is a lot more to explore:
+
+.. list-table::
+    :widths: 30 30
+    :header-rows: 1
+
+    * - If you are wondering...
+      - Visit...
+    * - "How do I...?"
+      - :ref:`How-to guides <how-to-guides>`,
+        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+    * - "How do I debug?"
+      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+    * - "How do I get in touch?"
+      - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
+    * - "What is...?"
+      - :ref:`reference`,
+        :external+ops:ref:`Ops | Reference <reference>`,
+        :external+juju:ref:`Juju | Reference <reference>`
+    * - "Why...?", "So what?"
+      - :external+ops:ref:`Ops | Explanation <explanation>`,
+        :external+juju:ref:`Juju | Explanation <explanation>`

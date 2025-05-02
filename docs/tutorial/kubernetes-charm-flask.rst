@@ -283,7 +283,7 @@ pack, subsequent charm packings are faster.
 
 .. admonition:: For more options when packing charms
 
-    See the :literalref:`ref_commands_pack` command reference.
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 
 Deploy the Flask app

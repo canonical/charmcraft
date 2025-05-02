@@ -291,7 +291,7 @@ We will also use PostgreSQL as the database for our Django app. In
 
 Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
-the app and connected it to the PostgreSQL database.
+it and connected it to the PostgreSQL database.
 
 Now let's pack the rock:
 
@@ -493,8 +493,8 @@ Set the configuration:
 
 .. note::
 
-    The ``django-debug`` configuration sets the Django environment variable
-    ``DJANGO_DEBUG`` that we previously updated in ``settings.py``.
+    The ``django-debug`` configuration sets the ``DJANGO_DEBUG`` environment
+    variable that we previously updated in ``settings.py``.
 
     Turning on debug mode shouldn't be done in production. We will do this in
     the tutorial for now and later disable debug mode.

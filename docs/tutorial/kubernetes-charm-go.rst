@@ -329,7 +329,7 @@ Deploy the Go app
 -----------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Go app. The Juju model holds the application along any supporting
+the Go app. The Juju model holds the app along with any supporting
 components. In this tutorial, our model will hold the Go app, ingress,
 and a PostgreSQL database.
 

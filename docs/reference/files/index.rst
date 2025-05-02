@@ -9,7 +9,6 @@ or a bundle project.
 
 .. toctree::
     :maxdepth: 1
-    :hidden:
 
     bundle-yaml-file
     actions-yaml-file

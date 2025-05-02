@@ -13,7 +13,6 @@ An extension is usually associated with a particular :ref:`profile <profile>`.
 
 .. toctree::
     :maxdepth: 2
-    :hidden:
 
     django-framework-extension
     fastapi-framework-extension

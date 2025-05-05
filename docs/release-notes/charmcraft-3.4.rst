@@ -176,7 +176,7 @@ Charmcraft 3.4.5
 Charmcraft 3.4.6
 ~~~~~~~~~~~~~~~~
 
-- The uv plugin breaks with uv 0.7.
+- The uv plugin was breaking with uv 0.7.
 - `#2259 <https://github.com/canonical/charmcraft/issues/2259>`_ Builds fail for 20.04
   in some common circumstances.
 

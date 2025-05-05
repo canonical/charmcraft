@@ -116,6 +116,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
+    "common/craft-parts/reference/plugins/jlink_plugin.rst", # not included in ToC
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
@@ -129,6 +130,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/go_use_plugin.rst",
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
+    "reuse/reference/extensions/integrations.rst",
     "reuse/tutorial/*"
 ]
 

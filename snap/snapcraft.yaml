@@ -39,7 +39,7 @@ description: |
   Windows apps. The universal operator pattern is very exciting for
   multi-cloud application management.
 
-adopt-info: charmcraft  # look for 'craftctl set *' in the charmcraft part
+adopt-info: charmcraft # look for 'craftctl set *' in the charmcraft part
 architectures:
   - build-on: s390x
   - build-on: ppc64el
@@ -90,13 +90,12 @@ build-snaps:
   - rustup
   - astral-uv
 
-
 parts:
   charmcraft-libs:
     plugin: nil
     stage-packages:
-      - libffi7      # Python3 foreign functions - used for rust modules
-      - libsodium23  # PyNaCl uses this
+      - libffi7 # Python3 foreign functions - used for rust modules
+      - libsodium23 # PyNaCl uses this
       - libpython3-stdlib
       - libpython3.10-stdlib
       - libpython3.10-minimal
@@ -152,7 +151,7 @@ parts:
       uv sync --no-dev --no-editable --no-binary
       . $CRAFT_PART_INSTALL/bin/activate
       uv pip install -r requirements-jammy.txt
-      rm $CRAFT_PART_INSTALL/lib64
+      rm -f $CRAFT_PART_INSTALL/lib64
 
       mkdir -p $CRAFT_PART_INSTALL/libexec/charmcraft
       sed -i 's|#!/bin/sh|#!/snap/charmcraft/current/bin/python3|' $CRAFT_PART_INSTALL/bin/craftctl
@@ -191,10 +190,13 @@ parts:
       python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
         > $CRAFT_PART_INSTALL/completion.sh
 
-  skopeo:  # Copied from Rockcraft
+  skopeo:
     plugin: nil
     source: https://github.com/containers/skopeo.git
-    source-tag: v1.15.1
+    source-tag: v1.17.0
+    build-environment:
+      - DISABLE_DOCS: "1"
+      - CGO_ENABLED: "1"
     override-build: |
       CGO=1 go build -ldflags -linkmode=external ./cmd/skopeo
       mkdir "$CRAFT_PART_INSTALL"/bin

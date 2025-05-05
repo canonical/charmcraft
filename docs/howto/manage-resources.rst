@@ -3,17 +3,17 @@
 Manage resources
 ================
 
-    See first: :external+juju:ref:`Juju | Charm resource <resource-charm>`,
+    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`,
     :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
 
 
 Declare a resource
 ------------------
 
-To declare a resource required by your charm, set the :ref:`recipe-key-resources` key in
-its recipe.
+To declare a resource required by your charm, set the
+:ref:`charmcraft-yaml-key-resources` key in its project file.
 
-    See more: :ref:`recipe-key-resources`
+    See more: :ref:`charmcraft-yaml-key-resources`
 
     See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 

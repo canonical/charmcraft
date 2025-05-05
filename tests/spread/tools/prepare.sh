@@ -9,3 +9,13 @@ install_charmcraft()
         exit 1
     fi
 }
+
+refresh_or_install_snap()
+{
+  # Refresh a snap or, if it's not installed, install it.
+  # args:
+  #  1. snap name
+  #  2. Channel
+  #  3?. Extra arguments to snap install
+  snap refresh "$1" --channel="$2" || snap install "$1" --channel="$2" "${@:3}"
+}

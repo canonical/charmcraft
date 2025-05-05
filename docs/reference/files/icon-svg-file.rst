@@ -30,7 +30,7 @@ Best practices
 
 .. tip::
 
-    In `Inkscape <https://snapcraft.io/inkscape>`_, the ‘Icon preview’ tool can help
+    In `Inkscape <https://snapcraft.io/inkscape>`_, the 'Icon preview' tool can help
     you check the sharpness of your icons at small sizes.
 
 
@@ -49,9 +49,9 @@ use the :ref:`craft_parts_dump_plugin` to include this file in your charm.
 
 .. collapse:: Example
 
-    This example is the :ref:`recipe-key-parts` key of a
-    recipe that uses the :ref:`craft_parts_poetry_plugin` to
-    build a charm, augmented to add the charm's ``icon.svg`` file.
+    This example is the :ref:`charmcraft-yaml-key-parts` key of a project file that uses
+    the :ref:`craft_parts_poetry_plugin` to build a charm, augmented to add the charm's
+    ``icon.svg`` file.
 
     .. code-block:: yaml
 

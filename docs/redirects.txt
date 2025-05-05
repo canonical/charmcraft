@@ -1,0 +1,14 @@
+# Client-side page redirects. Each mapping takes the format:
+#     `"<old path>" "<current path>"
+# Paths must be represented as source files relative to the root of the `docs` dir.
+# The old path must be a file that _doesn't exist_ in the source. The current path
+# must be a file that _does exist_ in the source.
+
+"howto/set-up-charmcraft.rst" "howto/manage-charmcraft.rst"
+"howto/install-charmcraft.rst" "howto/manage-charmcraft.rst"
+"tutorial/write-your-first-kubernetes-charm-for-a-django-app.rst" "tutorial/kubernetes-charm-django.rst"
+"tutorial/write-your-first-kubernetes-charm-for-a-flask-app.rst" "tutorial/kubernetes-charm-flask.rst"
+"tutorial/write-your-first-kubernetes-charm-for-a-fastapi-app.rst" "tutorial/kubernetes-charm-fastapi.rst"
+"tutorial/write-your-first-kubernetes-charm-for-a-go-app.rst" "tutorial/kubernetes-charm-go.rst"
+"howto/manage-12-factor-app-charms.rst" "howto/manage-web-app-charms/index.rst"
+"howto/flask-async.rst" "howto/manage-web-app-charms/configure-web-app-charm.rst"

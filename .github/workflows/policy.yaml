@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - hotfix/*
-      - work/check-policy  # For development
+      - work/check-policy # For development
 
 jobs:
   policy:
@@ -20,5 +20,5 @@ jobs:
       #    contain vulnerable versions.
       # 3. Docs contain requirements.txt files that don't specify versions.
       requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*" ! -path "./docs/**"'
-      osv-extra-args: '--config=source/osv-scanner.toml'
+      osv-extra-args: "--config=source/osv-scanner.toml"
       uv-export: false

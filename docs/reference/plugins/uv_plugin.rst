@@ -3,6 +3,8 @@
 uv plugin
 =========
 
+    See also: :ref:`howto-migrate-to-uv`
+
 The uv plugin is designed for Python charms that use `uv`_ as the build system
 and are written with the `Operator framework`_.
 
@@ -19,7 +21,7 @@ Whether to keep Python scripts in the virtual environment's :file:`bin`
 directory.
 
 .. include:: /common/craft-parts/reference/plugins/uv_plugin.rst
-    :start-after: .. _craft_parts_poetry_plugin-environment_variables:
+    :start-after: .. _craft_parts_uv_plugin-environment_variables:
     :end-before: .. _uv-details-end:
 
 How it works
@@ -39,7 +41,7 @@ During the build step, the plugin performs the following actions:
 Example
 -------
 
-The following :file:`charmcraft.yaml` file can be used with a uv project to
+The following project file can be used with a uv project to
 craft a charm with Ubuntu 24.04 as its base:
 
 .. literalinclude:: uv-charmcraft.yaml

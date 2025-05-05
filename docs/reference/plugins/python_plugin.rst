@@ -52,7 +52,7 @@ During the build step, the plugin performs the following actions:
 Example
 -------
 
-The following ``charmcraft.yaml`` file can be used with a standard charm structure
+The following project file can be used with a standard charm structure
 to build a charm for Ubuntu 24.04:
 
 .. literalinclude:: python-charmcraft.yaml

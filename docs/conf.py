@@ -43,14 +43,24 @@ ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
 html_context = {
-    "product_page": "github.com/canonical/charmcraft",
+    "product_page": "juju.is",
+    "product_tag": "_static/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
+    "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
+    "matrix": "https://matrix.to/#/#charmhub-charmcraft:ubuntu.com",
 }
 
+# Template and asset locations
 extensions = [
     "canonical_sphinx",
 ]
+
+# Copy extra files to the _static dir during build
+html_static_path = [
+    "_static/assets"
+]
+
 # endregion
 
 # region General configuration
@@ -73,6 +83,7 @@ extensions.extend(
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
+        "sphinxext.rediraffe",
     ]
 )
 
@@ -88,7 +99,6 @@ exclude_patterns = [
     # documents (so they generate "duplicate label" errors) or they aren't
     # used in this documentation at all (so they generate "unreferenced"
     # errors).
-    "explanation/index.rst",
     "common/craft-parts/explanation/lifecycle.rst",
     "common/craft-parts/explanation/overlay_parameters.rst",
     "common/craft-parts/explanation/overlays.rst",
@@ -119,6 +129,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/go_use_plugin.rst",
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
+    "reuse/tutorial/*"
 ]
 
 rst_epilog = """
@@ -157,6 +168,9 @@ github_username = "canonical"
 github_repository = "charmcraft"
 
 html_domain_indices = True
+
+# Client-side page redirects.
+rediraffe_redirects = "redirects.txt"
 
 # endregion
 

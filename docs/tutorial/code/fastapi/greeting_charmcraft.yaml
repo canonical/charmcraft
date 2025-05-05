@@ -1,0 +1,9 @@
+# configuration snippet for FastAPI application
+
+config:
+  options:
+    greeting:
+      description: |
+        The greeting to be returned by the FastAPI application.
+      default: "Hello, world!"
+      type: string

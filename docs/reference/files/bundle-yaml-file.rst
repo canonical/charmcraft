@@ -748,8 +748,8 @@ The default base for deploying charms that can be deployed on multiple bases.
 
 **Purpose:** A link to a documentation cover page.
 
-    See more: :external+juju:ref:`Juju | Charm documentation
-    <charm-documentation-best-practices>`
+    See more: :external+juju:ref:`Juju | Documentation conventions
+    <charm-best-practices-documentation>`
 
 
 ``issues``
@@ -800,7 +800,7 @@ machine. Containers are not valid machines in this context.
 **Status:** Optional. Only used by Charmhub.
 
 **Type:** String with the same limitations as a
-:ref:`charm name <recipe-key-name>`.
+:ref:`charm name <charmcraft-yaml-key-name>`.
 
 
 ``relations``

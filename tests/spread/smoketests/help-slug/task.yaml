@@ -1,0 +1,24 @@
+summary: verify the docs link is being shown
+
+systems:
+  - ubuntu-22.04-64
+
+prepare: |
+  charmcraft init --project-dir=charm
+
+  # change requirements.txt to be invalid
+  sed -e 's/ops /oppss-invalid /' -i charm/requirements.txt
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  charmcraft help |& MATCH 'For more information about charmcraft, check out: https://canonical-charmcraft.readthedocs-hosted.com/en/latest'
+
+  cd charm
+
+  charmcraft build |& MATCH 'For more information, check out: https://canonical-charmcraft.readthedocs-hosted.com/en/latest/reference/plugins.html'

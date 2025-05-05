@@ -9,7 +9,6 @@ or a bundle project.
 
 .. toctree::
     :maxdepth: 1
-    :hidden:
 
     bundle-yaml-file
     actions-yaml-file
@@ -28,6 +27,7 @@ or a bundle project.
     requirements-dev-txt-file
     requirements-txt-file
     src-charm-py-file
+    src-workload-py-file
     tests-unit-test-charm-py-file
     tests-integration-test-charm-py-file
     tox-ini-file

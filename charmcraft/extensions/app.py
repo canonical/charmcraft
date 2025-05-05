@@ -37,6 +37,9 @@ class _AppBase(Extension):
         {"lib": "redis_k8s.redis", "version": "0"},
         {"lib": "data_platform_libs.s3", "version": "0"},
         {"lib": "saml_integrator.saml", "version": "0"},
+        {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+        {"lib": "smtp_integrator.smtp", "version": "0"},
+        {"lib": "openfga_k8s.openfga", "version": "1"},
     ]
 
     @staticmethod
@@ -113,6 +116,7 @@ class _AppBase(Extension):
                     f"which conflict with the {self.framework}-framework extension, "
                     "please rename or remove it"
                 )
+        invalid_non_optionals = []
         for config in self._get_nested(self.yaml_data, "config.options"):
             for reserved_config_prefix in ("webserver-", f"{self.framework}-"):
                 if config.startswith(reserved_config_prefix):
@@ -121,6 +125,19 @@ class _AppBase(Extension):
                         f" reserved configuration prefix {reserved_config_prefix!r}, "
                         "please rename or remove it"
                     )
+            config_option_dict = self._get_nested(
+                self.yaml_data, f"config.options.{config}"
+            )
+            if config_option_dict.get("optional") is False and config_option_dict.get(
+                "default"
+            ):
+                invalid_non_optionals.append(config)
+
+        if invalid_non_optionals:
+            raise ExtensionError(
+                "Non-optional configuration options can not have default values.\n"
+                f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
+            )
 
     def _get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to be merged into the user charmcraft.yaml.
@@ -240,6 +257,13 @@ class FlaskFramework(_AppBase):
             "type": "string",
             "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Flask application. This configuration will set the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
         },
+        "flask-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `flask-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual Flask secret key. '
+            "To create the secret, run the following command: `juju add-secret my-flask-secret-key value=<secret-string> && juju grant-secret my-flask-secret-key flask-k8s`, "
+            "and use the output secret ID to configure this option.",
+        },
         "flask-session-cookie-secure": {
             "type": "boolean",
             "description": "Set the secure attribute in the Flask application cookies. This configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable. Run `app.config.from_prefixed_env()` in your Flask application in order to receive this configuration.",
@@ -275,6 +299,13 @@ class DjangoFramework(_AppBase):
         "django-secret-key": {
             "type": "string",
             "description": "The secret key used for securely signing the session cookie and for any other security related needs by your Django application. This configuration will set the DJANGO_SECRET_KEY environment variable.",
+        },
+        "django-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `django-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual Django secret key. '
+            "To create the secret, run the following command: `juju add-secret my-django-secret-key value=<secret-string> && juju grant-secret my-django-secret-key django-k8s`, "
+            "and use the output secret ID to configure this option.",
         },
         "django-allowed-hosts": {
             "type": "string",
@@ -312,6 +343,13 @@ class GoFramework(_AppBase):
         "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+        "app-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual application secret key. '
+            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key go-app`, "
+            "and use the output secret ID to configure this option.",
         },
     }
 
@@ -365,6 +403,13 @@ class FastAPIFramework(_AppBase):
         "app-secret-key": {
             "type": "string",
             "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+        "app-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual application secret key. '
+            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key fastapi-app`, "
+            "and use the output secret ID to configure this option.",
         },
     }
 

@@ -211,6 +211,10 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
 ``Packed fastapi-hello-world_0.1_<architecture>.rock``. The file name

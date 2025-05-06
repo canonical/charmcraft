@@ -1,0 +1,165 @@
+###########################################
+# IMPORTANT
+# Comments matter!
+# The docs use the wrapping comments as
+# markers for including said instructions
+# as snippets in the docs.
+###########################################
+summary: Custom action to a Django app
+
+kill-timeout: 120m
+
+environment:
+
+execute: |
+  # Move everything to $HOME so that Juju deployment works
+  mv *.yaml *.py *.txt $HOME
+  cd $HOME
+
+  # Don't use the staging store for this test
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+
+  # Add setup instructions
+  # (Ran into issues in prepare section)
+  # (don't install charmcraft)
+  lxd init --auto
+
+  # Juju config setup
+  lxc network set lxdbr0 ipv6.address none
+  mkdir -p ~/.local/share
+
+  # MicroK8s config setup
+  microk8s status --wait-ready
+  microk8s enable hostpath-storage
+  microk8s enable registry
+  microk8s enable ingress
+
+  # Bootstrap controller
+  juju bootstrap microk8s dev-controller
+
+  # Create working dir and cd
+  mkdir django-hello-world
+  cd django-hello-world
+
+  # Create virtual env and activate
+  sudo apt update && sudo apt install python3-venv -y
+  python3 -m venv .venv
+  source .venv/bin/activate
+
+  mv $HOME/requirements.txt $HOME/django-hello-world/
+  # Install requirements
+  pip install -r requirements.txt
+
+  # Start project
+  django-admin startproject django_hello_world
+
+  # Create rockcraft.yaml
+  rockcraft init --profile django-framework
+
+  sed -i "s/name: .*/name: django-hello-world/g" rockcraft.yaml
+  sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
+
+  # Update settings.py file
+  cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+
+  # Initial packing
+  rockcraft pack
+
+  # Copy to registry
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:django-hello-world_0.1_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/django-hello-world:0.1
+
+  # Create charm dir
+  mkdir charm
+  cd charm
+
+  # Initialize charm
+  charmcraft init --profile django-framework --name django-hello-world
+
+  # Add postgresql_client to charmcraft.yaml
+  cat $HOME/postgres_requires_charmcraft.yaml >> charmcraft.yaml
+
+  # Initial packing
+  charmcraft pack
+
+  # Add Juju model
+  juju add-model django-hello-world
+  juju set-model-constraints -m django-hello-world \
+    arch=$(dpkg --print-architecture)
+
+  # Deploy Django app
+  juju deploy \
+    ./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    django-hello-world --resource \
+    django-app-image=localhost:32000/django-hello-world:0.1
+
+  # Deploy + integrate with postgres
+  juju deploy postgresql-k8s --trust
+  juju integrate django-hello-world postgresql-k8s
+
+  # Check that django-hello-world and postgres are active idle
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+
+  # Configure
+  juju config django-hello-world django-debug=true
+
+  # Deploy, integrate, configure nginx
+  juju deploy nginx-ingress-integrator --channel=latest/stable --trust
+  juju integrate nginx-ingress-integrator django-hello-world
+  juju config nginx-ingress-integrator \
+    service-hostname=django-hello-world path-routes=/
+
+  # give Juju some time to deploy the apps
+  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+
+  juju status --relations
+  sleep 30s
+
+  # curl the Django app
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
+
+  # add custom action to charmcraft.yaml
+  cat $HOME/clearsession_action_charmcraft.yaml >> charmcraft.yaml
+
+  # add custom action to src/charm.py
+  cat $HOME/clearsession_action_charm.py > $HOME/django-hello-world/charm/src/charm.py
+
+  # charmcraft clean and charmcraft pack
+  charmcraft clean
+  charmcraft pack
+
+  # refresh the deployment
+  juju refresh django-hello-world \
+    --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --resource django-app-image=localhost:32000/django-hello-world:0.1
+
+  # wait for the Django app to come back to active idle
+  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+
+  # make sure it's in listed actions
+  juju actions django-hello-world | grep clearsession
+
+  # make sure the action runs successfully
+  juju run django-hello-world/0 clearsession | grep cleared!
+
+  # [docs:clean-environment]
+  charmcraft clean
+  # Back out to main directory for cleanup
+  cd ..
+  rockcraft clean
+  # exit and delete the virtual environment
+  deactivate
+  rm -rf .venv
+  # delete all the files created during the tutorial
+  rm -rf charm __pycache__ django_hello_world
+  rm django-hello-world_0.1_$(dpkg --print-architecture).rock \
+    rockcraft.yaml requirements.txt
+  # Remove the juju model
+  juju destroy-model django-hello-world --destroy-storage --no-prompt --force
+  # [docs:clean-environment-end]

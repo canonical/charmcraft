@@ -189,6 +189,7 @@ execute: |
   juju wait-for application fastapi-hello-world --query='life=="alive" && status=="active"' --timeout 20m | juju status --relations
 
   juju status --relations
+  sleep 30s
 
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1

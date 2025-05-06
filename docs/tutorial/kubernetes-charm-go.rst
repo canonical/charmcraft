@@ -226,9 +226,9 @@ deployed in the Kubernetes cluster. Copy the rock:
 This command contains the following pieces:
 
 - ``--insecure-policy``: adopts a permissive policy that
-    removes the need for a dedicated policy file.
+  removes the need for a dedicated policy file.
 - ``--dest-tls-verify=false``: disables the need for HTTPS
-    and verify certificates while interacting with the MicroK8s registry.
+  and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our Go app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
 

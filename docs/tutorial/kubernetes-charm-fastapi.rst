@@ -221,9 +221,9 @@ the terminal will respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in the Kubernetes cluster.
-Copy the rock:
+The rock needs to be copied to the MicroK8s registry. This registry acts as a
+temporary Dockerhub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

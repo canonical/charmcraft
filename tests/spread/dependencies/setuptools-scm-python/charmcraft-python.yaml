@@ -1,0 +1,27 @@
+type: charm
+name: setuptools-scm-python
+title: Simple test for setuptools-scm
+summary: A simple test for setuptools-scm on Python 3.8
+description: |
+  https://github.com/canonical/charmcraft/issues/2259
+
+base: ubuntu@20.04
+platforms:
+  amd64:
+  arm64:
+
+parts:
+  python-deps:
+    plugin: nil
+    override-build: |
+      /usr/bin/python3 -m pip install pip==23.1.1
+  my-charm:
+    after: [python-deps]
+    plugin: python
+    source: .
+    build-environment:
+      - PIP_CONSTRAINT: constraints.txt
+    build-packages:
+      - python3-pip
+    python-requirements:
+      - requirements.txt

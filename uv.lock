@@ -859,7 +859,7 @@ wheels = [
 
 [[package]]
 name = "craft-parts"
-version = "2.6.2"
+version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "overrides" },
@@ -868,10 +868,11 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
     { name = "requests-unixsocket2" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-oracular') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-oracular' and extra == 'group-10-charmcraft-dev-plucky')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/d7/f8d6c8aca83d1c751b0ed30c7e5b70f119f5d020569ae91626c37347caa9/craft_parts-2.6.2.tar.gz", hash = "sha256:937ac0f5a4abc7b2a1c9b236652b95a7d39de95bb76c380e0fb1249a8b4df0ea", size = 642416 }
+sdist = { url = "https://files.pythonhosted.org/packages/08/42/275aeb5f7388bf9b5e110de190c935a3f67bd7491b000264717b6d7c32a3/craft_parts-2.9.1.tar.gz", hash = "sha256:7a9f774a5338c3492755abc628e69df274ff3d1c434fd41f0e7227cd18fff38e", size = 723440 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/f0/c5795b199fd3db6a246a6609da69d4649c2f9347cc48c963b5589c8c307b/craft_parts-2.6.2-py3-none-any.whl", hash = "sha256:f6f0a58e3f31f0933f392b7bebc8f5fd335005db1404bb1ab27fce3f87172a15", size = 454557 },
+    { url = "https://files.pythonhosted.org/packages/d7/f1/08201da8a2577a63a99ef80cbf378813b806115f5b420436979f9e66b01f/craft_parts-2.9.1-py3-none-any.whl", hash = "sha256:bc5e23b3049a200e8a791cbaf695c7661f44be3e16a19b25fc44c2dd46036d80", size = 466500 },
 ]
 
 [[package]]

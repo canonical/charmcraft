@@ -324,17 +324,16 @@ deployed in the Kubernetes cluster. Copy the rock:
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
 
-.. note::
+This command contains the following pieces:
 
-    The ``--insecure-policy`` option adopts a permissive policy that
+- ``--insecure-policy``: adopts a permissive policy that
     removes the need for a dedicated policy file.
-
-    The ``--dest-tls-verify=false`` option disables the need for HTTPS
+- ``--dest-tls-verify=false``: disables the need for HTTPS
     and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Django app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
 
-    ``oci-archive:`` specifies the rock we created for our Django app.
-
-    ``docker:`` specifies the name of the image in the MicroK8s registry.
+.. seealso::
 
     See more: `Ubuntu manpage | skopeo
     <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_

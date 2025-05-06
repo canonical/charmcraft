@@ -61,7 +61,9 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+  rockcraft.skopeo copy \
+    --insecure-policy \
+    --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/fastapi-hello-world:0.1
   # [docs:skopeo-copy-end]
@@ -187,6 +189,7 @@ execute: |
   juju wait-for application fastapi-hello-world --query='life=="alive" && status=="active"' --timeout 20m | juju status --relations
 
   juju status --relations
+  sleep 30s
 
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1

@@ -83,8 +83,8 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo \
-    --insecure-policy copy \
+  rockcraft.skopeo copy \
+    --insecure-policy \
     --dest-tls-verify=false \
     oci-archive:go-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/go-hello-world:0.1

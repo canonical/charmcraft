@@ -1,0 +1,29 @@
+type: charm
+name: setuptools-scm-python
+title: Simple test for setuptools-scm
+summary: A simple test for setuptools-scm on Python 3.8
+description: |
+  https://github.com/canonical/charmcraft/issues/2259
+
+base: ubuntu@20.04
+platforms:
+  amd64:
+  arm64:
+
+parts:
+  poetry-deps:
+    plugin: nil
+    build-packages:
+      - curl
+    build-environment:
+      - POETRY_VERSION: 1.8.5  # Last version supporting Python 3.8
+    override-build: |
+      /usr/bin/python3 -m pip install pip==24.2
+      curl -sSL https://install.python-poetry.org | python3 -
+      ln -sf $HOME/.local/bin/poetry /usr/local/bin/poetry
+  my-charm:  # This can be named anything you want
+    after: [poetry-deps]
+    plugin: poetry
+    source: .
+    build-environment:
+      - PIP_NO_BINARY: ":all:"

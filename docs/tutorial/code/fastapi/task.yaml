@@ -61,7 +61,9 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+  rockcraft.skopeo \
+    --insecure-policy copy \
+    --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/fastapi-hello-world:0.1
   # [docs:skopeo-copy-end]

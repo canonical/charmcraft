@@ -15,15 +15,14 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, ExpressJS apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is a ExpressJS app that
-    can be easily deployed, configured, scaled, integrated, etc.,
-    on any Kubernetes cluster.
+If you're new to the charming world, ExpressJS apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The result is a ExpressJS app that
+can be easily deployed, configured, scaled, integrated, etc.,
+on any Kubernetes cluster.
 
 
 What you'll need

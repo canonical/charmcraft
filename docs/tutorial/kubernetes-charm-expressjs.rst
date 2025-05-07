@@ -85,7 +85,7 @@ Install ``npm`` and ``express-generator`` to initialize the ExpressJS module:
 Run the ExpressJS app locally
 ----------------------
 
-First, we need to install the necessary packages for the ExpressJS app so it can run:
+First, install the necessary packages for the ExpressJS app so it can run:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -115,11 +115,12 @@ The ExpressJS app should respond with ``Welcome to Express`` web page.
 .. note::
 
     The response from the ExpressJS application includes HTML and CSS
-    which makes it difficult to read on a terminal. Visit http://localhost:3000
-    using a browser to see the fully rendered page. If you are using
-    Multipass, you can use the IP address of the VM to access the
-    ExpressJS app. You can find the IP address of the VM using
-    ``multipass list``. For example, http://vm-ip:3000
+    which makes it difficult to read on a terminal. You can use a browser
+    to see the fully rendered page using the IP address of the VM to
+    access the ExpressJS app. You can find the IP address of the VM by
+    running ``multipass info charm-dev`` outside of the VM. Then open
+    a new tab and visit ``http://<Multipass private IP>:3000``, replacing
+    ``<Multipass private IP>`` with your VM's private IP address.
 
 The ExpressJS app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -128,9 +129,14 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the ExpressJS app into a rock
 ---------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``expressjs-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for an ExpressJS app.
+Now let's create a container image for our ExpressJS app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``expressjs-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for an ExpressJS app.
 From the ``~/expressjs-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
@@ -173,6 +179,8 @@ The top of the file should look similar to the following snippet:
         # ppc64el:
         # s390x:
 
+    ...   
+
 Verfiy that the ``name`` is ``expressjs-hello-world``.
 
 Ensure that ``platforms`` includes the architecture of your host. Check
@@ -183,8 +191,7 @@ the architecture of your system:
     dpkg --print-architecture
 
 
-If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 
@@ -204,12 +211,9 @@ minutes to finish.
 
 Once Rockcraft has finished packing the ExpressJS rock,
 the terminal will respond with something similar to
-``Packed expressjs-hello-world_0.1_amd64.rock``.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
+``Packed expressjs-hello-world_0.1_<architecture>.rock``.
+The file name reflects your system's architecture. After
+the initial pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.
@@ -239,11 +243,12 @@ for the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``expressjs-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the ExpressJS
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``expressjs-framework`` profile, Charmcraft
+automates the creation of the files needed for our charm, including a
+``charmcraft.yaml`` project file, ``requirements.txt`` and source code for the
+charm. The source code contains the logic required to operate the ExpressJS app.
 
 Initialize a charm named ``expressjs-hello-world``:
 
@@ -289,9 +294,8 @@ The top of the file should look similar to the following snippet:
     ...
 
 Verify that the ``name`` is ``expressjs-hello-world``. Ensure that ``platforms``
-includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
-``arm64`` in ``platforms``.
+includes the architecture of your host. Edit the ``platforms`` key in the
+project file if required.
 
 Let's pack the charm:
 
@@ -311,19 +315,20 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed expressjs-hello-world_ubuntu-24.04-amd64.charm``.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
+``Packed expressjs-hello-world_ubuntu-24.04-<architecture>.charm``.
+The file name reflects your system's architecture. After the initial
+pack, subsequent charm packings are faster.
 
 
 Deploy the ExpressJS app
------------------
+------------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the ExpressJS app. Let's create a new model:
+the ExpressJS app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the ExpressJS app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -331,10 +336,7 @@ the ExpressJS app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will need to include
-to include a constraint to the Juju model to specify your architecture.
-
-Set the Juju model constraints with:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -363,7 +365,10 @@ It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
+
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
@@ -460,6 +465,8 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # arm64:
         # ppc64el:
         # s390x:
+
+    ...
 
 Let's pack and upload the rock:
 
@@ -594,6 +601,8 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
+    ...
+
 To be able to connect to PostgreSQL from the ExpressJS app, the library
 ``pg-promise`` will be used. The app code needs to be updated to keep track of
 the number of visitors and to include a new endpoint to retrieve the
@@ -613,7 +622,7 @@ visitors:
     :caption: ~/expressjs-hello-world/app/routes/index.js
     :language: javascript
 
-go back to the ``~/expressjs-hello-world/app`` directory and
+Change back to the ``~/expressjs-hello-world/app`` directory,
 open ``app.js`` in a text editor and replace its content with the following
 code to add the new route:
 
@@ -621,8 +630,7 @@ code to add the new route:
     :caption: ~/expressjs-hello-world/app/app.js
     :language: javascript
 
-Add the new package in the ExpressJS project with the
-following command:
+Add the new package in the ExpressJS project:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -670,7 +678,7 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the ExpressJS app will not
 start until the database is ready.
 
-Running ``curl http://expressjs-hello-world  --resolve \
+Once the ExpressJS app is ``active``, running ``curl http://expressjs-hello-world  --resolve \
 expressjs-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 

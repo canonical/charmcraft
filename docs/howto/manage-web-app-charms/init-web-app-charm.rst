@@ -33,7 +33,7 @@ and description are correct.
 
             charmcraft init --profile django-framework
 
-    .. group-tab:: ExpressJS
+    .. group-tab:: Express
 
         .. code-block:: bash
 

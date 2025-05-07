@@ -1,16 +1,16 @@
 .. _write-your-first-kubernetes-charm-for-a-expressjs-app:
 
-Write your first Kubernetes charm for an ExpressJS app
+Write your first Kubernetes charm for an Express app
 ======================================================
 
-Imagine you have an ExpressJS app backed up by a database
+Imagine you have an Express app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
-yourself packaging and deploying your ExpressJS app in no time.
+yourself packaging and deploying your Express app in no time.
 
 
-In this tutorial we will build a Kubernetes charm for an ExpressJS
-app using Charmcraft, so we can have an ExpressJS app
+In this tutorial we will build a Kubernetes charm for an Express
+app using Charmcraft, so we can have an Express app
 up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
@@ -37,10 +37,10 @@ What you'll need
 What you'll do
 --------------
 
-#. Create an ExpressJS app.
+#. Create an Express app.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
-#. Use that to test, deploy, configure, etc., your ExpressJS app on a local
+#. Use that to test, deploy, configure, etc., your Express app on a local
    Kubernetes cloud with Juju.
 #. Repeat the process, mimicking a real development process.
 
@@ -67,13 +67,13 @@ enter into it:
     :dedent: 2
 
 
-Create the ExpressJS app
+Create the Express app
 -----------------
 
-Start by creating the "Hello, world" ExpressJS app that will be
+Start by creating the "Hello, world" Express app that will be
 used for this tutorial.
 
-Install ``npm`` and ``express-generator`` to initialize the ExpressJS module:
+Install ``npm`` and ``express-generator`` to initialize the Express module:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -82,7 +82,7 @@ Install ``npm`` and ``express-generator`` to initialize the ExpressJS module:
     :dedent: 2
 
 
-Run the ExpressJS app locally
+Run the Express app locally
 ----------------------
 
 First, install the necessary packages for the ExpressJS app so it can run:
@@ -93,14 +93,14 @@ First, install the necessary packages for the ExpressJS app so it can run:
     :end-before: [docs:build-expressjs-end]
     :dedent: 2
 
-Now that we have the packages installed, let's run the ExpressJS app to verify
+Now that we have the packages installed, let's run the Express app to verify
 that it works:
 
 .. code-block:: bash
 
    npm start
 
-Test the ExpressJS app by using ``curl`` to send a request to the root
+Test the Express app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
 
@@ -110,7 +110,7 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-expressjs-end]
     :dedent: 2
 
-The ExpressJS app should respond with ``Welcome to Express`` web page.
+The Express app should respond with ``Welcome to Express`` web page.
 
 .. note::
 
@@ -126,7 +126,7 @@ The ExpressJS app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
 
-Pack the ExpressJS app into a rock
+Pack the Express app into a rock
 ---------------------------
 
 Now let's create a container image for our ExpressJS app. We'll use a rock,
@@ -179,7 +179,7 @@ The top of the file should look similar to the following snippet:
         # ppc64el:
         # s390x:
 
-    ...   
+    ...
 
 Verfiy that the ``name`` is ``expressjs-hello-world``.
 
@@ -192,6 +192,7 @@ the architecture of your system:
 
 
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 
@@ -203,13 +204,13 @@ Now let's pack the rock:
 
 .. note::
 
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the ExpressJS
+    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Express
     extension is experimental.
 
 Depending on your system and network, this step can take several
 minutes to finish.
 
-Once Rockcraft has finished packing the ExpressJS rock,
+Once Rockcraft has finished packing the Express rock,
 the terminal will respond with something similar to
 ``Packed expressjs-hello-world_0.1_<architecture>.rock``.
 The file name reflects your system's architecture. After
@@ -320,12 +321,12 @@ The file name reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
 
-Deploy the ExpressJS app
+Deploy the Express app
 ------------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the ExpressJS app. The Juju model holds the app along with any supporting
-components. In this tutorial, our model will hold the ExpressJS app, ingress,
+the Express app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Express app, ingress,
 and a PostgreSQL database.
 
 Let's create a new model:
@@ -344,7 +345,7 @@ Constrain the Juju model to your architecture:
     :end-before: [docs:add-model-constraints-end]
     :dedent: 2
 
-Now let's use the OCI image we previously uploaded to deploy the ExpressJS
+Now let's use the OCI image we previously uploaded to deploy the Express
 app. Deploy using Juju by specifying the OCI image name with the
 ``--resource`` option:
 
@@ -354,7 +355,7 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-expressjs-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the ExpressJS app. You can monitor its
+It will take a few minutes to deploy the Express app. You can monitor its
 progress with:
 
 .. code-block:: bash
@@ -372,7 +373,7 @@ using :kbd:`Ctrl` + :kbd:`C`.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
-The ExpressJS app should now be running. We can monitor the status of
+The Express app should now be running. We can monitor the status of
 the deployment using ``juju status``, which should be similar to the
 following output:
 
@@ -389,7 +390,7 @@ following output:
     expressjs-hello-world/0*  active    idle   10.1.157.75
 
 Let's expose the app using ingress. Deploy the
-``nginx-ingress-integrator`` charm and integrate it with the ExpressJS app:
+``nginx-ingress-integrator`` charm and integrate it with the Express app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -408,9 +409,9 @@ the ingress. We will also set the default route to be the root endpoint:
 
 .. note::
 
-    By default, the port for the ExpressJS app should be 8080. If you want to change
+    By default, the port for the Express app should be 8080. If you want to change
     the default port, it can be done with the configuration option ``port`` that
-    will be exposed as the ``PORT`` to the ExpressJS app.
+    will be exposed as the ``PORT`` to the Express app.
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
@@ -425,12 +426,12 @@ to send a request via the ingress. It should return the
     setting a DNS record.
 
 
-Configure the ExpressJS app
+Configure the Express app
 --------------------
 
-To demonstrate how to provide a configuration to the ExpressJS app,
+To demonstrate how to provide a configuration to the Express app,
 we will make the greeting configurable. We will expect this
-configuration option to be available in the ExpressJS app configuration under the
+configuration option to be available in the Express app configuration under the
 keyword ``GREETING``. Change to the ``~/expressjs-hello-world/app/routes``
 directory using ``cd ../app/routes`` and replace the code into ``index.js`` with
 the following:
@@ -492,7 +493,7 @@ the ExpressJS app. Add the following to the end of the
     by ``_``. An ``APP_`` prefix will also be added as a namespace
     for app configurations.
 
-We can now pack and deploy the new version of the ExpressJS app:
+We can now pack and deploy the new version of the Express app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -542,7 +543,7 @@ The charm created by the ``expressjs-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.sh`` file containing this logic.
 
-ExpressJS back out to the ``~/expressjs-hello-world/app`` directory using ``cd ../app``.
+Back out to the ``~/expressjs-hello-world/app`` directory using ``cd ../app``.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
@@ -603,7 +604,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
     ...
 
-To be able to connect to PostgreSQL from the ExpressJS app, the library
+To be able to connect to PostgreSQL from the Express app, the library
 ``pg-promise`` will be used. The app code needs to be updated to keep track of
 the number of visitors and to include a new endpoint to retrieve the
 number of visitors. Create a new file called
@@ -630,7 +631,7 @@ code to add the new route:
     :caption: ~/expressjs-hello-world/app/app.js
     :language: javascript
 
-Add the new package in the ExpressJS project:
+Add the new package in the Express project:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -649,14 +650,14 @@ upload the rock:
 
 Change back into the charm directory using ``cd charm``.
 
-The ExpressJS app now requires a database which needs to be declared in the
+The Express app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
 add the following section to the end of the file:
 
 .. literalinclude:: code/expressjs/visitors_charmcraft.yaml
     :language: yaml
 
-We can now pack and deploy the new version of the ExpressJS app:
+We can now pack and deploy the new version of the Express app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -664,7 +665,7 @@ We can now pack and deploy the new version of the ExpressJS app:
     :end-before: [docs:refresh-2nd-deployment-end]
     :dedent: 2
 
-Now let's deploy PostgreSQL and integrate it with the ExpressJS app:
+Now let's deploy PostgreSQL and integrate it with the Express app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -673,13 +674,13 @@ Now let's deploy PostgreSQL and integrate it with the ExpressJS app:
     :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.
-During this time, the ExpressJS app may enter a ``blocked`` state as it
+During this time, the Express app may enter a ``blocked`` state as it
 waits to become integrated with the PostgreSQL database. Due to the
-``optional: false`` key in the endpoint definition, the ExpressJS app will not
+``optional: false`` key in the endpoint definition, the Express app will not
 start until the database is ready.
 
-Once the ExpressJS app is ``active``, running ``curl http://expressjs-hello-world  --resolve \
-expressjs-hello-world:80:127.0.0.1``
+Once the Express app is ``active``, running ``curl http://expressjs-hello-world \
+--resolve expressjs-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 
 To check the local visitors, use
@@ -703,7 +704,7 @@ Tear things down
 We've reached the end of this tutorial. We went through the entire
 development process, including:
 
-- Creating a ExpressJS app
+- Creating a Express app
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft

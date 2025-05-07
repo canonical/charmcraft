@@ -5,7 +5,7 @@ ExpressJS framework extension
 =============================
 
 The ``expressjs-framework`` extension includes configuration options customised
-for a ExpressJS application. This document describes all the keys that a user
+for a Express application. This document describes all the keys that a user
 may interact with.
 
 .. tip::
@@ -82,7 +82,7 @@ Proxy settings should be set as model configurations. Charms generated using the
 ``expressjs-framework`` extension will make the Juju proxy settings available as the
 ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environment variables. For example, the
 ``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the
-ExpressJS service.
+Express service.
 
     See more: `List of model configuration
     keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
@@ -136,7 +136,7 @@ for further information about tracing.
 Secrets
 -------
 
-Juju secrets can be passed as environment variables to your ExpressJS application. The
+Juju secrets can be passed as environment variables to your Express application. The
 secret ID has to be passed to the application as a config option in the project file of
 type ``secret``. This config option has to be populated with the secret ID, in the
 format ``secret:<secret ID>``.

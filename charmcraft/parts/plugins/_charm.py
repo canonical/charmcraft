@@ -257,12 +257,16 @@ class CharmPlugin(plugins.Plugin):
         """Return a list of commands to run during the build step."""
         options = cast(CharmPluginProperties, self._options)
 
+        constraints_file = pathlib.Path(__file__).parent / "charm-constraints.txt"
         build_env = {
             "LANG": "C.UTF-8",
             "LC_ALL": "C.UTF-8",
             # Cryptography fails to load OpenSSL legacy provider in some circumstances.
             # Since we don't need the legacy provider, this works around that bug.
             "CRYPTOGRAPHY_OPENSSL_NO_LEGACY": "true",
+            # Provide varying constraints based on ongoing environment changes.
+            # See: https://github.com/canonical/charmcraft/issues/2259
+            "PIP_CONSTRAINT": str(constraints_file),
         }
         for key in [
             "PATH",

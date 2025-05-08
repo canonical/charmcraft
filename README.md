@@ -1,9 +1,10 @@
 # Charmcraft
 
-[![Charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
-[![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
-[![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
-[![Weekly Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
+[![Charmcraft][charmcraft-badge]](charmcraft-latest)
+[![Documentation Status][rtd-badge]](rtd-latest)
+[![Tests][tests-badge]](tests-results)
+[![Spread][spread-badge]](spread-results)
+[![Weekly Spread][weekly-spread-badge]](weekly-spread-results)
 
 **Charmcraft** is the command-line tool for initializing, packaging, and publishing
 [Juju charms](https://documentation.ubuntu.com/juju/3.6/reference/charm). With
@@ -65,7 +66,9 @@ new to charming or a seasoned expert, this is the best place to deepen your know
 
 ## Community and support
 
-To get in touch with developers and other members of the charming community, reach
+To get in touch with developers and other
+[charmcraft-badge]: https://snapcraft.io/charmcraft/badge.svg
+[charmcraft-site]: https://snapcraft.io/charmcraft members of the charming community, reach
 out on the [forum](https://discourse.charmhub.io) or in our [Matrix
 channel](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com).
 
@@ -80,7 +83,7 @@ Conduct](https://ubuntu.com/community/ethos/code-of-conduct).
 Charmcraft is open source and part of the Canonical family. We would love your help.
 
 If you're interested, start with the [contribution guide](CONTRIBUTING.md).
-
+https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push
 We welcome any suggestions and help with the docs. The [Canonical Open Documentation
 Academy](https://github.com/canonical/open-documentation-academy) is the hub for doc
 development, including Charmcraft docs. No prior coding experience is required.
@@ -90,3 +93,14 @@ development, including Charmcraft docs. No prior coding experience is required.
 Charmcraft is released under the [Apache-2.0 license](LICENSE)
 
 © 2023-2025 Canonical Ltd.
+
+[charmcraft-badge]: https://snapcraft.io/charmcraft/badge.svg
+[charmcraft-site]: https://snapcraft.io/charmcraft
+[rtd-badge]: https://readthedocs.com/projects/canonical-charmcraft/badge/?version=latest
+[rtd-latest]: https://canonical-charmcraft.readthedocs-hosted.com/en/latest/?badge=latest
+[tests-badge]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push
+[tests-results]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml
+[spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push
+[spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml
+[weekly-spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg
+[weekly-spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml

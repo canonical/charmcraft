@@ -1,79 +1,92 @@
-[![charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
+# Charmcraft
+
+[![Charmcraft](https://snapcraft.io/charmcraft/badge.svg)](https://snapcraft.io/charmcraft)
 [![Tests](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/tests.yaml)
 [![Spread](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push)](https://github.com/canonical/charmcraft/actions/workflows/spread.yaml)
 [![Weekly Spread](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg)](https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml)
 
-# Charmcraft -- easily initialise, pack, and publish your charms
+**Charmcraft** is the command-line tool for initializing, packaging, and publishing
+[Juju charms](https://documentation.ubuntu.com/juju/3.6/reference/charm). With
+Charmcraft, you can bypass the boilerplate steps of crafting a charm and focus on what
+matters -- building scalable, configurable, and easy-to-deploy applications for your
+Juju deployment.
 
-Charmcraft is a CLI tool that makes it easy and quick to initialise, package, and publish Kubernetes and machine charms.
+## Basic usage
 
-## Give it a try
+Charmcraft provides commands to streamline every step of the charm development process,
+from initializing your charm project to releasing it on Charmhub.
 
-Let's use Charmcraft to initialise and pack a Kubernetes charm:
+In your project's root directory, initialize your charm project with basic template
+content by running:
 
-### Set up
-
-> See [Juju | Set things up](https://canonical-juju.readthedocs-hosted.com/en/latest/user/howto/manage-your-deployment/manage-your-deployment-environment/#set-things-up). <br> Choose the automatic track and MicroK8s.
-
-### Initialise and pack your charm
-
-In your Multipass VM shell, create a charm directory and use Charmcraft to initialise your charm file structure:
-
-```
-mkdir my-new-charm
-cd my-new-charm
+```bash
 charmcraft init
 ```
 
-This has created a standard charm directory structure:
+Once you've configured your project to suit the needs of the application you're
+charming, build the charm by running:
 
-```
-$ ls -R
-.:
-CONTRIBUTING.md  README.md        pyproject.toml    src    tox.ini
-LICENSE          charmcraft.yaml  requirements.txt  tests
-
-./src:
-charm.py
-
-./tests:
-integration  unit
-
-./tests/integration:
-test_charm.py
-
-./tests/unit:
-test_charm.py
-```
-
-Poke around:
-
-Note that the `charmcraft.yaml` file shows that what we have is an example charm called `my-new-charm`, which builds on Ubuntu 22.04 and which uses an OCI image resource `httpbin` from `kennethreitz/httpbin`.
-
-Note that the `src/charm.py` file contains code scaffolding featuring the Charm SDK's Ops library for writing charms.
-
-Explore further, start editing the files, or skip ahead and pack the charm:
-
-```
+```bash
 charmcraft pack
 ```
 
-If you didn't take any wrong turn or simply left the charm exactly as it was, this should work and yield a file called `my-new-charm_ubuntu-22.04-amd64.charm` (the architecture bit may be different depending on your system's architecture). Use this name and the resource from the `metadata.yaml` to deploy your example charm to your local MicroK8s cloud with Juju:
+If you're ready to distribute your charm, you can register its name on Charmhub with:
 
+```bash
+charmcraft register
 ```
-juju deploy ./my-new-charm_ubuntu-22.04-amd64.charm --resource httpbin-image=kennethreitz/httpbin
+
+Upload your charm and any subsequent revisions to Charmhub with:
+
+```bash
+charmcraft upload
 ```
 
-Congratulations, you’ve just initialised and packed your first Kubernetes charm using Charmcraft!
+## Installation
 
-But Charmcraft goes far beyond `init` and `pack`. For example, when you're ready to share your charm with the world, you can use Charmcraft to publish your charm on Charmhub. Run `charmcraft help` to preview more.
+Charmcraft is available on all major Linux distributions and macOS.
 
-### Clean up
+The recommended way to install Charmcraft on Linux systems is through its
+[snap](https://snapcraft.io/charmcraft).
 
-> See [Juju | Tear things down](https://canonical-juju.readthedocs-hosted.com/en/latest/user/howto/manage-your-deployment/manage-your-deployment-environment/#tear-things-down). <br> Choose the automatic track.
+```bash
+sudo snap install charmcraft --classic
+```
 
-## Next steps
+For information on installing Charmcraft on other platforms, refer to our [installation
+guide](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/set-up-charmcraft).
 
-- Read the [docs](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/).
-- Read our [Code of conduct](https://ubuntu.com/community/code-of-conduct) and join our [chat](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com) and [forum](https://discourse.charmhub.io/) or [open an issue](https://github.com/canonical/charmcraft/issues).
-- Read our [CONTRIBUTING guide](https://github.com/canonical/charmcraft/blob/main/CONTRIBUTING.md) and contribute!
+## Documentation
+
+The [Charmcraft
+documentation](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/) provides
+guidance and learning materials for every step of the charming process. Whether you're
+new to charming or a seasoned expert, this is the best place to deepen your knowledge.
+
+## Community and support
+
+To get in touch with developers and other members of the charming community, reach
+out on the [forum](https://discourse.charmhub.io) or in our [Matrix
+channel](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com).
+
+You can report any issues or bugs on the project's [GitHub
+repository](https://github.com/canonical/charmcraft/issues).
+
+Charmcraft is covered by the [Ubuntu Code of
+Conduct](https://ubuntu.com/community/ethos/code-of-conduct).
+
+## Contribute to Charmcraft
+
+Charmcraft is open source and part of the Canonical family. We would love your help.
+
+If you're interested, start with the [contribution guide](CONTRIBUTING.md).
+
+We welcome any suggestions and help with the docs. The [Canonical Open Documentation
+Academy](https://github.com/canonical/open-documentation-academy) is the hub for doc
+development, including Charmcraft docs. No prior coding experience is required.
+
+## License and copyright
+
+Charmcraft is released under the [Apache-2.0 license](LICENSE)
+
+© 2023-2025 Canonical Ltd.

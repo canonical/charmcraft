@@ -7,10 +7,9 @@
 [![Weekly Spread][weekly-spread-badge]](weekly-spread-results)
 
 **Charmcraft** is the command-line tool for initializing, packaging, and publishing
-[Juju charms](https://documentation.ubuntu.com/juju/3.6/reference/charm). With
-Charmcraft, you can bypass the boilerplate steps of crafting a charm and focus on what
-matters -- building scalable, configurable, and easy-to-deploy applications for your
-Juju deployment.
+charms, the software operators used by Juju. With Charmcraft, you can bypass the
+boilerplate steps of crafting a charm and focus on what matters — building scalable,
+configurable, and easy-to-deploy applications for Juju.
 
 ## Basic usage
 

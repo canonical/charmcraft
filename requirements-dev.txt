@@ -2,7 +2,7 @@
 #    uv export --extra docs --no-emit-project --no-hashes
 alabaster==0.7.16
 annotated-types==0.7.0
-anyio==4.8.0
+anyio==4.9.0
 apeye==1.4.1
 apeye-core==1.1.5
 astroid==3.3.9

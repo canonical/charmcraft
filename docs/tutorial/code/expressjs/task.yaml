@@ -73,8 +73,8 @@ execute: |
 
   kill $!
 
-  cd ..
   # [docs:create-rockcraft-yaml]
+  cd ..
   rockcraft init --profile expressjs-framework
   # [docs:create-rockcraft-yaml-end]
 

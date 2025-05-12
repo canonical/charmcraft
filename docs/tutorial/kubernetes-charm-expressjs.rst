@@ -249,7 +249,7 @@ Charmcraft with the ``--profile`` flag that caters initial charm files for
 specific web app frameworks. Using the ``expressjs-framework`` profile, Charmcraft
 automates the creation of the files needed for our charm, including a
 ``charmcraft.yaml`` project file, ``requirements.txt`` and source code for the
-charm. The source code contains the logic required to operate the ExpressJS app.
+charm. The source code contains the logic required to operate the Express app.
 
 Initialize a charm named ``expressjs-hello-world``:
 
@@ -417,7 +417,7 @@ Monitor ``juju status`` until everything has a status of ``active``.
 
 Use ``curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should return the
-``Hello, world!`` greeting.
+``Welcome to Express`` greeting.
 
 .. note::
 
@@ -425,21 +425,32 @@ to send a request via the ingress. It should return the
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
+The development cycle
+---------------------
+
+So far, we have worked though the entire cycle, from creating an app to deploying it.
+But now – as in every real-world case – we will go through the experience of iterating
+to develop the app, and deploy each iteration.
 
 Configure the Express app
---------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the Express app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Express app configuration under the
 keyword ``GREETING``. Change to the ``~/expressjs-hello-world/app/routes``
-directory using ``cd ../app/routes`` and replace the code into ``index.js`` with
+directory and replace the code in ``index.js`` with
 the following:
 
 .. literalinclude:: code/expressjs/greeting_index.js
     :caption: ~/expressjs-hello-world/app/routes/index.js
+    :emphasize-lines: 3-7
     :language: javascript
 
+Update the rock
+~~~~~~~~~~~~~~~
+
+Since we’re changing the app we should update the version of the rock.
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -477,6 +488,11 @@ Let's pack and upload the rock:
     :end-before: [docs:docker-update-end]
     :dedent: 2
 
+Redeploy the charm
+~~~~~~~~~~~~~~~~~~
+
+We’ll redeploy the new version with ``juju refresh``.
+
 Change back into the charm directory using ``cd charm``.
 
 The ``expressjs-framework`` Charmcraft extension supports adding configurations
@@ -485,6 +501,7 @@ the ExpressJS app. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/expressjs/greeting_charmcraft.yaml
+    :caption: ~/expressjs-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -507,9 +524,9 @@ has been added using
 ``juju config expressjs-hello-world | grep -A 6 greeting:``,
 which should show the configuration option.
 
-Using ``curl http://expressjs-hello-world  --resolve \
+Using ``curl http://expressjs-hello-world  --resolve
 expressjs-hello-world:80:127.0.0.1``
-shows that the response is still ``Hello, world!`` as expected.
+shows that the response is ``Hello, world!`` as expected.
 
 Now let's change the greeting:
 
@@ -543,7 +560,7 @@ The charm created by the ``expressjs-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.sh`` file containing this logic.
 
-Back out to the ``~/expressjs-hello-world/app`` directory using ``cd ../app``.
+Back out to the ``~/expressjs-hello-world/app`` directory.
 Create the ``migrate.sh`` file using a text editor and paste the
 following code into it:
 
@@ -565,47 +582,8 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :end-before: [docs:change-migrate-permissions-end]
     :dedent: 2
 
-For the migrations to work, we need the ``postgresql-client`` package
-installed in the rock. By default, the ``expressjs-framework`` uses the ``bare``
-base, so we will also need to install a shell interpreter. Let's do it as a
-slice, so that the rock doesn't include unnecessary files. Open the
-``rockcraft.yaml`` file using a text editor and add the following to the
-end of the file:
-
-.. literalinclude:: code/expressjs/visitors_rockcraft.yaml
-    :language: yaml
-
-Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
-top of the ``rockcraft.yaml`` file looks similar to the following:
-
-.. code-block:: yaml
-    :caption: ~/expressjs-hello-world/rockcraft.yaml
-    :emphasize-lines: 6
-
-    name: expressjs-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
-    # for more information about bases and using 'bare' bases for chiselled rocks
-    base: bare # as an alternative, a ubuntu base can be used
-    build-base: ubuntu@24.04 # build-base is required when the base is bare
-    version: '0.3' # just for humans. Semantic versioning is recommended
-    summary: A summary of your ExpressJS app # 79 char long summary
-    description: |
-        This is expressjs-hello-world's description. You have a paragraph or two to tell the
-        most important story about it. Keep it under 100 words though,
-        we live in tweetspace and your description wants to look good in the
-        container registries out there.
-    # the platforms this rock should be built on and run on.
-    # you can check your architecture with `dpkg --print-architecture`
-    platforms:
-        amd64:
-        # arm64:
-        # ppc64el:
-        # s390x:
-
-    ...
-
-To be able to connect to PostgreSQL from the Express app, the library
-``pg-promise`` will be used. The app code needs to be updated to keep track of
+To connect the Express app to PostgreSQL, we will use
+the ``pg-promise`` library. The app code needs to be updated to keep track of
 the number of visitors and to include a new endpoint to retrieve the
 number of visitors. Create a new file called
 ``visitors.js`` in the ``~/expressjs-hello-world/app/routes`` directory
@@ -639,14 +617,59 @@ Add the new package in the Express project:
     :end-before: [docs:check-expressjs-app-end]
     :dedent: 2
 
-Let's go back to the ``~/expressjs-hello-world`` directory and pack and
-upload the rock:
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
+
+For the migrations to work, we need the ``postgresql-client`` package
+installed in the rock. By default, the ``expressjs-framework`` uses the ``bare``
+base, so we will also need to install a shell interpreter. Let's do it as a
+slice, so that the rock doesn't include unnecessary files. Open the
+``rockcraft.yaml`` file using a text editor and add the following to the
+end of the file:
+
+.. literalinclude:: code/expressjs/visitors_rockcraft.yaml
+    :caption: ~/expressjs-hello-world/rockcraft.yaml
+    :language: yaml
+
+Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
+top of the ``rockcraft.yaml`` file looks similar to the following:
+
+.. code-block:: yaml
+    :caption: ~/expressjs-hello-world/rockcraft.yaml
+    :emphasize-lines: 6
+
+    name: expressjs-hello-world
+    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # for more information about bases and using 'bare' bases for chiselled rocks
+    base: bare # as an alternative, a ubuntu base can be used
+    build-base: ubuntu@24.04 # build-base is required when the base is bare
+    version: '0.3' # just for humans. Semantic versioning is recommended
+    summary: A summary of your ExpressJS app # 79 char long summary
+    description: |
+        This is expressjs-hello-world's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
+
+    ...
+
+Let's pack and upload the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
     :start-after: [docs:docker-2nd-update]
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
+
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -655,6 +678,7 @@ The Express app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/expressjs/visitors_charmcraft.yaml
+    :caption: ~/expressjs-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Express app:
@@ -679,7 +703,7 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the Express app will not
 start until the database is ready.
 
-Once the Express app is ``active``, running ``curl http://expressjs-hello-world \
+Once the Express app is ``active``, running ``curl http://expressjs-hello-world
 --resolve expressjs-hello-world:80:127.0.0.1``
 should still return the ``Hi!`` greeting.
 

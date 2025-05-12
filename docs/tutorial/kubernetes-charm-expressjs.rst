@@ -409,9 +409,9 @@ the ingress. We will also set the default route to be the root endpoint:
 
 .. note::
 
-    By default, the port for the Express app should be 8080. If you want to change
-    the default port, it can be done with the configuration option ``port`` that
-    will be exposed as the ``PORT`` to the Express app.
+    By default, the port for the ``express-framework`` extension should be 8080.
+    If you want to change the default port, it can be done with the configuration
+    option ``port`` that will be exposed as the ``PORT`` to the Express app.
 
 Monitor ``juju status`` until everything has a status of ``active``.
 

@@ -82,7 +82,8 @@ will be a new revision.
 .. admonition:: Best practice
     :class: hint
 
-    For resources that are binary files, provide binaries for all the CPU architectures you intend to support.
+    For resources that are binary files, provide binaries for all the CPU 
+    architectures you intend to support.
 
 
 View all the resources published on Charmhub

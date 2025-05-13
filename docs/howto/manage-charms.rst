@@ -14,7 +14,7 @@ Initialise a charm
 .. admonition:: Best practice
     :class: hint
 
-    If you're setting up a `git` repository: name it using the pattern
+    If you're setting up a ``git`` repository: name it using the pattern
     ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run

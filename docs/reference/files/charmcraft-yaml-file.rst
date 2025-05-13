@@ -484,11 +484,14 @@ secret URI.
     change them, and it is better to be consistent within a charm then to have
     some config names be dashed and some be underscored.
 
-For very complex applications, consider providing configuration profiles,
-which can group values for large configs together. For example,
-a ``profile: large`` that tweaks multiple options under the hood to optimize for
-larger deployments, or a ``profile: ci`` for limited resource usage during
-testing.
+.. admonition:: Best practice
+    :class: hint
+    
+    For very complex applications, consider providing configuration profiles,
+    which can group values for large configs together. For example,
+    a ``profile: large`` that tweaks multiple options under the hood to optimize for
+    larger deployments, or a ``profile: ci`` for limited resource usage during
+    testing.
 
 
 .. _charmcraft-yaml-key-containers:

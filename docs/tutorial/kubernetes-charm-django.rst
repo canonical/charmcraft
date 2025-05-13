@@ -165,9 +165,14 @@ original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Django app into a rock
 -------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``django-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Django app. Change
+Now let's create a container image for our Django app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``django-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Django app. Change
 back into the ``~/django-hello-world`` directory and initialize the rock:
 
 .. code-block:: bash
@@ -226,8 +231,7 @@ upgrade -- and this database wouldn't be shared by all containers as the
 app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
-the app with a database. From the ``~/django-hello-world`` directory, open
-``django_hello_world/django_hello_world/settings.py`` and update the
+the app with a database. Open the file and update the
 imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
@@ -285,7 +289,9 @@ We will also use PostgreSQL as the database for our Django app. In
         }
     }
 
-Save and close the ``settings.py`` file.
+Save and close the ``settings.py`` file. The app will no longer run locally
+due to these changes, and we can't test the app until we've deployed
+it and connected it to the PostgreSQL database.
 
 Now let's pack the rock:
 
@@ -300,13 +306,9 @@ finish.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_<architecture>.rock``. After the initial
+``Packed django-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in a Kubernetes cluster.
@@ -336,11 +338,12 @@ the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``django-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Django
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``django-framework`` profile, Charmcraft
+automates the creation of the files needed for our charm, including a
+``charmcraft.yaml`` project file, ``requirements.txt`` and source code for the
+charm. The source code contains the logic required to operate the Django app.
 
 Initialize a charm named ``django-hello-world``:
 
@@ -352,11 +355,12 @@ Initialize a charm named ``django-hello-world``:
 
 The files will automatically be created in your working directory.
 
-We will need to connect the Django app to the PostgreSQL database.
-Open the ``charmcraft.yaml`` file and add the following section to the end
-of the file:
+We will need to integrate our Django app to the PostgreSQL database,
+which means we must declare a requirement in the charm project file.
+Edit the project file by adding the following section to the end:
 
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
+    :caption: ~/django-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. tip::
@@ -373,30 +377,28 @@ Now let's pack the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-    in the pack command for older versions of Charmcraft.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-amd64.charm``. After the initial
+``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
-.. note::
+.. admonition:: For more options when packing charms
 
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
-
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 Deploy the Django app
 ---------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Django app. Let's create a new model:
+the Django app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Django app, the
+PostgreSQL database, and ingress.
+
+Let's create a new model:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -490,6 +492,9 @@ Set the configuration:
     :dedent: 2
 
 .. note::
+
+    The ``django-debug`` configuration key sets the ``DJANGO_DEBUG``
+    environment variable that we previously updated in ``settings.py``.
 
     Turning on debug mode shouldn't be done in production. We will do this in
     the tutorial for now and later disable debug mode.

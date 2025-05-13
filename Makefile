@@ -84,6 +84,9 @@ endif
 ifeq ($(shell which skopeo),)
 APT_PACKAGES += skopeo
 endif
+ifeq ($(shell which cargo),)
+APT_PACKAGES += cargo
+endif
 
 # Used for installing build dependencies in CI.
 .PHONY: install-build-deps

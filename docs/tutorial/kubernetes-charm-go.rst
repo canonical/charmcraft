@@ -125,9 +125,14 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Go app into a rock
 ---------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``go-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Go app.
+Now let's create a container image for our Go app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``go-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Go app.
 From the ``~/go-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/go/task.yaml
@@ -200,13 +205,9 @@ minutes to finish.
 
 Once Rockcraft has finished packing the Go rock,
 the terminal will respond with something similar to
-``Packed go-hello-world_0.1_<architecture>.rock``. After the initial
+``Packed go-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
-
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
 
 The rock needs to be copied to the MicroK8s registry, which stores OCI
 archives so they can be downloaded and deployed in the Kubernetes cluster.
@@ -236,11 +237,13 @@ for the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``go-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Go
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``go-framework`` profile,
+Charmcraft automates the creation of the files needed for our charm,
+including a ``charmcraft.yaml`` project file, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the
+Go app.
 
 Initialize a charm named ``go-hello-world``:
 
@@ -286,9 +289,8 @@ The top of the file should look similar to the following snippet:
     ...
 
 Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
-includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
-``arm64`` in ``platforms``.
+includes the architecture of your host. Edit the ``platforms`` key in the
+project file if required.
 
 .. tip::
 
@@ -314,20 +316,24 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed go-hello-world_ubuntu-24.04-amd64.charm``. After the initial
+``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
-.. note::
+.. admonition:: For more options when packing charms
 
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 
 Deploy the Go app
 -----------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Go app. Let's create a new model:
+the Go app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Go app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash

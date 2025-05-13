@@ -1,0 +1,20 @@
+type: charm
+name: setuptools-scm-python
+title: Simple test for setuptools-scm
+summary: A simple test for setuptools-scm on Python 3.8
+description: |
+  https://github.com/canonical/charmcraft/issues/2259
+
+base: ubuntu@20.04
+platforms:
+  amd64:
+  arm64:
+
+parts:
+  my-charm:
+    plugin: uv
+    source: .
+    build-snaps:
+      - astral-uv
+    build-environment:
+      - UV_NO_BINARY: "1"

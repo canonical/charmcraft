@@ -486,7 +486,6 @@ secret URI.
 
 .. admonition:: Best practice
     :class: hint
-    
     For very complex applications, consider providing configuration profiles,
     which can group values for large configs together. For example,
     a ``profile: large`` that tweaks multiple options under the hood to optimize for

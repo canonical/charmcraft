@@ -9,6 +9,10 @@ such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
 yourself packaging and deploying your FastAPI app in no time.
 
+
+Introduction
+------------
+
 In this tutorial we will build a Kubernetes charm for a FastAPI
 app using Charmcraft, so we can have a FastAPI app
 up and running with Juju. Let's get started!
@@ -26,7 +30,7 @@ on any Kubernetes cluster.
 
 
 What you'll need
-----------------
+~~~~~~~~~~~~~~~~
 
 - A local system, e.g., a laptop, with AMD64 or ARM64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
@@ -35,7 +39,7 @@ What you'll need
 
 
 What you'll do
---------------
+~~~~~~~~~~~~~~
 
 #. Create a FastAPI app.
 #. Use that to create a rock with Rockcraft.
@@ -126,7 +130,7 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-fastapi-end]
     :dedent: 2
 
-The FastAPI app should respond with ``{"message":"Hello, world"}``.
+The FastAPI app should respond with ``{"message":"Hello, world!"}``.
 
 The FastAPI app looks good, so we can stop for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -426,7 +430,7 @@ Monitor ``juju status`` until everything has a status of ``active``.
 Test the deployment using
 ``curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should return the
-``{"message":"Hello, world"}`` greeting.
+``{"message":"Hello, world!"}`` greeting.
 
 .. note::
 

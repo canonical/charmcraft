@@ -85,8 +85,132 @@ The configuration can be set on the deployed charm using:
 
     juju config <app name> token=<token>
 
-Manage secrets for a 12-factor app charm
-----------------------------------------
+Add a custom action
+-------------------
+
+For commands and processes that see shared or frequent use, custom Juju actions
+can expedite your workflow. Actions are handled in the Ops
+library, and Juju manages the action's workflow via tasks and operations. To
+implement a custom action, you need to declare the action in
+``charmcraft.yaml`` and add an event handler to the Ops framework of your
+charm.
+
+.. seealso::
+
+    :external+ops:ref:`Ops | Manage actions <manage-actions>`
+
+The custom action must be defined in the project file under the
+``actions`` section. You should provide a name, a description, and any
+associated parameters.
+
+Add the custom action to your charm code by modifying the ``src/charm.py``
+file. You need to add the action under the class constructor function
+(``__init__``) as well as a dedicated function for the action. When you define
+the action, follow the convention of appending ``_action`` onto the
+action name.
+
+Once your web app is updated and deployed with Juju, you can call the custom
+action using ``juju run``.
+
+Example: clear cookies in a Django app
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For example, let's say you want to add a custom action to your charmed Django
+app that removes expired session cookies.
+
+Add the custom action in the project file:
+
+.. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charmcraft.yaml
+    :language: yaml
+    :caption: charmcraft.yaml
+
+Modify the ``src/charm.py`` to define your custom action as part of the class
+and provide the function definition:
+
+.. literalinclude:: ../code/custom-action-clearsession/clearsession_action_charm.py
+    :language: python
+    :caption: src/charm.py
+    :lines: 20-46
+    :emphasize-lines: 8-27
+
+Build the charm using ``charmcraft pack`` and deploy the app with Juju.
+
+Finally, call the action using:
+
+.. code-block:: bash
+
+    juju run <django unit name> clearsession
+
+If successful, the terminal will output something like:
+
+.. terminal::
+    :input: juju run django-app/0 clearsession
+
+    Running operation 1 with 1 task
+      - task 2 on unit-django-app-0
+
+    Waiting for task 2...
+    result: session cleared!
+
+
+Example: check Flask app status and write output to container file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As another example, let's say you want to add a custom action to your charmed
+Flask app that checks the status of the running app and writes the status to a
+log file in the app container. The action performs the following steps:
+
+- Sends a request to the Flask app at its available port.
+- If the request is successful, updates the app container with the status
+  message in a logfile.
+- As a consistency check, reads the contents of the log file in the app
+  container and outputs the status message as part of the action result.
+  In practice, you could create a separate action for reading the log file.
+
+Add the custom action to the project file:
+
+.. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charmcraft.yaml
+    :language: yaml
+    :caption: charmcraft.yaml
+
+Add ``import requests`` to the start of ``src/charm.py``, then define
+your custom action as part of the class and provide the function definition:
+
+.. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
+    :language: python
+    :caption: src/charm.py
+    :lines: 22-65
+    :emphasize-lines: 8-44
+
+Build the charm using ``charmcraft pack`` and deploy the app with Juju.
+
+Finally, call the action using:
+
+.. code:: bash
+
+   juju run <flask unit name> updatelogfile logfile=<full path to logfile>
+
+If successful, the terminal will output something like:
+
+.. terminal::
+    :input: juju run flask-app/0 updatelogfile logfile="/tmp/example.log"
+
+    Running operation 1 with 1 task
+      - task 2 on unit-flask-app-0
+
+    Waiting for task 2...
+    result: |-
+      App response: Hello, world!
+      Output written to file: Hello, world!
+
+.. warning::
+
+    Writing to a file in the app container is unstable because the Juju units
+    are ephemeral, meaning that container files are not persistent in the case
+    of the unit's restart or deletion.
+
+Manage secrets
+--------------
 
 A user secret can be added to a charm and all the keys and values
 in the secret will be exposed as environment variables. Add the secret

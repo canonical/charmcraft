@@ -5,9 +5,9 @@
 # markers for including said instructions
 # as snippets in the docs.
 ###########################################
-summary: Getting started with Flask tutorial
+summary: Custom action in a Flask app
 
-kill-timeout: 180m
+kill-timeout: 120m
 
 environment:
 
@@ -61,9 +61,7 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:flask-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/flask-hello-world:0.1
   # [docs:skopeo-copy-end]
@@ -114,81 +112,30 @@ execute: |
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
 
-  cd ..
-  cat greeting_app.py > app.py
-  sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
+  # add custom action to charmcraft.yaml
+  cat $HOME/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
 
-  # [docs:docker-update]
-  rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:flask-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/flask-hello-world:0.2
-  # [docs:docker-update-end]
+  # add custom action to src/charm.py
+  cat $HOME/updatelogfile_action_charm.py > $HOME/charm/src/charm.py
 
-  cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
-  cd charm
-
-  # [docs:refresh-deployment]
+  # charmcraft clean and charmcraft pack
+  charmcraft clean
   charmcraft pack
+
+  # refresh the deployment
   juju refresh flask-hello-world \
     --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
-    --resource flask-app-image=localhost:32000/flask-hello-world:0.2
-  # [docs:refresh-deployment-end]
+    --resource flask-app-image=localhost:32000/flask-hello-world:0.1
 
-  # give Juju some time to refresh the app
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
-
-  # curl and check that the response is Hello
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hello
-
-  # [docs:change-config]
-  juju config flask-hello-world greeting='Hi!'
-  # [docs:change-config-end]
-
-  # make sure that the application updates
+  # wait for the Flask app to come back to active idle
   juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  # curl and check that the response is now Hi
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  # make sure it's in listed actions
+  juju actions flask-hello-world | grep updatelogfile
 
-  cd ..
-  cat visitors_migrate.py >> migrate.py
-  cat visitors_app.py > app.py
-  sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
-
-  # [docs:docker-2nd-update]
-  rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:flask-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/flask-hello-world:0.3
-  # [docs:docker-2nd-update-end]
-
-  cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
-  cd charm
-
-  # [docs:refresh-2nd-deployment]
-  charmcraft pack
-  juju refresh flask-hello-world \
-    --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
-    --resource flask-app-image=localhost:32000/flask-hello-world:0.3
-  # [docs:refresh-2nd-deployment-end]
-
-  # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
-  juju integrate flask-hello-world postgresql-k8s
-  # [docs:deploy-postgres-end]
-
-  # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 30m | juju status --relations
-  juju wait-for application flask-hello-world --query='status=="active"' --timeout 30m | juju status --relations
-
-  juju status --relations
-
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
-  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 1
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
-  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 2
+  # make sure the action runs successfully
+  juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"
 
   # [docs:clean-environment]
   charmcraft clean
@@ -200,9 +147,7 @@ execute: |
   rm -rf charm .venv __pycache__
   # delete all the files created during the tutorial
   rm flask-hello-world_0.1_$(dpkg --print-architecture).rock \
-    flask-hello-world_0.2_$(dpkg --print-architecture).rock \
-    flask-hello-world_0.3_$(dpkg --print-architecture).rock \
-    rockcraft.yaml app.py requirements.txt migrate.py
+    rockcraft.yaml app.py requirements.txt
   # Remove the juju model
   juju destroy-model flask-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]

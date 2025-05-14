@@ -134,6 +134,9 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Flask app into a rock
 ------------------------------
 
+Now let's create a container image for our Flask app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
 First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
 pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the
@@ -203,15 +206,19 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the Flask rock,
 the terminal will respond with something similar to
 ``Packed flask-hello-world_0.1_<architecture>.rock``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in the Kubernetes cluster.
-Copy the rock:
+The rock needs to be copied to the MicroK8s registry. This registry acts as a
+temporary Dockerhub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -219,10 +226,19 @@ Copy the rock:
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
 
+This command contains the following pieces:
+
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Flask app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
+
 .. seealso::
 
-    `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
+    See more: `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
 Create the charm
@@ -241,8 +257,9 @@ Similar to the rock, we'll take advantage of a pre-defined extension in
 Charmcraft with the ``--profile`` flag that caters initial charm files for
 specific web app frameworks. Using the ``flask-framework`` profile,
 Charmcraft automates the creation of the files needed for our charm,
-including a ``charmcraft.yaml``, ``requirements.txt`` and source code for the
-charm. The source code contains the logic required to operate the Flask app.
+including a ``charmcraft.yaml`` project file, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the
+Flask app.
 
 Initialize a charm named ``flask-hello-world``:
 
@@ -277,11 +294,20 @@ respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
+.. admonition:: For more options when packing charms
+
+    See the :literalref:`pack<ref_commands_pack>` command reference.
+
+
 Deploy the Flask app
 --------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Flask app. Let's create a new model:
+the Flask app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Flask app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

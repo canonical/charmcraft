@@ -3,3 +3,4 @@ include LICENSE
 include requirements.txt
 include completion.bash
 recursive-include charmcraft/templates *.j2
+include charmcraft/parts/plugins/*.txt

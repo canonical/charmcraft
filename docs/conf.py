@@ -99,24 +99,28 @@ exclude_patterns = [
     # documents (so they generate "duplicate label" errors) or they aren't
     # used in this documentation at all (so they generate "unreferenced"
     # errors).
-    "explanation/index.rst",
     "common/craft-parts/explanation/lifecycle.rst",
     "common/craft-parts/explanation/overlay_parameters.rst",
     "common/craft-parts/explanation/overlays.rst",
     "common/craft-parts/explanation/parts.rst",
     "common/craft-parts/explanation/how_parts_are_built.rst",
     "common/craft-parts/explanation/dump_plugin.rst",
+    "common/craft-parts/explanation/gradle_plugin.rst",
     "common/craft-parts/explanation/overlay_step.rst",
     "common/craft-parts/how-to/craftctl.rst",
     "common/craft-parts/how-to/include_files.rst",
+    "common/craft-parts/how-to/use_parts.rst",
     "common/craft-parts/how-to/override_build.rst",
     "common/craft-parts/reference/partition_specific_output_directory_variables.rst",
     "common/craft-parts/reference/step_output_directories.rst",
     "common/craft-parts/reference/plugins/ant_plugin.rst",
     "common/craft-parts/reference/plugins/autotools_plugin.rst",
+    "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
+    "common/craft-parts/reference/plugins/gradle_plugin.rst",
+    "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
@@ -130,6 +134,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/go_use_plugin.rst",
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
+    "reuse/reference/extensions/integrations.rst",
     "reuse/tutorial/*"
 ]
 

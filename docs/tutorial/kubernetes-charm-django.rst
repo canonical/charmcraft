@@ -304,15 +304,19 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several minutes to
 finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
 ``Packed django-hello-world_0.1_<architecture>.rock``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in a Kubernetes cluster.
-Copy the rock:
+The rock needs to be copied to the MicroK8s registry. This registry acts as a
+temporary Dockerhub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -320,9 +324,18 @@ Copy the rock:
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
 
+This command contains the following pieces:
+
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Django app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
+
 .. seealso::
 
-    `Ubuntu manpage | skopeo
+    See more: `Ubuntu manpage | skopeo
     <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 

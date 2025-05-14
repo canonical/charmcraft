@@ -435,8 +435,15 @@ to send a request via the ingress. It should return the
     setting a DNS record.
 
 
-Configure the FastAPI app
--------------------------
+The development cycle
+---------------------
+
+So far, we have worked through the entire cycle, from creating an app to deploying it.
+But now – as in every real-world case – we will go through the experience
+of iterating to develop the app, and deploy each iteration.
+
+Provide a configuration
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the FastAPI app,
 we will make the greeting configurable. We will expect this
@@ -447,6 +454,9 @@ using ``cd ..`` and copy the following code into ``app.py``:
 .. literalinclude:: code/fastapi/greeting_app.py
     :caption: ~/fastapi-hello-world/app.py
     :language: python
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -481,6 +491,9 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-update]
     :end-before: [docs:docker-update-end]
     :dedent: 2
+
+Update the charm
+~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -561,6 +574,9 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
     been integrated with the charm.
 
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -604,6 +620,9 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-2nd-update]
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
+
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 

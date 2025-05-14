@@ -126,7 +126,7 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-fastapi-end]
     :dedent: 2
 
-The FastAPI app should respond with ``{"message":"Hello World"}``.
+The FastAPI app should respond with ``{"message":"Hello, world"}``.
 
 The FastAPI app looks good, so we can stop for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -426,7 +426,7 @@ Monitor ``juju status`` until everything has a status of ``active``.
 Test the deployment using
 ``curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should return the
-``{"message":"Hello World"}`` greeting.
+``{"message":"Hello, world"}`` greeting.
 
 .. note::
 
@@ -684,7 +684,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

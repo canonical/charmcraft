@@ -446,6 +446,7 @@ So far, we have worked through the entire cycle, from creating an app to deployi
 But now – as in every real-world case – we will go through the experience
 of iterating to develop the app, and deploy each iteration.
 
+
 Provide a configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -458,6 +459,7 @@ using ``cd ..`` and copy the following code into ``app.py``:
 .. literalinclude:: code/fastapi/greeting_app.py
     :caption: ~/fastapi-hello-world/app.py
     :language: python
+
 
 Update the rock
 ~~~~~~~~~~~~~~~
@@ -495,6 +497,7 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-update]
     :end-before: [docs:docker-update-end]
     :dedent: 2
+
 
 Update the charm
 ~~~~~~~~~~~~~~~~
@@ -578,6 +581,7 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
     been integrated with the charm.
 
+
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -624,6 +628,7 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-2nd-update]
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
+
 
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~

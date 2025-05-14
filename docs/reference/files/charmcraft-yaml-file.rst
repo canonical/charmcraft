@@ -63,6 +63,14 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
         :start-at: actions:
         :end-before: analysis:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, and use hyphens (-) to separate words. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some action names be dashed and some be underscored.
+
 
 .. _charmcraft-yaml-key-analysis:
 
@@ -460,6 +468,30 @@ secret URI.
         :start-at: config:
         :end-before: containers:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Just like Juju, a charm is an opinionated tool. Configure the application
+    with the best defaults (ideally the application is deployable without
+    providing any configuration at deploy time), and only expose application
+    configuration options when necessary.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some config names be dashed and some be underscored.
+
+.. admonition:: Best practice
+    :class: hint
+    For very complex applications, consider providing configuration profiles,
+    which can group values for large configs together. For example,
+    a ``profile: large`` that tweaks multiple options under the hood to optimize for
+    larger deployments, or a ``profile: ci`` for limited resource usage during
+    testing.
+
 
 .. _charmcraft-yaml-key-containers:
 
@@ -603,6 +635,12 @@ for users) and the default is 0 (root).
         :start-at: links:
         :end-before: name:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Documentation links should apply to the charm, and not to the application that
+    is being charmed. Assume that the user already has basic competency in the use
+    of the application.
 
 .. _charmcraft-yaml-key-name:
 
@@ -627,6 +665,22 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: name:
         :end-before: parts:
+
+.. admonition:: Best practice
+    :class: hint
+
+    The name should be slug-oriented (ASCII lowercase letters, numbers, and
+    hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
+    For example, ``argo-server-k8s``.
+
+    Include the ``-k8s`` suffix on all charms that run on a Kubernetes cloud,
+    unless the charm has no workload or you know that there will never be
+    a machine version of the charm.
+
+    Don't include an organization or publisher in the name.
+
+    Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a
+    repository, see :ref:`initialise-a-charm`.
 
 
 .. _charmcraft-yaml-key-parts:
@@ -761,7 +815,8 @@ is a map where keys are part properties.
             # endpoint. This field is an integer
             limit: <n>
 
-            # (Optional) Defines if the relation is required. Informational only.
+            # (Optional) Defines if the relation is required. Not enforced by
+            # Juju, but used by other tools and should always be included.
             optional: true | false
 
             # (Optional) The scope of the relation. Defaults to "global"
@@ -840,13 +895,21 @@ endpoint.
 
 **Status:** Optional.
 
-**Purpose:** To define if the relation is required. Informational only.
+**Purpose:** To define if the relation is required. Not enforced by Juju.
 
 **Structure:**
 
 *Type:* Boolean.
 
 *Default value:* ``false``
+
+.. admonition:: Best practice
+    :class: hint
+
+    Always include the ``optional`` key, rather than relying on the default
+    value to indicate that the relation is required. Although this field is
+    not enforced by Juju, including it makes it clear to users (and other tools)
+    whether the relation is required.
 
 
 ``<endpoint role>.<endpoint name>.scope``

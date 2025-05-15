@@ -32,7 +32,7 @@ craft-application==4.10.0
 craft-archives==2.1.0
 craft-cli==2.15.0
 craft-grammar==2.0.3
-craft-parts==2.6.2
+craft-parts==2.9.1
 craft-platforms==0.6.0
 craft-providers==2.2.0
 craft-store==3.2.1

@@ -18,7 +18,7 @@ build==1.2.2.post1
 cachecontrol==0.14.2
 canonical-sphinx==0.4.1
 canonical-sphinx-extensions==0.0.27
-certifi==2025.1.31
+certifi==2025.4.26
 cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.1

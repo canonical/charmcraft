@@ -6,7 +6,7 @@ env:
 
 jobs:
   diff-schema:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -39,7 +39,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install ajv cli
         run: npm install -g ajv-cli

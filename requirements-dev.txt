@@ -482,7 +482,7 @@ ruamel-yaml-clib==0.2.12 ; python_full_version < '3.13' and platform_python_impl
     # via ruamel-yaml
 secretstorage==3.3.3 ; sys_platform == 'linux'
     # via keyring
-setuptools==75.8.0
+setuptools==78.1.1
     # via
     #   lazr-restfulclient
     #   lazr-uri

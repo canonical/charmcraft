@@ -72,7 +72,7 @@ responses==0.24.1
 rpds-py==0.10.6
 ruff==0.1.15
 secretstorage==3.3.3
-setuptools==75.3.0
+setuptools==78.1.1
 six==1.16.0
 snap-helpers==0.4.2
 snowballstemmer==2.2.0

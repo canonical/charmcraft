@@ -58,12 +58,12 @@ you can use a `YAML Language Server <https://snapcraft.io/yaml-language-server>`
 to provide the feature.
 
 
-Improved documentation
-~~~~~~~~~~~~~~~~~~~~~~
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Many people have made countless improvements to Charmcraft's documentation this release
-cycle, from hard to notice things like
-`using consistent terminology <https://github.com/canonical/charmcraft/pull/2169>`_ to
+cycle, from small changes like
+`consistent terminology usage <https://github.com/canonical/charmcraft/pull/2169>`_ to
 `major rewrites of tutorials <https://github.com/canonical/charmcraft/pull/2085>`_.
 
 
@@ -78,7 +78,7 @@ Windows support
 ~~~~~~~~~~~~~~~
 
 Charmcraft 3.0 deprecated support for Windows, and the upcoming 4.0 major release will
-remove support for it (`#1810 <https://github.com/canonical/charmcraft/issues/1810>`_).
+cease it (`#1810 <https://github.com/canonical/charmcraft/issues/1810>`_).
 Windows users should begin preparing to migrate their workflows to `Windows Subsystem
 for Linux <https://ubuntu.com/desktop/wsl>`_.
 
@@ -88,8 +88,8 @@ CentOS 7 support
 
 CentOS 7 reached its `end of life
 <https://www.redhat.com/en/topics/linux/centos-linux-eol>`_ on 30 June 2024. Charmcraft
-3 will continue its current support for CentOS 7, but Charmcraft 4.0 won't support
-CentOS 7 (`#1826 <https://github.com/canonical/charmcraft/issues/1826>`_).
+3.0 will continue supporting it, but Charmcraft 4.0 will cease support for it
+(`#1826 <https://github.com/canonical/charmcraft/issues/1826>`_).
 
 
 Bundle registration
@@ -120,7 +120,7 @@ The schedule for removing this feature hasn't been set yet.
 
 In line with the phasing out of bundles, Charmcraft 4.0 will deprecate the bundle plugin
 (`#2114 <https://github.com/canonical/charmcraft/issues/2114>`_). No schedule has been
-set yet for this change.
+set for this change yet.
 
 
 Known issues

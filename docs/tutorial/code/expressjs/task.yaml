@@ -103,10 +103,6 @@ execute: |
   # update platforms in charmcraft.yaml file
   sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
 
-  # delete once the paas-charm pr is merged
-  sed -i "s|paas-charm.*|https://github.com/canonical/paas-charm/archive\
-  /feat/expressjs.tar.gz|g" requirements.txt
-
   # [docs:charm-pack]
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
   # [docs:charm-pack-end]

@@ -192,7 +192,6 @@ the architecture of your system:
 
 
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
-Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 

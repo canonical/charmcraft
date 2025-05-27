@@ -15,12 +15,12 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-If you're new to the charming world, ExpressJS apps are
+If you're new to the charming world, Express apps are
 specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.
 A rock is a special kind of OCI-compliant container image, while a
 charm is a software operator for cloud operations that use the Juju
-orchestration engine. The result is a ExpressJS app that
+orchestration engine. The result is an Express app that
 can be easily deployed, configured, scaled, integrated, etc.,
 on any Kubernetes cluster.
 
@@ -55,7 +55,7 @@ Set things up
 -------------
 
 .. include:: /reuse/tutorial/setup_edge.rst
-.. |12FactorApp| replace:: ExpressJS
+.. |12FactorApp| replace:: Express
 
 Finally, let's create a new directory for this tutorial and
 enter into it:
@@ -85,7 +85,7 @@ Install ``npm`` and ``express-generator`` to initialize the Express module:
 Run the Express app locally
 ----------------------
 
-First, install the necessary packages for the ExpressJS app so it can run:
+First, install the necessary packages for the Express app so it can run:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -114,29 +114,29 @@ The Express app should respond with ``Welcome to Express`` web page.
 
 .. note::
 
-    The response from the ExpressJS application includes HTML and CSS
+    The response from the Express app includes HTML and CSS
     which makes it difficult to read on a terminal. You can use a browser
     to see the fully rendered page using the IP address of the VM to
-    access the ExpressJS app. You can find the IP address of the VM by
+    access the Express app. You can find the IP address of the VM by
     running ``multipass info charm-dev`` outside of the VM. Then open
     a new tab and visit ``http://<Multipass private IP>:3000``, replacing
     ``<Multipass private IP>`` with your VM's private IP address.
 
-The ExpressJS app looks good, so we can stop it for now from the
+The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
 
 Pack the Express app into a rock
 ---------------------------
 
-Now let's create a container image for our ExpressJS app. We'll use a rock,
+Now let's create a container image for our Express app. We'll use a rock,
 which is an OCI-compliant container image based on Ubuntu.
 
 First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
 pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the
 ``expressjs-framework`` profile, Rockcraft automates the creation of
-``rockcraft.yaml`` and tailors the file for an ExpressJS app.
+``rockcraft.yaml`` and tailors the file for an Express app.
 From the ``~/expressjs-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
@@ -210,6 +210,10 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the Express rock,
 the terminal will respond with something similar to
 ``Packed expressjs-hello-world_0.1_<architecture>.rock``.
@@ -225,6 +229,15 @@ Copy the rock:
     :start-after: [docs:skopeo-copy]
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
+
+This command contains the following pieces:
+
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Express app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
 
 .. seealso::
 
@@ -319,6 +332,10 @@ respond with something similar to
 ``Packed expressjs-hello-world_ubuntu-24.04-<architecture>.charm``.
 The file name reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
+
+.. admonition:: For more options when packing charms
+
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 
 Deploy the Express app
@@ -497,7 +514,7 @@ Change back into the charm directory using ``cd charm``.
 
 The ``expressjs-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
-the ExpressJS app. Add the following to the end of the
+the Express app. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/expressjs/greeting_charmcraft.yaml

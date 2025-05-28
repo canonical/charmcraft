@@ -22,7 +22,7 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems=$(spread -list google:docs/ | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   docs-tests:
     runs-on: spread-installed
@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        spread: ${{ fromJSON(needs.spread-select.outputs.systems) }}
+        system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
       - name: Cleanup job workspace
@@ -50,7 +50,7 @@ jobs:
 
       - name: Run spread
         run: |
-          spread google:docs/howto/code/ google:docs/tutorial/code/
+          spread google:${{ matrix.system }}:docs/
 
       - name: Discard spread workers
         if: always()

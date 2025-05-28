@@ -14,8 +14,24 @@ on:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
 
 jobs:
+  spread-select:
+    runs-on: spread-installed
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems=$(spread -list google:docs/ | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+
   docs-tests:
     runs-on: spread-installed
+    needs: [spread-select]
+    strategy:
+      fail-fast: false
+      matrix:
+        system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
+
     steps:
       - name: Cleanup job workspace
         run: |
@@ -34,7 +50,7 @@ jobs:
 
       - name: Run spread
         run: |
-          spread google:docs/howto/code/ google:docs/tutorial/code/
+          spread google:${{ matrix.system }}:docs/
 
       - name: Discard spread workers
         if: always()

@@ -35,6 +35,10 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+      - ubuntu-24.04-64:
+          workers: 6
+          memory: 8G
+          storage: 40G
 
   multipass:
     type: adhoc

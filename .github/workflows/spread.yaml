@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        spread: ${{ fromJSON(needs.spread-select.outputs.systems) }}
+        system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
       - name: Cleanup job workspace
@@ -62,7 +62,7 @@ jobs:
 
       - name: Run spread
         run: |
-          spread ${{ matrix.spread }}
+          spread google:${{ matrix.system }}
 
       - name: Discard spread workers
         if: always()

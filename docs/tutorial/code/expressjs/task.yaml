@@ -9,6 +9,12 @@ summary: Getting started with ExpressJS tutorial
 
 kill-timeout: 180m
 
+prepare: |
+  juju destroy-model expressjs-hello-world \
+  --destroy-storage --no-prompt --force || true
+  juju destroy-controller --force --destroy-all-models \
+  --destroy-storage --no-prompt --no-wait dev-controller || true
+
 environment:
 
 execute: |

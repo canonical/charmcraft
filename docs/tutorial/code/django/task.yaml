@@ -11,6 +11,12 @@ kill-timeout: 180m
 
 environment:
 
+prepare: |
+  juju destroy-model django-hello-world \
+  --destroy-storage --no-prompt --force || true
+  juju destroy-controller --force --destroy-all-models \
+  --destroy-storage --no-prompt --no-wait dev-controller || true
+
 execute: |
   # Move everything to $HOME so that Juju deployment works
   mv *.yaml *.py *.txt $HOME
@@ -67,7 +73,8 @@ execute: |
   cd django_hello_world
 
   # Update settings.py file
-  cat $HOME/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/settings_local_run.py > \
+  $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # Run Django app locally
   ./manage.py runserver 0.0.0.0:8000 &
@@ -88,7 +95,8 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # Update settings.py file
-  cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/settings_init_rock.py > \
+  $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # [docs:pack]
   rockcraft pack
@@ -143,8 +151,10 @@ execute: |
   # [docs:integrate-postgres-end]
 
   # Check that django-hello-world and postgres are active idle
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application postgresql-k8s --query='status=="active"' \
+  --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' \
+  --timeout 10m
 
   # [docs:config-debug]
   juju config django-hello-world django-debug=true
@@ -161,14 +171,17 @@ execute: |
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
-  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' \
+  --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"'\
+   --timeout 10m
 
   juju status --relations
   sleep 30s
 
   # curl the Django app
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | \
+  grep Congratulations
 
   cd ..
   cd django_hello_world
@@ -199,7 +212,8 @@ execute: |
   # [docs:refresh-deployment]
   cd charm
   juju refresh django-hello-world \
-      --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+      --path=./django-hello-world_ubuntu-22.04-\
+      $(dpkg --print-architecture).charm \
       --resource django-app-image=localhost:32000/django-hello-world:0.2
   # [docs:refresh-deployment-end]
 
@@ -208,15 +222,19 @@ execute: |
   # [docs:disable-debug-mode-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="maintenance"' \
+  --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' \
+  --timeout 10m
 
   # curl and check that the response is Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | \
+  grep Hello
 
   cd ..
   # Update django_hello_world/greeting/views.py
-  cat $HOME/views_greeting_configuration.py > django_hello_world/greeting/views.py
+  cat $HOME/views_greeting_configuration.py > \
+  django_hello_world/greeting/views.py
 
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
 
@@ -235,26 +253,31 @@ execute: |
   # [docs:repack-refresh-2nd-deployment]
   charmcraft pack
   juju refresh django-hello-world \
-    --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
-    --resource django-app-image=localhost:32000/django-hello-world:0.3
+    --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm\
+     --resource django-app-image=localhost:32000/django-hello-world:0.3
   # [docs:repack-refresh-2nd-deployment-end]
 
   # Wait for django-hello-world to be active
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' \
+  --timeout 10m
 
   # curl and check that the response is still Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | \
+  grep Hello
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application django-hello-world --query='status=="maintenance"' \
+  --timeout 10m
+  juju wait-for application django-hello-world --query='status=="active"' \
+  --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
+  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | \
+  grep Hi
 
   # [docs:clean-environment]
   charmcraft clean

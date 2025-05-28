@@ -112,9 +112,12 @@ endif
 
 .PHONY: install-linux-build-deps
 install-linux-build-deps:
-ifneq ($(shell which snap),)
+ifneq ($(wildcard /snap/bin/lxd),)
+else ifneq ($(shell which snap),)
 	sudo snap install lxd
 	sudo lxd init --auto
+else
+	$(warning lxd not installed and snap is not available. Please install snap and lxd)
 endif
 
 .PHONY: install-macos-build-deps

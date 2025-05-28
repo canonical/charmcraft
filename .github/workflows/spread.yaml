@@ -25,17 +25,23 @@ jobs:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
+  spread-select:
+    runs-on: spread-installed
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems=\'$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)\' | tee -a "${GITHUB_OUTPUT}"
+
   snap-tests:
     runs-on: spread-installed
-    needs: [snap-build]
+    needs: [snap-build, spread-select]
     strategy:
       fail-fast: false
       matrix:
-        spread:
-          - "google:ubuntu-18.04-64"
-          - "google:ubuntu-20.04-64"
-          - "google:ubuntu-22.04-64"
-          - "google:ubuntu-24.04-64"
+        spread: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
       - name: Cleanup job workspace

@@ -463,7 +463,7 @@ specify the ``config`` key.
 
     See more: :ref:`charmcraft-yaml-key-config`
 
-    See next: :external+ops:ref:`Ops | Manage configurations <manage-configurations>`
+    See next: :external+ops:ref:`Ops | Manage configuration <manage-configuration>`
 
 .. _manage-relations:
 

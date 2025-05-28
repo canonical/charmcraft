@@ -213,7 +213,7 @@ execute: |
   cd charm
   juju refresh django-hello-world \
       --path=./django-hello-world_ubuntu-22.04-\
-      $(dpkg --print-architecture).charm \
+  $(dpkg --print-architecture).charm \
       --resource django-app-image=localhost:32000/django-hello-world:0.2
   # [docs:refresh-deployment-end]
 

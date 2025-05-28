@@ -78,7 +78,8 @@ To add the icon to the charm's Charmhub page, save it as ``icon.svg``, place it
 in the root directory of the charm, and then publish the charm to a channel of the
 form ``<track>/stable`` (e.g., ``latest/stable``). Note that the track that you publish
 the icon to needs to be the default track for the icon to be displayed on Charmhub.
-Please raise a `CharmHub request <https://discourse.charmhub.io/c/charmhub-requests/46>`_
+Please raise a
+`CharmHub request <https://discourse.charmhub.io/c/charmhub-requests/46>`_
 on Discourse to set a track as the default track.
 
 .. note::

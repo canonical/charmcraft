@@ -50,7 +50,7 @@ The `JSON Schema Store <https://schemastore.org>`_ now includes a schema for the
 
 If your IDE supports fetching JSON schemas from the store, you can now load the latest.
 
-.. image:: /_static/assets/json-schema-example-light.webp
+.. image:: https://assets.ubuntu.com/v1/963f71da-json-schema-example-light.webp
    :width: 451
    :alt: A charmcraft.yaml file open in kate editor showing the mouseover hint for the parts key.
 

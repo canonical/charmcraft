@@ -126,10 +126,12 @@ ifneq ($(OS),Darwin)
 else ifeq ($(shell which brew),)
 	$(warning brew not installed. Please install dependencies yourself.)
 else
+	brew install multipass
+	# Work around installation conflict in GH CI.
+	if [ "${CI:-nope}" != "nope" ]; then sudo rm -f /usr/local/bin/idle* /usr/local/bin/pip* /usr/local/bin/py* ; fi
+	brew install skopeo
 	brew install libgit2@1.7  # For building pygit2
 	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
-	brew install multipass
-	brew install skopeo
 endif
 
 .PHONY: schema

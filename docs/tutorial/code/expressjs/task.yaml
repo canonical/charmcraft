@@ -127,8 +127,8 @@ execute: |
   # [docs:deploy-expressjs-app]
   juju deploy \
     ./expressjs-hello-world_$(dpkg --print-architecture).charm \
-    expressjs-hello-world --resource \
-    app-image=localhost:32000/expressjs-hello-world:0.1
+    expressjs-hello-world \
+    --resource app-image=localhost:32000/expressjs-hello-world:0.1
   # [docs:deploy-expressjs-app-end]
 
   # [docs:deploy-nginx]
@@ -233,19 +233,19 @@ execute: |
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' \
-  --timeout 20m | juju status --relations
-  juju wait-for application expressjs-hello-world --query='status=="active"' \
-  --timeout 20m | juju status --relations
+  juju wait-for application postgresql-k8s \
+  --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application expressjs-hello-world \
+  --query='status=="active"' --timeout 20m | juju status --relations
 
-  curl http://expressjs-hello-world --resolve \
-  expressjs-hello-world:80:127.0.0.1 | grep Hi
-  curl http://expressjs-hello-world/visitors --resolve \
-  expressjs-hello-world:80:127.0.0.1 | grep 1
-  curl http://expressjs-hello-world --resolve \
-  expressjs-hello-world:80:127.0.0.1 | grep Hi
-  curl http://expressjs-hello-world/visitors --resolve \
-  expressjs-hello-world:80:127.0.0.1 | grep 2
+  curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  curl http://expressjs-hello-world/visitors \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep 1
+  curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  curl http://expressjs-hello-world/visitors \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean

@@ -124,8 +124,8 @@ execute: |
   # [docs:deploy-go-app]
   juju deploy \
     ./go-hello-world_$(dpkg --print-architecture).charm \
-    go-hello-world --resource \
-    app-image=localhost:32000/go-hello-world:0.1
+    go-hello-world \
+    --resource app-image=localhost:32000/go-hello-world:0.1
   # [docs:deploy-go-app-end]
 
   # [docs:deploy-nginx]
@@ -139,10 +139,10 @@ execute: |
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
-  juju wait-for application go-hello-world --query='status=="active"' \
-  --timeout 10m
-  juju wait-for application nginx-ingress-integrator --query='status=="active"'\
-   --timeout 10m
+  juju wait-for application go-hello-world \
+  --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator \
+  --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
@@ -170,8 +170,8 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application go-hello-world --query='status=="active"' \
-  --timeout 10m
+  juju wait-for application go-hello-world \
+  --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hello
@@ -181,10 +181,10 @@ execute: |
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application go-hello-world --query='status=="maintenance"' \
-  --timeout 10m
-  juju wait-for application go-hello-world --query='status=="active"' \
-  --timeout 10m
+  juju wait-for application go-hello-world \
+  --query='status=="maintenance"' --timeout 10m
+  juju wait-for application go-hello-world \
+  --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
@@ -228,17 +228,17 @@ execute: |
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' \
-  --timeout 20m | juju status --relations
-  juju wait-for application go-hello-world --query='status=="active"' \
-  --timeout 20m | juju status --relations
+  juju wait-for application postgresql-k8s \
+  --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application go-hello-world \
+  --query='status=="active"' --timeout 20m | juju status --relations
 
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | \
-  grep 1
+  curl http://go-hello-world/visitors \
+  --resolve go-hello-world:80:127.0.0.1 | grep 1
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | \
-  grep 2
+  curl http://go-hello-world/visitors \
+  --resolve go-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean

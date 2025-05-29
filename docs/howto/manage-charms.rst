@@ -447,10 +447,10 @@ specify the ``actions`` key.
 
     See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
-.. _manage-configurations:
+.. _manage-the-app-configuration:
 
-Manage configurations
-~~~~~~~~~~~~~~~~~~~~~
+Manage the app configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     See first: :external+juju:ref:`Juju | Configuration > Application configuration
     <application-configuration>`,

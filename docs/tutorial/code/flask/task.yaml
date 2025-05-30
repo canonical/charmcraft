@@ -99,7 +99,7 @@ execute: |
   # [docs:deploy-flask-app]
   juju deploy \
     ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
-    flask-hello-world
+    flask-hello-world \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.1
   # [docs:deploy-flask-app-end]
 

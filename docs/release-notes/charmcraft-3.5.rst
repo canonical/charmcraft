@@ -52,7 +52,7 @@ If your IDE supports fetching JSON schemas from the store, you can now load the 
 
 .. image:: https://assets.ubuntu.com/v1/963f71da-json-schema-example-light.webp
    :width: 451
-   :alt: A charmcraft.yaml file open in kate editor showing the mouseover hint for the parts key.
+   :alt: A charmcraft.yaml file open in kate editor showing a hint for the parts key.
 
 
 Documentation improvements

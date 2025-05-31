@@ -499,7 +499,7 @@ dev = [
     { name = "responses", specifier = ">=0.25.3" },
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
-    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-requests", specifier = "<2.32.0.20250516" },
     { name = "types-setuptools" },
     { name = "types-tabulate" },
     { name = "types-urllib3" },
@@ -525,7 +525,7 @@ lint = [
     { name = "mypy", extras = ["reports"], specifier = "~=1.11" },
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
-    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-requests", specifier = "<2.32.0.20250516" },
     { name = "types-setuptools" },
     { name = "types-tabulate" },
     { name = "types-urllib3" },
@@ -538,7 +538,7 @@ types = [
     { name = "mypy", extras = ["reports"], specifier = "~=1.11" },
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
-    { name = "types-requests", specifier = "<2.31.0.20240312" },
+    { name = "types-requests", specifier = "<2.32.0.20250516" },
     { name = "types-setuptools" },
     { name = "types-tabulate" },
     { name = "types-urllib3" },
@@ -3831,14 +3831,14 @@ wheels = [
 
 [[package]]
 name = "types-requests"
-version = "2.31.0.20240311"
+version = "2.32.0.20250515"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d1/bb/05c62e972a5a89318ee014aed52af921800e3bdd9a0eabfb3851d9bf0beb/types-requests-2.31.0.20240311.tar.gz", hash = "sha256:b1c1b66abfb7fa79aae09097a811c4aa97130eb8831c60e47aee4ca344731ca5", size = 16824, upload-time = "2024-03-11T02:17:54.824Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/c1/cdc4f9b8cfd9130fbe6276db574f114541f4231fcc6fb29648289e6e3390/types_requests-2.32.0.20250515.tar.gz", hash = "sha256:09c8b63c11318cb2460813871aaa48b671002e59fda67ca909e9883777787581", size = 23012, upload-time = "2025-05-15T03:04:31.817Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/22/21c7918c9bb842faa92fd26108e9f669c3dee9b6b239e8f45dd5f673e6cf/types_requests-2.31.0.20240311-py3-none-any.whl", hash = "sha256:47872893d65a38e282ee9f277a4ee50d1b28bd592040df7d1fdaffdf3779937d", size = 14955, upload-time = "2024-03-11T02:17:52.817Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/0f/68a997c73a129287785f418c1ebb6004f81e46b53b3caba88c0e03fcd04a/types_requests-2.32.0.20250515-py3-none-any.whl", hash = "sha256:f8eba93b3a892beee32643ff836993f15a785816acca21ea0ffa006f05ef0fb2", size = 20635, upload-time = "2025-05-15T03:04:30.5Z" },
 ]
 
 [[package]]

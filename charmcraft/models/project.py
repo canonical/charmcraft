@@ -675,7 +675,7 @@ class CharmProject(CharmcraftProject):
               container (that you will then define further in the resources block).
             - ``bases`` is a list of bases to be used for resolving a container image,
               in descending order of preference. To use it, specify a base name (for
-              example, ``ubuntu`` or ``centos``), a ``channel`` and an
+              example, ``ubuntu`` or ``almalinux``), a ``channel`` and an
               ``architecture``.
             - ``mounts`` is a list of mounted storage volumes for this container. To
               use it, specify the name of the storage to mount from the charm
@@ -989,10 +989,7 @@ def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
         and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
     ):
         return True
-    return base in (
-        {"name": "centos", "channel": "7"},
-        {"name": "almalinux", "channel": "9"},
-    )
+    return base == {"name": "almalinux", "channel": "9"}
 
 
 def _validate_base(

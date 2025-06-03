@@ -50,7 +50,6 @@ MULTIARCH_BASENAME = bases.BaseName("multiarch", "2.0")
 UBUNTU_JAMMY = Base(name="ubuntu", channel="22.04", architectures=["amd64"])
 SIMPLE_BASES = (
     UBUNTU_JAMMY,
-    Base(name="centos", channel="7", architectures=["amd64"]),
     Base(name="almalinux", channel="9", architectures=["amd64"]),
 )
 COMPLEX_BASES = (
@@ -239,7 +238,7 @@ def test_platform_from_single_base(base):
 @pytest.mark.parametrize(
     ("bases", "expected"),
     [
-        (SIMPLE_BASES, "ubuntu-22.04-amd64_centos-7-amd64_almalinux-9-amd64"),
+        (SIMPLE_BASES, "ubuntu-22.04-amd64_almalinux-9-amd64"),
         (
             COMPLEX_BASES,
             "ubuntu-devel-amd64-arm64-s390x-riscv64_almalinux-9-amd64-arm64-s390x-ppc64el",
@@ -1189,7 +1188,6 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         ({"name": "ubuntu", "channel": "24.04"}, False),
         ({"name": "ubuntu", "channel": "24.10"}, False),
         ({"name": "ubuntu", "channel": "25.04"}, False),
-        ({"name": "centos", "channel": "7"}, True),
         ({"name": "almalinux", "channel": "9"}, True),
     ],
 )

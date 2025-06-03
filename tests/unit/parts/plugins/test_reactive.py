@@ -28,10 +28,6 @@ from craft_parts.errors import PluginEnvironmentValidationError
 from charmcraft import const
 from charmcraft.parts.plugins import _reactive
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows not [yet] supported"
-)
-
 
 @pytest.fixture
 def charm_exe(tmp_path):

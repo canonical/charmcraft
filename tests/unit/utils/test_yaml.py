@@ -13,7 +13,6 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-import sys
 import textwrap
 
 import pytest
@@ -65,7 +64,6 @@ def test_load_yaml_corrupted_format(tmp_path, emitter):
     emitter.assert_debug(expected, regex=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_load_yaml_file_problem(tmp_path, emitter):
     test_file = tmp_path / "testfile.yaml"
     test_file.write_text(

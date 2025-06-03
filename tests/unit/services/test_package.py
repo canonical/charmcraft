@@ -254,25 +254,8 @@ def test_do_not_overwrite_config_yaml(
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
             ],
         ),
-        (
-            [{"name": "centos", "channel": "7"}],
-            BuildInfo(
-                platform=util.get_host_architecture(),
-                build_on=util.get_host_architecture(),
-                build_for=util.get_host_architecture(),
-                base=BaseName("centos", "7"),
-            ),
-            [
-                {
-                    "name": "centos",
-                    "channel": "7",
-                    "architectures": [util.get_host_architecture()],
-                }
-            ],
-        ),
         pytest.param(
             [
-                {"name": "centos", "channel": "7"},
                 {
                     "build-on": [{"name": "ubuntu", "channel": "20.04"}],
                     "run-on": [

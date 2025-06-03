@@ -955,7 +955,7 @@ class PromoteCommand(CharmcraftCommand):
                     resolution="Provide channel names as '<track>/<risk>'.",
                     reportable=False,
                     logpath_report=False,
-                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                    retcode=os.EX_USAGE,
                 )
             package_metadata = store.get_package_metadata(name)
             default_track = package_metadata.default_track
@@ -967,7 +967,7 @@ class PromoteCommand(CharmcraftCommand):
         if to_channel == from_channel:
             raise CraftError(
                 "Cannot promote from a channel to the same channel.",
-                retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                retcode=os.EX_USAGE,
             )
         if to_channel.risk > from_channel.risk:
             command_parts = [
@@ -988,14 +988,14 @@ class PromoteCommand(CharmcraftCommand):
                     "Cross-track promotion can only occur at the same risk level.",
                     reportable=False,
                     logpath_report=False,
-                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                    retcode=os.EX_USAGE,
                 )
             if not parsed_args.yes and not utils.confirm_with_user(
                 "Did you mean to promote to a different track? (from "
                 f"{from_channel.track} to {to_channel.track})",
             ):
                 emit.message("Cancelling.")
-                return 64  # Replace with os.EX_USAGE once we drop Windows.
+                return os.EX_USAGE
 
         candidates = store.get_revisions_on_channel(name, from_channel.name)
 

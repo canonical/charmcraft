@@ -99,13 +99,6 @@ You can also install Charmcraft in an isolated environment.
 
     See more: :ref:`install-in-an-isolated-environment`
 
-
-On Windows
-~~~~~~~~~~
-
-There is no previously packaged way to install Charmcraft in Windows, please refer to
-how to install it in an `isolated environment <#heading--isolated>`_.
-
 .. _install-in-an-isolated-environment:
 
 

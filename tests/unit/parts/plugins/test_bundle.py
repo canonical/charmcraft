@@ -15,10 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 import sys
 
-import pytest
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
-
 
 def test_bundleplugin_get_build_package(bundle_plugin):
     assert bundle_plugin.get_build_packages() == set()

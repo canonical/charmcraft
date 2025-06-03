@@ -17,7 +17,6 @@
 
 import datetime
 import pathlib
-import sys
 import zipfile
 from typing import Any
 
@@ -487,7 +486,6 @@ def test_pack_charm_simple(fake_path, package_service):
     assert zf.read("bar/baz.txt") == b"mo\xc3\xb1o"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_simple(fake_path, package_service):
     """Symlinks are supported."""
     build_dir = fake_path / "somedir"
@@ -506,7 +504,6 @@ def test_zipbuild_symlink_simple(fake_path, package_service):
     assert zf.read("link.txt") == b"123\x00456"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_outside(fake_path, package_service):
     """No matter where the symlink points to."""
     # outside the build dir

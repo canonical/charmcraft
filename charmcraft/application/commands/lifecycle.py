@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 import pathlib
-import sys
 import textwrap
 from typing import TYPE_CHECKING, Any, cast
 
@@ -160,26 +159,6 @@ class PackCommand(lifecycle.PackCommand):
                 raise CraftError(msg.format(bases_index))
             if bases_index >= len_configured_bases:
                 raise CraftError(msg.format(bases_index))
-
-    def run_managed(self, parsed_args: argparse.Namespace) -> bool:
-        """Whether to run this command in managed mode.
-
-        If we're packing a bundle, run unmanaged. Otherwise, do what other lifecycle
-        commands do.
-        """
-        project_dir = pathlib.Path(getattr(parsed_args, "project_dir", "."))
-        charmcraft_yaml = utils.load_yaml(project_dir / "charmcraft.yaml")
-        # Always use a runner on non-Linux platforms.
-        # Craft-parts is not designed to work on non-posix platforms, and most
-        # notably here, the bundle plugin doesn't work on Windows.
-        if (
-            sys.platform == "linux"
-            and charmcraft_yaml
-            and charmcraft_yaml.get("type") == "bundle"
-        ):
-            return False
-
-        return super().run_managed(parsed_args)
 
     def _update_charm_libs(self) -> None:
         """Update charm libs attached to the project."""

@@ -30,7 +30,6 @@ from charmcraft.services.provider import _maybe_lock_cache
 pytestmark = [pytest.mark.slow]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
@@ -67,7 +66,6 @@ def test_lock_cache(
         subprocess.run(bash_lock_cmd, check=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
@@ -116,7 +114,6 @@ def test_locked_cache_no_cache(
         assert not (tmp_path / "cache_cached").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )

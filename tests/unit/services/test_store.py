@@ -62,7 +62,7 @@ def test_user_agent(store):
     )
 
 
-@pytest.mark.parametrize("system", ["Windows", "Macos"])
+@pytest.mark.parametrize("system", ["Macos"])
 @pytest.mark.parametrize("release", ["10", "11", "12"])
 @pytest.mark.parametrize("machine", ["x86_64", "arm64", "riscv64"])
 @pytest.mark.parametrize("python", ["CPython", "PyPy"])

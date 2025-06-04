@@ -194,9 +194,11 @@ execute: |
   cat visitors_index.js > app/routes/index.js
   cat visitors_app.js > app/app.js
 
+  pushd app
   # [docs:check-expressjs-app]
   npm install pg-promise
   # [docs:check-expressjs-app-end]
+  popd
 
   # [docs:docker-2nd-update]
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack

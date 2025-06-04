@@ -22,8 +22,14 @@ platforms:
 
 parts:
   charm:
-    plugin: charm
+    plugin: uv
     source: .
+    build-snaps:
+      - astral-uv
+    uv-groups:
+      # This pulls in dependencies of Charmcraft libraries.
+      # The dependency group is defined in pyproject.toml.
+      - charmlib-pydeps
 
 # (Optional) Configuration options for the charm
 # This config section defines charm config options, and populates the Configure

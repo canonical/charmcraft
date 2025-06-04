@@ -167,9 +167,15 @@ suites:
       #shellcheck source=tests/spread/tools/prepare.sh
       . "/charmcraft/tests/spread/tools/prepare.sh"
 
+      lxc network set lxdbr0 ipv6.address none
+      mkdir -p ~/.local/share
+
       refresh_or_install_snap juju "$juju_channel"
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/stable --classic
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

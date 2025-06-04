@@ -27,28 +27,14 @@ execute: |
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
 
-  # Add setup instructions
-  # (Ran into issues in prepare section)
-  # (don't install charmcraft)
-  snap install rockcraft --classic
-  snap install lxd
-  lxd init --auto
-  snap install microk8s --channel=1.31-strict/stable
-  snap install juju --channel=3.5/stable
-  snap refresh juju --channel=3.5/stable --amend
-
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
-  mkdir -p ~/.local/share
-
   # MicroK8s config setup
-  microk8s status --wait-ready
+  microk8s status --wait-ready --timeout 120
   microk8s enable hostpath-storage
   microk8s enable registry
   microk8s enable ingress
 
   # Bootstrap controller
-  juju bootstrap microk8s dev-controller
+  juju bootstrap microk8s dev-controller --config bootstrap-timeout=240
 
   # [docs:create-working-dir]
   mkdir expressjs-hello-world
@@ -70,7 +56,8 @@ execute: |
   npm install
   # [docs:build-expressjs-end]
 
-  npm start &
+  npm start >npmoutput.txt 2>&1  </dev/null &
+
   retry -n 5 --wait 2 curl --fail localhost:3000
 
   # [docs:curl-expressjs]
@@ -78,6 +65,7 @@ execute: |
   # [docs:curl-expressjs-end]
 
   kill $!
+  pkill --signal SIGINT node
 
   # [docs:create-rockcraft-yaml]
   cd ..
@@ -177,8 +165,8 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config expressjs-hello-world greeting='Hi!'
@@ -189,8 +177,8 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> app/migrate.sh
@@ -234,12 +222,13 @@ execute: |
 
   # give Juju some time to deploy and refresh the apps
   juju wait-for application postgresql-k8s \
-  --query='status=="active"' --timeout 20m | juju status --relations
+  --query='status=="active"' --timeout 20m
   juju wait-for application expressjs-hello-world \
-  --query='status=="active"' --timeout 20m | juju status --relations
+  --query='status=="active"' --timeout 20m
+  juju status --relations
 
-  curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi "
   curl http://expressjs-hello-world/visitors \
   --resolve expressjs-hello-world:80:127.0.0.1 | grep 1
   curl http://expressjs-hello-world \

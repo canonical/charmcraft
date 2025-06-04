@@ -45,7 +45,6 @@ BASIC_INIT_FILES = frozenset(
         "LICENSE",
         "pyproject.toml",
         "README.md",
-        "requirements.txt",
         "src",
         "src/charm.py",
         "tests",

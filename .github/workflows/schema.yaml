@@ -15,7 +15,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup project
-        run: make setup
+        run: |
+          sudo apt-get update
+          make setup
 
       - name: Run generator script
         run: |

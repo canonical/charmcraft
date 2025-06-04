@@ -88,9 +88,6 @@
 				"version": {
 					"const": "unversioned",
 					"default": "unversioned",
-					"enum": [
-						"unversioned"
-					],
 					"title": "Version",
 					"type": "string"
 				},
@@ -161,6 +158,7 @@
 				},
 				"parts": {
 					"additionalProperties": {
+						"additionalProperties": true,
 						"type": "object"
 					},
 					"default": {
@@ -177,6 +175,7 @@
 					"anyOf": [
 						{
 							"items": {
+								"additionalProperties": true,
 								"type": "object"
 							},
 							"type": "array"
@@ -190,9 +189,6 @@
 				},
 				"type": {
 					"const": "charm",
-					"enum": [
-						"charm"
-					],
 					"title": "Type",
 					"type": "string"
 				},
@@ -231,6 +227,7 @@
 				"actions": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -257,6 +254,7 @@
 													"type": "array"
 												},
 												{
+													"additionalProperties": true,
 													"type": "object"
 												}
 											]
@@ -296,6 +294,7 @@
 				"containers": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -322,6 +321,7 @@
 				"devices": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -358,6 +358,7 @@
 				"extra-bindings": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -371,6 +372,7 @@
 				"peers": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -394,6 +396,7 @@
 				"provides": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -414,6 +417,7 @@
 				"requires": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -437,6 +441,7 @@
 				"resources": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -464,6 +469,7 @@
 				"storage": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -545,6 +551,7 @@
 				"config": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -671,9 +678,6 @@
 				"version": {
 					"const": "unversioned",
 					"default": "unversioned",
-					"enum": [
-						"unversioned"
-					],
 					"title": "Version",
 					"type": "string"
 				},
@@ -765,6 +769,7 @@
 				},
 				"parts": {
 					"additionalProperties": {
+						"additionalProperties": true,
 						"type": "object"
 					},
 					"title": "Parts",
@@ -774,6 +779,7 @@
 					"anyOf": [
 						{
 							"items": {
+								"additionalProperties": true,
 								"type": "object"
 							},
 							"type": "array"
@@ -787,9 +793,6 @@
 				},
 				"type": {
 					"const": "bundle",
-					"enum": [
-						"bundle"
-					],
 					"title": "Type",
 					"type": "string"
 				},
@@ -826,6 +829,7 @@
 					"type": "array"
 				},
 				"bundle": {
+					"additionalProperties": true,
 					"default": {},
 					"title": "Bundle",
 					"type": "object"
@@ -1108,9 +1112,6 @@
 				"version": {
 					"const": "unversioned",
 					"default": "unversioned",
-					"enum": [
-						"unversioned"
-					],
 					"title": "Version",
 					"type": "string"
 				},
@@ -1164,9 +1165,6 @@
 						},
 						{
 							"const": "ubuntu@devel",
-							"enum": [
-								"ubuntu@devel"
-							],
 							"type": "string"
 						},
 						{
@@ -1224,6 +1222,7 @@
 				},
 				"parts": {
 					"additionalProperties": {
+						"additionalProperties": true,
 						"type": "object"
 					},
 					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names. Charmcraft provides 3 plugins: charm, bundle, reactive.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
@@ -1235,6 +1234,7 @@
 					"anyOf": [
 						{
 							"items": {
+								"additionalProperties": true,
 								"type": "object"
 							},
 							"type": "array"
@@ -1248,9 +1248,6 @@
 				},
 				"type": {
 					"const": "charm",
-					"enum": [
-						"charm"
-					],
 					"title": "Type",
 					"type": "string"
 				},
@@ -1289,6 +1286,7 @@
 				"actions": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1315,6 +1313,7 @@
 													"type": "array"
 												},
 												{
+													"additionalProperties": true,
 													"type": "object"
 												}
 											]
@@ -1354,6 +1353,7 @@
 				"containers": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1380,6 +1380,7 @@
 				"devices": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1416,6 +1417,7 @@
 				"extra-bindings": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1429,6 +1431,7 @@
 				"peers": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1452,6 +1455,7 @@
 				"provides": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1472,6 +1476,7 @@
 				"requires": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1495,6 +1500,7 @@
 				"resources": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1522,6 +1528,7 @@
 				"storage": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{
@@ -1603,6 +1610,7 @@
 				"config": {
 					"anyOf": [
 						{
+							"additionalProperties": true,
 							"type": "object"
 						},
 						{

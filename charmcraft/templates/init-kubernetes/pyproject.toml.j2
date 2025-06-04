@@ -1,3 +1,36 @@
+name = "{{ name }}"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+# Dependencies of the charm code in src/
+dependencies = [
+    "ops >=2.22,<3",
+]
+
+[dependency-groups]
+# Dependencies of Charmcraft libraries (from their PYDEPS)
+charmlib-pydeps = []
+# Dependencies of code in tests/unit/
+unit = [
+    "ops[testing]",
+    "pytest",
+]
+# Dependencies of code in tests/integration/
+integration = [
+    "pytest",
+    "pytest-operator",
+]
+# Dependencies needed to actually run the tests
+run-static = [
+    "pyright",
+]
+run-unit = [
+    "coverage[toml]",
+]
+run-integration = [
+    "juju",
+]
+
 # Testing tools configuration
 [tool.coverage.run]
 branch = true

@@ -10,7 +10,15 @@ from charm import SERVICE_NAME, {{ class_name }}
 
 CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
-base_layer: pebble.LayerDict = {"services": {SERVICE_NAME: {}}, "checks": {CHECK_NAME: {}}}
+base_layer: pebble.LayerDict = {
+    "services": {SERVICE_NAME: {}},
+    "checks": {
+        CHECK_NAME: {
+            "startup": "enabled",
+            "level": "ready",
+        }
+    },
+}
 layers = {"base": pebble.Layer(base_layer)}
 
 

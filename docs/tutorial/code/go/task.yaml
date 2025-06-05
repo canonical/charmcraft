@@ -178,11 +178,9 @@ execute: |
   juju wait-for application go-hello-world \
   --query='status=="active"' --timeout 10m
 
-  # Retry until it is working
-  retry -n 5 --wait 2 curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
-
   # curl and check that the response is now Hi
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 2 sh -c "curl http://go-hello-world \
+  --resolve go-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> migrate.sh
@@ -253,3 +251,7 @@ execute: |
   # Remove the juju model
   juju destroy-model go-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+    juju status
+    juju debug-log --no-tail --limit 500

@@ -98,7 +98,6 @@ def create_namespace(
 @pytest.mark.parametrize(
     ("profile", "base_expected_files", "has_workload_module"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, False, id="simple"),
         pytest.param("machine", BASIC_INIT_FILES, True, id="machine"),
         pytest.param("kubernetes", BASIC_INIT_FILES, True, id="kubernetes"),
     ],
@@ -232,12 +231,16 @@ def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
         ),
     ],
 )
-@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
-def test_create_directory(new_path, init_command, subdir, expected_files):
+@pytest.mark.parametrize("base_expected_files", [BASIC_INIT_FILES])
+def test_create_directory(new_path, init_command, subdir, base_expected_files):
     init_dir = new_path / subdir
 
     try:
-        init_command.run(create_namespace(project_dir=pathlib.Path(subdir)))
+        params = create_namespace(name="foo-bar-k8s", project_dir=pathlib.Path(subdir))
+        init_command.run(params)
+
+        workload_module_path = pathlib.Path("src/foo_bar.py")
+        expected_files = base_expected_files.union({workload_module_path})
 
         actual_files = {p.relative_to(init_dir) for p in init_dir.rglob("*")}
 

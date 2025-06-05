@@ -19,7 +19,7 @@ Initialise a charm
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
-machine charms: ``machine``; for Kubernetes charms: ``kubernetes``, ``simple``, or
+machine charms: ``machine``; for Kubernetes charms: ``kubernetes`` or
 ``flask-framework``); that will create all the necessary files and even prepopulate them
 with useful content.
 
@@ -58,8 +58,8 @@ with useful content.
         charm.py
 
 The command also allows you to not specify any profile (in that case you get the
-``simple`` profile -- a Kubernetes profile with lots of scaffolding, suitable for
-beginners) and has flags that you can use to specify a different directory to operate
+``kubernetes`` profile -- a minimal profile with scaffolding for a Kubernetes charm)
+and has flags that you can use to specify a different directory to operate
 in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`ref_commands_revisions`, :ref:`profile`, :ref:`files`

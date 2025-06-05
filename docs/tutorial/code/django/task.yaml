@@ -212,6 +212,10 @@ execute: |
   juju wait-for application django-hello-world \
   --query='status=="active"' --timeout 10m
 
+  # wait until it works
+  retry -n 5 --wait 2 curl http://django-hello-world \
+  --resolve django-hello-world:80:127.0.0.1
+
   # curl and check that the response is Hello, world!
   curl http://django-hello-world \
   --resolve django-hello-world:80:127.0.0.1 | grep Hello
@@ -246,6 +250,10 @@ execute: |
   juju wait-for application django-hello-world \
   --query='status=="active"' --timeout 10m
 
+  # wait until it works
+  retry -n 5 --wait 2 curl http://django-hello-world \
+  --resolve django-hello-world:80:127.0.0.1
+
   # curl and check that the response is still Hello, world!
   curl http://django-hello-world \
   --resolve django-hello-world:80:127.0.0.1 | grep Hello
@@ -259,6 +267,10 @@ execute: |
   --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world \
   --query='status=="active"' --timeout 10m
+
+  # wait until it works
+  retry -n 5 --wait 2 curl http://django-hello-world \
+  --resolve django-hello-world:80:127.0.0.1
 
   # curl and check that the response is now Hi
   curl http://django-hello-world \

@@ -119,6 +119,9 @@ execute: |
   juju wait-for application nginx-ingress-integrator \
   --query='status=="active"' --timeout 10m
 
+  # Retry until it is working
+  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
@@ -148,6 +151,9 @@ execute: |
   juju wait-for application flask-hello-world \
   --query='status=="active"' --timeout 10m
 
+  # Retry until it is working
+  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
   # curl and check that the response is Hello
   curl http://flask-hello-world \
   --resolve flask-hello-world:80:127.0.0.1 | grep Hello
@@ -161,6 +167,9 @@ execute: |
   --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world \
   --query='status=="active"' --timeout 10m
+
+  # Retry until it is working
+  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
   # curl and check that the response is now Hi
   curl http://flask-hello-world \
@@ -200,6 +209,9 @@ execute: |
   --query='status=="active"' --timeout 30m | juju status --relations
 
   juju status --relations
+
+  # Retry until it is working
+  retry -n 5 --wait 2 curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
 
   curl http://flask-hello-world \
   --resolve flask-hello-world:80:127.0.0.1 | grep Hi

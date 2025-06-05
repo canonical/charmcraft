@@ -10,17 +10,28 @@ from charm import SERVICE_NAME, {{ class_name }}
 
 CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
-base_layer: pebble.LayerDict = {
-    "services": {SERVICE_NAME: {}},
-    "checks": {
-        CHECK_NAME: {
-            "startup": "enabled",
-            "level": "ready",
-            "threshold": 3,
-        }
-    },
-}
-layers = {"base": pebble.Layer(base_layer)}
+layer = pebble.Layer(
+    {
+        "services": {
+            SERVICE_NAME: {
+                "override": "replace",
+                "command": "/bin/foo",  # The specific command isn't important for unit tests.
+                "startup": "enabled",
+            }
+        },
+        "checks": {
+            CHECK_NAME: {
+                "override": "replace",
+                "level": "ready",
+                "threshold": 3,
+                "startup": "enabled",
+                "http": {
+                    "url": "http://localhost:8000/version",  # The specific URL isn't important.
+                },
+            }
+        },
+    }
+)
 
 
 def mock_get_version():
@@ -40,7 +51,7 @@ def test_pebble_ready(monkeypatch: pytest.MonkeyPatch):
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers=layers,
+        layers={"base": layer},
         service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )
@@ -69,7 +80,7 @@ def test_pebble_ready_service_not_ready():
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers=layers,
+        layers={"base": layer},
         service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )

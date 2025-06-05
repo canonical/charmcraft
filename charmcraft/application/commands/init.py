@@ -63,8 +63,17 @@ Available profiles are:
         A basic charm but meant to be deployed in machine-based environments,
         without container requirements.
 
+    django-framework:
+        A basic Django application charm for the 12-factor charm project.
+
+    fastapi-framework:
+        A basic FastAPI application charm for the 12-factor charm project.
+
     flask-framework:
         A basic Flask application charm for the 12-factor charm project.
+
+    go-framework:
+        A basic Go application charm for the 12-factor charm project.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:

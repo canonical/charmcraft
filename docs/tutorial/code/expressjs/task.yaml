@@ -245,12 +245,13 @@ execute: |
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean
   # exit and delete the charm dir
   rm -rf charm
+  # delete app directory
+  rm -rf app
   # delete all the files created during the tutorial
   rm expressjs-hello-world_0.1_$(dpkg --print-architecture).rock \
     expressjs-hello-world_0.2_$(dpkg --print-architecture).rock \
     expressjs-hello-world_0.3_$(dpkg --print-architecture).rock \
-    rockcraft.yaml main.expressjs migrate.sh expressjs-hello-world \
-    expressjs.mod expressjs.sum
+    rockcraft.yaml
   # Remove the juju model
   juju destroy-model expressjs-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]

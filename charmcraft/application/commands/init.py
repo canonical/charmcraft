@@ -64,16 +64,16 @@ Available profiles are:
         without container requirements.
 
     django-framework:
-        A basic Django application charm for the 12-factor charm project.
+        A basic charm for a 12-factor Django app.
 
     fastapi-framework:
-        A basic FastAPI application charm for the 12-factor charm project.
+        A basic charm for a 12-factor FastAPI app.
 
     flask-framework:
-        A basic Flask application charm for the 12-factor charm project.
+        A basic charm for a 12-factor Flask app.
 
     go-framework:
-        A basic Go application charm for the 12-factor charm project.
+        A basic charm for a 12-factor Go app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:

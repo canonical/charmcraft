@@ -12,6 +12,7 @@ kill-timeout: 90m
 environment:
 
 restore: |
+  rm -rf $HOME/charm
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   # Destroy the model on restore just in case the test failed.
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
@@ -35,7 +36,7 @@ execute: |
   # [docs:create-venv-end]
 
   flask run -p 8000 &
-  retry -n 5 --wait 2 curl --fail localhost:8000
+  retry -n 5 --wait 5 curl --fail localhost:8000
 
   # [docs:curl-flask]
   curl localhost:8000
@@ -112,7 +113,7 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-async-app --resolve flask-async-app:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://flask-async-app --resolve flask-async-app:80:127.0.0.1
 
   # [docs:curl-init-deployment]
   curl http://flask-async-app --resolve flask-async-app:80:127.0.0.1
@@ -125,7 +126,7 @@ execute: |
   juju wait-for application flask-async-app --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-async-app/io --resolve flask-async-app:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://flask-async-app/io --resolve flask-async-app:80:127.0.0.1
 
   # test the async flask service
   NUM_REQUESTS=15
@@ -173,3 +174,7 @@ execute: |
   # Remove the juju model
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

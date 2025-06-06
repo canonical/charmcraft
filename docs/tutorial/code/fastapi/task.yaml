@@ -10,6 +10,7 @@ summary: Getting started with FastAPI tutorial
 kill-timeout: 90m
 
 restore: |
+  rm -rf $HOME/charm
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model fastapi-hello-world \
   --destroy-storage --no-prompt --force || true
@@ -141,11 +142,8 @@ execute: |
   # give Juju some time to refresh the app
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
-
   # curl and check that the response is Hello
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 2 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config fastapi-hello-world greeting='Hi!'
@@ -154,11 +152,8 @@ execute: |
   # make sure that the application updates
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
-
   # curl and check that the response is now Hi
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 2 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.py >> migrate.py
@@ -218,3 +213,7 @@ execute: |
   # Remove the juju model
   juju destroy-model fastapi-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

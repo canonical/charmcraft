@@ -10,6 +10,7 @@ summary: Getting started with Flask tutorial
 kill-timeout: 90m
 
 restore: |
+  rm -rf $HOME/charm
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
@@ -107,7 +108,7 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
@@ -137,11 +138,8 @@ execute: |
   # give Juju some time to refresh the app
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-
   # curl and check that the response is Hello
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
@@ -150,11 +148,8 @@ execute: |
   # make sure that the application updates
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
-
   # curl and check that the response is now Hi
-  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.py >> migrate.py
@@ -190,7 +185,7 @@ execute: |
   juju status --relations
 
   # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
 
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
   curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 1
@@ -213,3 +208,7 @@ execute: |
   # Remove the juju model
   juju destroy-model flask-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

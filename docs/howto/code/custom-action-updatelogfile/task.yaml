@@ -10,6 +10,7 @@ summary: Custom action in a Flask app
 kill-timeout: 90m
 
 restore: |
+  rm -rf $HOME/charm
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
@@ -130,10 +131,10 @@ execute: |
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions
-  juju actions flask-hello-world | grep updatelogfile
+  retry -n 10 --wait 5 sh -c 'juju actions flask-hello-world | grep updatelogfile'
 
   # make sure the action runs successfully
-  juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"
+  retry -n 10 --wait 5 sh -c 'juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"'
 
   # [docs:clean-environment]
   charmcraft clean
@@ -149,3 +150,7 @@ execute: |
   # Remove the juju model
   juju destroy-model flask-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

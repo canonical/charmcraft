@@ -195,11 +195,8 @@ execute: |
   # give Juju some time to refresh the app
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
-
   # curl and check that the response is Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   cd ..
   # Update django_hello_world/greeting/views.py
@@ -229,11 +226,8 @@ execute: |
   # Wait for django-hello-world to be active
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
-
   # curl and check that the response is still Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
@@ -242,11 +236,8 @@ execute: |
   # make sure that the application updates
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
-
   # curl and check that the response is now Hi
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi"
 
   # [docs:clean-environment]
   charmcraft clean
@@ -265,3 +256,7 @@ execute: |
   # Remove the juju model
   juju destroy-model django-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

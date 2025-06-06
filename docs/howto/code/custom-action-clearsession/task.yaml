@@ -107,11 +107,8 @@ execute: |
 
   juju status --relations
 
-  # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
-
   # curl the Django app
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
+  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations"
 
   # add custom action to charmcraft.yaml
   cat $HOME/clearsession_action_charmcraft.yaml >> charmcraft.yaml
@@ -132,7 +129,9 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions
-  juju actions django-hello-world | grep clearsession
+  retry -n 10 --wait 5 sh -c "juju actions django-hello-world | grep clearsession"
+
+  retry -n 10 --wait 5 sh -c "juju run django-hello-world/0 clearsession | grep cleared!"
 
   # make sure the action runs successfully
   juju run django-hello-world/0 clearsession | grep cleared!
@@ -152,3 +151,7 @@ execute: |
   # Remove the juju model
   juju destroy-model django-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
+
+debug: |
+  juju status
+  juju debug-log --lines 200

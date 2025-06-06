@@ -92,9 +92,9 @@ integration tests, which you can run using 'tox -e unit' and 'tox -e integration
 """
 
 
-def _make_success_message(src_files: list[str]) -> str:
+def _make_success_message(profile: str, src_files: list[str]) -> str:
     src_files_str = "\n".join(src_files)
-    return f"""\
+    message = f"""\
 Charmed operator package file and directory tree initialised.
 
 Now edit the following package files to provide fundamental charm metadata
@@ -104,6 +104,10 @@ charmcraft.yaml
 {src_files_str}
 README.md
 """
+    if profile in ("kubernetes", "machine"):
+        message = f"""{message}
+Before packing, run `uv lock` to create a lockfile."""
+    return message
 
 
 def _make_workload_module_name(charm_name: str) -> str:
@@ -238,5 +242,5 @@ class InitCommand(base.CharmcraftCommand):
                 workload_module_path = path.with_name(f"{workload_module}.py")
                 path.rename(workload_module_path)
                 src_files.append(f"src/{workload_module}.py")
-        for line in _make_success_message(src_files).split("\n"):
+        for line in _make_success_message(parsed_args.profile, src_files).split("\n"):
             emit.message(line)

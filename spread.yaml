@@ -142,7 +142,7 @@ suites:
       - ubuntu-22.04-64
     manual: true
     prepare: |
-      juju_channel=3.5/stable
+      juju_channel=3.6/stable
       microk8s_channel=1.31-strict/stable
 
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -152,7 +152,23 @@ suites:
 
       refresh_or_install_snap juju "$juju_channel"
       refresh_or_install_snap microk8s "$microk8s_channel"
-      refresh_or_install_snap rockcraft latest/stable --classic
+      refresh_or_install_snap rockcraft latest/edge --classic
+
+      microk8s status --wait-ready --timeout 180
+      microk8s enable hostpath-storage
+      microk8s enable registry
+      microk8s enable ingress
+      microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+
+      # Bootstrap controller
+      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
+    restore: |
+      juju destroy-controller --force --destroy-all-models \
+      --destroy-storage --no-prompt --no-wait dev-controller
+
   docs/tutorial/code/:
     summary: tests tutorial from the docs
     systems:
@@ -169,7 +185,23 @@ suites:
 
       refresh_or_install_snap juju "$juju_channel"
       refresh_or_install_snap microk8s "$microk8s_channel"
-      refresh_or_install_snap rockcraft latest/stable --classic
+      refresh_or_install_snap rockcraft latest/edge --classic
+
+      microk8s status --wait-ready --timeout 180
+      microk8s enable hostpath-storage
+      microk8s enable registry
+      microk8s enable ingress
+      microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+
+      # Bootstrap controller
+      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
+    restore: |
+      juju destroy-controller --force --destroy-all-models \
+      --destroy-storage --no-prompt --no-wait dev-controller
+
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

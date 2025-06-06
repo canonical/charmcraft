@@ -7,7 +7,11 @@
 ###########################################
 summary: Custom action in a Flask app
 
-kill-timeout: 120m
+kill-timeout: 60m
+
+restore: |
+  juju destroy-model flask-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
@@ -20,15 +24,6 @@ execute: |
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # [docs:create-venv]
   sudo apt update && sudo apt install python3-venv -y
@@ -107,6 +102,9 @@ execute: |
   # give Juju some time to deploy the apps
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+
+  # wait until the endpoint works
+  retry -n 5 --wait 2 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1

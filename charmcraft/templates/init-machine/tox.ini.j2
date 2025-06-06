@@ -48,9 +48,9 @@ commands =
 description = Run static type checks
 runner = uv-venv-lock-runner
 dependency_groups =
+    static
     unit
     integration
-    run-static
 commands =
     pyright {posargs}
 
@@ -60,7 +60,6 @@ runner = uv-venv-lock-runner
 dependency_groups =
     charmlib-pydeps
     unit
-    run-unit
 commands =
     coverage run --source={[vars]src_path} \
                  -m pytest \
@@ -76,7 +75,6 @@ description = Run integration tests
 runner = uv-venv-lock-runner
 dependency_groups =
     integration
-    run-integration
 commands =
     pytest -v \
            -s \

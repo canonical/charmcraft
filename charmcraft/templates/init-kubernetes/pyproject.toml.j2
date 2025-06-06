@@ -3,7 +3,7 @@ name = "{{ name }}"
 version = "0.0.1"
 requires-python = ">=3.10"
 
-# Dependencies of the charm code in src/
+# Dependencies of the charm code
 dependencies = [
     "ops<4",
 ]
@@ -11,25 +11,21 @@ dependencies = [
 [dependency-groups]
 # Dependencies of charmlibs (from their PYDEPS)
 charmlib-pydeps = []
-# Dependencies of code in tests/unit/
+# Dependencies of static type checks
+static = [
+    "pyright",
+]
+# Dependencies of unit tests
 unit = [
+    "coverage[toml]",
     "ops[testing]",
     "pytest",
 ]
-# Dependencies of code in tests/integration/
+# Dependencies of integration tests
 integration = [
+    "juju",
     "pytest",
     "pytest-operator",
-]
-# Dependencies needed to actually run the tests
-run-static = [
-    "pyright",
-]
-run-unit = [
-    "coverage[toml]",
-]
-run-integration = [
-    "juju",
 ]
 
 # Testing tools configuration

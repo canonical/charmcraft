@@ -10,6 +10,7 @@ summary: Custom action in a Flask app
 kill-timeout: 90m
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -126,7 +127,6 @@ execute: |
     --resource flask-app-image=localhost:32000/flask-hello-world:0.1
 
   # wait for the Flask app to come back to active idle
-  juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions

@@ -10,6 +10,7 @@ summary: Getting started with Go tutorial
 kill-timeout: 90m
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model go-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -159,7 +160,6 @@ execute: |
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application go-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works

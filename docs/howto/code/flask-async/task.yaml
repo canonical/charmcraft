@@ -12,6 +12,7 @@ kill-timeout: 90m
 environment:
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   # Destroy the model on restore just in case the test failed.
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
 

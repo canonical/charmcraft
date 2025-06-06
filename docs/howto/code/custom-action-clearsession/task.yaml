@@ -10,6 +10,7 @@ summary: Custom action to a Django app
 kill-timeout: 90m
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   rm -rf $HOME/django-hello-world
   juju destroy-model django-hello-world \
   --destroy-storage --no-prompt --force || true
@@ -128,7 +129,6 @@ execute: |
     --resource django-app-image=localhost:32000/django-hello-world:0.1
 
   # wait for the Django app to come back to active idle
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions

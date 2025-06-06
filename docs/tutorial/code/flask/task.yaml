@@ -10,6 +10,7 @@ summary: Getting started with Flask tutorial
 kill-timeout: 90m
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -147,7 +148,6 @@ execute: |
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works

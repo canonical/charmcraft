@@ -10,6 +10,7 @@ summary: Getting started with Django tutorial
 kill-timeout: 90m
 
 restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
   rm -rf $HOME/django-hello-world
   juju destroy-model django-hello-world \
   --destroy-storage --no-prompt --force || true
@@ -192,7 +193,6 @@ execute: |
   # [docs:disable-debug-mode-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
@@ -240,7 +240,6 @@ execute: |
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works

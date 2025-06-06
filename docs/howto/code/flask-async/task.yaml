@@ -12,6 +12,7 @@ kill-timeout: 60m
 environment:
 
 restore: |
+  # Destroy the model on restore just in case the test failed.
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
 
 execute: |
@@ -171,10 +172,3 @@ execute: |
   # Remove the juju model
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
-
-restore: |
-  # Destroy the model on restore just in case the test failed.
-  juju destroy-model flask-async-app --destroy-storage --no-prompt --force || true
-
-  # Destroy the controller
-  juju destroy-controller --force --destroy-all-models --destroy-storage --no-prompt --no-wait dev-controller || true

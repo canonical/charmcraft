@@ -7,7 +7,13 @@
 ###########################################
 summary: Getting started with Django tutorial
 
-kill-timeout: 180m
+kill-timeout: 50m
+
+restore: |
+  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
+  rm -rf $HOME/django-hello-world
+  juju destroy-model django-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
@@ -20,29 +26,6 @@ execute: |
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # Add setup instructions
-  # (Ran into issues in prepare section)
-  # (don't install charmcraft)
-  snap install rockcraft --classic
-  snap install lxd
-  lxd init --auto
-  snap install microk8s --channel=1.31-strict/stable
-  snap install juju --channel=3.5/stable
-  snap refresh juju --channel=3.5/stable --amend
-
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
-  mkdir -p ~/.local/share
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # Create working dir and cd
   mkdir django-hello-world
@@ -73,7 +56,7 @@ execute: |
   ./manage.py runserver 0.0.0.0:8000 &
 
   # Test the Django app
-  retry -n 5 --wait 2 curl --fail localhost:8000
+  retry -n 5 --wait 5 curl --fail localhost:8000
 
   curl localhost:8000 | grep Congratulations
 
@@ -165,7 +148,9 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   juju status --relations
-  sleep 30s
+
+  # wait until the endpoint works
+  retry -n 5 --wait 5 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
 
   # curl the Django app
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
@@ -208,11 +193,10 @@ execute: |
   # [docs:disable-debug-mode-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   cd ..
   # Update django_hello_world/greeting/views.py
@@ -243,18 +227,17 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is still Hello, world!
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi"
 
   # [docs:clean-environment]
   charmcraft clean

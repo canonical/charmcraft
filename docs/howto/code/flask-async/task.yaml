@@ -7,7 +7,7 @@
 ###########################################
 summary: How to create async Flask Charm
 
-kill-timeout: 60m
+kill-timeout: 90m
 
 environment:
 

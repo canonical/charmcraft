@@ -7,7 +7,7 @@
 ###########################################
 summary: Custom action in a Flask app
 
-kill-timeout: 60m
+kill-timeout: 90m
 
 restore: |
   juju destroy-model flask-hello-world \

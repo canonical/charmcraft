@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with FastAPI tutorial
 
-kill-timeout: 60m
+kill-timeout: 90m
 
 restore: |
   juju destroy-model fastapi-hello-world \

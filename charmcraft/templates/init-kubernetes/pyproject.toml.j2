@@ -1,3 +1,33 @@
+[project]
+name = "{{ name }}"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+# Dependencies of the charm code
+dependencies = [
+    "ops<4",
+]
+
+[dependency-groups]
+# Dependencies of charmlibs (from their PYDEPS)
+charmlib-pydeps = []
+# Dependencies of static type checks
+static = [
+    "pyright",
+]
+# Dependencies of unit tests
+unit = [
+    "coverage[toml]",
+    "ops[testing]",
+    "pytest",
+]
+# Dependencies of integration tests
+integration = [
+    "juju",
+    "pytest",
+    "pytest-operator",
+]
+
 # Testing tools configuration
 [tool.coverage.run]
 branch = true
@@ -38,4 +68,7 @@ max-complexity = 10
 skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
 
 [tool.pyright]
-include = ["src/**.py"]
+include = [
+    "src/**/*.py",
+    "tests/**/*.py",
+]

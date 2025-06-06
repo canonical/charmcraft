@@ -10,6 +10,7 @@ summary: Custom action to a Django app
 kill-timeout: 60m
 
 restore: |
+  rm -rf $HOME/django-hello-world
   juju destroy-model django-hello-world \
   --destroy-storage --no-prompt --force || true
 

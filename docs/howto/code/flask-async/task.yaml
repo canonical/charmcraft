@@ -176,5 +176,8 @@ execute: |
   # [docs:clean-environment-end]
 
 debug: |
-  juju status
-  juju debug-log --lines 200
+  df -h
+  free
+  cat /proc/cpuinfo
+  juju status || true
+  juju debug-log --lines 200 || true

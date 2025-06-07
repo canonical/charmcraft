@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with FastAPI tutorial
 
-kill-timeout: 90m
+kill-timeout: 120m
 
 restore: |
   rm -rf $HOME/charm
@@ -215,5 +215,8 @@ execute: |
   # [docs:clean-environment-end]
 
 debug: |
-  juju status
-  juju debug-log --lines 200
+  df -h
+  free
+  cat /proc/cpuinfo
+  juju status || true
+  juju debug-log --lines 200 || true

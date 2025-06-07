@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with Go tutorial
 
-kill-timeout: 90m
+kill-timeout: 120m
 
 restore: |
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
@@ -229,5 +229,8 @@ execute: |
   # [docs:clean-environment-end]
 
 debug: |
-  juju status
-  juju debug-log --lines 200
+  df -h
+  free
+  cat /proc/cpuinfo
+  juju status || true
+  juju debug-log --lines 200 || true

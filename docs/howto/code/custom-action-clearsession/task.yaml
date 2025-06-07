@@ -129,9 +129,9 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions
-  retry -n 10 --wait 5 sh -c "juju actions django-hello-world | grep clearsession"
+  retry -n 10 --wait 20 sh -c "juju actions django-hello-world | grep clearsession"
 
-  retry -n 10 --wait 5 sh -c "juju run django-hello-world/0 clearsession | grep cleared!"
+  retry -n 10 --wait 20 sh -c "juju run django-hello-world/0 clearsession | grep cleared!"
 
   # make sure the action runs successfully
   juju run django-hello-world/0 clearsession | grep cleared!
@@ -153,5 +153,8 @@ execute: |
   # [docs:clean-environment-end]
 
 debug: |
-  juju status
-  juju debug-log --lines 200
+  df -h
+  free
+  cat /proc/cpuinfo
+  juju status || true
+  juju debug-log --lines 200 || true

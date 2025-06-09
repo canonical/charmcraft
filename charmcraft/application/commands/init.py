@@ -64,16 +64,16 @@ Available profiles are:
         without container requirements.
 
     django-framework:
-        A basic charm for a 12-factor Django app.
+        A basic Kubernetes charm for a 12-factor Django app.
 
     fastapi-framework:
-        A basic charm for a 12-factor FastAPI app.
+        A basic Kubernetes charm for a 12-factor FastAPI app.
 
     flask-framework:
-        A basic charm for a 12-factor Flask app.
+        A basic Kubernetes charm for a 12-factor Flask app.
 
     go-framework:
-        A basic charm for a 12-factor Go app.
+        A basic Kubernetes charm for a 12-factor Go app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:

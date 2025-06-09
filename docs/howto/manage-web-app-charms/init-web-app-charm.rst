@@ -6,8 +6,8 @@ Initialize a 12-factor app charm
 Prepare an OCI image for a 12-factor app charm
 ----------------------------------------------
 
-:external+rockcraft:doc:`Prepare a rock for a 12-factor app charm
-<how-to/build-a-12-factor-app-rock>` with Rockcraft.
+:external+rockcraft:ref:`Prepare a rock for a 12-factor app charm
+<set-up-web-app-rock>` with Rockcraft.
 
 Prepare a 12-factor app charm
 -----------------------------
@@ -50,4 +50,3 @@ and description are correct.
         .. code-block:: bash
 
             charmcraft init --profile go-framework
-

@@ -145,7 +145,7 @@ parts:
       # Ensure we don't have a dubious ownership error from git with a remote build.
       git config --global --add safe.directory $CRAFT_PART_SRC
       # Set up the rust compiler
-      rustup default 1.79
+      rustup default 1.85
     override-build: |
       uv venv --relocatable $CRAFT_PART_INSTALL
       uv sync --no-dev --no-editable --no-binary

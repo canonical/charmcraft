@@ -24,7 +24,6 @@ from unittest import mock
 
 import craft_cli.pytest_plugin
 import craft_store
-import freezegun
 import pytest
 from craft_cli import CraftError
 from craft_store import models, publisher
@@ -366,40 +365,6 @@ def test_fetch_libs_success(
 
     emitter.assert_progress("Getting library metadata from charmhub")
     emitter.assert_message("Downloaded 1 charm libraries.")
-
-
-@freezegun.freeze_time("2024-10-31")
-def test_register_bundle_warning(monkeypatch: pytest.MonkeyPatch, emitter):
-    mock_store = mock.Mock()
-    monkeypatch.setattr("charmcraft.application.commands.store.Store", mock_store)
-
-    parsed_args = argparse.Namespace(name="name")
-    cmd = commands.RegisterBundleNameCommand(None)
-    cmd.run(parsed_args)
-
-    emitter.assert_progress(
-        "\u001b[31mWARNING:\u001b[0m New bundle registration will stop working on 2024-11-01. For "
-        f"more information, see: {store_commands.BUNDLE_REGISTRATION_REMOVAL_URL}",
-        permanent=True,
-    )
-    mock_store.assert_called()
-
-
-@freezegun.freeze_time("2024-11-01")
-def test_register_bundle_error(monkeypatch: pytest.MonkeyPatch, emitter):
-    mock_store = mock.Mock()
-    monkeypatch.setattr("charmcraft.application.commands.store.Store", mock_store)
-
-    parsed_args = argparse.Namespace(name="name")
-    cmd = commands.RegisterBundleNameCommand(None)
-
-    assert cmd.run(parsed_args) == 1
-
-    emitter.assert_message(
-        "\u001b[31mERROR:\u001b[0m New bundle registration is discontinued as of 2024-11-01.  For "
-        f"more information, see: {store_commands.BUNDLE_REGISTRATION_REMOVAL_URL}",
-    )
-    mock_store.assert_not_called()
 
 
 def test_promote_no_track_inference_noninteractive(

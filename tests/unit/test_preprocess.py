@@ -22,10 +22,6 @@ import pytest
 
 from charmcraft import const, errors, preprocess
 
-BASIC_BUNDLE = {
-    "type": "bundle",
-    "parts": {"bundle": {"plugin": "bundle", "source": "."}},
-}
 BASIC_CHARM = {"type": "charm", "parts": {"charm": {"plugin": "charm", "source": "."}}}
 BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.04"}]}
 

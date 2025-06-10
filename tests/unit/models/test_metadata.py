@@ -32,15 +32,6 @@ BASIC_CHARM_DICT = {
     "bases": [{"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}],
 }
 
-BASIC_BUNDLE_METADATA_DICT = {
-    "name": "test-bundle",
-    "description": "A fake bundle for testing purposes.",
-}
-BASIC_BUNDLE_DICT = {
-    "type": "bundle",
-    **BASIC_BUNDLE_METADATA_DICT,
-}
-
 
 @pytest.mark.parametrize(
     ("charm_dict", "expected"),

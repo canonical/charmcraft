@@ -68,6 +68,7 @@ else:
 # Template and asset locations
 extensions = [
     "canonical_sphinx",
+    "sphinx_sitemap",
 ]
 
 # Copy extra files to the _static dir during build
@@ -205,7 +206,7 @@ rediraffe_redirects = "redirects.txt"
 
 
 def generate_cli_docs(nil):
-    gen_cli_docs_path = (project_dir / "tools" / "gen_cli_docs.py").resolve()
+    gen_cli_docs_path = (project_dir / "tools/gen_cli_docs.py").resolve()
     subprocess.run([sys.executable, gen_cli_docs_path, project_dir / "docs"], check=True)
 
 

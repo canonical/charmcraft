@@ -740,14 +740,15 @@ def test_get_bundle_plan(mocker, architecture, release, system):
             },
             project.Charm,
         ),
-        (
-            {"type": "bundle"},
-            project.Bundle,
-        ),
     ],
 )
 def test_unmarshal_success(data, type_class):
     assert isinstance(project.CharmcraftProject.unmarshal(data), type_class)
+
+
+def test_unmarshal_bundle():
+    with pytest.raises(CraftValidationError, match="Bundle packing has been removed"):
+        project.CharmcraftProject.unmarshal({"type": "bundle"})
 
 
 @pytest.mark.parametrize("type_", [None, "", "invalid", "Dvorak"])

@@ -28,14 +28,14 @@ import pydantic
 import pyfakefs.fake_filesystem
 import pytest
 import pytest_check
-from craft_application import models, util
+from craft_application import util
 from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 from hypothesis import strategies
 
-from charmcraft import const, utils
+from charmcraft import const
 from charmcraft.models import project
 from charmcraft.models.charmcraft import Base, BasesConfiguration
 
@@ -430,21 +430,6 @@ def test_build_info_generator(given, expected):
     ("data", "expected"),
     [
         pytest.param(
-            {"type": "bundle"},
-            [
-                project.models.BuildInfo(
-                    platform=util.get_host_architecture(),
-                    build_on=util.get_host_architecture(),
-                    build_for=util.get_host_architecture(),
-                    base=bases.BaseName(
-                        name=utils.get_os_platform().system,
-                        version=utils.get_os_platform().release,
-                    ),
-                ),
-            ],
-            id="bundle",
-        ),
-        pytest.param(
             {"base": "ubuntu@22.04", "platforms": {"amd64": None}},
             [
                 project.models.BuildInfo(
@@ -698,33 +683,6 @@ def test_build_planner_platforms_combinations(
         pytest_check.is_in(build_info.platform, platforms.keys())
 
 
-@pytest.mark.parametrize("architecture", sorted(const.SUPPORTED_ARCHITECTURES))
-@pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "plan9"])
-@pytest.mark.parametrize(
-    "release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"]
-)
-def test_get_bundle_plan(mocker, architecture, release, system):
-    mocker.patch(
-        "craft_application.util.get_host_architecture", return_value=architecture
-    )
-    mocker.patch(
-        "charmcraft.utils.get_os_platform",
-        return_value=utils.OSPlatform(
-            machine=architecture, system=system, release=release
-        ),
-    )
-    planner = project.CharmcraftBuildPlanner(type="bundle")
-
-    assert planner.get_build_plan() == [
-        models.BuildInfo(
-            platform=architecture,
-            build_on=architecture,
-            build_for=architecture,
-            base=bases.BaseName(system, release),
-        )
-    ]
-
-
 # endregion
 # region CharmcraftProject tests
 @pytest.mark.parametrize(
@@ -815,7 +773,6 @@ def test_unmarshal_invalid_type(type_):
                 parts:
                   charm: {}
                   reactive: {}
-                  bundle: {}
                 """
             ),
             None,
@@ -830,10 +787,6 @@ def test_unmarshal_invalid_type(type_):
                     },
                     "reactive": {
                         "plugin": "reactive",
-                    },
-                    "bundle": {
-                        "plugin": "bundle",
-                        "source": ".",
                     },
                 }
             },
@@ -997,10 +950,6 @@ def test_from_yaml_file_exception(
                 "parts": {"my-part": {"plugin": "nil"}},
                 "charmhub": {"api_url": "http://charmhub.io"},
             },
-        ),
-        (
-            project.Bundle,
-            {"type": "bundle", "charmhub": {"api_url": "http://charmhub.io"}},
         ),
     ],
 )

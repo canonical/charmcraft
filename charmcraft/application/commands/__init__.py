@@ -81,7 +81,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
         ],
     )
     app.add_command_group(
-        "Store (charm or bundle)",
+        "Store (charm)",
         [
             # pushing files and checking revisions
             UploadCommand,

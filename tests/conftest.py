@@ -399,30 +399,6 @@ def charm_plugin(tmp_path):
 
 
 @pytest.fixture
-def bundle_plugin(tmp_path):
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-    spec = {
-        "plugin": "bundle",
-        "source": str(tmp_path),
-    }
-    plugin_properties = charmcraft.parts.plugins.BundlePluginProperties.unmarshal(spec)
-    part_spec = plugins.extract_part_properties(spec, plugin_name="bundle")
-    part = craft_parts.Part(
-        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
-    )
-    project_info = craft_parts.ProjectInfo(
-        application_name="test",
-        project_dirs=project_dirs,
-        cache_dir=tmp_path,
-    )
-    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-
-    return plugins.get_plugin(
-        part=part, part_info=part_info, properties=plugin_properties
-    )
-
-
-@pytest.fixture
 def poetry_plugin(tmp_path: pathlib.Path):
     project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
     spec = {

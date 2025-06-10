@@ -167,7 +167,7 @@
 							"source": "."
 						}
 					},
-					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names. Charmcraft provides 3 plugins: charm, bundle, reactive.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
+					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
 					"title": "Parts",
 					"type": "object"
 				},
@@ -623,224 +623,6 @@
 			"title": "BasesConfiguration",
 			"type": "object"
 		},
-		"Bundle": {
-			"additionalProperties": false,
-			"description": "Model for defining a bundle.",
-			"properties": {
-				"name": {
-					"anyOf": [
-						{
-							"description": "The name of this project. This is used when uploading, publishing, or installing.\n\nProject name rules:\n* Valid characters are lower-case ASCII letters, numerals and hyphens.\n* Must contain at least one letter\n* May not start or end with a hyphen\n* May not have two hyphens in a row\n",
-							"examples": [
-								"ubuntu",
-								"jupyterlab-desktop",
-								"lxd",
-								"digikam",
-								"kafka",
-								"mysql-router-k8s"
-							],
-							"maxLength": 40,
-							"minLength": 1,
-							"title": "Project Name",
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Name"
-				},
-				"title": {
-					"anyOf": [
-						{
-							"description": "A human-readable title.",
-							"examples": [
-								"Ubuntu Linux",
-								"Jupyter Lab Desktop",
-								"LXD",
-								"DigiKam",
-								"Apache Kafka",
-								"MySQL Router K8s charm"
-							],
-							"maxLength": 40,
-							"minLength": 2,
-							"title": "Title",
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Title"
-				},
-				"version": {
-					"const": "unversioned",
-					"default": "unversioned",
-					"title": "Version",
-					"type": "string"
-				},
-				"summary": {
-					"anyOf": [
-						{
-							"maxLength": 200,
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Summary"
-				},
-				"description": {
-					"anyOf": [
-						{
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Description"
-				},
-				"base": {
-					"anyOf": [
-						{
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Base"
-				},
-				"build-base": {
-					"anyOf": [
-						{
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Build-Base"
-				},
-				"platforms": {
-					"default": null,
-					"title": "Platforms",
-					"type": "null"
-				},
-				"contact": {
-					"default": null,
-					"title": "Contact",
-					"type": "null"
-				},
-				"issues": {
-					"default": null,
-					"title": "Issues",
-					"type": "null"
-				},
-				"source-code": {
-					"default": null,
-					"title": "Source-Code",
-					"type": "null"
-				},
-				"license": {
-					"default": null,
-					"title": "License",
-					"type": "null"
-				},
-				"adopt-info": {
-					"anyOf": [
-						{
-							"type": "string"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Adopt-Info"
-				},
-				"parts": {
-					"additionalProperties": {
-						"additionalProperties": true,
-						"type": "object"
-					},
-					"title": "Parts",
-					"type": "object"
-				},
-				"package-repositories": {
-					"anyOf": [
-						{
-							"items": {
-								"additionalProperties": true,
-								"type": "object"
-							},
-							"type": "array"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"title": "Package-Repositories"
-				},
-				"type": {
-					"const": "bundle",
-					"title": "Type",
-					"type": "string"
-				},
-				"analysis": {
-					"anyOf": [
-						{
-							"$ref": "#/$defs/AnalysisConfig"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
-				},
-				"charmhub": {
-					"anyOf": [
-						{
-							"$ref": "#/$defs/Charmhub"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"deprecated": true,
-					"description": "(DEPRECATED): Configuration for accessing charmhub."
-				},
-				"charm-libs": {
-					"items": {
-						"$ref": "#/$defs/CharmLib"
-					},
-					"title": "List of libraries to use for this charm",
-					"type": "array"
-				},
-				"bundle": {
-					"additionalProperties": true,
-					"default": {},
-					"title": "Bundle",
-					"type": "object"
-				}
-			},
-			"required": [
-				"type"
-			],
-			"title": "Bundle",
-			"type": "object"
-		},
 		"CharmLib": {
 			"additionalProperties": false,
 			"description": "A Charm library dependency for this charm.",
@@ -1225,7 +1007,7 @@
 						"additionalProperties": true,
 						"type": "object"
 					},
-					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names. Charmcraft provides 3 plugins: charm, bundle, reactive.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
+					"description": "Configures the various mechanisms to obtain, process and prepare data from\ndifferent sources that end up being a part of the final charm.\n\nKeys are user-defined part names. The value of each key is a map where keys\nare part names.\n\nExample::\n\n    parts:\n      libs:\n        plugin: dump\n        source: /usr/local/lib/\n        organize:\n          \"libxxx.so*\": lib/\n        prime:\n          - lib/",
 					"minProperties": 1,
 					"title": "Parts",
 					"type": "object"
@@ -1650,35 +1432,12 @@
 			"type": "object"
 		}
 	},
-	"discriminator": {
-		"mapping": {
-			"bundle": "#/$defs/Bundle",
-			"charm": {
-				"oneOf": [
-					{
-						"$ref": "#/$defs/PlatformCharm"
-					},
-					{
-						"$ref": "#/$defs/BasesCharm"
-					}
-				]
-			}
-		},
-		"propertyName": "type"
-	},
 	"oneOf": [
 		{
-			"oneOf": [
-				{
-					"$ref": "#/$defs/PlatformCharm"
-				},
-				{
-					"$ref": "#/$defs/BasesCharm"
-				}
-			]
+			"$ref": "#/$defs/PlatformCharm"
 		},
 		{
-			"$ref": "#/$defs/Bundle"
+			"$ref": "#/$defs/BasesCharm"
 		}
 	]
 }

@@ -29,7 +29,7 @@ to declare information about the project in a form that can be used by Charmcraf
 .. note::
 
     If you're starting from an empty file, the only required key is the ``type`` key.
-    However, depending on what value you set it to (``charm`` or ``bundle``), other
+    However, depending on what value you set it to (currently only ``charm``), other
     keys become required as well.
 
 
@@ -224,7 +224,7 @@ block must be satisfied.
                 build-for: <list-of-arch> | <arch>
 
 **Status:** Deprecated. Conflicts with the `base`_, `build-base`_, and platforms
-keys. Not allowed if `type`_ is ``bundle``.
+keys.
 
 **Purpose:** Specifies a list of environments (OS version and architecture)
 where the charm must be built on and run on.
@@ -735,19 +735,6 @@ is a map where keys are part properties.
     - ``charm-python-packages``: A list of Python packages to install before installing requirements. These packages will be installed from sources and built locally at packing time. It is optional, defaults to empty.
     - ``charm-binary-python-packages``: A list of python packages to install before installing requirements and regular Python packages. Binary packages are allowed, but they may also be installed from sources if a package is only available in source form. It is optional, defaults to empty.
 
-
-    **The** ``bundle`` **plugin**
-
-    Used to pack a :external+juju:ref:`charm bundle <bundle>`, a collection of charms which have been carefully combined and configured in order to automate a multi-charm solution.
-
-    Supports the following configuration:
-
-    .. code-block:: yaml
-
-        parts:
-          my-bundle:
-            plugin: bundle
-
     **The** ``reactive`` **plugin**
 
     Used to pack charms using the reactive framework.
@@ -1123,13 +1110,13 @@ to a principal charm.
 
 **Status:** Required.
 
-**Purpose:** Indicates whether charmcraft will pack a charm or a bundle.
+**Purpose:** Indicates the type of package charmcraft will pack.
 
 **Structure:**
 
 **Type:** String.
 
-**Value:** ``charm`` or ``bundle``.
+**Value:** ``charm``.
 
 .. collapse:: Example
 

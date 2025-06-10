@@ -24,7 +24,7 @@ integrations, for internal purposes.
 
 In addition to these integrations, in each ``provides`` and ``requires``
 block you may specify further integration endpoints, to integrate with
-the following charms and bundles:
+the following charms:
 
 - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
   ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__

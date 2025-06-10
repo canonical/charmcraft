@@ -65,7 +65,6 @@ def test_build_generics_simple_files(tmp_path):
     assert linked_entrypoint == built_entrypoint
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_simple_dir(tmp_path):
     """Check transferred any directory, with proper permissions."""
     build_dir = tmp_path / const.BUILD_DIRNAME
@@ -237,13 +236,11 @@ def _test_build_generics_tree(tmp_path, *, expect_hardlinks):
             assert p1.stat().st_mtime == pytest.approx(p2.stat().st_mtime)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree(tmp_path):
     """Manages ok a deep tree, including internal ignores."""
     _test_build_generics_tree(tmp_path, expect_hardlinks=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_vagrant(tmp_path):
     """Manages ok a deep tree, including internal ignores, when hardlinks aren't allowed."""
     with patch("os.link") as mock_link:
@@ -251,7 +248,6 @@ def test_build_generics_tree_vagrant(tmp_path):
         _test_build_generics_tree(tmp_path, expect_hardlinks=False)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_tree_xdev(tmp_path):
     """Manages ok a deep tree, including internal ignores, when hardlinks can't be done."""
     with patch("os.link") as mock_link:
@@ -259,7 +255,6 @@ def test_build_generics_tree_xdev(tmp_path):
         _test_build_generics_tree(tmp_path, expect_hardlinks=False)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file(tmp_path):
     """Respects a symlinked file."""
     build_dir = tmp_path / const.BUILD_DIRNAME
@@ -285,7 +280,6 @@ def test_build_generics_symlink_file(tmp_path):
     assert built_symlink.readlink() == pathlib.Path("crazycharm.py")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_dir(tmp_path):
     """Respects a symlinked dir."""
     build_dir = tmp_path / const.BUILD_DIRNAME
@@ -318,7 +312,6 @@ def test_build_generics_symlink_dir(tmp_path):
     assert (build_dir / "thelink" / "some file").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_deep(tmp_path):
     """Correctly re-links a symlink across deep dirs."""
     build_dir = tmp_path / const.BUILD_DIRNAME
@@ -351,7 +344,6 @@ def test_build_generics_symlink_deep(tmp_path):
     assert built_symlink.readlink() == pathlib.Path("..", "dir1", "file.real")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_file_outside(tmp_path, assert_output):
     """Ignores (with warning) a symlink pointing a file outside projects dir."""
     project_dir = tmp_path / "test-project"
@@ -381,7 +373,6 @@ def test_build_generics_symlink_file_outside(tmp_path, assert_output):
     assert_output(expected)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_symlink_directory_outside(tmp_path, assert_output):
     """Ignores (with warning) a symlink pointing a dir outside projects dir."""
     project_dir = tmp_path / "test-project"
@@ -411,7 +402,6 @@ def test_build_generics_symlink_directory_outside(tmp_path, assert_output):
     assert_output(expected)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch):
     """Ignores whatever is not a regular file, symlink or dir."""
     # change into the tmp path and do everything locally, because otherwise the socket path
@@ -441,7 +431,6 @@ def test_build_generics_different_filetype(tmp_path, assert_output, monkeypatch)
     assert_output(expected)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_created(tmp_path):
     """The dispatcher script is properly built."""
     metadata = tmp_path / const.METADATA_FILENAME
@@ -466,7 +455,6 @@ def test_build_dispatcher_modern_dispatch_created(tmp_path):
     )
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_modern_dispatch_respected(tmp_path):
     """The already included dispatcher script is left untouched."""
     metadata = tmp_path / const.METADATA_FILENAME
@@ -489,7 +477,6 @@ def test_build_dispatcher_modern_dispatch_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     """The mandatory classic hooks are implemented ok if not present."""
     metadata = tmp_path / const.METADATA_FILENAME
@@ -514,7 +501,6 @@ def test_build_dispatcher_classic_hooks_mandatory_created(tmp_path):
     assert test_hook.readlink() == pathlib.Path("..", const.DISPATCH_FILENAME)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
     """The already included mandatory classic hooks are left untouched."""
     metadata = tmp_path / const.METADATA_FILENAME
@@ -542,7 +528,6 @@ def test_build_dispatcher_classic_hooks_mandatory_respected(tmp_path):
         assert fh.read() == b"abc"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_build_dispatcher_classic_hooks_linking_charm_replaced(tmp_path, assert_output):
     """Hooks that are just a symlink to the entrypoint are replaced."""
     metadata = tmp_path / const.METADATA_FILENAME
@@ -1284,7 +1269,6 @@ def test_builder_arguments_full(tmp_path):
 # --- subprocess runner tests
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_processrun_base(assert_output):
     """Basic execution."""
     cmd = ["echo", "HELO"]
@@ -1294,7 +1278,6 @@ def test_processrun_base(assert_output):
     )
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_processrun_stdout_logged(assert_output):
     """The standard output is logged in debug."""
     cmd = ["echo", "HELO"]

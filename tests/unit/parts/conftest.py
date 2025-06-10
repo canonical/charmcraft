@@ -14,11 +14,8 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import pathlib
-import sys
 
 import pytest
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
 
 
 @pytest.fixture

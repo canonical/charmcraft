@@ -69,6 +69,12 @@ Charmcraft 4 does not pack bundles. Users who need to pack bundles can use Charm
 for this purpose.
 
 
+``simple`` profile
+~~~~~~~~~~~~~~~~~~
+
+The ``simple`` profile of ``charmcraft init`` has been removed from Charmcraft 4.
+The default profile is now ``kubernetes``, which is a minimal profile with scaffolding
+for a Kubernetes charm.
 Known issues
 ------------
 

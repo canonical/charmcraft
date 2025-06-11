@@ -37,6 +37,7 @@ backends:
           storage: 40G
       - ubuntu-24.04-64:
           workers: 6
+          cpus: 2 # Needed for docs tests
           memory: 8G
           storage: 40G
 
@@ -139,7 +140,7 @@ suites:
   docs/howto/code/:
     summary: tests howto from the docs
     systems:
-      - ubuntu-22.04-64
+      - ubuntu-24.04-64
     manual: true
     prepare: |
       juju_channel=3.5/stable
@@ -156,7 +157,7 @@ suites:
   docs/tutorial/code/:
     summary: tests tutorial from the docs
     systems:
-      - ubuntu-22.04-64
+      - ubuntu-24.04-64
     manual: true
     prepare: |
       juju_channel=3.6/stable

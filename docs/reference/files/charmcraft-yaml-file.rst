@@ -8,8 +8,6 @@
     The full list of keys is defined in the Charmcraft project (but this implies upstream keys from craft-application):
     https://github.com/canonical/charmcraft/blob/3.2.0/charmcraft/models/project.py#L381-L1070
 
-    Technically, the only key required upfront is type. But then, depending on what you choose, other keys become required as well. (The required keys are the ones that are set to a value, unless that value is a pydantic.Field that doesn't have either a default or a default_factory parameter)
-
     The parts key connects to an external library. The plugin properties are defined here: https://canonical-craft-parts.readthedocs-hosted.com/en/latest/reference/part_properties.html
 
     This test file shows the full spec at once: https://github.com/canonical/charmcraft/blob/main/tests/unit/models/valid_charms_yaml/full.yaml
@@ -25,13 +23,6 @@
 
 ``charmcraft.yaml`` is a file in your charm project that contains keys that allow you
 to declare information about the project in a form that can be used by Charmcraft.
-
-.. note::
-
-    If you're starting from an empty file, the only required key is the ``type`` key.
-    However, depending on what value you set it to (currently only ``charm``), other
-    keys become required as well.
-
 
 .. collapse:: Expand to view a full charm with sample content all at once
 

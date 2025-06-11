@@ -56,9 +56,19 @@ html_theme_options = {
     "source_edit_link": "https://github.com/canonical/charmcraft",
 }
 
+# Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
+html_baseurl = "https://canonical-charmcraft.readthedocs-hosted.com/"
+
+if "READTHEDOCS_VERSION" in os.environ:
+    version = os.environ["READTHEDOCS_VERSION"]
+    sitemap_url_scheme = "{version}{link}"
+else:
+    sitemap_url_scheme = "latest/{link}"
+
 # Template and asset locations
 extensions = [
     "canonical_sphinx",
+    "sphinx_sitemap",
 ]
 
 # Copy extra files to the _static dir during build
@@ -196,7 +206,7 @@ rediraffe_redirects = "redirects.txt"
 
 
 def generate_cli_docs(nil):
-    gen_cli_docs_path = (project_dir / "tools" / "gen_cli_docs.py").resolve()
+    gen_cli_docs_path = (project_dir / "tools/gen_cli_docs.py").resolve()
     subprocess.run([sys.executable, gen_cli_docs_path, project_dir / "docs"], check=True)
 
 

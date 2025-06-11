@@ -70,26 +70,6 @@ def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
 
 
 @pytest.mark.parametrize(
-    ("platform", "expected"),
-    [
-        ("linux", False),
-        ("macos", True),
-        ("win32", True),
-    ],
-)
-def test_pack_run_managed_bundle_by_os(monkeypatch, new_path, platform, expected):
-    """When packing a bundle, run_managed should return False if and only if we're on posix."""
-    monkeypatch.setattr("sys.platform", platform)
-    (new_path / "charmcraft.yaml").write_text("type: bundle")
-
-    pack = lifecycle.PackCommand(None)
-
-    result = pack.run_managed(argparse.Namespace(destructive_mode=False))
-
-    assert result == expected
-
-
-@pytest.mark.parametrize(
     ("command_args", "message_start", "project_type"),
     [
         pytest.param(

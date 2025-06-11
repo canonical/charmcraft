@@ -14,16 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import sys
 
 import pydantic
 import pytest
 
 from charmcraft import parts
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows not [yet] supported"
-)
 # -- tests for part config processing
 
 

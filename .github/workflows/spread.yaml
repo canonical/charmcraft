@@ -1,6 +1,12 @@
 name: Spread
 on:
   pull_request:
+    paths-ignore:
+      - ".github/**"
+      - "!.github/workflows/spread.yaml"
+      - "docs/**"
+      - "schema/**"
+      - "tools/**"
   merge_group:
   push:
     branches:

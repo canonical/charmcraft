@@ -19,6 +19,8 @@ jobs:
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
       - name: Find spread systems
         id: select
         run: |

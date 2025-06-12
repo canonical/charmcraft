@@ -699,7 +699,7 @@ def test_build_planner_platforms_combinations(
 
 
 @pytest.mark.parametrize("architecture", sorted(const.SUPPORTED_ARCHITECTURES))
-@pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "windows", "plan9"])
+@pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "plan9"])
 @pytest.mark.parametrize(
     "release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"]
 )

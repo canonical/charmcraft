@@ -135,8 +135,7 @@ def test_files_created_correct(
 
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 
-    # Note: we need to specify the encoding here because Windows defaults ta CP-1252.
-    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text(encoding="utf-8")
+    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text()
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
@@ -258,7 +257,6 @@ def test_executable_set(new_path, init_command):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.skipif(
     bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
     reason="does not work inside tox in Python3.10 and below",

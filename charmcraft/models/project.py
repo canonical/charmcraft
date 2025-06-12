@@ -444,8 +444,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             return PlatformCharm.unmarshal(data)
         if project_type == "bundle":
             raise errors.CraftValidationError(
-                "Bundle packing has been removed from Charmcraft 4.",
-                resolution="Install Charmcraft 3 for bundle packing support.",
+                "Invalid 'charmcraft.yaml' file"
+                details="Support for 'type: bundle' was removed in Charmcraft 4"
+                resolution: "To create charm bundles, use Charmcraft 3",
+                reportable=False,
+                docs_url="https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/charmcraft-yaml-file",
             )
         raise ValueError(f"field type cannot be {project_type!r}")
 

@@ -6,8 +6,8 @@ Initialize a 12-factor app charm
 Prepare an OCI image for a 12-factor app charm
 ----------------------------------------------
 
-:external+rockcraft:doc:`Set up a 12-Factor app rock
-<how-to/web-app-rocks/set-up-web-app-rock>` with Rockcraft.
+:external+rockcraft:ref:`Prepare a rock for a 12-factor app charm <set-up-web-app-rock>`
+with Rockcraft.
 
 Prepare a 12-factor app charm
 -----------------------------

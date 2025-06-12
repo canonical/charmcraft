@@ -61,13 +61,18 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@24.04",
     "ubuntu@24.10",
     "ubuntu@25.04",
+    "ubuntu@25.10",
     "centos@7",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
 BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
-DEVEL_BASE_STRINGS = ()  # Bases that require a specified build base.
+DEVEL_BASE_STRINGS = (
+    "ubuntu@24.10",
+    "ubuntu@25.04",
+    "ubuntu@25.10",
+)  # Bases that require a specified build base.
 
 SUPPORTED_BASES = frozenset(
     (

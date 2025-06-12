@@ -31,9 +31,9 @@ body:
     attributes:
       label: Environment
       description: >
-        We need to know a bit more about the context in which Snapcraft failed.
-        - Are you running Charmcraft in destructive-mode, using LXD or Multipass.
-        - On what system is Charmcraft running (e.g.; Ubuntu 24.04 LTS, macOS 13).
+        We need to know a bit more about the context in which Charmcraft failed.
+        - Are you running Charmcraft in destructive-mode, using LXD or Multipass?
+        - On what system is Charmcraft running (e.g.; Ubuntu 24.04 LTS, macOS 13)?
     validations:
       required: true
   - type: textarea

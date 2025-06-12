@@ -51,6 +51,20 @@ html_context = {
     "matrix": "https://matrix.to/#/#charmhub-charmcraft:ubuntu.com",
 }
 
+# Target repository for the edit button on pages
+html_theme_options = {
+    "source_edit_link": "https://github.com/canonical/charmcraft",
+}
+
+# Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
+html_baseurl = "https://canonical-charmcraft.readthedocs-hosted.com/"
+
+if "READTHEDOCS_VERSION" in os.environ:
+    version = os.environ["READTHEDOCS_VERSION"]
+    sitemap_url_scheme = "{version}{link}"
+else:
+    sitemap_url_scheme = "latest/{link}"
+
 # Template and asset locations
 extensions = [
     "canonical_sphinx",

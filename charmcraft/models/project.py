@@ -445,8 +445,8 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         if project_type == "bundle":
             raise errors.CraftValidationError(
                 "Invalid 'charmcraft.yaml' file"
-                details="Support for 'type: bundle' was removed in Charmcraft 4"
-                resolution: "To create charm bundles, use Charmcraft 3",
+                details="Support for 'type: bundle' was removed in Charmcraft 4",
+                resolution="To create charm bundles, use Charmcraft 3",
                 reportable=False,
                 docs_url="https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/charmcraft-yaml-file",
             )

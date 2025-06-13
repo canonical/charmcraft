@@ -18,15 +18,14 @@ running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, Django apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is Django apps that
-    can be easily deployed, configured, scaled, integrated, etc.,
-    on any Kubernetes cluster.
+If you're new to the charming world, Django apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The combined result is a Django app that
+can be deployed, configured, scaled, integrated, and so on,
+on any Kubernetes cluster.
 
 
 What you'll need
@@ -83,9 +82,8 @@ Create the Django app
 Let's start by creating the "Hello, world" Django app that
 will be used for this tutorial.
 
-Create a ``requirements.txt`` file using ``touch requirements.txt``.
-Then, open the file in a text editor using ``nano requirements.txt``,
-copy the following text into it and then save the file:
+Create a new requirements file with ``nano requirements.txt``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-hello-world/requirements.txt
@@ -154,8 +152,8 @@ Multipass VM, run:
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
-``http://<MULTIPASS_PRIVATE_IP>:8000``, replacing
-``<MULTIPASS_PRIVATE_IP>`` with your VM's private IP address.
+``http://<Multipass private IP>:8000``, replacing
+``<Multipass private IP>`` with your VM's private IP address.
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
@@ -167,9 +165,14 @@ original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Django app into a rock
 -------------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``django-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Django app. Change
+Now let's create a container image for our Django app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``django-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Django app. Change
 back into the ``~/django-hello-world`` directory and initialize the rock:
 
 .. code-block:: bash
@@ -212,25 +215,23 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``django-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
+The ``platforms`` key must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash
 
     dpkg --print-architecture
 
-If your host uses ARM architecture, open ``rockcraft.yaml`` in a
-text editor, comment out ``amd64``, and include ``arm64`` under ``platforms``.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Django apps require a database. Django will use a sqlite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
-app is scaled. We'll use Juju later to easily deploy a database.
+app is scaled. We'll use Juju later to deploy a database.
 
 We'll need to update the ``settings.py`` file to prepare for integrating
-the app with a database. From the ``~/django-hello-world`` directory, open
-``django_hello_world/django_hello_world/settings.py`` and update the
+the app with a database. Open the file and update the
 imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
@@ -288,7 +289,9 @@ We will also use PostgreSQL as the database for our Django app. In
         }
     }
 
-Save and close the ``settings.py`` file.
+Save and close the ``settings.py`` file. The app will no longer run locally
+due to these changes, and we can't test the app until we've deployed
+it and connected it to the PostgreSQL database.
 
 Now let's pack the rock:
 
@@ -298,26 +301,22 @@ Now let's pack the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    In older versions of Rockcraft, you might need to set
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` before the pack command.
-
 Depending on your system and network, this step can take several minutes to
 finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
-``Packed django-hello-world_0.1_amd64.rock``.
+``Packed django-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
+pack, subsequent rock packings are faster.
 
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
-
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in a Kubernetes cluster.
-Copy the rock:
+The rock needs to be copied to the MicroK8s registry. This registry acts as a
+temporary Dockerhub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -325,9 +324,18 @@ Copy the rock:
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
 
+This command contains the following pieces:
+
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Django app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
+
 .. seealso::
 
-    `Ubuntu manpage | skopeo
+    See more: `Ubuntu manpage | skopeo
     <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
@@ -343,11 +351,12 @@ the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``django-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Django
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``django-framework`` profile, Charmcraft
+automates the creation of the files needed for our charm, including a
+``charmcraft.yaml`` project file, ``requirements.txt`` and source code for the
+charm. The source code contains the logic required to operate the Django app.
 
 Initialize a charm named ``django-hello-world``:
 
@@ -359,12 +368,19 @@ Initialize a charm named ``django-hello-world``:
 
 The files will automatically be created in your working directory.
 
-We will need to connect the Django app to the PostgreSQL database.
-Open the ``charmcraft.yaml`` file and add the following section to the end
-of the file:
+We will need to integrate our Django app to the PostgreSQL database,
+which means we must declare a requirement in the charm project file.
+Edit the project file by adding the following section to the end:
 
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
+    :caption: ~/django-hello-world/charm/charmcraft.yaml
     :language: yaml
+
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``django-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/django-hello-world/charm/`` directory.
 
 Now let's pack the charm:
 
@@ -374,29 +390,28 @@ Now let's pack the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true`` may be required
-    in the pack command for older versions of Charmcraft.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed django-hello-world_ubuntu-22.04-amd64.charm``.
+``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
+pack, subsequent charm packings are faster.
 
-.. note::
+.. admonition:: For more options when packing charms
 
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
-
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 Deploy the Django app
 ---------------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Django app. Let's create a new model:
+the Django app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Django app, the
+PostgreSQL database, and ingress.
+
+Let's create a new model:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -404,10 +419,7 @@ the Django app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will need
-to include a constraint to the Juju model to specify your architecture.
-
-Set the Juju model constraints with:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -458,9 +470,12 @@ start until the database is ready.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
 
-    See more: `Command 'juju status' <https://juju.is/docs/juju/juju-status>`_
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
+
+    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 
 The Django app should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the
@@ -491,6 +506,9 @@ Set the configuration:
 
 .. note::
 
+    The ``django-debug`` configuration key sets the ``DJANGO_DEBUG``
+    environment variable that we previously updated in ``settings.py``.
+
     Turning on debug mode shouldn't be done in production. We will do this in
     the tutorial for now and later disable debug mode.
 
@@ -520,9 +538,9 @@ and add a line like the following:
 
 .. code-block:: bash
 
-    <MULTIPASS_PRIVATE_IP> django-hello-world
+    <Multipass private IP> django-hello-world
 
-Here, replace ``<MULTIPASS_PRIVATE_IP>`` with the same Multipass VM
+Here, replace ``<Multipass private IP>`` with the same Multipass VM
 private IP address you previously used.
 
 Now you can open a new tab and visit http://django-hello-world. The
@@ -543,7 +561,7 @@ Add a "Hello, world" app
 
 In this iteration, we'll add a greeting app that returns a ``Hello, world!`` greeting.
 
-The generated Django app doesn't come with an app, which is why
+The generated Django project doesn't come with an app, which is why
 we had to initially enable debug mode for testing.  We will need to go back
 out to the ``~/django-hello-world`` directory where the rock is and enter
 into the ``./django_hello_world`` directory where the Django app

@@ -11,10 +11,11 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. note::
+.. admonition:: Best practice
+    :class: hint
 
-    **Best practice:** If you're setting up a git repository: Name it on the pattern
-     ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
+    If you're setting up a ``git`` repository: name it using the pattern
+    ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
@@ -65,6 +66,7 @@ in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`manage-extensions`
 
+.. _add-charm-project-metadata-an-icon-docs:
 
 Add charm project metadata, an icon, docs
 -----------------------------------------
@@ -73,8 +75,8 @@ Add charm project metadata, an icon, docs
 Specify that the project is a charm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify that the project is a charm (as supposed to a bundle), set the ``type`` key
-to ``charm`` in your project file:
+To specify that the project is a charm, set the ``type`` key to ``charm`` in
+your project file:
 
 .. code-block:: yaml
 
@@ -88,14 +90,6 @@ to ``charm`` in your project file:
 
 Specify a name
 ~~~~~~~~~~~~~~
-
-.. note::
-
-    **Best practice:** The name should be slug-oriented (ASCII lowercase letters,
-    numbers, and hyphens) and follow the pattern
-    ``<workload name in full>[<function>][-k8s]``. E.g., ``argo-server-k8s``.
-
-.. Need to add more content based on https://discourse.charmhub.io/t/charm-naming-guidelines/5364 .
 
 To specify a pack-and-deploy name for your charm, in your charm's project file, specify
 the ``name`` key. E.g.,
@@ -235,11 +229,13 @@ Add docs
 ~~~~~~~~
 
 If you publish your charm on Charmhub, reference documentation about the charm's
-resources, actions, configurations, relations, and libraries is extracted automatically.
-However, you should also aim to add further docs, e.g., a tutorial, how-to guides, etc.
-To provide a link to these docs, in your charm's project file, specify a
-value for the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. Note
-that at present this must be a Discourse page. E.g.,
+resources, actions, configurations, relations, and libraries is generated and
+published automatically in respective tabs.
+
+To add content to the **Description** tab,
+create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
+in your charm's project file under the
+:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
 
 .. code-block:: yaml
 
@@ -250,6 +246,34 @@ that at present this must be a Discourse page. E.g.,
 
     See more: :ref:`charmcraft-yaml-key-links`
 
+The **Description** tab can contain additional documentation, such as tutorials or
+how-to guides.
+
+.. note::
+   A charm's documentation should focus on the charm itself.
+   For workload-specific or Juju-related content, link to the appropriate upstream
+   documentation.
+
+A smaller charm can have single-page documentation for its description.
+A bigger charm, that needs multi-page documentation, can have either
+a brief description with a link to an external documentation set, or
+a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description** tab.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Smaller charm documentation examples:
+
+    * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
+    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
+
+.. admonition:: Best practice
+    :class: hint
+
+    Bigger charm documentation examples:
+
+    * `OpenSearch <https://charmhub.io/opensearch>`_ charm
+    * `Wordpress-k8s <https://charmhub.io/wordpress-k8s>`_ charm
 
 Add terms of use
 ~~~~~~~~~~~~~~~~
@@ -273,6 +297,8 @@ Add an icon
 
     See more: :ref:`manage-icons`
 
+
+.. _add-runtime-details-to-a-charm:
 
 Add runtime details to a charm
 ------------------------------
@@ -421,10 +447,10 @@ specify the ``actions`` key.
 
     See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
-.. _manage-configurations:
+.. _manage-the-app-configuration:
 
-Manage configurations
-~~~~~~~~~~~~~~~~~~~~~
+Manage the app configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     See first: :external+juju:ref:`Juju | Configuration > Application configuration
     <application-configuration>`,
@@ -437,7 +463,7 @@ specify the ``config`` key.
 
     See more: :ref:`charmcraft-yaml-key-config`
 
-    See next: :external+ops:ref:`Ops | Manage configurations <manage-configurations>`
+    See next: :external+ops:ref:`Ops | Manage configuration <manage-configuration>`
 
 .. _manage-relations:
 

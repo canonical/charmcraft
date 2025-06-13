@@ -8,8 +8,6 @@
     The full list of keys is defined in the Charmcraft project (but this implies upstream keys from craft-application):
     https://github.com/canonical/charmcraft/blob/3.2.0/charmcraft/models/project.py#L381-L1070
 
-    Technically, the only key required upfront is type. But then, depending on what you choose, other keys become required as well. (The required keys are the ones that are set to a value, unless that value is a pydantic.Field that doesn't have either a default or a default_factory parameter)
-
     The parts key connects to an external library. The plugin properties are defined here: https://canonical-craft-parts.readthedocs-hosted.com/en/latest/reference/part_properties.html
 
     This test file shows the full spec at once: https://github.com/canonical/charmcraft/blob/main/tests/unit/models/valid_charms_yaml/full.yaml
@@ -25,13 +23,6 @@
 
 ``charmcraft.yaml`` is a file in your charm project that contains keys that allow you
 to declare information about the project in a form that can be used by Charmcraft.
-
-.. note::
-
-    If you're starting from an empty file, the only required key is the ``type`` key.
-    However, depending on what value you set it to (``charm`` or ``bundle``), other
-    keys become required as well.
-
 
 .. collapse:: Expand to view a full charm with sample content all at once
 
@@ -62,6 +53,14 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
         :language: yaml
         :start-at: actions:
         :end-before: analysis:
+
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, and use hyphens (-) to separate words. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some action names be dashed and some be underscored.
 
 
 .. _charmcraft-yaml-key-analysis:
@@ -216,7 +215,7 @@ block must be satisfied.
                 build-for: <list-of-arch> | <arch>
 
 **Status:** Deprecated. Conflicts with the `base`_, `build-base`_, and platforms
-keys. Not allowed if `type`_ is ``bundle``.
+keys.
 
 **Purpose:** Specifies a list of environments (OS version and architecture)
 where the charm must be built on and run on.
@@ -460,6 +459,31 @@ secret URI.
         :start-at: config:
         :end-before: containers:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Just like Juju, a charm is an opinionated tool. Configure the application
+    with the best defaults (ideally the application is deployable without
+    providing any configuration at deploy time), and only expose application
+    configuration options when necessary.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    charms that have already standardised on underscores, it is not necessary to
+    change them, and it is better to be consistent within a charm then to have
+    some config names be dashed and some be underscored.
+
+.. admonition:: Best practice
+    :class: hint
+
+    For very complex applications, consider providing configuration profiles,
+    which can group values for large configs together. For example,
+    a ``profile: large`` that tweaks multiple options under the hood to optimize for
+    larger deployments, or a ``profile: ci`` for limited resource usage during
+    testing.
+
 
 .. _charmcraft-yaml-key-containers:
 
@@ -480,7 +504,7 @@ for the OCI image resource used to create the container; to use it, specify  an 
 image resource name (that you will then define further in the `resources`_ block).
 ``bases`` is a list of bases to be used for resolving a container image, in descending
 order of preference; to use it, specify a base name (for example, ``ubuntu``,
-``centos``, ``windows``, ``osx``, ``opensuse``), a
+``centos``, ``osx``, ``opensuse``), a
 `channel <https://snapcraft.io/docs/channels>`_, and an architecture. ``mounts`` is a
 list of mounted storages for this container; to use it, specify the name of the
 storage to mount from the charm storage and, optionally, the location where to mount
@@ -603,6 +627,12 @@ for users) and the default is 0 (root).
         :start-at: links:
         :end-before: name:
 
+.. admonition:: Best practice
+    :class: hint
+
+    Documentation links should apply to the charm, and not to the application that
+    is being charmed. Assume that the user already has basic competency in the use
+    of the application.
 
 .. _charmcraft-yaml-key-name:
 
@@ -627,6 +657,22 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: name:
         :end-before: parts:
+
+.. admonition:: Best practice
+    :class: hint
+
+    The name should be slug-oriented (ASCII lowercase letters, numbers, and
+    hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
+    For example, ``argo-server-k8s``.
+
+    Include the ``-k8s`` suffix on all charms that run on a Kubernetes cloud,
+    unless the charm has no workload or you know that there will never be
+    a machine version of the charm.
+
+    Don't include an organization or publisher in the name.
+
+    Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a
+    repository, see :ref:`initialise-a-charm`.
 
 
 .. _charmcraft-yaml-key-parts:
@@ -679,19 +725,6 @@ is a map where keys are part properties.
     - ``charm-requirements``: A list of requirements files specifying Python dependencies. It is optional; if not defined, defaults to a list with one ``requirements.txt`` entry if that file is present in the project directory.
     - ``charm-python-packages``: A list of Python packages to install before installing requirements. These packages will be installed from sources and built locally at packing time. It is optional, defaults to empty.
     - ``charm-binary-python-packages``: A list of python packages to install before installing requirements and regular Python packages. Binary packages are allowed, but they may also be installed from sources if a package is only available in source form. It is optional, defaults to empty.
-
-
-    **The** ``bundle`` **plugin**
-
-    Used to pack a :external+juju:ref:`charm bundle <bundle>`, a collection of charms which have been carefully combined and configured in order to automate a multi-charm solution.
-
-    Supports the following configuration:
-
-    .. code-block:: yaml
-
-        parts:
-          my-bundle:
-            plugin: bundle
 
     **The** ``reactive`` **plugin**
 
@@ -761,7 +794,8 @@ is a map where keys are part properties.
             # endpoint. This field is an integer
             limit: <n>
 
-            # (Optional) Defines if the relation is required. Informational only.
+            # (Optional) Defines if the relation is required. Not enforced by
+            # Juju, but used by other tools and should always be included.
             optional: true | false
 
             # (Optional) The scope of the relation. Defaults to "global"
@@ -840,13 +874,21 @@ endpoint.
 
 **Status:** Optional.
 
-**Purpose:** To define if the relation is required. Informational only.
+**Purpose:** To define if the relation is required. Not enforced by Juju.
 
 **Structure:**
 
 *Type:* Boolean.
 
 *Default value:* ``false``
+
+.. admonition:: Best practice
+    :class: hint
+
+    Always include the ``optional`` key, rather than relying on the default
+    value to indicate that the relation is required. Although this field is
+    not enforced by Juju, including it makes it clear to users (and other tools)
+    whether the relation is required.
 
 
 ``<endpoint role>.<endpoint name>.scope``
@@ -1059,13 +1101,13 @@ to a principal charm.
 
 **Status:** Required.
 
-**Purpose:** Indicates whether charmcraft will pack a charm or a bundle.
+**Purpose:** Indicates the type of package charmcraft will pack.
 
 **Structure:**
 
 **Type:** String.
 
-**Value:** ``charm`` or ``bundle``.
+**Value:** ``charm``.
 
 .. collapse:: Example
 

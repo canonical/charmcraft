@@ -35,11 +35,10 @@ description: |
   and collaboration.
 
   Charmcraft and the Python Operator Framework extend the operator pattern
-  beyond Kubernetes with universal operators that drive Linux and
-  Windows apps. The universal operator pattern is very exciting for
-  multi-cloud application management.
+  beyond Kubernetes with universal operators that drive Linux apps. The universal
+  operator pattern is very exciting for multi-cloud application management.
 
-adopt-info: charmcraft  # look for 'craftctl set *' in the charmcraft part
+adopt-info: charmcraft # look for 'craftctl set *' in the charmcraft part
 architectures:
   - build-on: s390x
   - build-on: ppc64el
@@ -90,13 +89,12 @@ build-snaps:
   - rustup
   - astral-uv
 
-
 parts:
   charmcraft-libs:
     plugin: nil
     stage-packages:
-      - libffi7      # Python3 foreign functions - used for rust modules
-      - libsodium23  # PyNaCl uses this
+      - libffi7 # Python3 foreign functions - used for rust modules
+      - libsodium23 # PyNaCl uses this
       - libpython3-stdlib
       - libpython3.10-stdlib
       - libpython3.10-minimal
@@ -146,7 +144,7 @@ parts:
       # Ensure we don't have a dubious ownership error from git with a remote build.
       git config --global --add safe.directory $CRAFT_PART_SRC
       # Set up the rust compiler
-      rustup default 1.79
+      rustup default 1.85
     override-build: |
       uv venv --relocatable $CRAFT_PART_INSTALL
       uv sync --no-dev --no-editable --no-binary

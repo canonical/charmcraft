@@ -14,15 +14,14 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-.. note::
-    If you're new to the charming world, Go apps are
-    specifically supported with a template to quickly generate a
-    **rock** and a matching template to generate a **charm**.
-    A rock is a special kind of OCI-compliant container image, while a
-    charm is a software operator for cloud operations that use the Juju
-    orchestration engine. The result is a Go app that
-    can be easily deployed, configured, scaled, integrated, etc.,
-    on any Kubernetes cluster.
+If you're new to the charming world, Go apps are
+specifically supported with a template to quickly generate a
+**rock** and a matching template to generate a **charm**.
+A rock is a special kind of OCI-compliant container image, while a
+charm is a software operator for cloud operations that use the Juju
+orchestration engine. The combined result is a Go app that
+can be deployed, configured, scaled, integrated, and so on,
+on any Kubernetes cluster.
 
 
 What you'll need
@@ -81,9 +80,8 @@ Install ``go`` and initialize the Go module:
     :end-before: [docs:install-init-go-end]
     :dedent: 2
 
-Create a ``main.go`` file using ``touch main.go``.
-Then, open the file in a text editor using ``nano main.go``,
-copy the following text into it and then save the file:
+Create a new Go program file with ``nano main.go``.
+Then, copy the following text into it, and save:
 
 .. literalinclude:: code/go/main.go
     :caption: ~/go-hello-world/main.go
@@ -127,9 +125,14 @@ original terminal using :kbd:`Ctrl` + :kbd:`C`.
 Pack the Go app into a rock
 ---------------------------
 
-First, we'll need a ``rockcraft.yaml`` file. Using the
-``go-framework`` profile, Rockcraft will automate the creation of
-``rockcraft.yaml`` and tailor the file for a Go app.
+Now let's create a container image for our Go app. We'll use a rock,
+which is an OCI-compliant container image based on Ubuntu.
+
+First, we'll need a ``rockcraft.yaml`` project file. We'll take advantage of a
+pre-defined extension in Rockcraft with the ``--profile`` flag that caters
+initial rock files for specific web app frameworks. Using the
+``go-framework`` profile, Rockcraft automates the creation of
+``rockcraft.yaml`` and tailors the file for a Go app.
 From the ``~/go-hello-world`` directory, initialize the rock:
 
 .. literalinclude:: code/go/task.yaml
@@ -174,7 +177,7 @@ The top of the file should look similar to the following snippet:
 
 Verfiy that the ``name`` is ``go-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
+The ``platforms`` key must match the architecture of your host. Check
 the architecture of your system:
 
 .. code-block:: bash
@@ -182,8 +185,7 @@ the architecture of your system:
     dpkg --print-architecture
 
 
-If your host uses the ARM architecture, open ``rockcraft.yaml`` in a
-text editor, comment out ``amd64``, and include ``arm64`` in ``platforms``.
+Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
 
@@ -201,18 +203,19 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
+.. admonition:: For more options when packing rocks
+
+    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
+
 Once Rockcraft has finished packing the Go rock,
 the terminal will respond with something similar to
-``Packed go-hello-world_0.1_amd64.rock``.
+``Packed go-hello-world_0.1_<architecture>.rock``. The file name
+reflects your system's architecture. After the initial
+pack, subsequent rock packings are faster.
 
-.. note::
-
-    If you aren't on AMD64 architecture, the name of the ``.rock`` file
-    will be different for you.
-
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in the Kubernetes cluster.
-Copy the rock:
+The rock needs to be copied to the MicroK8s registry. This registry acts as a
+temporary Dockerhub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -220,10 +223,19 @@ Copy the rock:
     :end-before: [docs:skopeo-copy-end]
     :dedent: 2
 
+This command contains the following pieces:
+
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and verify certificates while interacting with the MicroK8s registry.
+- ``oci-archive``: specifies the rock we created for our Go app.
+- ``docker``: specifies the name of the image in the MicroK8s registry.
+
 .. seealso::
 
-    `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
+    See more: `Ubuntu manpage | skopeo
+    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
 Create the charm
@@ -238,11 +250,13 @@ for the charm and change inside it:
     :end-before: [docs:create-charm-dir-end]
     :dedent: 2
 
-Using the ``go-framework`` profile, Charmcraft will automate the
-creation of the files needed for our charm, including a
-``charmcraft.yaml``, ``requirements.txt`` and source code for the charm.
-The source code contains the logic required to operate the Go
-app.
+Similar to the rock, we'll take advantage of a pre-defined extension in
+Charmcraft with the ``--profile`` flag that caters initial charm files for
+specific web app frameworks. Using the ``go-framework`` profile,
+Charmcraft automates the creation of the files needed for our charm,
+including a ``charmcraft.yaml`` project file, ``requirements.txt`` and source
+code for the charm. The source code contains the logic required to operate the
+Go app.
 
 Initialize a charm named ``go-hello-world``:
 
@@ -288,9 +302,14 @@ The top of the file should look similar to the following snippet:
     ...
 
 Verify that the ``name`` is ``go-hello-world``. Ensure that ``platforms``
-includes the architecture of your host. If your host uses the ARM architecture,
-open ``charmcraft.yaml`` in a text editor, comment out ``amd64``, and include
-``arm64`` in ``platforms``.
+includes the architecture of your host. Edit the ``platforms`` key in the
+project file if required.
+
+.. tip::
+
+    Want to learn more about all the configurations in the
+    ``go-framework`` profile? Run ``charmcraft expand-extensions``
+    from the ``~/go-hello-world/charm/`` directory.
 
 Let's pack the charm:
 
@@ -310,19 +329,24 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed go-hello-world_ubuntu-24.04-amd64.charm``.
+``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+reflects your system's architecture. After the initial
+pack, subsequent charm packings are faster.
 
-.. note::
+.. admonition:: For more options when packing charms
 
-    If you aren't on AMD64 architecture, the name of the ``.charm``
-    file will be different for you.
+    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 
 Deploy the Go app
 -----------------
 
 A Juju model is needed to handle Kubernetes resources while deploying
-the Go app. Let's create a new model:
+the Go app. The Juju model holds the app along with any supporting
+components. In this tutorial, our model will hold the Go app, ingress,
+and a PostgreSQL database.
+
+Let's create a new model:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -330,10 +354,7 @@ the Go app. Let's create a new model:
     :end-before: [docs:add-juju-model-end]
     :dedent: 2
 
-If you aren't on a host with the AMD64 architecture, you will need to include
-to include a constraint to the Juju model to specify your architecture.
-
-Set the Juju model constraints with:
+Constrain the Juju model to your architecture:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -362,7 +383,10 @@ It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
 using :kbd:`Ctrl` + :kbd:`C`.
 
-.. seealso::
+.. tip::
+
+    To monitor your deployment, keep a ``juju status`` session active in a
+    second terminal.
 
     See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
 

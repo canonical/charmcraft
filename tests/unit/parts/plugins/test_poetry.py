@@ -16,16 +16,10 @@
 """Unit tests for the Charmcraft-specific poetry plugin."""
 
 import pathlib
-import sys
 
-import pytest
 import pytest_check
 
 from charmcraft.parts import plugins
-
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
-]
 
 
 def test_get_build_environment(

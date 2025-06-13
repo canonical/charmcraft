@@ -63,8 +63,17 @@ Available profiles are:
         A basic charm but meant to be deployed in machine-based environments,
         without container requirements.
 
+    django-framework:
+        A basic Kubernetes charm for a 12-factor Django app.
+
+    fastapi-framework:
+        A basic Kubernetes charm for a 12-factor FastAPI app.
+
     flask-framework:
-        A basic Flask application charm for the 12-factor charm project.
+        A basic Kubernetes charm for a 12-factor Flask app.
+
+    go-framework:
+        A basic Kubernetes charm for a 12-factor Go app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:
@@ -79,7 +88,9 @@ files and directories:
     ├── README.md                  - Frontpage for your charmhub.io/charm/
     ├── requirements.txt           - PyPI dependencies for your charm, with `ops`
     ├── src
-    │   └── charm.py               - Minimal operator using Python operator framework
+    │   ├── charm.py               - Python code that operates your charm's workload
+    │   └── <workload>.py          - Standalone module for workload-specific logic,
+    │                                created if profile is 'kubernetes' or 'machine'
     ├── tests
     │   ├── integration
     │   │   └── test_charm.py      - Integration tests
@@ -89,21 +100,48 @@ files and directories:
 
 You will need to edit at least charmcraft.yaml and README.md.
 
-Your minimal operator code is in src/charm.py which uses the Python operator
-framework from https://github.com/canonical/operator and there are some
-example unit and integration tests with a harness to run them.
+Your minimal operator code is in src/charm.py, which uses the 'ops' Python framework.
+See https://ops.readthedocs.io/en/latest/. There are also some sample unit and
+integration tests, which you can run using 'tox -e unit' and 'tox -e integration'.
 """
 
-SUCCESS_MESSAGE = """\
+
+def _make_success_message(src_files: list[str]) -> str:
+    src_files_str = "\n".join(src_files)
+    return f"""\
 Charmed operator package file and directory tree initialised.
 
 Now edit the following package files to provide fundamental charm metadata
 and other information:
 
 charmcraft.yaml
-src/charm.py
+{src_files_str}
 README.md
 """
+
+
+def _make_workload_module_name(charm_name: str) -> str:
+    module_name = charm_name.replace("-", "_")
+    generic_names = [  # put names with more components at the beginning of the list
+        "k8s_charm",
+        "k8s_operator",
+        "machine_charm",
+        "machine_operator",
+        "vm_charm",
+        "vm_operator",
+        "charm",
+        "operator",
+        "k8s",
+        "machine",
+        "vm",
+    ]
+    if module_name in generic_names:
+        return "workload"
+    for generic_name in generic_names:
+        generic_suffix = f"_{generic_name}"
+        if module_name.endswith(generic_suffix):
+            return module_name[: -len(generic_suffix)]
+    return module_name
 
 
 def _get_users_full_name_gecos() -> str | None:
@@ -185,12 +223,14 @@ class InitCommand(base.CharmcraftCommand):
             "author": parsed_args.author,
             "year": date.today().year,
             "class_name": "".join(re.split(r"\W+", parsed_args.name.title())) + "Charm",
+            "workload_module": _make_workload_module_name(parsed_args.name),
         }
 
         template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
         executables = ["run_tests", "src/charm.py", "tests/spread/lib/tools/retry"]
+        src_files = ["src/charm.py"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):
                 continue
@@ -207,5 +247,10 @@ class InitCommand(base.CharmcraftCommand):
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     emit.debug("  made executable")
-        for line in SUCCESS_MESSAGE.split("\n"):
+            if path.name == "workload.py" and path.parent.name == "src":
+                workload_module = context["workload_module"]
+                workload_module_path = path.with_name(f"{workload_module}.py")
+                path.rename(workload_module_path)
+                src_files.append(f"src/{workload_module}.py")
+        for line in _make_success_message(src_files).split("\n"):
             emit.message(line)

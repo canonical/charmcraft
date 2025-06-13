@@ -25,14 +25,23 @@ jobs:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
+  spread-select:
+    runs-on: spread-installed
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+
   snap-tests:
     runs-on: spread-installed
-    needs: [snap-build]
+    needs: [snap-build, spread-select]
     strategy:
       fail-fast: false
       matrix:
-        spread:
-          - "google:"
+        system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
       - name: Cleanup job workspace
@@ -53,7 +62,7 @@ jobs:
 
       - name: Run spread
         run: |
-          spread ${{ matrix.spread }}
+          spread google:${{ matrix.system }}
 
       - name: Discard spread workers
         if: always()
@@ -87,6 +96,5 @@ jobs:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
           CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
-          BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/

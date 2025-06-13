@@ -32,7 +32,12 @@ from overrides import override
 from charmcraft import const, env, errors, store
 from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
-from charmcraft.store.models import ChannelData, Library, LibraryMetadataRequest
+from charmcraft.store.models import (
+    ChannelData,
+    Library,
+    LibraryMetadataIdRequest,
+    LibraryMetadataRequest,
+)
 
 
 class BaseStoreService(craft_application.AppService):
@@ -399,3 +404,13 @@ class StoreService(BaseStoreService):
         return self.anonymous_client.get_library(
             charm_name=charm_name, library_id=library_id, api=api, patch=patch
         )
+
+    def get_libraries_metadata_by_id(self, *lib_id: str) -> Mapping[str, Library]:
+        """Get the metadata for a set of libraries by their IDs."""
+        store_requests = [
+            LibraryMetadataIdRequest({"library-id": lib}) for lib in lib_id
+        ]
+        return {
+            lib.lib_id: lib
+            for lib in self.anonymous_client.fetch_libraries_metadata(store_requests)
+        }

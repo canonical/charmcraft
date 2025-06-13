@@ -3,4 +3,7 @@
 Explanation
 ===========
 
-.. toctree
+.. toctree::
+   :maxdepth: 1
+
+   Cryptographic technology <cryptography>

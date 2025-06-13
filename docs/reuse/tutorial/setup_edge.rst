@@ -1,14 +1,9 @@
-.. warning::
-
-    This tutorial requires version ``3.2.0`` or later of Charmcraft.
-    Check the version of Charmcraft using ``charmcraft --version``.
-
 First, install Multipass.
 
 .. seealso::
 
     See more: `Multipass |
-    How to install Multipass <https://multipass.run/docs/install-multipass>`_
+    How to install Multipass <https://canonical.com/multipass/docs/install-multipass>`_
 
 Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
 from the 24.04 blueprint:
@@ -28,7 +23,7 @@ classic confinement, which grants it access to the whole file system:
 
 .. code-block:: bash
 
-    sudo snap install rockcraft --classic
+    sudo snap install rockcraft --channel latest/edge --classic
 
 
 LXD will be required for building the rock.

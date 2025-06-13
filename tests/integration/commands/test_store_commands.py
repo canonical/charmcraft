@@ -20,7 +20,6 @@ import datetime
 import json
 import pathlib
 import re
-import sys
 from unittest import mock
 
 import craft_cli.pytest_plugin
@@ -127,7 +126,6 @@ def test_fetchlib_simple_updated(
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_all(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,

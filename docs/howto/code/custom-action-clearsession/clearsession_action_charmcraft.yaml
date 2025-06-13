@@ -1,0 +1,3 @@
+actions:
+  clearsession:
+    description: Clear the session cookies.

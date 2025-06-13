@@ -6,29 +6,22 @@ env:
 
 jobs:
   diff-schema:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout rockcraft
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up uv with caching
-        id: setup-uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
-          cache-suffix: ${{ steps.runner-info.outputs.cache-hash }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+      - name: Setup project
+        run: |
+          sudo apt-get update
+          make setup
 
       - name: Run generator script
         run: |
-          uv run --frozen --no-dev --extra apt-jammy \
+          uv run --frozen \
             python tools/schema.py > generated_schema.json
 
       - name: Check with stored schema
@@ -40,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Charmcraft
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0

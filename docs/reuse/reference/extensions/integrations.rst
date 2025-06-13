@@ -24,7 +24,7 @@ integrations, for internal purposes.
 
 In addition to these integrations, in each ``provides`` and ``requires``
 block you may specify further integration endpoints, to integrate with
-the following charms and bundles:
+the following charms:
 
 - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
   ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
@@ -42,6 +42,7 @@ the following charms and bundles:
   `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
 - `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
 - `SMTP <https://charmhub.io/smtp-integrator>`__
+- `OpenFGA <https://charmhub.io/openfga-k8s>`__
 
 These endpoint definitions are as below:
 
@@ -114,6 +115,14 @@ These endpoint definitions are as below:
     requires:
       smtp:
         interface: smtp
+        optional: True
+        limit: 1
+
+.. code-block:: yaml
+
+    requires:
+      openfga:
+        interface: openfga
         optional: True
         limit: 1
 
@@ -205,6 +214,13 @@ The provided SMTP environment variables are as follows:
 - ``SMTP_AUTH_TYPE``
 - ``SMTP_TRANSPORT_SECURITY``
 - ``SMTP_DOMAIN``
+
+The provided OpenFGA environment variables are as follows:
+
+- ``FGA_STORE_ID``
+- ``FGA_TOKEN``
+- ``FGA_GRPC_API_URL``
+- ``FGA_HTTP_API_URL``
 
 The environment variable |base_url| provides the Ingress URL
 for an Ingress integration or the Kubernetes service URL if there is no

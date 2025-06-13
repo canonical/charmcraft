@@ -96,30 +96,48 @@ def create_namespace(
 
 
 @pytest.mark.parametrize(
-    ("profile", "expected_files"),
+    ("profile", "base_expected_files", "has_workload_module"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, id="simple"),
-        pytest.param("machine", BASIC_INIT_FILES, id="machine"),
-        pytest.param("kubernetes", BASIC_INIT_FILES, id="kubernetes"),
+        pytest.param("simple", BASIC_INIT_FILES, False, id="simple"),
+        pytest.param("machine", BASIC_INIT_FILES, True, id="machine"),
+        pytest.param("kubernetes", BASIC_INIT_FILES, True, id="kubernetes"),
     ],
 )
-@pytest.mark.parametrize("charm_name", ["my-charm", "charm123"])
+@pytest.mark.parametrize(
+    ("charm_name", "workload_module_filename"),
+    [
+        pytest.param("machine", "workload.py", id="generic_name"),
+        pytest.param(
+            "foo-bar-k8s-operator", "foo_bar.py", id="generic_suffix_k8s_operator"
+        ),
+        pytest.param("foo-bar-k8s", "foo_bar.py", id="generic_suffix_k8s"),
+        pytest.param("foo-bar-operator", "foo_bar.py", id="generic_suffix_operator"),
+        pytest.param("charm123", "charm123.py", id="name_with_numbers"),
+    ],
+)
 @pytest.mark.parametrize("author", VALID_AUTHORS)
 def test_files_created_correct(
     new_path,
     init_command,
     profile: str,
-    expected_files: set[pathlib.Path],
+    base_expected_files: set[pathlib.Path],
+    has_workload_module: bool,
     charm_name,
+    workload_module_filename: str,
     author,
 ):
     params = create_namespace(name=charm_name, author=author, profile=profile)
     init_command.run(params)
 
+    if has_workload_module:
+        workload_module_path = pathlib.Path(f"src/{workload_module_filename}")
+        expected_files = base_expected_files.union({workload_module_path})
+    else:
+        expected_files = base_expected_files
+
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 
-    # Note: we need to specify the encoding here because Windows defaults ta CP-1252.
-    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text(encoding="utf-8")
+    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text()
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
@@ -237,7 +255,6 @@ def test_executable_set(new_path, init_command):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.skipif(
     bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
     reason="does not work inside tox in Python3.10 and below",

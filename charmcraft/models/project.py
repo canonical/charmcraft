@@ -32,7 +32,7 @@ from typing import (
 import craft_platforms
 import pydantic
 import pydantic.v1
-from craft_application import errors, models, util
+from craft_application import errors, models
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
 from craft_platforms import charm
@@ -40,7 +40,7 @@ from craft_providers import bases
 from pydantic import dataclasses
 from typing_extensions import Self, override
 
-from charmcraft import const, preprocess, utils
+from charmcraft import const, preprocess
 from charmcraft.const import (
     BaseStr,
     BuildBaseStr,
@@ -341,20 +341,6 @@ class CharmcraftBuildPlanner(models.BuildPlanner):
         `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
         as expected with platforms.
         """
-        if self.type == "bundle":
-            # A bundle can build anywhere, so just present the current system.
-            current_arch = util.get_host_architecture()
-            current_base = utils.get_os_platform()
-            return [
-                models.BuildInfo(
-                    platform=current_arch,
-                    build_on=current_arch,
-                    build_for=current_arch,
-                    base=bases.BaseName(
-                        name=current_base.system, version=current_base.release
-                    ),
-                )
-            ]
         if not self.base and not self.platforms:
             return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
 
@@ -397,7 +383,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     in order to preserve field order. It's registered as a virtual child class below.
     """
 
-    type: Literal["charm", "bundle"]
+    type: Literal["charm"]
     title: models.ProjectTitle | None = None
     summary: CharmcraftSummaryStr | None = None
     description: str | None = None
@@ -457,7 +443,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 return BasesCharm.unmarshal(data)
             return PlatformCharm.unmarshal(data)
         if project_type == "bundle":
-            return Bundle.unmarshal(data)
+            raise errors.CraftValidationError(
+                "Invalid 'charmcraft.yaml' file",
+                details="Support for 'type: bundle' was removed in Charmcraft 4",
+                resolution="To create charm bundles, use Charmcraft 3",
+                reportable=False,
+                docs_url="https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/charmcraft-yaml-file",
+            )
         raise ValueError(f"field type cannot be {project_type!r}")
 
     @classmethod
@@ -488,7 +480,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         project_dir = path.parent
 
         preprocess.add_default_parts(data)
-        preprocess.add_bundle_snippet(project_dir, data)
         preprocess.add_metadata(project_dir, data)
         preprocess.add_config(project_dir, data)
         preprocess.add_actions(project_dir, data)
@@ -519,15 +510,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     def _preprocess_parts(
         cls, parts: dict[str, dict[str, Any]] | None, info: pydantic.ValidationInfo
     ) -> dict[str, dict[str, Any]]:
-        """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
+        """Preprocess parts object for a charm, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
             raise TypeError(
                 "'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec."
             )
         if not parts:
-            if info.config and info.config.get("title") == "Bundle":
-                parts = {"bundle": {"plugin": "bundle"}}
-            elif "type" in info.data:
+            if "type" in info.data:
                 parts = {info.data["type"]: {"plugin": info.data["type"]}}
             else:
                 parts = {}
@@ -540,9 +529,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         for name, part in parts.items():
             if name == "charm" and part["plugin"] == "charm":
-                part.setdefault("source", ".")
-
-            if name == "bundle" and part["plugin"] == "bundle":
                 part.setdefault("source", ".")
         return {name: process_part_config(part) for name, part in parts.items()}
 
@@ -1045,7 +1031,7 @@ class BasesCharm(CharmProject):
             different sources that end up being a part of the final charm.
 
             Keys are user-defined part names. The value of each key is a map where keys
-            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+            are part names.
 
             Example::
 
@@ -1076,7 +1062,7 @@ class PlatformCharm(CharmProject):
             different sources that end up being a part of the final charm.
 
             Keys are user-defined part names. The value of each key is a map where keys
-            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+            are part names.
 
             Example::
 
@@ -1111,32 +1097,3 @@ class PlatformCharm(CharmProject):
 
 
 Charm = PlatformCharm | BasesCharm
-
-
-class Bundle(CharmcraftProject):
-    """Model for defining a bundle."""
-
-    type: Literal["bundle"]
-    bundle: dict[str, Any] = {}
-    name: models.ProjectName | None = None  # type: ignore[assignment]
-    title: models.ProjectTitle | None = None
-    summary: CharmcraftSummaryStr | None = None
-    description: pydantic.StrictStr | None = None
-    platforms: None = None  # type: ignore[assignment]
-
-    parts: dict[str, dict[str, Any]] = pydantic.Field(
-        default_factory=lambda: {"bundle": {"plugin": "bundle", "source": "."}}
-    )
-
-    @pydantic.model_validator(mode="before")
-    @classmethod
-    def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
-        """Preprocess any values that charmcraft infers, before attribute validation."""
-        emit.progress(
-            "Packing bundles is deprecated and will be removed in Charmcraft 4.",
-            permanent=True,
-        )
-        if "name" not in values:
-            values["name"] = values.get("bundle", {}).get("name")
-
-        return values

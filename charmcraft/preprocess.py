@@ -36,13 +36,10 @@ def add_default_parts(yaml_data: dict[str, Any]) -> None:
     if yaml_data.get("parts"):  # Only operate if there aren't any parts.
         return
 
-    if yaml_data.get("type") == "bundle":
-        yaml_data["parts"] = {"bundle": {"plugin": "bundle", "source": "."}}
-    elif yaml_data.get("type") == "charm":
-        # Only for backwards compatibility for bases charms.
-        # Platforms charms expect parts to be explicit.
-        if "bases" in yaml_data:
-            yaml_data["parts"] = {"charm": {"plugin": "charm", "source": "."}}
+    # Only for backwards compatibility for bases charms.
+    # Platforms charms expect parts to be explicit.
+    if yaml_data.get("type") == "charm" and "bases" in yaml_data:
+        yaml_data["parts"] = {"charm": {"plugin": "charm", "source": "."}}
 
 
 def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
@@ -76,39 +73,6 @@ def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
             resolution="Remove the duplicate fields from metadata.yaml.",
             retcode=65,  # Data error. per sysexits.h
         )
-
-
-def add_bundle_snippet(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
-    """Add metadata from bundle.yaml to a bundle.
-
-    :param yaml_data: The raw YAML dictionary of the project.
-    :param project_dir: The Path to the directory containing charmcraft.yaml and bundle.yaml.
-    :returns: The same dictionary passed in, with necessary mutations.
-    """
-    if yaml_data.get("type") != "bundle":
-        return
-
-    bundle_file = project_dir / const.BUNDLE_FILENAME
-    if not bundle_file.is_file():
-        raise errors.CraftValidationError(
-            f"Missing 'bundle.yaml' file: {str(bundle_file)!r}",
-            resolution="Create a 'bundle.yaml' file in the same directory as 'charmcraft.yaml'.",
-            docs_url="https://juju.is/docs/sdk/create-a-charm-bundle",
-            reportable=False,
-            retcode=66,  # EX_NOINPUT from sysexits.h
-        )
-
-    with bundle_file.open() as bf:
-        bundle = util.safe_yaml_load(bf)
-    if not isinstance(bundle, dict):
-        raise errors.CraftValidationError(
-            "Incorrectly formatted 'bundle.yaml' file",
-            resolution="Ensure 'bundle.yaml' matches the Juju 'bundle.yaml' format.",
-            docs_url="https://juju.is/docs/sdk/charm-bundles",
-            reportable=False,
-            retcode=65,  # EX_DATAERR from sysexits.h
-        )
-    yaml_data["bundle"] = bundle
 
 
 def add_config(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:

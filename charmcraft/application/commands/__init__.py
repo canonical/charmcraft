@@ -37,7 +37,6 @@ from charmcraft.application.commands.store import (
     WhoamiCommand,
     # name handling
     RegisterCharmNameCommand,
-    RegisterBundleNameCommand,
     UnregisterNameCommand,
     ListNamesCommand,
     # pushing files and checking revisions
@@ -47,7 +46,6 @@ from charmcraft.application.commands.store import (
     CreateTrack,
     ReleaseCommand,
     PromoteCommand,
-    PromoteBundleCommand,
     StatusCommand,
     CloseCommand,
     # libraries support
@@ -78,13 +76,12 @@ def fill_command_groups(app: craft_application.Application) -> None:
             WhoamiCommand,
             # name handling
             RegisterCharmNameCommand,
-            RegisterBundleNameCommand,
             UnregisterNameCommand,
             ListNamesCommand,
         ],
     )
     app.add_command_group(
-        "Store (charm or bundle)",
+        "Store (charm)",
         [
             # pushing files and checking revisions
             UploadCommand,
@@ -93,7 +90,6 @@ def fill_command_groups(app: craft_application.Application) -> None:
             CreateTrack,
             ReleaseCommand,
             PromoteCommand,
-            PromoteBundleCommand,
             StatusCommand,
             CloseCommand,
             # resources support
@@ -141,14 +137,12 @@ __all__ = [
     "LogoutCommand",
     "WhoamiCommand",
     "RegisterCharmNameCommand",
-    "RegisterBundleNameCommand",
     "UnregisterNameCommand",
     "ListNamesCommand",
     "UploadCommand",
     "ListRevisionsCommand",
     "CreateTrack",
     "ReleaseCommand",
-    "PromoteBundleCommand",
     "StatusCommand",
     "CloseCommand",
     "CreateLibCommand",

@@ -24,7 +24,6 @@ or a bundle project.
     metadata-yaml-file
     pyproject-toml-file
     readme-md-file
-    requirements-dev-txt-file
     requirements-txt-file
     src-charm-py-file
     src-workload-py-file

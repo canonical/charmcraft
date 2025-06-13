@@ -18,6 +18,8 @@ following contents:
 - Dependencies of static type checks, unit tests, and integration tests
 - Configuration of testing and linting tools
 
+If you manually modify the dependencies, you'll need to update the uv.lock file.
+
 For the 12-factor profiles, ``django-framework`` and so on, ``pyproject.toml`` only
 contains configuration of testing and linting tools. Dependencies are specified in
-the :ref:`requirements-txt-file` instead.
+the :ref:`requirements-txt-file` and there's no ``uv.lock`` file.

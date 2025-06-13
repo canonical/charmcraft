@@ -1,10 +1,43 @@
 name: Spread
 on:
   pull_request:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   merge_group:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   push:
     branches:
       - main
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   schedule:
     - cron: "0 0 */2 * *"
 

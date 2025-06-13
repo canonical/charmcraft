@@ -75,8 +75,8 @@ Add charm project metadata, an icon, docs
 Specify that the project is a charm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify that the project is a charm (as supposed to a bundle), set the ``type`` key
-to ``charm`` in your project file:
+To specify that the project is a charm, set the ``type`` key to ``charm`` in
+your project file:
 
 .. code-block:: yaml
 

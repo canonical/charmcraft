@@ -30,7 +30,6 @@ jobs:
         task:
           - charms/k8s-operator
           - charms/operator
-          - charms/bundle
           - charms/reactive
           - smoketests/parallel-build
           - smoketests/remote-build

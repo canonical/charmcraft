@@ -26,9 +26,9 @@ from typing_extensions import Self, override
 from charmcraft import const
 
 if TYPE_CHECKING:
-    from charmcraft.models.project import Bundle, Charm
+    from charmcraft.models.project import Charm
 else:
-    Charm = Bundle = None
+    Charm = None
 
 
 class CharmMetadata(models.BaseMetadata):
@@ -132,19 +132,3 @@ class CharmMetadataLegacy(CharmMetadata):
             del data["maintainer"]
 
         return cls.model_validate(data)
-
-
-class BundleMetadata(models.BaseMetadata):
-    """metadata.yaml for a bundle zip."""
-
-    name: models.ProjectName | None = None
-    description: pydantic.StrictStr | None = None
-
-    @classmethod
-    def from_bundle(cls, bundle: Bundle) -> Self:
-        """Turn a populated bundle model into a metadata.yaml model."""
-        bundle_dict = bundle.marshal()
-        if "bundle" in bundle_dict:
-            return cls.model_validate(bundle_dict["bundle"])
-        del bundle_dict["type"]
-        return cls.model_validate(bundle_dict)

@@ -39,10 +39,10 @@ Account commands
 
 .. _reference-charm-commands:
 
-Charm or bundle commands
+Charm commands
 ------------------------
 
-.. include:: store (charm or bundle)-commands.rst
+.. include:: store (charm)-commands.rst
 
 
 .. _reference-library-commands:

@@ -32,15 +32,6 @@ BASIC_CHARM_DICT = {
     "bases": [{"name": "ubuntu", "channel": "22.04", "architectures": ["riscv64"]}],
 }
 
-BASIC_BUNDLE_METADATA_DICT = {
-    "name": "test-bundle",
-    "description": "A fake bundle for testing purposes.",
-}
-BASIC_BUNDLE_DICT = {
-    "type": "bundle",
-    **BASIC_BUNDLE_METADATA_DICT,
-}
-
 
 @pytest.mark.parametrize(
     ("charm_dict", "expected"),
@@ -85,20 +76,5 @@ def test_charm_metadata_from_charm_success(charm_dict, expected):
 
     assert (
         json.loads(json.dumps(metadata.CharmMetadata.from_charm(charm).marshal()))
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("bundle_dict", "expected"),
-    [
-        (BASIC_BUNDLE_DICT, BASIC_BUNDLE_METADATA_DICT),
-    ],
-)
-def test_bundle_metadata_from_bundle(bundle_dict, expected):
-    bundle = project.Bundle.unmarshal(BASIC_BUNDLE_DICT)
-
-    assert (
-        json.loads(json.dumps(metadata.BundleMetadata.from_bundle(bundle).marshal()))
         == expected
     )

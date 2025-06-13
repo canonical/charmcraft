@@ -1,16 +1,36 @@
 name: Spread
 on:
   pull_request:
+    paths:
+      - .github/workflows/spread.yaml
+      - charmcraft/**
+      - libexec/**
+      - snap/**
+      - tests/spread/**
+      - tools/**
+      - spread.yaml
+      - spread/**
   merge_group:
   push:
     branches:
       - main
-  schedule:
-    - cron: "0 0 */2 * *"
+      - hotfix/*
+    paths:
+      - .github/workflows/spread.yaml
+      - charmcraft/**
+      - libexec/**
+      - snap/**
+      - tests/spread/**
+      - tools/**
+      - spread.yaml
+      - spread/**
 
 jobs:
   snap-build:
     runs-on: [self-hosted, amd64]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

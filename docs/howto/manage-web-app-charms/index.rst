@@ -17,7 +17,7 @@ Initialization
 You need both a rock and a charm to have a deployable 12-factor app in Juju.
 
 The charm initialization step uses the ``--profile`` flag to cater the initial
-charm files for your specific web app framework. 
+charm files for your specific web app framework.
 
 .. toctree::
    :maxdepth: 2

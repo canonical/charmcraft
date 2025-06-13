@@ -6,6 +6,7 @@
 *       @lengau
 
 # Documentation owners
+/docs/tutorial/ @medubelko @erinecon
 /docs/  @medubelko @lengau
 
 # Charm-tech owns templates unless they opt out of a review.

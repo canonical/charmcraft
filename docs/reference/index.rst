@@ -48,6 +48,7 @@ initialized or packed. The files are documented in the following pages:
 * :ref:`tests-integration-test-charm-py-file`
 * :ref:`tests-unit-test-charm-py-file`
 * :ref:`tox-ini-file`
+* :ref:`uv-lock-file`
 
 
 Plugins and extensions

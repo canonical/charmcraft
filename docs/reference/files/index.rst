@@ -30,3 +30,4 @@ or a bundle project.
     tests-unit-test-charm-py-file
     tests-integration-test-charm-py-file
     tox-ini-file
+    uv-lock-file

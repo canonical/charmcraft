@@ -250,8 +250,8 @@ Add the Juju secret ID to the application:
 
         The following environment variables are available for the application:
 
-        - ``APP_API_TOKEN_VALUE: "1234"``
-        - ``APP_API_TOKEN_OTHERVALUE: "5678"``
+        - ``FLASK_API_TOKEN_VALUE: "1234"``
+        - ``FLASK_API_TOKEN_OTHERVALUE: "5678"``
 
             See also: `How to manage secrets
             <https://juju.is/docs/juju/manage-secrets>`_

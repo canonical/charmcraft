@@ -8,8 +8,8 @@ from initialization to usage.
 
 :ref:`Extensions <profile>` add customized elements to a charm for specific
 web app frameworks. While the overall basic logic is the same as
-:ref:`managing a charm <manage-charms>`, the following guides are relevant
-to the 12-factor app charm workflow.
+:ref:`managing a charm <manage-charms>`, the following guides are about
+the 12-factor app charm workflow.
 
 Initialization
 --------------
@@ -17,7 +17,7 @@ Initialization
 You need both a rock and a charm to have a deployable 12-factor app in Juju.
 
 The charm initialization step uses the ``--profile`` flag to cater the initial
-charm files for your specific web app framework.
+charm files for your specific framework.
 
 .. toctree::
    :maxdepth: 2

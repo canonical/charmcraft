@@ -5,7 +5,7 @@ Manage charm revisions
 
 .. raw:: html
 
-    <!--As opposed to resource revisions. (Or bundle revisions, but that's being phased out.)-->
+    <!--As opposed to resource revisions.-->
 
 
 Create a charm revision

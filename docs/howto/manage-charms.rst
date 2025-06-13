@@ -75,8 +75,8 @@ Add charm project metadata, an icon, docs
 Specify that the project is a charm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify that the project is a charm (as supposed to a bundle), set the ``type`` key
-to ``charm`` in your project file:
+To specify that the project is a charm, set the ``type`` key to ``charm`` in
+your project file:
 
 .. code-block:: yaml
 
@@ -447,10 +447,10 @@ specify the ``actions`` key.
 
     See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
 
-.. _manage-configurations:
+.. _manage-the-app-configuration:
 
-Manage configurations
-~~~~~~~~~~~~~~~~~~~~~
+Manage the app configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     See first: :external+juju:ref:`Juju | Configuration > Application configuration
     <application-configuration>`,
@@ -463,7 +463,7 @@ specify the ``config`` key.
 
     See more: :ref:`charmcraft-yaml-key-config`
 
-    See next: :external+ops:ref:`Ops | Manage configurations <manage-configurations>`
+    See next: :external+ops:ref:`Ops | Manage configuration <manage-configuration>`
 
 .. _manage-relations:
 

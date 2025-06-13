@@ -18,7 +18,6 @@
 
 import hashlib
 import pathlib
-import sys
 
 import pytest
 from craft_cli import CraftError
@@ -271,7 +270,6 @@ def test_getlibinfo_not_importable_charm_name():
     assert lib_data.path == pathlib.Path("lib/charms/operator_libs_linux/v0/apt.py")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize(
     "path",
     [

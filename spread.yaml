@@ -35,6 +35,10 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+      - ubuntu-24.04-64:
+          workers: 6
+          memory: 8G
+          storage: 40G
 
   multipass:
     type: adhoc
@@ -266,4 +270,3 @@ suites:
       # tests (except in the names registration tests, of course); register them manually
       # in staging Charmhub authenticating with the configured credentials
       CHARM_DEFAULT_NAME: "$(HOST: echo ${CHARM_DEFAULT_NAME:-$USER-test-charm})"
-      BUNDLE_DEFAULT_NAME: "$(HOST: echo ${BUNDLE_DEFAULT_NAME:-$USER-test-bundle})"

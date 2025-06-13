@@ -19,22 +19,17 @@
 from __future__ import annotations
 
 import contextlib
+import fcntl
 import io
-from collections.abc import Generator
-
-from craft_application.models import BuildInfo
-
-try:
-    import fcntl
-except ModuleNotFoundError:  # Not available on Windows.
-    fcntl = None  # type: ignore[assignment]
 import os
 import pathlib
+from collections.abc import Generator
 from typing import cast
 
 import craft_application
 import craft_providers
 from craft_application import services
+from craft_application.models import BuildInfo
 from craft_cli import emit
 from craft_providers import bases
 
@@ -135,15 +130,13 @@ class ProviderService(services.ProviderService):
                 )
                 yield instance
             finally:
-                if fcntl is not None and self._lock:
+                if self._lock:
                     fcntl.flock(self._lock, fcntl.LOCK_UN)
                     self._lock.close()
 
 
 def _maybe_lock_cache(path: pathlib.Path) -> io.TextIOBase | None:
     """Lock the cache so we only have one copy of Charmcraft using it at a time."""
-    if fcntl is None:  # Don't lock on Windows - just don't cache.
-        return None
     cache_lock_path = path / "charmcraft.lock"
 
     emit.trace("Attempting to lock the cache path")

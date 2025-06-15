@@ -32,7 +32,6 @@ to include any necessary libraries, parts, or other assets your application may 
 * :ref:`manage-resources`
 * :ref:`manage-libraries`
 * :ref:`manage-extensions`
-* :ref:`manage-charm-bundles`
 
 
 Publish charms and manage releases
@@ -77,6 +76,5 @@ migration guide for your charm:
    manage-channels
    manage-tracks
    manage-icons
-   manage-bundles
    Migrate plugins <migrate-plugins/index>
    Build <build-guides/index>

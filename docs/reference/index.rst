@@ -29,7 +29,6 @@ In the context of Charmcraft, a *file* refers to any file in a project that can 
 initialized or packed. The files are documented in the following pages:
 
 * :ref:`actions-yaml-file`
-* :ref:`bundle-yaml-file`
 * :ref:`charmcraft-yaml-file`
 * :ref:`config-yaml-file`
 * :ref:`contributing-md-file`

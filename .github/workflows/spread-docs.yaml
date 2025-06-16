@@ -61,13 +61,10 @@ jobs:
         system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
-      - name: Fix network issues between lxd and docker
+      - name: Fix network issues related to docker and lxd
         run: |
-          sudo iptables  -I DOCKER-USER -i lxdbr0 -j ACCEPT
-          sudo ip6tables -I DOCKER-USER -i lxdbr0 -j ACCEPT
-          sudo iptables  -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-          sudo ip6tables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-
+          sudo iptables -P FORWARD ACCEPT
+          sudo ip6tables -P FORWARD ACCEPT
       - name: Checkout charmcraft
         uses: actions/checkout@v4
         with:

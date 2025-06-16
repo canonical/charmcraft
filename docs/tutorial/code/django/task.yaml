@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with Django tutorial
 
-kill-timeout: 120m
+kill-timeout: 50m
 
 restore: |
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt

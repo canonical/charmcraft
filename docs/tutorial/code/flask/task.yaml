@@ -7,7 +7,7 @@
 ###########################################
 summary: Getting started with Flask tutorial
 
-kill-timeout: 120m
+kill-timeout: 50m
 
 restore: |
   rm -rf $HOME/charm

@@ -19,6 +19,11 @@ jobs:
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -40,6 +45,11 @@ jobs:
         system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
       - name: Set up Go
         uses: actions/setup-go@v2
         with:

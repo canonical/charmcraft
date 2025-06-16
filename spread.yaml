@@ -207,9 +207,9 @@ suites:
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/edge --classic
 
-      echo "server = $CONTAINER_REGISTRY_URL" > /var/snap/microk8s/current/args/certs.d
-      echo "[host.\"$CONTAINER_REGISTRY_URL\"] >> /var/snap/microk8s/current/args/certs.d
-      echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d
+      echo "server = $CONTAINER_REGISTRY_URL" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+      echo "[host.\"$CONTAINER_REGISTRY_URL\"] >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+      echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
 
       microk8s status --wait-ready --timeout 180
       microk8s enable hostpath-storage

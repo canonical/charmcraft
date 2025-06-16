@@ -54,14 +54,14 @@ jobs:
 
   docs-tests:
     runs-on: ubuntu-latest
-    needs: [spread-select]
+    needs: [spread-select, snap-build]
     strategy:
       fail-fast: false
       matrix:
         system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
-      - name: Fix network issued between lxd and docker
+      - name: Fix network issues between lxd and docker
         run: |
           sudo iptables  -I DOCKER-USER -i lxdbr0 -j ACCEPT
           sudo ip6tables -I DOCKER-USER -i lxdbr0 -j ACCEPT

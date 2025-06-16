@@ -34,7 +34,6 @@ except ImportError:
 
 # the available profiles and in which directory the template can be found
 PROFILES = {
-    "simple": "init-simple",
     "kubernetes": "init-kubernetes",
     "machine": "init-machine",
     "flask-framework": "init-flask-framework",
@@ -42,7 +41,7 @@ PROFILES = {
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
 }
-DEFAULT_PROFILE = "simple"
+DEFAULT_PROFILE = "kubernetes"
 
 
 _overview = """
@@ -52,10 +51,6 @@ This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 
 Available profiles are:
-    simple:
-        A basic kubernetes charm with lot of texts helping the developer
-        to navigate their first charm by following the instructions.
-
     kubernetes:
         A basic Kubernetes charm with example container.
 
@@ -63,8 +58,17 @@ Available profiles are:
         A basic charm but meant to be deployed in machine-based environments,
         without container requirements.
 
+    django-framework:
+        A basic Kubernetes charm for a 12-factor Django app.
+
+    fastapi-framework:
+        A basic Kubernetes charm for a 12-factor FastAPI app.
+
     flask-framework:
-        A basic Flask application charm for the 12-factor charm project.
+        A basic Kubernetes charm for a 12-factor Flask app.
+
+    go-framework:
+        A basic Kubernetes charm for a 12-factor Go app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:

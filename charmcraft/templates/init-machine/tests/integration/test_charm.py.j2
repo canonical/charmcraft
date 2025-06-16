@@ -26,6 +26,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     charm = await ops_test.build_charm(".")
 
     # Deploy the charm and wait for active/idle status
+    assert ops_test.model is not None
     await asyncio.gather(
         ops_test.model.deploy(charm, application_name=APP_NAME),
         ops_test.model.wait_for_idle(

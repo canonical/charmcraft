@@ -39,6 +39,17 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+  ci:
+    type: adhoc
+    systems:
+      - ubuntu-22.04-64:
+          workers: 1
+    allocate: ADDRESS $(./spread/.extension allocate ci)
+    discard: ./spread/.extension discard ci
+    prepare: '"$PROJECT_PATH"/spread/.extension backend-prepare ci'
+    restore: '"$PROJECT_PATH"/spread/.extension backend-restore ci'
+    prepare_each: '"$PROJECT_PATH"/spread/.extension backend-prepare-each ci'
+    restore_each: '"$PROJECT_PATH"/spread/.extension backend-restore-each ci'
 
   multipass:
     type: adhoc

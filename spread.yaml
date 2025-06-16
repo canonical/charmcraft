@@ -181,6 +181,7 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
     debug: |
+      printenv CONTAINER_REGISTRY_URL
       ip a
       microk8s kubectl get all -A
       microk8s kubectl describe all -A

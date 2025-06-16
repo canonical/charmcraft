@@ -208,7 +208,7 @@ suites:
       refresh_or_install_snap rockcraft latest/edge --classic
 
       echo "server = $CONTAINER_REGISTRY_URL" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-      echo "[host.\"$CONTAINER_REGISTRY_URL\"] >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+      echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
       echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
       microk8s stop
       microk8s start

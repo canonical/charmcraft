@@ -179,6 +179,8 @@ suites:
     restore: |
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
+    debug: |
+      microk8s kubectl get all -A
 
   docs/tutorial/code/:
     summary: tests tutorial from the docs
@@ -212,6 +214,8 @@ suites:
     restore: |
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
+    debug: |
+      microk8s kubectl get all -A
 
   tests/spread/commands/:
     summary: simple charmcraft commands

@@ -137,7 +137,20 @@ See individual issue links for any mitigations.
 Fixed bugs and issues
 ---------------------
 
-The following bugs have been resolved in Charmcraft 3.5.0:
+The following bugs have been resolved in Charmcraft 3.5.1:
+
+- `#2310 <https://github.com/canonical/charmcraft/issues/2310>`_ Can't build
+  Charmcraft snap.
+- `#2311 <https://github.com/canonical/charmcraft/issues/2311>`_ Not all 12-factor
+  profiles are listed in ``charmcraft help init``.
+- `#2309 <https://github.com/canonical/charmcraft/issues/2309>`_ Default unit tests
+  in the Kubernetes profile are inconsistent.
+- `#2327 <https://github.com/canonical/charmcraft/issues/2327>`_ Some documentation
+  links are broken.
+- `#2322 <https://github.com/canonical/charmcraft/issues/2322>`_ Documentation is
+  missing a **Contribute to this page** button.
+- `#2323 <https://github.com/canonical/charmcraft/issues/2323>`_ Documentation is
+  missing a sitemap.
 
 Contributors
 ------------

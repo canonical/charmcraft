@@ -1,7 +1,6 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
 environment:
-  PROFILE/simple: simple
   PROFILE/machine: machine
   PROFILE/kubernetes: kubernetes
 

@@ -98,7 +98,6 @@ def create_namespace(
 @pytest.mark.parametrize(
     ("profile", "base_expected_files", "has_workload_module"),
     [
-        pytest.param("simple", BASIC_INIT_FILES, False, id="simple"),
         pytest.param("machine", BASIC_INIT_FILES, True, id="machine"),
         pytest.param("kubernetes", BASIC_INIT_FILES, True, id="kubernetes"),
     ],
@@ -137,8 +136,7 @@ def test_files_created_correct(
 
     actual_files = {p.relative_to(new_path) for p in new_path.rglob("*")}
 
-    # Note: we need to specify the encoding here because Windows defaults ta CP-1252.
-    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text(encoding="utf-8")
+    charmcraft_yaml = (new_path / "charmcraft.yaml").read_text()
     tox_ini = (new_path / "tox.ini").read_text(encoding="utf-8")
 
     pytest_check.equal(actual_files, expected_files)
@@ -232,12 +230,16 @@ def test_gecos_user_has_no_name(monkeypatch, new_path, init_command):
         ),
     ],
 )
-@pytest.mark.parametrize("expected_files", [BASIC_INIT_FILES])
-def test_create_directory(new_path, init_command, subdir, expected_files):
+@pytest.mark.parametrize("base_expected_files", [BASIC_INIT_FILES])
+def test_create_directory(new_path, init_command, subdir, base_expected_files):
     init_dir = new_path / subdir
 
     try:
-        init_command.run(create_namespace(project_dir=pathlib.Path(subdir)))
+        params = create_namespace(name="foo-bar-k8s", project_dir=pathlib.Path(subdir))
+        init_command.run(params)
+
+        workload_module_path = pathlib.Path("src/foo_bar.py")
+        expected_files = base_expected_files.union({workload_module_path})
 
         actual_files = {p.relative_to(init_dir) for p in init_dir.rglob("*")}
 
@@ -256,7 +258,6 @@ def test_executable_set(new_path, init_command):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 @pytest.mark.skipif(
     bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
     reason="does not work inside tox in Python3.10 and below",

@@ -14,6 +14,22 @@ on:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
 
 jobs:
+  snap-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: charmcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap
+          path: ${{ steps.charmcraft.outputs.snap }}
+  
   spread-select:
     runs-on: ubuntu-latest
     outputs:
@@ -45,6 +61,13 @@ jobs:
         system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
+      - name: Fix network issued between lxd and docker
+        run: |
+          sudo iptables  -I DOCKER-USER -i lxdbr0 -j ACCEPT
+          sudo ip6tables -I DOCKER-USER -i lxdbr0 -j ACCEPT
+          sudo iptables  -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          sudo ip6tables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
       - name: Checkout charmcraft
         uses: actions/checkout@v4
         with:
@@ -68,9 +91,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Download snap from store
-        run: |
-          snap download --edge charmcraft
+      - name: Download snap artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: snap
 
       - name: Run spread
         run: |

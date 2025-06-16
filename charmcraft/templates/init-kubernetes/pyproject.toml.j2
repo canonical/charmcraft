@@ -4,13 +4,13 @@ version = "0.0.1"
 requires-python = ">=3.10"
 
 # Dependencies of the charm code
+# You should include the dependencies of the code in src/. You should also include the
+# dependencies of any charmlibs that the charm uses (copy the dependencies from PYDEPS).
 dependencies = [
     "ops<4",
 ]
 
 [dependency-groups]
-# Dependencies of charmlibs (from their PYDEPS)
-charmlib-pydeps = []
 # Dependencies of static type checks
 static = [
     "pyright",

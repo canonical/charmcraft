@@ -157,14 +157,6 @@ def test_extra_yaml_transform_failure(
                 "name": "test-charm",
                 "summary": "A test charm",
                 "description": "A charm for testing!",
-                "parts": {"bundle": {"prime": ["something"]}},
-            }
-        ),
-        (
-            {
-                "name": "test-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing!",
                 "parts": {"reactive": {"prime": ["something"]}},
             }
         ),
@@ -174,14 +166,6 @@ def test_extra_yaml_transform_failure(
                 "summary": "A test charm",
                 "description": "A charm for testing!",
                 "parts": {"other_name": {"plugin": "charm", "prime": ["something"]}},
-            }
-        ),
-        (
-            {
-                "name": "test-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing!",
-                "parts": {"other_name": {"plugin": "bundle", "prime": ["something"]}},
             }
         ),
         (
@@ -236,13 +220,6 @@ def test_deprecated_prime_warning(
         pytest.param(
             {"parts": {"my-part": {"plugin": "reactive"}}}, id="reactive-plugin"
         ),
-        pytest.param(
-            {
-                "parts": {"bundle": {}},
-            },
-            id="named-bundle",
-        ),
-        pytest.param({"parts": {"my-part": {"plugin": "bundle"}}}, id="bundle-plugin"),
     ],
 )
 def test_deprecated_prime_warning_not_raised(

@@ -87,7 +87,7 @@ class Charmcraft(craft_application.Application):
             return
         has_primed_part = False
         if "parts" in yaml_data:
-            prime_changed_extensions = {"charm", "reactive", "bundle"}
+            prime_changed_extensions = {"charm", "reactive"}
             for name, part in yaml_data["parts"].items():
                 if not {name, part.get("plugin", None)} & prime_changed_extensions:
                     continue
@@ -104,7 +104,6 @@ class Charmcraft(craft_application.Application):
 
         # Preprocessing "magic" to create a fully-formed charm.
         preprocess.add_default_parts(yaml_data)
-        preprocess.add_bundle_snippet(self.project_dir, yaml_data)
         preprocess.add_config(self.project_dir, yaml_data)
         preprocess.add_actions(self.project_dir, yaml_data)
         preprocess.add_metadata(self.project_dir, yaml_data)

@@ -1070,7 +1070,6 @@ def test_additional_files_checker_not_applicable(tmp_path):
 @pytest.mark.parametrize(
     "file",
     [
-        (pathlib.Path(const.BUNDLE_FILENAME)),
         (pathlib.Path(const.CHARMCRAFT_FILENAME)),
         (pathlib.Path(const.MANIFEST_FILENAME)),
         (pathlib.Path(const.METADATA_FILENAME)),

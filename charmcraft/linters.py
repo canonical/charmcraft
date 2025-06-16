@@ -654,7 +654,7 @@ class AdditionalFiles(Linter):
     IGNORE_FILES: set[pathlib.Path] = {
         pathlib.Path(f)
         for f in (
-            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            {const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
             | const.CHARM_MANDATORY_FILES
             | const.CHARM_OPTIONAL_FILES
         )

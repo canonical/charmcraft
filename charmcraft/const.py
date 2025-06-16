@@ -36,7 +36,6 @@ MANAGED_MODE_ENV_VAR = "CHARMCRAFT_MANAGED_MODE"
 # endregion
 # region Project files and directories
 CHARMCRAFT_FILENAME = "charmcraft.yaml"
-BUNDLE_FILENAME = "bundle.yaml"
 MANIFEST_FILENAME = "manifest.yaml"
 JUJU_CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.yaml"

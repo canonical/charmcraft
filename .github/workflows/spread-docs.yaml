@@ -55,6 +55,7 @@ jobs:
   docs-tests:
     runs-on: [self-hosted, self-hosted-linux-amd64-noble-medium]
     needs: [spread-select, snap-build]
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

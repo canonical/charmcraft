@@ -95,7 +95,7 @@ jobs:
 
       - name: Run spread
         run: |
-          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
+          $(go env GOPATH)/bin/spread -debug "${{ matrix.system }}"
 
       - name: Setup tmate session
         if: ${{ failure() }}

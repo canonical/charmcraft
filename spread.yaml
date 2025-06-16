@@ -44,6 +44,8 @@ backends:
     systems:
       - ubuntu-22.04-64:
           workers: 1
+    environment:
+      CONTAINER_REGISTRY_URL: '$(HOST: echo $CONTAINER_REGISTRY_URL)'
     allocate: ADDRESS $(./spread/.extension allocate ci)
     discard: ./spread/.extension discard ci
     prepare: '"$PROJECT_PATH"/spread/.extension backend-prepare ci'
@@ -181,8 +183,8 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
     debug: |
-      printenv CONTAINER_REGISTRY_URL
       ip a
+      printenv CONTAINER_REGISTRY_URL
       microk8s kubectl get all -A
       microk8s kubectl describe all -A
 
@@ -205,6 +207,10 @@ suites:
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/edge --classic
 
+      echo "server = $CONTAINER_REGISTRY_URL" > /var/snap/microk8s/current/args/certs.d
+      echo "[host.\"$CONTAINER_REGISTRY_URL\"] >> /var/snap/microk8s/current/args/certs.d
+      echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d
+
       microk8s status --wait-ready --timeout 180
       microk8s enable hostpath-storage
       microk8s enable registry
@@ -220,7 +226,11 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
     debug: |
+      cat /var/snap/microk8s/current/args/certs.d
+      ip a
+      printenv CONTAINER_REGISTRY_URL
       microk8s kubectl get all -A
+      microk8s kubectl describe all -A
 
   tests/spread/commands/:
     summary: simple charmcraft commands

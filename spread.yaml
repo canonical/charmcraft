@@ -166,7 +166,7 @@ suites:
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/edge --classic
 
-      microk8s status --wait-ready --timeout 180
+      microk8s status --wait-ready --timeout 360
       microk8s enable hostpath-storage
       microk8s enable registry
       microk8s enable ingress

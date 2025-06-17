@@ -32,7 +32,7 @@ backends:
           workers: 3
           storage: 40G
       - ubuntu-22.04-64:
-          workers: 8
+          workers: 6
           memory: 8G
           storage: 40G
       - ubuntu-24.04-64:

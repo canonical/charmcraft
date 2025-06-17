@@ -7,8 +7,6 @@ Imagine you have an Express app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
 yourself packaging and deploying your Express app in no time.
-
-
 In this tutorial we will build a Kubernetes charm for an Express
 app using Charmcraft, so we can have an Express app
 up and running with Juju. Let's get started!

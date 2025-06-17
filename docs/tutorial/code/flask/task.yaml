@@ -11,12 +11,6 @@ kill-timeout: 180m
 
 environment:
 
-prepare: |
-  juju destroy-model flask-hello-world \
-  --destroy-storage --no-prompt --force || true
-  juju destroy-controller --force --destroy-all-models \
-  --destroy-storage --no-prompt --no-wait dev-controller || true
-
 execute: |
   # Move everything to $HOME so that Juju deployment works
   mv *.yaml *.py *.txt $HOME
@@ -92,15 +86,14 @@ execute: |
   # [docs:add-juju-model-end]
 
   #[docs:add-model-constraints]
-  juju set-model-constraints -m flask-hello-world \
-  arch=$(dpkg --print-architecture)
+  juju set-model-constraints -m flask-hello-world arch=$(dpkg --print-architecture)
   #[docs:add-model-constraints-end]
 
   # [docs:deploy-flask-app]
   juju deploy \
     ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
-    flask-hello-world \
-    --resource flask-app-image=localhost:32000/flask-hello-world:0.1
+    flask-hello-world --resource \
+    flask-app-image=localhost:32000/flask-hello-world:0.1
   # [docs:deploy-flask-app-end]
 
   # [docs:deploy-nginx]
@@ -114,13 +107,8 @@ execute: |
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
-  juju wait-for application flask-hello-world \
-  --query='status=="active"' --timeout 10m
-  juju wait-for application nginx-ingress-integrator \
-  --query='status=="active"' --timeout 10m
-
-  # Retry until it is working
-  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
@@ -148,32 +136,21 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  juju wait-for application flask-hello-world \
-  --query='status=="active"' --timeout 10m
-
-  # Retry until it is working
-  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  curl http://flask-hello-world \
-  --resolve flask-hello-world:80:127.0.0.1 | grep Hello
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hello
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application flask-hello-world \
-  --query='status=="maintenance"' --timeout 10m
-  juju wait-for application flask-hello-world \
-  --query='status=="active"' --timeout 10m
-
-  # Retry until it is working
-  retry -n 5 --wait 2 curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+  juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://flask-hello-world \
-  --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
 
   cd ..
   cat visitors_migrate.py >> migrate.py
@@ -203,24 +180,15 @@ execute: |
   # [docs:deploy-postgres-end]
 
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s \
-  --query='status=="active"' --timeout 30m | juju status --relations
-  juju wait-for application flask-hello-world \
-  --query='status=="active"' --timeout 30m | juju status --relations
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 30m | juju status --relations
+  juju wait-for application flask-hello-world --query='status=="active"' --timeout 30m | juju status --relations
 
   juju status --relations
 
-  # Retry until it is working
-  retry -n 5 --wait 2 curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
-
-  curl http://flask-hello-world \
-  --resolve flask-hello-world:80:127.0.0.1 | grep Hi
-  curl http://flask-hello-world/visitors \
-  --resolve flask-hello-world:80:127.0.0.1 | grep 1
-  curl http://flask-hello-world \
-  --resolve flask-hello-world:80:127.0.0.1 | grep Hi
-  curl http://flask-hello-world/visitors \
-  --resolve flask-hello-world:80:127.0.0.1 | grep 2
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 1
+  curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1 | grep Hi
+  curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
   charmcraft clean

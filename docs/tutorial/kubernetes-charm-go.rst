@@ -443,8 +443,15 @@ to send a request via the ingress. It should return the
     setting a DNS record.
 
 
-Configure the Go app
---------------------
+The development cycle
+---------------------
+
+So far, we have worked though the entire cycle, from creating an app to deploying it.
+But now – as in every real-world case – we will go through the experience of iterating to
+develop the app, and deploy each iteration.
+
+Provide a configuration
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the Go app,
 we will make the greeting configurable. We will expect this
@@ -455,6 +462,9 @@ keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory using
 .. literalinclude:: code/go/greeting_main.txt
     :caption: ~/go-hello-world/main.go
     :language: go
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -490,6 +500,9 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-update]
     :end-before: [docs:docker-update-end]
     :dedent: 2
+
+Update the charm
+~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -588,6 +601,10 @@ end of the file:
 .. literalinclude:: code/go/visitors_rockcraft.yaml
     :language: yaml
 
+
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -642,6 +659,9 @@ Let's pack and upload the rock:
     :start-after: [docs:docker-2nd-update]
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
+
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -702,7 +722,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

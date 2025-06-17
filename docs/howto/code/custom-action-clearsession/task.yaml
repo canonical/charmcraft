@@ -7,7 +7,7 @@
 ###########################################
 summary: Custom action to a Django app
 
-kill-timeout: 90m
+kill-timeout: 60m
 
 restore: |
   rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
@@ -151,10 +151,3 @@ execute: |
   # Remove the juju model
   juju destroy-model django-hello-world --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
-
-debug: |
-  df -h
-  free
-  cat /proc/cpuinfo
-  juju status || true
-  juju debug-log --lines 200 || true

@@ -96,7 +96,6 @@ jobs:
 
       - name: Run spread
         run: |
-          printenv CONTAINER_REGISTRY_URL
           $(go env GOPATH)/bin/spread -debug "${{ matrix.system }}"
 
       - name: Discard spread workers

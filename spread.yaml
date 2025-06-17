@@ -45,7 +45,7 @@ backends:
       - ubuntu-22.04-64:
           workers: 1
     environment:
-      CONTAINER_REGISTRY_URL: '$(HOST: echo $CONTAINER_REGISTRY_URL)'
+      CONTAINER_REGISTRY_URL: "$(HOST: echo $CONTAINER_REGISTRY_URL)"
     allocate: ADDRESS $(./spread/.extension allocate ci)
     discard: ./spread/.extension discard ci
     prepare: '"$PROJECT_PATH"/spread/.extension backend-prepare ci'
@@ -190,9 +190,6 @@ suites:
     restore: |
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
-    debug: |
-      microk8s kubectl get all -A
-      microk8s kubectl describe all -A
 
   docs/tutorial/code/:
     <<: *docsuite

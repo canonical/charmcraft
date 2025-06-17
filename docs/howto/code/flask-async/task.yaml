@@ -7,7 +7,7 @@
 ###########################################
 summary: How to create async Flask Charm
 
-kill-timeout: 90m
+kill-timeout: 60m
 
 environment:
 
@@ -174,10 +174,3 @@ execute: |
   # Remove the juju model
   juju destroy-model flask-async-app --destroy-storage --no-prompt --force
   # [docs:clean-environment-end]
-
-debug: |
-  df -h
-  free
-  cat /proc/cpuinfo
-  juju status || true
-  juju debug-log --lines 200 || true

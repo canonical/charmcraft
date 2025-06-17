@@ -56,7 +56,7 @@ execute: |
   ./manage.py runserver 0.0.0.0:8000 &
 
   # Test the Django app
-  retry -n 5 --wait 2 curl --fail localhost:8000
+  retry -n 5 --wait 5 curl --fail localhost:8000
 
   curl localhost:8000 | grep Congratulations
 
@@ -150,7 +150,7 @@ execute: |
   juju status --relations
 
   # wait until the endpoint works
-  retry -n 5 --wait 2 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://django-hello-world --resolve django-hello-world:80:127.0.0.1
 
   # curl the Django app
   curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
@@ -196,7 +196,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!
-  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   cd ..
   # Update django_hello_world/greeting/views.py
@@ -227,7 +227,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is still Hello, world!
-  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
@@ -237,7 +237,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi"
+  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Hi"
 
   # [docs:clean-environment]
   charmcraft clean

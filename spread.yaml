@@ -149,7 +149,7 @@ prepare: |
   install_charmcraft
 
 suites:
-  docs/howto/code/:
+  docs/howto/code/: &docsuite
     summary: tests howto from the docs
     systems:
       - ubuntu-22.04-64
@@ -168,6 +168,14 @@ suites:
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/edge --classic
 
+      if [ -n "$CONTAINER_REGISTRY_URL" ]; then
+        echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        microk8s stop
+        microk8s start
+      fi
+
       microk8s status --wait-ready --timeout 360
       microk8s enable hostpath-storage
       microk8s enable registry
@@ -183,56 +191,12 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
     debug: |
-      ip a
-      printenv CONTAINER_REGISTRY_URL
       microk8s kubectl get all -A
       microk8s kubectl describe all -A
 
   docs/tutorial/code/:
+    <<: *docsuite
     summary: tests tutorial from the docs
-    systems:
-      - ubuntu-22.04-64
-    manual: true
-    prepare: |
-      juju_channel=3.6/stable
-      microk8s_channel=1.31-strict/stable
-
-      lxc network set lxdbr0 ipv6.address none
-      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
-
-      #shellcheck source=tests/spread/tools/prepare.sh
-      . "/charmcraft/tests/spread/tools/prepare.sh"
-
-      refresh_or_install_snap juju "$juju_channel"
-      refresh_or_install_snap microk8s "$microk8s_channel"
-      refresh_or_install_snap rockcraft latest/edge --classic
-
-      echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-      echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-      echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-      microk8s stop
-      microk8s start
-
-      microk8s status --wait-ready --timeout 180
-      microk8s enable hostpath-storage
-      microk8s enable registry
-      microk8s enable ingress
-      microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
-
-      # Bootstrap controller
-      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
-
-      echo 'connect-timeout = 10' >> ~/.curlrc
-      echo 'max-time = 20' >> ~/.curlrc
-    restore: |
-      juju destroy-controller --force --destroy-all-models \
-      --destroy-storage --no-prompt --no-wait dev-controller
-    debug: |
-      cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-      ip a
-      printenv CONTAINER_REGISTRY_URL
-      microk8s kubectl get all -A
-      microk8s kubectl describe all -A
 
   tests/spread/commands/:
     summary: simple charmcraft commands

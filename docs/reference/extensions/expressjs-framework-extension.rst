@@ -26,10 +26,14 @@ The predefined configuration options for the ``expressjs-framework`` are:
   using this port. The environment variable passed to the app is ``PORT``. Default value
   is 8080.
 
-* **app-secret-key**: A secret you can use for sessions, csrf or any other thing
-  where you need a random secret shared by all units. The environment variable passed to
-  the app is ``APP_SECRET_KEY``. The default value is a 64 byte Base64 encoded random
-  string.
+* **app-secret-key-id**: A secret you can use for sessions, csrf or any other thing where
+  you need a random secret shared by all units. The environment variable passed to the
+  app is ``APP_SECRET_KEY``. The secret should contain a single key, ``value``, which
+  maps to the actual application secret key. To create the secret, run the following
+  command: ``juju add-secret my-app-secret-key value=<secret-string>``,
+  grant the application access to the secret and use the output secret ID to configure
+  this option. If this configuration option is not set, the environment variable
+  ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
 
 * **metrics-port**: Port where the Prometheus metrics will be scraped. The environment
   variable passed to the app is ``METRICS_PORT``. Default value is 8080.

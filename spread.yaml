@@ -228,7 +228,7 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
     debug: |
-      cat /var/snap/microk8s/current/args/certs.d
+      cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
       ip a
       printenv CONTAINER_REGISTRY_URL
       microk8s kubectl get all -A

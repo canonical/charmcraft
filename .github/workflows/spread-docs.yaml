@@ -96,7 +96,7 @@ jobs:
 
       - name: Run spread
         run: |
-          $(go env GOPATH)/bin/spread -debug "${{ matrix.system }}"
+          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
       - name: Discard spread workers
         if: always()

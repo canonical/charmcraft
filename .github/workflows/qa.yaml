@@ -8,6 +8,13 @@ on:
       - "release/*"
       - "renovate/*"
   pull_request:
+    paths-ignore:
+      - ".github/**"
+      - "!.github/workflows/qa.yaml"
+      - "docs/**"
+      - "schema/**"
+      - "snap/**"
+      - "tools/**"
   merge_group:
 
 jobs:

@@ -1,11 +1,11 @@
 .. _expressjs-framework-extension:
 
 
-ExpressJS framework extension
+Express framework extension
 =============================
 
 The ``expressjs-framework`` extension includes configuration options customised
-for a Express application. This document describes all the keys that a user
+for an Express application. This document describes all the keys that a user
 may interact with.
 
 .. tip::
@@ -26,7 +26,7 @@ The predefined configuration options for the ``expressjs-framework`` are:
   using this port. The environment variable passed to the app is ``PORT``. Default value
   is 8080.
 
-* **app-secret-key-id**: A secret you can use for sessions, csrf or any other thing
+* **app-secret-key-id**: A secret you can use for sessions, protection against cross-site request forgery, or any other thing
   where you need a random secret shared by all units. The environment variable passed
   to the app is ``APP_SECRET_KEY``. The secret should contain a single key, ``value``,
   which maps to the actual application secret key. To create the secret, run the

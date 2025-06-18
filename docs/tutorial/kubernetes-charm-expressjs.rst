@@ -19,7 +19,7 @@ specifically supported with a template to quickly generate a
 A rock is a special kind of OCI-compliant container image, while a
 charm is a software operator for cloud operations that use the Juju
 orchestration engine. The result is an Express app that
-can be easily deployed, configured, scaled, integrated, etc.,
+can be easily deployed, configured, scaled, and integrated
 on any Kubernetes cluster.
 
 
@@ -55,8 +55,7 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: Express
 
-Finally, let's create a new directory for this tutorial and
-enter into it:
+Finally, let's create a directory for the app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -83,7 +82,7 @@ Install ``npm`` and ``express-generator`` to initialize the Express module:
 Run the Express app locally
 ----------------------
 
-First, install the necessary packages for the Express app so it can run:
+Install the necessary packages for the app so it can run:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -91,7 +90,7 @@ First, install the necessary packages for the Express app so it can run:
     :end-before: [docs:build-expressjs-end]
     :dedent: 2
 
-Now that we have the packages installed, let's run the Express app to verify
+With the packages installed, let's run the Express app to verify
 that it works:
 
 .. code-block:: bash
@@ -108,7 +107,7 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-expressjs-end]
     :dedent: 2
 
-The Express app should respond with ``Welcome to Express`` web page.
+If successful, the Express app replies with the *Welcome to Express* web page.
 
 .. note::
 
@@ -191,18 +190,14 @@ the architecture of your system:
 
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Now let's pack the rock:
+Let's pack the rock. Because the Express framework extension is in development,
+we need to turn on experimental extensions:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
     :start-after: [docs:pack]
     :end-before: [docs:pack-end]
     :dedent: 2
-
-.. note::
-
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Express
-    extension is experimental.
 
 Depending on your system and network, this step can take several
 minutes to finish.
@@ -308,18 +303,14 @@ Verify that the ``name`` is ``expressjs-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. Edit the ``platforms`` key in the
 project file if required.
 
-Let's pack the charm:
+Let's pack the charm. Because the Express profile is in development, we also need to
+enable experimental extensions for Charmcraft:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
     :start-after: [docs:charm-pack]
     :end-before: [docs:charm-pack-end]
     :dedent: 2
-
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the ExpressJS
-    extension is experimental.
 
 Depending on your system and network, this step can take several
 minutes to finish.

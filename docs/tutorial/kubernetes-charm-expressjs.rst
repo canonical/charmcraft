@@ -109,16 +109,6 @@ endpoint. You will need a new terminal for this; use
 
 If successful, the Express app replies with the *Welcome to Express* web page.
 
-.. note::
-
-    The response from the Express app includes HTML and CSS
-    which makes it difficult to read on a terminal. You can use a browser
-    to see the fully rendered page using the IP address of the VM to
-    access the Express app. You can find the IP address of the VM by
-    running ``multipass info charm-dev`` outside of the VM. Then open
-    a new tab and visit ``http://<Multipass private IP>:3000``, replacing
-    ``<Multipass private IP>`` with your VM's private IP address.
-
 The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
 

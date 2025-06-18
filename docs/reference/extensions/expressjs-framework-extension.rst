@@ -26,12 +26,13 @@ The predefined configuration options for the ``expressjs-framework`` are:
   using this port. The environment variable passed to the app is ``PORT``. Default value
   is 8080.
 
-* **app-secret-key-id**: A secret you can use for sessions, protection against cross-site request forgery, or any other thing
-  where you need a random secret shared by all units. The environment variable passed
-  to the app is ``APP_SECRET_KEY``. The secret should contain a single key, ``value``,
-  which maps to the actual application secret key. To create the secret, run the
-  following command: ``juju add-secret my-app-secret-key value=<secret-string>``,
-  grant the application access to the secret and use the output secret ID to configure
+* **app-secret-key-id**: A secret you can use for sessions, protection against cross-site
+  request forgery, or any other thing where you need a random secret shared by all units.
+  The environment variable passed to the app is ``APP_SECRET_KEY``. The secret should
+  contain a single key, ``value``, which maps to the actual application secret key.
+  To create the secret, run the following command:
+  ``juju add-secret my-app-secret-key value=<secret-string>``, grant the application
+  access to the secret and use the output secret ID to configure
   this option. If this configuration option is not set, the environment variable
   ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
 
@@ -40,14 +41,6 @@ The predefined configuration options for the ``expressjs-framework`` are:
 
 * **metrics-path**: Path where the Prometheus metrics will be scraped. The environment
   variable passed to the app is ``METRICS_PATH``. Default value is ``/metrics``.
-
-.. note::
-
-    The ``metrics-port`` and ``metrics-path`` options are not mandatory. If you don't
-    define the ``metrics-port`` and ``metrics-path`` options, the charm will use the
-    default values. If you want to make use of these configuration options you need
-    to use them in your application code. The charm only defines the environment
-    variables.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will

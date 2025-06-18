@@ -55,7 +55,7 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: Express
 
-Finally, let's create a directory for the app:
+Create a directory for the app:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -63,6 +63,15 @@ Finally, let's create a directory for the app:
     :end-before: [docs:create-working-dir-end]
     :dedent: 2
 
+As the ``expressjs-framework`` extensions for Rockcraft and Charmcraft are
+still experimental, export the environment variables
+ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS and CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS:
+
+.. literalinclude:: code/expressjs/task.yaml
+    :language: bash
+    :start-after: [docs:export-experimental-env-vars]
+    :end-before: [docs:export-experimental-env-vars-end]
+    :dedent: 2
 
 Create the Express app
 -----------------
@@ -180,8 +189,7 @@ the architecture of your system:
 
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Let's pack the rock. Because the Express framework extension is in development,
-we need to turn on experimental extensions:
+Let's pack the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -293,8 +301,7 @@ Verify that the ``name`` is ``expressjs-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. Edit the ``platforms`` key in the
 project file if required.
 
-Let's pack the charm. Because the Express profile is in development, we also need to
-enable experimental extensions for Charmcraft:
+Let's pack the charm:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash

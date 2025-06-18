@@ -41,6 +41,11 @@ execute: |
   cd expressjs-hello-world
   # [docs:create-working-dir-end]
 
+  # [docs:export-experimental-env-vars]
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  # [docs:export-experimental-env-vars-end]
+
   cd ..
   mv *.yaml *.js *.sh $HOME/expressjs-hello-world
   cd expressjs-hello-world
@@ -76,7 +81,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # [docs:pack]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
@@ -100,7 +105,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
 
   # [docs:charm-pack]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   # [docs:charm-pack-end]
 
   # [docs:add-juju-model]
@@ -144,7 +149,7 @@ execute: |
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
 
   # [docs:docker-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:expressjs-hello-world_0.2_$(dpkg --print-architecture).rock \
     docker://localhost:32000/expressjs-hello-world:0.2
@@ -154,7 +159,7 @@ execute: |
   cd charm
 
   # [docs:refresh-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh expressjs-hello-world \
     --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/expressjs-hello-world:0.2
@@ -201,7 +206,7 @@ execute: |
   popd
 
   # [docs:docker-2nd-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:expressjs-hello-world_0.3_$(dpkg --print-architecture).rock \
     docker://localhost:32000/expressjs-hello-world:0.3
@@ -211,7 +216,7 @@ execute: |
   cd charm
 
   # [docs:refresh-2nd-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh expressjs-hello-world \
     --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/expressjs-hello-world:0.3
@@ -239,10 +244,10 @@ execute: |
   --resolve expressjs-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
+  charmcraft clean
   # Back out to main directory for cleanup
   cd ..
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean
+  rockcraft clean
   # exit and delete the charm dir
   rm -rf charm
   # delete app directory

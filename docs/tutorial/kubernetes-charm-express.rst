@@ -64,8 +64,7 @@ Create a directory for the app:
     :dedent: 2
 
 As the ``expressjs-framework`` extensions for Rockcraft and Charmcraft are
-still experimental, export the environment variables
-ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS and CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS:
+still in development, we must enable experimental extensions for each:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash

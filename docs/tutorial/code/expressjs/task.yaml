@@ -66,7 +66,7 @@ execute: |
   retry -n 5 --wait 2 curl --fail localhost:3000
 
   # [docs:curl-expressjs]
-  curl localhost:3000
+  curl -I localhost:3000
   # [docs:curl-expressjs-end]
 
   kill $!
@@ -141,7 +141,7 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
-  curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+  curl -I http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
 
   cd ..

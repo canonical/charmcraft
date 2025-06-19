@@ -73,7 +73,7 @@ still in development, we must enable experimental extensions for each:
     :dedent: 2
 
 Create the Express app
------------------
+----------------------
 
 Start by creating the "Hello, world" Express app that will be
 used for this tutorial.
@@ -88,7 +88,7 @@ Install ``npm`` and ``express-generator`` to initialize the Express module:
 
 
 Run the Express app locally
-----------------------
+---------------------------
 
 Install the necessary packages for the app so it can run:
 
@@ -115,14 +115,15 @@ endpoint. You will need a new terminal for this; use
     :end-before: [docs:curl-expressjs-end]
     :dedent: 2
 
-If successful, the Express app replies with the *Welcome to Express* web page.
+If the output has an *HTTP/1.1 200 OK* status message, then we know the newly-built
+app is working.
 
 The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
 
 
 Pack the Express app into a rock
----------------------------
+--------------------------------
 
 Now let's create a container image for our Express app. We'll use a rock,
 which is an OCI-compliant container image based on Ubuntu.
@@ -416,9 +417,9 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Use ``curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should return the
-``Welcome to Express`` greeting.
+Use ``curl -I http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
+to send a request via the ingress. It should show the
+``HTTP/1.1 200 OK`` status message.
 
 .. note::
 

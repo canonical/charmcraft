@@ -417,7 +417,8 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Use ``curl -I http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
+Use
+``curl -I http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
 to send a request via the ingress. It should show the
 ``HTTP/1.1 200 OK`` status message.
 

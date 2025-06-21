@@ -446,9 +446,9 @@ to send a request via the ingress. It should return the
 The development cycle
 ---------------------
 
-So far, we have worked though the entire cycle, from creating an app to deploying it.
-But now – as in every real-world case – we will go through the experience of iterating to
-develop the app, and deploy each iteration.
+So far, we've worked though the entire cycle, from creating an app to deploying
+it. But now -- as in every real-world case -- we'll go through the experience of
+iteratively developing the app, and deploying each iteration.
 
 Provide a configuration
 ~~~~~~~~~~~~~~~~~~~~~~~

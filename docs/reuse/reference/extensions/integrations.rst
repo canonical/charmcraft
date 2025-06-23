@@ -34,7 +34,7 @@ the following charms:
     - Endpoint definition
   * - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
       ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
-    - 
+    -
   * - MySQL: `machine <https://charmhub.io/mysql>`__ and
       `k8s <https://charmhub.io/mysql-k8s>`__ charm
     - .. code-block:: yaml
@@ -54,7 +54,7 @@ the following charms:
               interface: postgresql_client
               optional: True
               limit: 1
-  
+
   * - `MongoDB <https://charmhub.io/mongodb>`__
     - .. code-block:: yaml
 
@@ -63,10 +63,10 @@ the following charms:
               interface: mongodb_client
               optional: True
               limit: 1
-  
+
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
-    - 
+    -
   * - `Redis <https://charmhub.io/redis-k8s>`__
     - .. code-block:: yaml
 
@@ -75,7 +75,7 @@ the following charms:
               interface: redis
               optional: True
               limit: 1
-  
+
   * - `SAML <https://charmhub.io/saml-integrator>`__
     - .. code-block:: yaml
 
@@ -112,7 +112,7 @@ the following charms:
               interface: tracing
               optional: True
               limit: 1
-  
+
   * - `SMTP <https://charmhub.io/smtp-integrator>`__
     - .. code-block:: yaml
 
@@ -121,7 +121,7 @@ the following charms:
               interface: smtp
               optional: True
               limit: 1
-  
+
   * - `OpenFGA <https://charmhub.io/openfga-k8s>`__
     - .. code-block:: yaml
 
@@ -154,7 +154,7 @@ provided to your |framework| app:
   * - Relation
     - Available environment variables
   * - PostgreSQL
-    - 
+    -
         - ``POSTGRESQL_DB_CONNECT_STRING``
         - ``POSTGRESQL_DB_SCHEME``
         - ``POSTGRESQL_DB_NETLOC``
@@ -168,7 +168,7 @@ provided to your |framework| app:
         - ``POSTGRESQL_DB_PORT``
         - ``POSTGRESQL_DB_NAME``
   * - MySQL
-    - 
+    -
         - ``MYSQL_DB_CONNECT_STRING``
         - ``MYSQL_DB_SCHEME``
         - ``MYSQL_DB_NETLOC``
@@ -182,7 +182,7 @@ provided to your |framework| app:
         - ``MYSQL_DB_PORT``
         - ``MYSQL_DB_NAME``
   * - MongoDB
-    - 
+    -
         - ``MONGODB_DB_CONNECT_STRING``
         - ``MONGODB_DB_SCHEME``
         - ``MONGODB_DB_NETLOC``
@@ -196,7 +196,7 @@ provided to your |framework| app:
         - ``MONGODB_DB_PORT``
         - ``MONGODB_DB_NAME``
   * - Redis
-    - 
+    -
         - ``REDIS_DB_CONNECT_STRING``
         - ``REDIS_DB_SCHEME``
         - ``REDIS_DB_NETLOC``
@@ -210,13 +210,13 @@ provided to your |framework| app:
         - ``REDIS_DB_PORT``
         - ``REDIS_DB_NAME``
   * - SAML
-    - 
+    -
         - ``SAML_ENTITY_ID`` (required)
         - ``SAML_METADATA_URL`` (required)
         - ``SAML_SINGLE_SIGN_ON_REDIRECT_URL`` (required)
         - ``SAML_SIGNING_CERTIFICATE`` (required)
   * - S3
-    - 
+    -
         - ``S3_ACCESS_KEY`` (required)
         - ``S3_SECRET_KEY`` (required)
         - ``S3_BUCKET`` (required)
@@ -230,7 +230,7 @@ provided to your |framework| app:
         - ``S3_ATTRIBUTES``
         - ``S3_TLS_CA_CHAIN``
   * - RabbitMQ
-    - 
+    -
         - ``RABBITMQ_CONNECT_STRING``
         - ``RABBITMQ_SCHEME``
         - ``RABBITMQ_NETLOC``
@@ -242,7 +242,7 @@ provided to your |framework| app:
         - ``RABBITMQ_PASSWORD``
         - ``RABBITMQ_HOSTNAME``
         - ``RABBITMQ_PORT``
-        - ``RABBITMQ_VHOST``             
+        - ``RABBITMQ_VHOST``
   * - Tracing
     -
         - ``OTEL_EXPORTER_OTLP_ENDPOINT``

@@ -34,7 +34,7 @@ the following charms:
     - Endpoint definition
   * - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
       ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
-    - Already available in the extension
+    - Already available in the charm
   * - MySQL: `machine <https://charmhub.io/mysql>`__ and
       `k8s <https://charmhub.io/mysql-k8s>`__ charm
     - .. code-block:: yaml
@@ -66,7 +66,7 @@ the following charms:
 
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
-    - Already available in the extension
+    - Already available in the charm
   * - `Redis <https://charmhub.io/redis-k8s>`__
     - .. code-block:: yaml
 

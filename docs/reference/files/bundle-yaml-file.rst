@@ -748,9 +748,6 @@ The default base for deploying charms that can be deployed on multiple bases.
 
 **Purpose:** A link to a documentation cover page.
 
-    See more: :external+juju:ref:`Juju | Documentation conventions
-    <charm-best-practices-documentation>`
-
 
 ``issues``
 ----------

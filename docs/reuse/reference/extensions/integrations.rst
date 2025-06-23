@@ -1,9 +1,9 @@
 
-``peers``, ``provides``, and ``requires`` keys
-----------------------------------------------
+Relation endpoints
+------------------
 
-Your charm already has some ``peers``, ``provides``, and ``requires``
-integrations, for internal purposes.
+Your charm already has the following ``peers``, ``provides``, and ``requires``
+relations, for internal purposes:
 
 .. code-block:: yaml
 
@@ -22,8 +22,8 @@ integrations, for internal purposes.
         interface: ingress
         limit: 1
 
-In addition to these integrations, in each ``provides`` and ``requires``
-block you may specify further integration endpoints, to integrate with
+In addition to these relations, in each ``provides`` and ``requires``
+block you may specify further relations endpoints, to integrate with
 the following charms:
 
 - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
@@ -131,11 +131,14 @@ These endpoint definitions are as below:
     The key ``optional`` with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
 
-To add one of these integrations, e.g., PostgreSQL, in the
+To add one of these relations, e.g., PostgreSQL, in the
 project file, include the appropriate requires block and
 integrate with |juju_integrate_postgresql| as usual.
 
-After the integration has been established, the connection string will
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~
+
+After the relation has been established, the connection string will
 be available as an environment variable. Integration with PostgreSQL,
 MySQL, MongoDB or Redis provides the string as the
 ``POSTGRESQL_DB_CONNECT_STRING``, ``MYSQL_DB_CONNECT_STRING``,
@@ -166,7 +169,7 @@ The provided SAML environment variables are as follows:
 - ``SAML_SINGLE_SIGN_ON_REDIRECT_URL`` (required)
 - ``SAML_SIGNING_CERTIFICATE`` (required)
 
-The S3 integration creates the following environment variables that you
+The S3 relation creates the following environment variables that you
 may use to configure your |framework| application:
 
 - ``S3_ACCESS_KEY`` (required)
@@ -182,7 +185,7 @@ may use to configure your |framework| application:
 - ``S3_ATTRIBUTES``
 - ``S3_TLS_CA_CHAIN``
 
-The RabbitMQ integration creates the connection string in the
+The RabbitMQ relation creates the connection string in the
 environment variable ``RABBITMQ_CONNECT_STRING``. Furthermore, the
 following environment variables may be provided, derived from the
 connection string:
@@ -199,7 +202,7 @@ connection string:
 - ``RABBITMQ_PORT``
 - ``RABBITMQ_VHOST``
 
-The Tracing integration creates the following environment variables
+The Tracing relation creates the following environment variables
 that you can use to configure your application:
 
 - ``OTEL_EXPORTER_OTLP_ENDPOINT``
@@ -223,5 +226,5 @@ The provided OpenFGA environment variables are as follows:
 - ``FGA_HTTP_API_URL``
 
 The environment variable |base_url| provides the Ingress URL
-for an Ingress integration or the Kubernetes service URL if there is no
-Ingress integration.
+for an Ingress relation or the Kubernetes service URL if there is no
+Ingress relation.

@@ -26,105 +26,111 @@ In addition to these relations, in each ``provides`` and ``requires``
 block you may specify further relations endpoints, to integrate with
 the following charms:
 
-- Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
-  ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
-- MySQL: `machine <https://charmhub.io/mysql>`__ and
-  `k8s <https://charmhub.io/mysql-k8s>`__ charm
-- PostgreSQL: `machine <https://charmhub.io/postgresql>`__ and
-  `k8s <https://charmhub.io/postgresql-k8s>`__ charm
-- `MongoDB <https://charmhub.io/mongodb>`__
-- `Canonical Observability Stack
-  (COS) <https://charmhub.io/cos-lite>`__
-- `Redis <https://charmhub.io/redis-k8s>`__
-- `SAML <https://charmhub.io/saml-integrator>`__
-- `S3 <https://charmhub.io/s3-integrator>`__
-- RabbitMQ: `machine <https://charmhub.io/rabbitmq-server>`__ and
-  `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
-- `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
-- `SMTP <https://charmhub.io/smtp-integrator>`__
-- `OpenFGA <https://charmhub.io/openfga-k8s>`__
+.. list-table::
+  :widths: 30 30
+  :header-rows: 1
 
-These endpoint definitions are as below:
+  * - Relation
+    - Endpoint definition
+  * - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
+      ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
+    - 
+  * - MySQL: `machine <https://charmhub.io/mysql>`__ and
+      `k8s <https://charmhub.io/mysql-k8s>`__ charm
+    - .. code-block:: yaml
 
-.. code-block:: yaml
+          requires:
+            mysql:
+              interface: mysql_client
+              optional: True
+              limit: 1
 
-    requires:
-      mysql:
-        interface: mysql_client
-        optional: True
-        limit: 1
+  * - PostgreSQL: `machine <https://charmhub.io/postgresql>`__ and
+      `k8s <https://charmhub.io/postgresql-k8s>`__ charm
+    - .. code-block:: yaml
 
-.. code-block:: yaml
+          requires:
+            postgresql:
+              interface: postgresql_client
+              optional: True
+              limit: 1
+  
+  * - `MongoDB <https://charmhub.io/mongodb>`__
+    - .. code-block:: yaml
 
-    requires:
-      postgresql:
-        interface: postgresql_client
-        optional: True
-        limit: 1
+          requires:
+            mongodb:
+              interface: mongodb_client
+              optional: True
+              limit: 1
+  
+  * - `Canonical Observability Stack
+      (COS) <https://charmhub.io/cos-lite>`__
+    - 
+  * - `Redis <https://charmhub.io/redis-k8s>`__
+    - .. code-block:: yaml
 
-.. code-block:: yaml
+          requires:
+            redis:
+              interface: redis
+              optional: True
+              limit: 1
+  
+  * - `SAML <https://charmhub.io/saml-integrator>`__
+    - .. code-block:: yaml
 
-    requires:
-      mongodb:
-        interface: mongodb_client
-        optional: True
-        limit: 1
+          requires:
+            saml:
+              interface: saml
+              optional: True
+              limit: 1
 
-.. code-block:: yaml
+  * - `S3 <https://charmhub.io/s3-integrator>`__
+    - .. code-block:: yaml
 
-    requires:
-      redis:
-        interface: redis
-        optional: True
-        limit: 1
+          requires:
+            s3:
+              interface: s3
+              optional: True
+              limit: 1
 
-.. code-block:: yaml
+  * - RabbitMQ: `machine <https://charmhub.io/rabbitmq-server>`__ and
+      `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
+    - .. code-block:: yaml
 
-    requires:
-      saml:
-        interface: saml
-        optional: True
-        limit: 1
+         requires:
+           rabbitmq:
+             interface: rabbitmq
+             optional: True
+             limit: 1
 
-.. code-block:: yaml
+  * - `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
+    - .. code-block:: yaml
 
-    requires:
-      s3:
-        interface: s3
-        optional: True
-        limit: 1
+          requires:
+            tracing:
+              interface: tracing
+              optional: True
+              limit: 1
+  
+  * - `SMTP <https://charmhub.io/smtp-integrator>`__
+    - .. code-block:: yaml
 
-.. code-block:: yaml
+          requires:
+            smtp:
+              interface: smtp
+              optional: True
+              limit: 1
+  
+  * - `OpenFGA <https://charmhub.io/openfga-k8s>`__
+    - .. code-block:: yaml
 
-   requires:
-     rabbitmq:
-       interface: rabbitmq
-       optional: True
-       limit: 1
+          requires:
+            openfga:
+              interface: openfga
+              optional: True
+              limit: 1
 
-.. code-block:: yaml
-
-    requires:
-      tracing:
-        interface: tracing
-        optional: True
-        limit: 1
-
-.. code-block:: yaml
-
-    requires:
-      smtp:
-        interface: smtp
-        optional: True
-        limit: 1
-
-.. code-block:: yaml
-
-    requires:
-      openfga:
-        interface: openfga
-        optional: True
-        limit: 1
 
 .. note::
 

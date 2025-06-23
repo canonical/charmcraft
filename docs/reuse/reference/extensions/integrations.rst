@@ -3,7 +3,7 @@ Relation endpoints
 ------------------
 
 Your charm already has the following ``peers``, ``provides``, and ``requires``
-relations, for internal purposes:
+relations, as they were automatically supplied by the |framework| extension:
 
 .. code-block:: yaml
 
@@ -34,7 +34,7 @@ the following charms:
     - Endpoint definition
   * - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
       ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
-    -
+    - Already available in the extension
   * - MySQL: `machine <https://charmhub.io/mysql>`__ and
       `k8s <https://charmhub.io/mysql-k8s>`__ charm
     - .. code-block:: yaml
@@ -66,7 +66,7 @@ the following charms:
 
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
-    -
+    - Already available in the extension
   * - `Redis <https://charmhub.io/redis-k8s>`__
     - .. code-block:: yaml
 

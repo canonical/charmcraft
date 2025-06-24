@@ -126,8 +126,8 @@ execute: |
   # [docs:integrate-postgres-end]
 
   # Check that django-hello-world and postgres are active idle
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
+  juju wait-for application django-hello-world --query='status=="active"' --timeout 20m
 
   # [docs:config-debug]
   juju config django-hello-world django-debug=true

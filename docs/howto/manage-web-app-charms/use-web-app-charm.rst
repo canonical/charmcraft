@@ -72,6 +72,12 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh --container app <spring-boot-app-name>/0 pebble logs
+
 .. seealso::
 
    `Pebble CLI commands | logs
@@ -153,6 +159,13 @@ Juju container:
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh --container app <spring-boot-app-name>/0 \
+              pebble exec --context=spring-boot -- bash
+
 .. important::
 
     This command is specific to the ``context`` of your web app and will run
@@ -216,6 +229,12 @@ name of the web app with the ``-c`` option.
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. group-tab:: Go
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+    .. group-tab:: Spring Boot
 
         .. code-block:: bash
 

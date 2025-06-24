@@ -1,0 +1,36 @@
+package com.example.demo;
+
+import jakarta.persistence.*;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.sql.Timestamp;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "visitors")
+public class Visitor implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @CreatedDate
+    @Column
+    private Timestamp timestamp;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String userAgent;
+
+	public void setUserAgent(String userAgent) {
+		this.userAgent = userAgent;
+	}
+
+
+}

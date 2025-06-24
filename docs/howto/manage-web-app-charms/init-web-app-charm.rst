@@ -50,3 +50,9 @@ and description are correct.
         .. code-block:: bash
 
             charmcraft init --profile go-framework
+
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            charmcraft init --profile spring-boot-framework

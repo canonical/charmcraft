@@ -149,6 +149,9 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/go_use_plugin.rst",
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
+    "reference/commands/promote-bundle.rst",
+    "reference/commands/register-bundle.rst",
+    "reference/commands/store (charm or bundle)-commands.rst",
     "reuse/reference/extensions/integrations.rst",
     "reuse/tutorial/*"
 ]

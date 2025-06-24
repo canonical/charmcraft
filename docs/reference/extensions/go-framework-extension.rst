@@ -19,16 +19,21 @@ application. This document describes all the keys that a user may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``go-framework`` are: - **app-port**: Port
-in which the application should listen. The ingress will be configured using this port.
-The environment variable passed to the app is ``APP_PORT``. Default value is 8080. -
-**app-secret-key**: Long secret you can use for sessions, csrf or any other thing where
-you need a random secret shared by all units. The environment variable passed to the app
-is ``APP_METRICS_PORT``. The default value is random. - **metrics-port**: Port where the
-prometheus metrics will be scraped. The environment variable passed to the app is
-``APP_PORT``. Default value is 8080. - **metrics-path**: Path where the prometheus
-metrics will be scraped. The environment variable passed to the app is
-``APP_METRICS_PATH``. Default value is ``/metrics``.
+The predefined configuration options for the ``go-framework`` are:
+
+* **app-port**: Port in which the application should listen. The ingress will be
+  configured using this port. The environment variable passed to the app is
+  ``APP_PORT``. Default value is 8080.
+
+* **app-secret-key**: Long secret you can use for sessions, csrf or any other thing
+  where you need a random secret shared by all units. The environment variable passed
+  to the app is ``APP_METRICS_PORT``. The default value is random.
+
+* **metrics-port**: Port where the prometheus metrics will be scraped. The environment
+  variable passed to the app is ``APP_PORT``. Default value is 8080.
+
+* **metrics-path**: Path where the prometheus metrics will be scraped. The environment
+  variable passed to the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will

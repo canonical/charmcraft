@@ -39,7 +39,6 @@ by running ``juju config <application> token=<token>``.
         token:
           description: The token for the service.
           type: string
-          optional: false
 
 .. include:: /reuse/reference/extensions/non_optional_config.rst
 
@@ -117,7 +116,7 @@ If your app depends on a database it is common to run a database
 migration script before app startup which, for example, creates or
 modifies tables. This can be done by including the ``migrate.sh`` script
 in the root of your project. It will be executed with the same
-environment variables and context as the Flask application.
+environment variables and context as the FastAPI application.
 
 If the migration script fails, the app won't be started and the app
 charm will go into blocked state. The migration script will be run on
@@ -130,7 +129,7 @@ during the migration.
 Secrets
 -------
 
-Juju secrets can be passed as environment variables to your Flask application. The
+Juju secrets can be passed as environment variables to your FastAPI application. The
 secret ID has to be passed to the application as a config option in the project file of
 type ``secret``. This config option has to be populated with the secret ID, in the
 format ``secret:<secret ID>``.
@@ -139,7 +138,7 @@ The environment variable name passed to the application will be:
 
 .. code-block:: bash
 
-    FLASK_<config option name>_<key inside the secret>
+    APP_<config option name>_<key inside the secret>
 
 The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by

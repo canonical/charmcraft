@@ -187,6 +187,9 @@ suites:
 
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc
+    debug-each: |
+      juju status
+      juju debug-log --no-tail --limit 1000
     restore: |
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller

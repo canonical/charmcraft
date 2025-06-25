@@ -93,8 +93,8 @@ Create a new Java file with
 Then, copy the following text into it, and save:
 
 .. literalinclude:: code/spring-boot/HelloController.java
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/
-     HelloController.java
+    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+              HelloController.java
     :language: java
 
 Run the Spring Boot app locally

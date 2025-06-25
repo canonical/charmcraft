@@ -114,6 +114,12 @@ To view more details about the web app itself, run:
 
             juju ssh --container app <go-app-name>/0 pebble plan
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh --container app <spring-boot-app-name>/0 pebble plan
+
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
 use).

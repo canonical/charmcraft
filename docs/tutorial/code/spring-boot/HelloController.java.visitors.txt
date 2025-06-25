@@ -24,6 +24,6 @@ public class HelloController {
     
     @GetMapping("/visitors")
     public String visitorsCount() {
-        return String.format("Number of visitors: %d", visitorService.countVisitors());
+        return String.format("Number of visitors %d", visitorService.countVisitors());
     }
 }

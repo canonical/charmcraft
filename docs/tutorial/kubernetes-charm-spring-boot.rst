@@ -112,7 +112,7 @@ A jar called ``demo-0.0.1.jar`` is created in the ``target``
 directory. This jar is only needed for local testing, as
 Rockcraft will package the Spring Boot application when we pack the rock.
 
-Let's Run the Spring Boot application to verify that it works:
+Let's run the Spring Boot application to verify that it works:
 
 .. code:: bash
 
@@ -121,7 +121,7 @@ Let's Run the Spring Boot application to verify that it works:
 The application starts an HTTP server listening on port 8080
 that we can test by using ``curl`` to send a request to the root
 endpoint. We may need a new terminal for this -- if using Multipass, run
-``multipass shell rock-dev`` to get another terminal:
+``multipass shell charm-dev`` to get another terminal:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -129,10 +129,10 @@ endpoint. We may need a new terminal for this -- if using Multipass, run
     :end-before: [docs:curl-spring-boot-end]
     :dedent: 2
 
-The Spring Boot application should respond with ``Hello, world!``.
+The Spring Boot application should respond with ``Hello, world!``
 
 The Spring Boot application looks good, so let's stop it for now
-with :kbd:`Ctrl` + :kbd:`C`.
+with :kbd:`Ctrl` + :kbd:`C` and close the second terminal.
 
 
 Pack the Spring Boot app into a rock
@@ -431,7 +431,7 @@ the ingress. We will also set the default route to be the root endpoint:
 
     By default, the port for the Spring Boot app should be 8080. If you want to change
     the default port, it can be done with the configuration option ``app-port`` that
-    will be exposed as the ``SERVER_PORT`` to the Spring Boot app.
+    will be exposed as the environment variable ``SERVER_PORT`` to the Spring Boot app.
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
@@ -567,6 +567,7 @@ file:
 
 
 .. code-block:: Properties
+    :caption: ~/spring-boot-hello-world/src/main/resources/application.properties
 
     spring.jpa.generate-ddl=true
 
@@ -577,6 +578,7 @@ for the tests to pass. Add the following snippet in the ``pom.xml``
 under the ``dependencies`` tag:
 
 .. literalinclude:: code/spring-boot/pom.xml.visitors.dependencies.txt
+    :caption: ~/spring-boot-hello-world/pom.xml
     :language: xml
 
 Replace the code into
@@ -710,7 +712,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database
@@ -729,7 +731,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/spring-boot-hello-world/charm`` for the tutorial:
+following in the directory ``~/spring-boot-hello-world/charm`` for the tutorial:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash

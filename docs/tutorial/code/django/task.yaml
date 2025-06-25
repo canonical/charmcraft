@@ -119,6 +119,7 @@ execute: |
 
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 10m
   # [docs:deploy-postgres-end]
 
   # [docs:integrate-postgres]

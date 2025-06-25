@@ -173,8 +173,12 @@ execute: |
     --resource flask-app-image=localhost:32000/flask-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
+  # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 10m
   juju integrate flask-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

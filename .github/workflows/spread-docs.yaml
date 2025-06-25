@@ -53,7 +53,7 @@ jobs:
           echo systems=$($(go env GOPATH)/bin/spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   docs-tests:
-    runs-on: [self-hosted, self-hosted-linux-amd64-noble-medium]
+    runs-on: [self-hosted, self-hosted-linux-amd64-noble-large]
     needs: [spread-select, snap-build]
     timeout-minutes: 90
     strategy:

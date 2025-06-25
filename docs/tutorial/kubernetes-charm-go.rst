@@ -660,20 +660,12 @@ We can now pack and deploy the new version of the Go app:
     :end-before: [docs:refresh-2nd-deployment-end]
     :dedent: 2
 
-Now let's deploy PostgreSQL:
+Now let's deploy PostgreSQL and integrate it with the Go app:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
     :start-after: [docs:deploy-postgres]
     :end-before: [docs:deploy-postgres-end]
-    :dedent: 2
-
-Integrate PostgreSQL with the Go app:
-
-.. literalinclude:: code/go/task.yaml
-    :language: bash
-    :start-after: [docs:integrate-postgres]
-    :end-before: [docs:integrate-postgres-end]
     :dedent: 2
 
 Wait for ``juju status`` to show that the App is ``active`` again.

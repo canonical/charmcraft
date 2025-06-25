@@ -195,16 +195,16 @@ execute: |
     --resource app-image=localhost:32000/go-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
+  # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 10m
+  juju integrate go-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
-  # In the integration test we may hit
-  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
-
   # [docs:integrate-postgres]
-  juju integrate go-hello-world postgresql-k8s
   # [docs:integrate-postgres-end]
 
   # give Juju some time to deploy and refresh the apps

@@ -590,25 +590,33 @@ Replace the code into
     :language: java
 
 
-Create the classes ``ApplicationConfig.java``, ``Visitor.java``,
-``VisitorRepository.java``, ``VisitorService.java`` in the
-``src/main/java/com/example/demo/ApplicationConfig.java`` directory
-with the following:
+Now we'll create some new classes in the ``src/main/java/com/example/demo/`` directory.
+Create the class ``ApplicationConfig`` in a new file
+``ApplicationConfig.java`` with the following content:
 
 .. literalinclude:: code/spring-boot/ApplicationConfig.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               ApplicationConfig.java
     :language: java
 
+Create the class ``Visitor`` in a new file
+``Visitor.java`` with the following content:
+
 .. literalinclude:: code/spring-boot/Visitor.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               Visitor.java
     :language: java
 
+Create the class ``VisitorRepository`` in a new file
+``VisitorRepository.java`` with the following content:
+
 .. literalinclude:: code/spring-boot/VisitorRepository.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               VisitorRepository.java
     :language: java
+
+Create the class ``VisitorService`` in a new file
+``VisitorService.java`` with the following content:
 
 .. literalinclude:: code/spring-boot/VisitorService.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\

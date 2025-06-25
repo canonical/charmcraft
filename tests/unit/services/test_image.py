@@ -25,6 +25,7 @@ import docker.models.images
 import pytest
 
 from charmcraft import application, const, services, utils
+from charmcraft.errors import SkopeoError
 
 
 @pytest.fixture
@@ -90,7 +91,7 @@ def test_get_name_from_url(url: str, name: str):
         ("s390x", "s390x"),
     ],
 )
-def test_convert_go_acrh_to_charm_arch(go_arch: str, charm_arch: const.CharmArch):
+def test_convert_go_arch_to_charm_arch(go_arch: str, charm_arch: const.CharmArch):
     assert services.ImageService.convert_go_arch_to_charm_arch(go_arch) == charm_arch
 
 
@@ -177,3 +178,42 @@ def test_inspect_two_arch(
     assert actual == services.image.OCIMetadata(
         path=image, digest="Reader's", architectures=list(architectures)
     )
+
+
+@pytest.mark.parametrize("image", ["my-image"])
+@pytest.mark.parametrize(
+    ("stderr", "error_msg"),
+    [
+        (
+            'time="2025-06-25T19:14:57-04:00" level=fatal msg="Error parsing image name \\"docker://ghcr.io/canonical/spark-integration-hub:3.4-22.04_edge@sha256:0b9a40435440256b1c10020bd59d19e186ea68d8973fc8f2310010f9bd4e3459\\": Docker references with both a tag and digest are currently not supported"',
+            "Docker references with both a tag and digest are currently not supported"
+        ),
+        (
+            "level=fatal error='No message'",
+            "Unknown error from skopeo."
+        ),
+        (
+            "Something unparseable",
+            "Unknown error from skopeo."
+        )
+    ]
+)
+def test_inspect_skopeo_error(
+    fake_process,
+    image_service: services.ImageService,
+    mock_skopeo,
+    image: str,
+    stderr: str,
+    error_msg: str,
+):
+    fake_process.register(
+        ["/skopeo", "inspect", "--raw", image],
+        stdout="",
+        stderr=stderr,
+        returncode=1,
+    )
+
+    with pytest.raises(SkopeoError) as exc_info:
+        image_service.inspect(image)
+
+    assert error_msg in str(exc_info.value)

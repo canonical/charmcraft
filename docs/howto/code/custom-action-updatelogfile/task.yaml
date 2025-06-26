@@ -116,7 +116,7 @@ execute: |
   cat $HOME/flask-app/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
 
   # add custom action to src/charm.py
-  cat $HOME/flask-app/updatelogfile_action_charm.py > $HOME/charm/src/charm.py
+  cat $HOME/flask-app/updatelogfile_action_charm.py > $HOME/flask-app/charm/src/charm.py
 
   # charmcraft clean and charmcraft pack
   charmcraft clean

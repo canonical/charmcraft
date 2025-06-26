@@ -186,17 +186,11 @@ def test_inspect_two_arch(
     [
         (
             'time="2025-06-25T19:14:57-04:00" level=fatal msg="Error parsing image name \\"docker://ghcr.io/canonical/spark-integration-hub:3.4-22.04_edge@sha256:0b9a40435440256b1c10020bd59d19e186ea68d8973fc8f2310010f9bd4e3459\\": Docker references with both a tag and digest are currently not supported"',
-            "Docker references with both a tag and digest are currently not supported"
+            "Docker references with both a tag and digest are currently not supported",
         ),
-        (
-            "level=fatal error='No message'",
-            "Unknown error from skopeo."
-        ),
-        (
-            "Something unparseable",
-            "Unknown error from skopeo."
-        )
-    ]
+        ("level=fatal error='No message'", "Unknown error from skopeo."),
+        ("Something unparseable", "Unknown error from skopeo."),
+    ],
 )
 def test_inspect_skopeo_error(
     fake_process,

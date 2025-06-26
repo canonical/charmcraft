@@ -155,15 +155,14 @@ class SkopeoError(CraftError):
         # This lexes it and splits it into key/value pairs.
         error_parts = {
             key: value
-            for key, _, value in (
-                token.partition("=") for token in shlex.split(stderr)
-            )
+            for key, _, value in (token.partition("=") for token in shlex.split(stderr))
         }
         if "msg" in error_parts:
             return cls(error_parts["msg"])
         else:
             return cls(
                 "Unknown error from skopeo.",
-                details=f"Error from skopeo. Return code {error.returncode}\nError text:\n" + textwrap.indent(error.stderr, "  "),
-                resolution="Report a bug at https://github.com/canonical/charmcraft/issues"
+                details=f"Error from skopeo. Return code {error.returncode}\nError text:\n"
+                + textwrap.indent(error.stderr, "  "),
+                resolution="Report a bug at https://github.com/canonical/charmcraft/issues",
             )

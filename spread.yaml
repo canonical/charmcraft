@@ -39,6 +39,19 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+  ci:
+    type: adhoc
+    systems:
+      - ubuntu-24.04-64:
+          workers: 1
+    environment:
+      CONTAINER_REGISTRY_URL: "$(HOST: echo $CONTAINER_REGISTRY_URL)"
+    allocate: ADDRESS $(./spread/.extension allocate ci)
+    discard: ./spread/.extension discard ci
+    prepare: '"$PROJECT_PATH"/spread/.extension backend-prepare ci'
+    restore: '"$PROJECT_PATH"/spread/.extension backend-restore ci'
+    prepare_each: '"$PROJECT_PATH"/spread/.extension backend-prepare-each ci'
+    restore_each: '"$PROJECT_PATH"/spread/.extension backend-restore-each ci'
 
   multipass:
     type: adhoc
@@ -136,32 +149,16 @@ prepare: |
   install_charmcraft
 
 suites:
-  docs/howto/code/:
+  docs/howto/code/: &docsuite
     summary: tests howto from the docs
     systems:
-      - ubuntu-22.04-64
-    manual: true
-    prepare: |
-      juju_channel=3.5/stable
-      microk8s_channel=1.31-strict/stable
-
-      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
-
-      #shellcheck source=tests/spread/tools/prepare.sh
-      . "/charmcraft/tests/spread/tools/prepare.sh"
-
-      refresh_or_install_snap juju "$juju_channel"
-      refresh_or_install_snap microk8s "$microk8s_channel"
-      refresh_or_install_snap rockcraft latest/stable --classic
-  docs/tutorial/code/:
-    summary: tests tutorial from the docs
-    systems:
-      - ubuntu-22.04-64
+      - ubuntu-24.04-64
     manual: true
     prepare: |
       juju_channel=3.6/stable
       microk8s_channel=1.31-strict/stable
 
+      lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
 
       #shellcheck source=tests/spread/tools/prepare.sh
@@ -169,7 +166,38 @@ suites:
 
       refresh_or_install_snap juju "$juju_channel"
       refresh_or_install_snap microk8s "$microk8s_channel"
-      refresh_or_install_snap rockcraft latest/stable --classic
+      refresh_or_install_snap rockcraft latest/edge --classic
+
+      if [[ -v CONTAINER_REGISTRY_URL ]]; then
+        echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        microk8s stop
+        microk8s start
+      fi
+
+      microk8s status --wait-ready --timeout 360
+      microk8s enable hostpath-storage
+      microk8s enable registry
+      microk8s enable ingress
+      microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+
+      # Bootstrap controller
+      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
+    debug-each: |
+      juju status
+      juju debug-log --no-tail --limit 1000
+    restore: |
+      juju destroy-controller --force --destroy-all-models \
+      --destroy-storage --no-prompt --no-wait dev-controller
+
+  docs/tutorial/code/:
+    <<: *docsuite
+    summary: tests tutorial from the docs
+
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

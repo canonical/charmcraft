@@ -7,13 +7,19 @@
 ###########################################
 summary: Getting started with Go tutorial
 
-kill-timeout: 180m
+kill-timeout: 50m
+
+restore: |
+  rm -rf $HOME/tmp $HOME/go-hello-world
+  juju destroy-model go-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.go *.txt *.sh $HOME
+  mkdir $HOME/tmp
+  mv *.yaml *.go *.txt *.sh $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
@@ -21,37 +27,14 @@ execute: |
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
 
-  # Add setup instructions
-  # (Ran into issues in prepare section)
-  # (don't install charmcraft)
-  snap install rockcraft --classic
-  snap install lxd
-  lxd init --auto
-  snap install microk8s --channel=1.31-strict/stable
-  snap install juju --channel=3.5/stable
-  snap refresh juju --channel=3.5/stable --amend
-
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
-  mkdir -p ~/.local/share
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
-
   # [docs:create-working-dir]
   mkdir go-hello-world
   cd go-hello-world
   # [docs:create-working-dir-end]
 
-  cd ..
+  cd $HOME/tmp
   mv *.yaml *.go *.txt *.sh $HOME/go-hello-world
-  cd go-hello-world
+  cd $HOME/go-hello-world
 
   # [docs:install-init-go]
   sudo snap install go --classic
@@ -63,7 +46,7 @@ execute: |
   # [docs:build-go-end]
 
   ./go-hello-world &
-  retry -n 5 --wait 2 curl --fail localhost:8080
+  retry -n 5 --wait 5 curl --fail localhost:8080
 
   # [docs:curl-go]
   curl localhost:8080
@@ -136,6 +119,9 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
+  # wait until the endpoint works
+  retry -n 5 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+
   # [docs:curl-init-deployment]
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
@@ -165,18 +151,17 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config go-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application go-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> migrate.sh
@@ -211,14 +196,24 @@ execute: |
     --resource app-image=localhost:32000/go-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
+  # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 20m
   juju integrate go-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
+  # [docs:integrate-postgres]
+  # [docs:integrate-postgres-end]
+
   # give Juju some time to deploy and refresh the apps
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
-  juju wait-for application go-hello-world --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
+  juju wait-for application go-hello-world --query='status=="active"' --timeout 20m
+
+  # wait until the endpoint works
+  retry -n 5 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
 
   curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
   curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 1

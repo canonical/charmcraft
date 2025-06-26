@@ -7,37 +7,25 @@
 ###########################################
 summary: Custom action to a Django app
 
-kill-timeout: 120m
+kill-timeout: 60m
+
+restore: |
+  rm -rf $HOME/tmp $HOME/django-hello-world
+  juju destroy-model django-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
+  mkdir $HOME/tmp
+  mv *.yaml *.py *.txt $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # Add setup instructions
-  # (Ran into issues in prepare section)
-  # (don't install charmcraft)
-  lxd init --auto
-
-  # Juju config setup
-  lxc network set lxdbr0 ipv6.address none
-  mkdir -p ~/.local/share
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # Create working dir and cd
   mkdir django-hello-world
@@ -48,7 +36,7 @@ execute: |
   python3 -m venv .venv
   source .venv/bin/activate
 
-  mv $HOME/requirements.txt $HOME/django-hello-world/
+  mv $HOME/tmp/requirements.txt $HOME/django-hello-world/
   # Install requirements
   pip install -r requirements.txt
 
@@ -62,7 +50,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # Update settings.py file
-  cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/tmp/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # Initial packing
   rockcraft pack
@@ -80,7 +68,7 @@ execute: |
   charmcraft init --profile django-framework --name django-hello-world
 
   # Add postgresql_client to charmcraft.yaml
-  cat $HOME/postgres_requires_charmcraft.yaml >> charmcraft.yaml
+  cat $HOME/tmp/postgres_requires_charmcraft.yaml >> charmcraft.yaml
 
   # Initial packing
   charmcraft pack
@@ -98,11 +86,12 @@ execute: |
 
   # Deploy + integrate with postgres
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
   juju integrate django-hello-world postgresql-k8s
 
   # Check that django-hello-world and postgres are active idle
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 10m
-  juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
+  juju wait-for application django-hello-world --query='status=="active"' --timeout 20m
 
   # Configure
   juju config django-hello-world django-debug=true
@@ -118,16 +107,15 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   juju status --relations
-  sleep 30s
 
   # curl the Django app
-  curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations
+  retry -n 5 --wait 2 sh -c "curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1 | grep Congratulations"
 
   # add custom action to charmcraft.yaml
-  cat $HOME/clearsession_action_charmcraft.yaml >> charmcraft.yaml
+  cat $HOME/tmp/clearsession_action_charmcraft.yaml >> charmcraft.yaml
 
   # add custom action to src/charm.py
-  cat $HOME/clearsession_action_charm.py > $HOME/django-hello-world/charm/src/charm.py
+  cat $HOME/tmp/clearsession_action_charm.py > $HOME/django-hello-world/charm/src/charm.py
 
   # charmcraft clean and charmcraft pack
   charmcraft clean
@@ -139,11 +127,12 @@ execute: |
     --resource django-app-image=localhost:32000/django-hello-world:0.1
 
   # wait for the Django app to come back to active idle
-  juju wait-for application django-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions
-  juju actions django-hello-world | grep clearsession
+  retry -n 10 --wait 20 sh -c "juju actions django-hello-world | grep clearsession"
+
+  retry -n 10 --wait 20 sh -c "juju run django-hello-world/0 clearsession | grep cleared!"
 
   # make sure the action runs successfully
   juju run django-hello-world/0 clearsession | grep cleared!

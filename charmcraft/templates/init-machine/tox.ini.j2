@@ -64,8 +64,8 @@ commands =
         -v \
         -s \
         --tb native \
-        {posargs} \
-        {[vars]tests_path}/unit
+        {[vars]tests_path}/unit \
+        {posargs}
     coverage report
 
 [testenv:integration]
@@ -79,5 +79,5 @@ commands =
         -s \
         --tb native \
         --log-cli-level=INFO \
-        {posargs} \
-        {[vars]tests_path}/integration
+        {[vars]tests_path}/integration \
+        {posargs}

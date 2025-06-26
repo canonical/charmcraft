@@ -15,7 +15,7 @@ on:
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, self-hosted-linux-amd64-noble-medium]
+    runs-on: [self-hosted, linux, amd64, noble, medium]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

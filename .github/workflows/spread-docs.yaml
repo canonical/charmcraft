@@ -59,11 +59,13 @@ jobs:
         run: |
           sudo iptables -P FORWARD ACCEPT
           sudo ip6tables -P FORWARD ACCEPT
+
       - name: Checkout charmcraft
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
+
       - name: Cleanup job workspace
         run: |
           rm -rf "${{ github.workspace }}"
@@ -80,13 +82,18 @@ jobs:
         with:
           name: snap
 
-      - name: Install charmcraft
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.24
+
+      - name: Install spread
         run: |
-          sudo snap install --classic --dangerous charmcraft_*.snap
+          go install github.com/snapcore/spread/cmd/spread@latest
 
       - name: Run spread
         run: |
-          charmcraft.spread "${{ matrix.system }}"
+          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
       - name: Discard spread workers
         if: always()

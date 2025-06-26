@@ -61,7 +61,7 @@ def test_inspect_and_download(
 
     raw_data = skopeo.inspect(f"{image}:{tag}", raw=True)
 
-    with contextlib.suppress(errors.SubprocessError):
+    with contextlib.suppress(errors.SkopeoError):
         # These fail if the host platform doesn't match a valid platform for the container.
         meta_data = skopeo.inspect(f"{image}:{tag}")
         meta_data_by_hash = skopeo.inspect(f"{image}@{meta_data['Digest']}")

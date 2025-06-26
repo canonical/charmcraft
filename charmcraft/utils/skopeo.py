@@ -77,7 +77,7 @@ class Skopeo:
         try:
             return subprocess.run(command, check=True, **kwargs)
         except subprocess.CalledProcessError as exc:
-            raise errors.SubprocessError.from_subprocess(exc) from exc
+            raise errors.SkopeoError.from_subprocess(exc) from exc
 
     def copy(
         self,
@@ -153,7 +153,19 @@ class Skopeo:
 
         command.append(image)
 
-        result = self._run_skopeo(command, capture_output=True, text=True)
+        try:
+            result = self._run_skopeo(command, capture_output=True, text=True)
+        except errors.SkopeoError as exc:
+            raise errors.SkopeoError(
+                f"Could not inspect OCI image: {exc.args[0]}",
+                details=exc.details,
+                resolution=exc.resolution,
+                reportable=exc.reportable,
+                retcode=exc.retcode,
+                docs_url=exc.docs_url,
+                doc_slug=exc.doc_slug,
+                logpath_report=exc.logpath_report,
+            )
 
         if format_template is None:
             return json.loads(result.stdout)

@@ -1,6 +1,6 @@
 
-Relation endpoints
-------------------
+Relations
+---------
 
 Your charm already has the following ``peers``, ``provides``, and ``requires``
 relations, as they were automatically supplied by the |framework| extension:
@@ -23,20 +23,19 @@ relations, as they were automatically supplied by the |framework| extension:
         limit: 1
 
 In addition to these relations, in each ``provides`` and ``requires``
-block you may specify further relations endpoints, to integrate with
+block you may specify further relations, to integrate with
 the following charms:
 
 .. list-table::
-  :widths: 30 30
   :header-rows: 1
 
   * - Relation
     - Endpoint definition
-  * - Ingress: `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
+  * - Ingress `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
       ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
     - Already available in the charm
-  * - MySQL: `machine <https://charmhub.io/mysql>`__ and
-      `k8s <https://charmhub.io/mysql-k8s>`__ charm
+  * - MySQL `machine <https://charmhub.io/mysql>`__ and
+      `Kubernetes <https://charmhub.io/mysql-k8s>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -45,8 +44,8 @@ the following charms:
               optional: True
               limit: 1
 
-  * - PostgreSQL: `machine <https://charmhub.io/postgresql>`__ and
-      `k8s <https://charmhub.io/postgresql-k8s>`__ charm
+  * - PostgreSQL `machine <https://charmhub.io/postgresql>`__ and
+      `Kubernetes <https://charmhub.io/postgresql-k8s>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -55,7 +54,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `MongoDB <https://charmhub.io/mongodb>`__
+  * - `MongoDB <https://charmhub.io/mongodb>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -67,7 +66,7 @@ the following charms:
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
     - Already available in the charm
-  * - `Redis <https://charmhub.io/redis-k8s>`__
+  * - `Redis <https://charmhub.io/redis-k8s>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -76,7 +75,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `SAML <https://charmhub.io/saml-integrator>`__
+  * - `SAML <https://charmhub.io/saml-integrator>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -85,7 +84,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `S3 <https://charmhub.io/s3-integrator>`__
+  * - `S3 <https://charmhub.io/s3-integrator>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -94,8 +93,8 @@ the following charms:
               optional: True
               limit: 1
 
-  * - RabbitMQ: `machine <https://charmhub.io/rabbitmq-server>`__ and
-      `k8s <https://charmhub.io/rabbitmq-k8s>`__ charm
+  * - RabbitMQ `machine <https://charmhub.io/rabbitmq-server>`__ and
+      `Kubernetes <https://charmhub.io/rabbitmq-k8s>`__ charm
     - .. code-block:: yaml
 
          requires:
@@ -104,7 +103,7 @@ the following charms:
              optional: True
              limit: 1
 
-  * - `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__
+  * - `Tempo <https://charmhub.io/topics/charmed-tempo-ha>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -113,7 +112,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `SMTP <https://charmhub.io/smtp-integrator>`__
+  * - `SMTP <https://charmhub.io/smtp-integrator>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -122,7 +121,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `OpenFGA <https://charmhub.io/openfga-k8s>`__
+  * - `OpenFGA <https://charmhub.io/openfga-k8s>`__ charm
     - .. code-block:: yaml
 
           requires:
@@ -144,15 +143,19 @@ integrate with |juju_integrate_postgresql| as usual.
 Environment variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-After the relation has been established, environment variables will be
-provided to your |framework| app:
+Each relation adds its own environment variables to your |framework| app. Some
+are required, meaning they must be set for the relation to function.
+
+The environment variable |base_url| provides the Ingress URL
+for an Ingress relation or the Kubernetes service URL if there is no
+Ingress relation.
 
 .. list-table::
   :widths: 20 40
   :header-rows: 1
 
   * - Relation
-    - Available environment variables
+    - Environment variables
   * - PostgreSQL
     -
         - ``POSTGRESQL_DB_CONNECT_STRING``
@@ -263,7 +266,3 @@ provided to your |framework| app:
         - ``FGA_GRPC_API_URL``
         - ``FGA_HTTP_API_URL``
 
-
-The environment variable |base_url| provides the Ingress URL
-for an Ingress relation or the Kubernetes service URL if there is no
-Ingress relation.

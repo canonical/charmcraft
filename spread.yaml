@@ -42,7 +42,7 @@ backends:
   ci:
     type: adhoc
     systems:
-      - ubuntu-22.04-64:
+      - ubuntu-24.04-64:
           workers: 1
     environment:
       CONTAINER_REGISTRY_URL: "$(HOST: echo $CONTAINER_REGISTRY_URL)"

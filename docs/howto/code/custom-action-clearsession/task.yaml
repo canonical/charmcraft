@@ -86,6 +86,7 @@ execute: |
 
   # Deploy + integrate with postgres
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
   juju integrate django-hello-world postgresql-k8s
 
   # Check that django-hello-world and postgres are active idle

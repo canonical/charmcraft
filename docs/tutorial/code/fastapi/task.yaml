@@ -182,7 +182,7 @@ execute: |
 
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
-  juju wait-for application postgresql-k8s --timeout 10m
+  juju wait-for application postgresql-k8s --timeout 20m
   juju integrate fastapi-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

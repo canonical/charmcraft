@@ -31,7 +31,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: [self-hosted, self-hosted-linux-amd64-noble-medium]
+    runs-on: [spread-installed]
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
@@ -40,13 +40,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.24
-      - name: Install spread
-        run: |
-          go install github.com/snapcore/spread/cmd/spread@latest
       - name: Find spread systems
         id: select
         run: |
@@ -71,13 +64,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.24
-      - name: Install spread
-        run: |
-          go install github.com/snapcore/spread/cmd/spread@latest
       - name: Cleanup job workspace
         run: |
           rm -rf "${{ github.workspace }}"
@@ -94,9 +80,13 @@ jobs:
         with:
           name: snap
 
+      - name: Install charmcraft
+        run: |
+            snap install --classic --dangerous charmcraft_*.snap
+
       - name: Run spread
         run: |
-          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
+          charmcraft.spread "${{ matrix.system }}"
 
       - name: Discard spread workers
         if: always()

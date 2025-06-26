@@ -10,8 +10,7 @@ summary: Getting started with Django tutorial
 kill-timeout: 50m
 
 restore: |
-  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
-  rm -rf $HOME/django-hello-world
+  rm -rf $HOME/tmp $HOME/django-hello-world
   juju destroy-model django-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -19,7 +18,8 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
+  mkdir $HOME/tmp
+  mv *.yaml *.py *.txt $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
@@ -37,7 +37,7 @@ execute: |
   source .venv/bin/activate
   # [docs:create-venv-end]
 
-  mv $HOME/requirements.txt $HOME/django-hello-world/
+  mv $HOME/tmp/requirements.txt $HOME/django-hello-world/
   # [docs:install-requirements]
   pip install -r requirements.txt
   # [docs:install-requirements-end]
@@ -50,7 +50,7 @@ execute: |
   cd django_hello_world
 
   # Update settings.py file
-  cat $HOME/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/tmp/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # Run Django app locally
   ./manage.py runserver 0.0.0.0:8000 &
@@ -61,7 +61,7 @@ execute: |
   curl localhost:8000 | grep Congratulations
 
   kill $!
-  cd $HOME/django-hello-world
+  cd $HOME/tmp/django-hello-world
 
   # [docs:create-rockcraft-yaml]
   rockcraft init --profile django-framework
@@ -71,7 +71,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # Update settings.py file
-  cat $HOME/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/tmp/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
 
   # [docs:pack]
   rockcraft pack
@@ -95,7 +95,7 @@ execute: |
   # [docs:charm-init-end]
 
   # Add postgresql_client to charmcraft.yaml
-  cat $HOME/postgres_requires_charmcraft.yaml >> charmcraft.yaml
+  cat $HOME/tmp/postgres_requires_charmcraft.yaml >> charmcraft.yaml
 
   # [docs:charm-pack]
   charmcraft pack
@@ -164,13 +164,13 @@ execute: |
   # [docs:startapp-greeting-end]
 
   # Update greeting/views.py file
-  cat $HOME/views_greeting.py > greeting/views.py
+  cat $HOME/tmp/views_greeting.py > greeting/views.py
 
   # Create greeting/urls.py file
-  cat $HOME/urls_greeting.py > greeting/urls.py
+  cat $HOME/tmp/urls_greeting.py > greeting/urls.py
 
   # Update django_hello_world/urls.py file
-  cat $HOME/urls_django_hello_world.py > django_hello_world/urls.py
+  cat $HOME/tmp/urls_django_hello_world.py > django_hello_world/urls.py
 
   cd ..
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
@@ -201,7 +201,7 @@ execute: |
 
   cd ..
   # Update django_hello_world/greeting/views.py
-  cat $HOME/views_greeting_configuration.py > django_hello_world/greeting/views.py
+  cat $HOME/tmp/views_greeting_configuration.py > django_hello_world/greeting/views.py
 
   sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
 
@@ -215,7 +215,7 @@ execute: |
   cd charm
 
   # Update greeting config in charmcraft.yaml
-  cat $HOME/greeting_charmcraft.yaml >> ./charmcraft.yaml
+  cat $HOME/tmp/greeting_charmcraft.yaml >> ./charmcraft.yaml
 
   # [docs:repack-refresh-2nd-deployment]
   charmcraft pack

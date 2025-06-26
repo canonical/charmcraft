@@ -10,8 +10,7 @@ summary: Getting started with FastAPI tutorial
 kill-timeout: 50m
 
 restore: |
-  rm -rf $HOME/charm
-  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
+  rm -rf $HOME/fastapi
   juju destroy-model fastapi-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -19,8 +18,9 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
-  cd $HOME
+  mkdir $HOME/fastapi
+  mv *.yaml *.py *.txt $HOME/fastapi
+  cd $HOME/fastapi
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL

@@ -10,8 +10,7 @@ summary: Custom action in a Flask app
 kill-timeout: 60m
 
 restore: |
-  rm -rf $HOME/charm
-  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
+  rm -rf $HOME/flask-app
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -19,8 +18,9 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
-  cd $HOME
+  mkdir $HOME/flask-app
+  mv *.yaml *.py *.txt $HOME/flask-app
+  cd $HOME/flask-app
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
@@ -113,10 +113,10 @@ execute: |
   # [docs:curl-init-deployment-end]
 
   # add custom action to charmcraft.yaml
-  cat $HOME/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
+  cat $HOME/flask-app/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
 
   # add custom action to src/charm.py
-  cat $HOME/updatelogfile_action_charm.py > $HOME/charm/src/charm.py
+  cat $HOME/flask-app/updatelogfile_action_charm.py > $HOME/charm/src/charm.py
 
   # charmcraft clean and charmcraft pack
   charmcraft clean

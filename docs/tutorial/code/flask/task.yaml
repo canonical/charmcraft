@@ -10,8 +10,7 @@ summary: Getting started with Flask tutorial
 kill-timeout: 50m
 
 restore: |
-  rm -rf $HOME/charm
-  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
+  rm -rf $HOME/flask
   juju destroy-model flask-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -19,8 +18,9 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
-  cd $HOME
+  mkdir $HOME/flask
+  mv *.yaml *.py *.txt $HOME/flask
+  cd $HOME/flask
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL

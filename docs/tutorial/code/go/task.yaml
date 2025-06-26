@@ -10,7 +10,7 @@ summary: Getting started with Go tutorial
 kill-timeout: 50m
 
 restore: |
-  rm -f $HOME/*.yaml $HOME/*.py $HOME/*.txt
+  rm -rf $HOME/tmp $HOME/go-hello-world
   juju destroy-model go-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -18,7 +18,8 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.go *.txt *.sh $HOME
+  mkdir HOME/tmp
+  mv *.yaml *.go *.txt *.sh $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
@@ -31,9 +32,9 @@ execute: |
   cd go-hello-world
   # [docs:create-working-dir-end]
 
-  cd ..
+  cd $HOME/tmp
   mv *.yaml *.go *.txt *.sh $HOME/go-hello-world
-  cd go-hello-world
+  cd $HOME/go-hello-world
 
   # [docs:install-init-go]
   sudo snap install go --classic

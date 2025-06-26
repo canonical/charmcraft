@@ -428,3 +428,54 @@ class FastAPIFramework(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+
+class SpringBootFramework(_AppBase):
+    """Extension for 12-factor Spring Boot applications."""
+
+    framework = "spring-boot"
+    options = {
+        "app-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Default port where the application will listen on.",
+        },
+        "metrics-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Port where the prometheus metrics will be scraped.",
+        },
+        "metrics-path": {
+            "type": "string",
+            "default": "/metrics",
+            "description": "Path where the prometheus metrics will be scraped.",
+        },
+        "app-secret-key": {
+            "type": "string",
+            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+        },
+        "app-secret-key-id": {
+            "type": "secret",
+            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+            'The secret should contain a single key, "value", which maps to the actual application secret key. '
+            "To create the secret, run the following command: "
+            "`juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key spring-boot-app`, "
+            "and use the output secret ID to configure this option.",
+        },
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"

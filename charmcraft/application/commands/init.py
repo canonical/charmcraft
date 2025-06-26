@@ -40,6 +40,7 @@ PROFILES = {
     "django-framework": "init-django-framework",
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
+    "spring-boot-framework": "init-spring-boot-framework",
 }
 DEFAULT_PROFILE = "kubernetes"
 
@@ -69,6 +70,9 @@ Available profiles are:
 
     go-framework:
         A basic Kubernetes charm for a 12-factor Go app.
+
+    spring-boot-framework:
+        A basic Kubernetes charm for a 12-factor Spring Boot app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories:

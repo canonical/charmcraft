@@ -22,9 +22,9 @@ but also add your own, as needed.
 
 The predefined configuration options for the ``expressjs-framework`` are:
 
-* **port**: Port in which the application should listen. The ingress will be configured
-  using this port. The environment variable passed to the app is ``PORT``. Default value
-  is 8080.
+* **app-port**: Port in which the application should listen. The ingress will be
+  configured using this port. The environment variable passed to the app is
+  ``APP_PORT``. Default value is 8080.
 
 * **app-secret-key-id**: A secret you can use for sessions, protection against
   cross-site request forgery, or any other thing where you need a random secret shared

@@ -36,7 +36,7 @@ contents below:
     [tool.ruff]
     line-length = 99
     select = ["E", "W", "F", "C", "N", "D", "I001"]
-    extend-ignore = [
+    ignore = [
         "D203",
         "D204",
         "D213",
@@ -48,8 +48,9 @@ contents below:
         "D408",
         "D409",
         "D413",
+        "E501",
+        "D107",
     ]
-    ignore = ["E501", "D107"]
     extend-exclude = ["__pycache__", "*.egg_info"]
     per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
 

@@ -23,6 +23,39 @@ from overrides import override
 from ..errors import ExtensionError
 from .extension import Extension
 
+APP_PORT_OPTION = {
+    "app-port": {
+        "type": "int",
+        "default": 8080,
+        "description": "Default port where the application will listen on.",
+    }
+}
+METRICS_OPTIONS = {
+    "metrics-port": {
+        "type": "int",
+        "default": 8080,
+        "description": "Port where the prometheus metrics will be scraped.",
+    },
+    "metrics-path": {
+        "type": "string",
+        "default": "/metrics",
+        "description": "Path where the prometheus metrics will be scraped.",
+    },
+}
+SECRET_OPTIONS = {
+    "app-secret-key": {
+        "type": "string",
+        "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+    },
+    "app-secret-key-id": {
+        "type": "secret",
+        "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+        'The secret should contain a single key, "value", which maps to the actual application secret key. '
+        "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key my-app`, "
+        "and use the output secret ID to configure this option.",
+    },
+}
+
 
 class _AppBase(Extension):
     """A base class for 12-factor applications."""
@@ -325,32 +358,9 @@ class GoFramework(_AppBase):
 
     framework = "go"
     options = {
-        "app-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Default port where the application will listen on.",
-        },
-        "metrics-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Port where the prometheus metrics will be scraped.",
-        },
-        "metrics-path": {
-            "type": "string",
-            "default": "/metrics",
-            "description": "Path where the prometheus metrics will be scraped.",
-        },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key go-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **APP_PORT_OPTION,
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
     }
 
     @staticmethod
@@ -390,27 +400,8 @@ class FastAPIFramework(_AppBase):
             "default": "info",
             "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
         },
-        "metrics-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Port where the prometheus metrics will be scraped.",
-        },
-        "metrics-path": {
-            "type": "string",
-            "default": "/metrics",
-            "description": "Path where the prometheus metrics will be scraped.",
-        },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key fastapi-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
     }
 
     @staticmethod
@@ -435,32 +426,9 @@ class ExpressJSFramework(_AppBase):
 
     framework = "expressjs"
     options = {
-        "app-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Default port where the application will listen on.",
-        },
-        "metrics-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Port where the prometheus metrics will be scraped.",
-        },
-        "metrics-path": {
-            "type": "string",
-            "default": "/metrics",
-            "description": "Path where the prometheus metrics will be scraped.",
-        },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key expressjs-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **APP_PORT_OPTION,
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
     }
 
     @staticmethod

@@ -152,7 +152,7 @@ suites:
   docs/howto/code/: &docsuite
     summary: tests howto from the docs
     systems:
-      - ubuntu-22.04-64
+      - ubuntu-24.04-64
     manual: true
     prepare: |
       juju_channel=3.6/stable

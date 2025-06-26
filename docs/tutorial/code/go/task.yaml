@@ -18,7 +18,7 @@ environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mkdir HOME/tmp
+  mkdir $HOME/tmp
   mv *.yaml *.go *.txt *.sh $HOME/tmp
   cd $HOME
 

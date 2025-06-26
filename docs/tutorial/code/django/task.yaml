@@ -61,7 +61,7 @@ execute: |
   curl localhost:8000 | grep Congratulations
 
   kill $!
-  cd $HOME/tmp/django-hello-world
+  cd $HOME/django-hello-world
 
   # [docs:create-rockcraft-yaml]
   rockcraft init --profile django-framework

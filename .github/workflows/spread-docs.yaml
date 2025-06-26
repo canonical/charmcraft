@@ -82,7 +82,7 @@ jobs:
 
       - name: Install charmcraft
         run: |
-          snap install --classic --dangerous charmcraft_*.snap
+          sudo snap install --classic --dangerous charmcraft_*.snap
 
       - name: Run spread
         run: |

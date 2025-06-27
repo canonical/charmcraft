@@ -556,7 +556,7 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: app.py
+.. dropdown:: ~/flask-hello-world/app.py
 
   .. literalinclude:: code/flask/visitors_app.py
       :language: python

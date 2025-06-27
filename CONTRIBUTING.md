@@ -110,7 +110,6 @@ changes on.
 If you're making a change to a current release, run:
 
 ```bash
-git fetch --tags --all
 git checkout hotfix/<current-release>
 git pull
 make setup
@@ -119,7 +118,6 @@ make setup
 If you're contributing to multiple releases or the next major release, run:
 
 ```bash
-git fetch --tags --all
 git checkout main
 git pull
 make setup

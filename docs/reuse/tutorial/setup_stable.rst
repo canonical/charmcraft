@@ -42,7 +42,8 @@ In order to create the charm, you'll need to install Charmcraft:
     sudo snap install charmcraft --channel latest/stable --classic
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
-Let's install MicroK8s using the ``1.31-strict/stable`` track:
+Let's install MicroK8s using the ``1.31-strict/stable`` track, add the current
+user to the group, and activate the changes:
 
 .. code-block:: text
 

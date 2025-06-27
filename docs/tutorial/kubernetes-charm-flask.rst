@@ -454,6 +454,7 @@ environment variables to the Flask app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/flask/greeting_charmcraft.yaml
+    :caption: ~/flask-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -576,6 +577,7 @@ The Flask app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/flask/visitors_charmcraft.yaml
+    :caption: ~/flask-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Flask app:

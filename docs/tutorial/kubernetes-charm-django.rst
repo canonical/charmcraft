@@ -127,6 +127,7 @@ Open the settings file of the app located at
 to allow all traffic:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
 
     ALLOWED_HOSTS = ['*']
 
@@ -236,6 +237,7 @@ imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 15,16,17
 
     """
@@ -261,6 +263,7 @@ Near the top of the ``settings.py`` file, change the ``SECRET_KEY``,
 ``DEBUG`` and ``ALLOWED_HOSTS`` variables to:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 2,5,7
 
     # SECURITY WARNING: keep the secret key used in production secret!
@@ -276,6 +279,7 @@ We will also use PostgreSQL as the database for our Django app. In
 ``DATABASES`` variable to:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 3-8
 
     DATABASES = {
@@ -576,17 +580,20 @@ is. Let's add a new Django app:
 Open the ``greeting/views.py`` file and replace the content with:
 
 .. literalinclude:: code/django/views_greeting.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
     :language: python
 
 Create the ``greeting/urls.py`` file with the following contents:
 
 .. literalinclude:: code/django/urls_greeting.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/urls.py
     :language: python
 
 Open the ``django_hello_world/urls.py`` file and edit the imports for
 ``django.urls`` and the value of ``urlpatterns`` like in the following example:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/urls.py
     :emphasize-lines: 2,5
 
     from django.contrib import admin
@@ -679,6 +686,7 @@ directory ``~/django-hello-world`` using ``cd ..``. From there, open the
 with:
 
 .. literalinclude:: code/django/views_greeting_configuration.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
     :language: python
 
 
@@ -731,6 +739,7 @@ environment variables to the Django app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/django/greeting_charmcraft.yaml
+    :caption: ~/django-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::

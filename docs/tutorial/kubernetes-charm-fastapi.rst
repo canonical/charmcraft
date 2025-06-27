@@ -503,6 +503,7 @@ environment variables to the FastAPI app. Add the
 following to the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/fastapi/greeting_charmcraft.yaml
+    :caption: ~/fastapi-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -605,7 +606,7 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: app.py
+.. dropdown:: ~/fastapi-hello-world/app.py
 
   .. literalinclude:: code/fastapi/visitors_app.py
       :language: python
@@ -625,6 +626,7 @@ The FastAPI app now requires a database which needs to be declared in the
 add the following section to the end:
 
 .. literalinclude:: code/fastapi/visitors_charmcraft.yaml
+    :caption: ~/fastapi-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the FastAPI app:

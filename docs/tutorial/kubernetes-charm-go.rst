@@ -499,6 +499,7 @@ the Go app. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/go/greeting_charmcraft.yaml
+    :caption: ~/go-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -586,6 +587,7 @@ slice, so that the rock doesn't include unnecessary files. Open the
 end of the file:
 
 .. literalinclude:: code/go/visitors_rockcraft.yaml
+    :caption: ~/go-hello-world/rockcraft.yaml
     :language: yaml
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
@@ -621,7 +623,7 @@ the number of visitors and to include a new endpoint to retrieve the
 number of visitors. Open ``main.go`` in a text editor and
 replace its content with the following code:
 
-.. dropdown:: main.go
+.. dropdown:: ~/go-hello-world/main.go
 
     .. literalinclude:: code/go/visitors_main.txt
         :language: go
@@ -650,6 +652,7 @@ The Go app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/go/visitors_charmcraft.yaml
+    :caption: ~/go-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Go app:

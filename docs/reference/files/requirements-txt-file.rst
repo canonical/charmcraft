@@ -6,9 +6,13 @@
 
 The ``requirements.txt`` file is a standard Python `requirements file
 <https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format>`_
-used to declare and pin the version of any Python libraries required by a charm in
-production. This will be pre-populated with :literalref:`ops`. Any dependencies
-specified here will be bundled with the charm when it is built with
-:ref:`charmcraft pack <ref_commands_pack>`.
+used to declare and pin the version of any Python packages required by your charm.
 
-.. _ops: https://ops.readthedocs.io/en/latest/
+Charmcraft doesn't create this file for all :ref:`ref_commands_init` profiles. It's not
+needed if the profile is ``kubernetes`` or ``machine``. These profiles use
+a :ref:`pyproject-toml-file` instead.
+
+For ``init`` with a 12-factor profile (``django-framework`` and so on), Charmcraft
+creates this file and pre-populates it with :external+ops:doc:`Ops <index>`. Any
+dependencies specified here will be bundled with the charm when it is built with
+:ref:`charmcraft pack <ref_commands_pack>`.

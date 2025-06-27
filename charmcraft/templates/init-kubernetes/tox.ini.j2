@@ -44,43 +44,40 @@ commands =
     ruff check {[vars]all_path}
     ruff format --check --diff {[vars]all_path}
 
-[testenv:unit]
-description = Run unit tests
-deps =
-    pytest
-    coverage[toml]
-    ops[testing]
-    -r {tox_root}/requirements.txt
-commands =
-    coverage run --source={[vars]src_path} \
-                 -m pytest \
-                 --tb native \
-                 -v \
-                 -s \
-                 {posargs} \
-                 {[vars]tests_path}/unit
-    coverage report
-
 [testenv:static]
 description = Run static type checks
-deps =
-    pyright
-    ops[testing]
-    -r {tox_root}/requirements.txt
+runner = uv-venv-lock-runner
+dependency_groups =
+    static
+    unit
+    integration
 commands =
     pyright {posargs}
 
+[testenv:unit]
+description = Run unit tests
+runner = uv-venv-lock-runner
+dependency_groups =
+    unit
+commands =
+    coverage run --source={[vars]src_path} -m pytest \
+        -v \
+        -s \
+        --tb native \
+        {[vars]tests_path}/unit \
+        {posargs}
+    coverage report
+
 [testenv:integration]
 description = Run integration tests
-deps =
-    pytest
-    juju
-    pytest-operator
-    -r {tox_root}/requirements.txt
+runner = uv-venv-lock-runner
+dependency_groups =
+    integration
 commands =
-    pytest -v \
-           -s \
-           --tb native \
-           --log-cli-level=INFO \
-           {posargs} \
-           {[vars]tests_path}/integration
+    pytest \
+        -v \
+        -s \
+        --tb native \
+        --log-cli-level=INFO \
+        {[vars]tests_path}/integration \
+        {posargs}

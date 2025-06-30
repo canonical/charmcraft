@@ -14,25 +14,58 @@ on:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
 
 jobs:
+  snap-build:
+    runs-on: [self-hosted, linux, amd64, noble, medium]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: charmcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap
+          path: ${{ steps.charmcraft.outputs.snap }}
+
   spread-select:
-    runs-on: spread-installed
+    runs-on: [spread-installed]
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list google:docs/ | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems=$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   docs-tests:
-    runs-on: spread-installed
-    needs: [spread-select]
+    runs-on: [self-hosted, linux, amd64, noble, large]
+    needs: [spread-select, snap-build]
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         system: ${{ fromJSON(needs.spread-select.outputs.systems) }}
 
     steps:
+      - name: Fix network issues related to docker and lxd
+        run: |
+          sudo iptables -P FORWARD ACCEPT
+          sudo ip6tables -P FORWARD ACCEPT
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
       - name: Cleanup job workspace
         run: |
           rm -rf "${{ github.workspace }}"
@@ -44,13 +77,23 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: Download snap from store
+      - name: Download snap artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: snap
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.24
+
+      - name: Install spread
         run: |
-          snap download --edge charmcraft
+          go install github.com/snapcore/spread/cmd/spread@latest
 
       - name: Run spread
         run: |
-          spread google:${{ matrix.system }}:docs/
+          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
       - name: Discard spread workers
         if: always()

@@ -189,7 +189,7 @@ def test_inspect_two_arch(
             "Docker references with both a tag and digest are currently not supported",
         ),
         ("level=fatal error='No message'", "Unknown error from skopeo."),
-        ("Something unparseable", "Unknown error from skopeo."),
+        ("Something unparsable", "Unknown error from skopeo."),
     ],
 )
 def test_inspect_skopeo_error(

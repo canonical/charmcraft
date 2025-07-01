@@ -13,7 +13,7 @@ configuration file.
 Charmcraft creates this file and defines the following tox environments:
 
 +-------------+-------------------------------------------+
-| Environment | Description                               |
+| Environment | Purpose                                   |
 +=============+===========================================+
 | format      | Apply coding style standards              |
 +-------------+-------------------------------------------+

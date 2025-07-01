@@ -7,26 +7,25 @@
 ###########################################
 summary: Getting started with Spring Boot tutorial
 
+kill-timeout: 50m
+
+restore: |
+  rm -rf $HOME/tmp $HOME/spring-boot-hello-world
+  juju destroy-model spring-boot-hello-world \
+  --destroy-storage --no-prompt --force || true
+
 environment:
-kill-timeout: 60m
+
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  cp *.txt *.yaml *.java $HOME
+  mkdir $HOME/tmp
+  cp *.txt *.yaml *.java $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # [docs:export-experimental-env-vars]
   export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
@@ -56,7 +55,7 @@ execute: |
   cd spring-boot-hello-world
   # [docs:init-spring-boot-end]
 
-  cp $HOME/HelloController.java $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+  cp $HOME/tmp/HelloController.java $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
 
   # [docs:spring-boot-build]
   ./mvnw clean install
@@ -142,7 +141,7 @@ execute: |
   # [docs:curl-init-deployment-end]
 
   cd ..
-  cat $HOME/HelloController.java.greeting.txt > $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+  cat $HOME/tmp/HelloController.java.greeting.txt > $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
 
   # [docs:skopeo-update]
@@ -152,7 +151,7 @@ execute: |
     docker://localhost:32000/spring-boot-hello-world:0.2
   # [docs:skopeo-update-end]
 
-  cat $HOME/greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cat $HOME/tmp/greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
 
   # [docs:refresh-deployment]
@@ -182,16 +181,16 @@ execute: |
   echo "spring.jpa.generate-ddl=true" >> src/main/resources/application.properties
   # [docs:add-generate-ddl-end]
 
-  cp $HOME/ApplicationConfig.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/ApplicationConfig.java
-  cp $HOME/HelloController.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
-  cp $HOME/Visitor.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/Visitor.java
-  cp $HOME/VisitorRepository.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorRepository.java
-  cp $HOME/VisitorService.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorService.java
+  cp $HOME/tmp/ApplicationConfig.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/ApplicationConfig.java
+  cp $HOME/tmp/HelloController.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+  cp $HOME/tmp/Visitor.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/Visitor.java
+  cp $HOME/tmp/VisitorRepository.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorRepository.java
+  cp $HOME/tmp/VisitorService.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorService.java
 
   sed -i "s/version: .*/version: 0.3/" rockcraft.yaml
 
   mv pom.xml pom.xml.original
-  cp $HOME/pom.xml.visitors.dependencies.txt .
+  cp $HOME/tmp/pom.xml.visitors.dependencies.txt .
   awk '
   /<dependencies>/ {
     print
@@ -211,7 +210,7 @@ execute: |
     docker://localhost:32000/spring-boot-hello-world:0.3
   # [docs:skopeo-2nd-update-end]
   
-  cat $HOME/visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cat $HOME/tmp/visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
 
   # [docs:refresh-2nd-deployment]

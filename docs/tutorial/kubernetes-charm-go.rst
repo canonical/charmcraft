@@ -443,8 +443,15 @@ to send a request via the ingress. It should return the
     setting a DNS record.
 
 
-Configure the Go app
---------------------
+The development cycle
+---------------------
+
+So far, we've worked though the entire cycle, from creating an app to deploying
+it. But now -- as in every real-world case -- we'll go through the experience of
+iteratively developing the app, and deploying each iteration.
+
+Provide a configuration
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the Go app,
 we will make the greeting configurable. We will expect this
@@ -455,6 +462,9 @@ keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory using
 .. literalinclude:: code/go/greeting_main.txt
     :caption: ~/go-hello-world/main.go
     :language: go
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -491,6 +501,9 @@ Let's pack and upload the rock:
     :end-before: [docs:docker-update-end]
     :dedent: 2
 
+Update the charm
+~~~~~~~~~~~~~~~~
+
 Change back into the charm directory using ``cd charm``.
 
 The ``go-framework`` Charmcraft extension supports adding configurations
@@ -499,6 +512,7 @@ the Go app. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/go/greeting_charmcraft.yaml
+    :caption: ~/go-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -586,7 +600,12 @@ slice, so that the rock doesn't include unnecessary files. Open the
 end of the file:
 
 .. literalinclude:: code/go/visitors_rockcraft.yaml
+    :caption: ~/go-hello-world/rockcraft.yaml
     :language: yaml
+
+
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -621,7 +640,7 @@ the number of visitors and to include a new endpoint to retrieve the
 number of visitors. Open ``main.go`` in a text editor and
 replace its content with the following code:
 
-.. dropdown:: main.go
+.. dropdown:: ~/go-hello-world/main.go
 
     .. literalinclude:: code/go/visitors_main.txt
         :language: go
@@ -643,6 +662,9 @@ Let's pack and upload the rock:
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
 
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
+
 Change back into the charm directory using ``cd charm``.
 
 The Go app now requires a database which needs to be declared in the
@@ -650,6 +672,7 @@ The Go app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/go/visitors_charmcraft.yaml
+    :caption: ~/go-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Go app:
@@ -702,7 +725,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

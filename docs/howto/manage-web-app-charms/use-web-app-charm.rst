@@ -173,7 +173,7 @@ Juju container:
 
             juju ssh <spring-boot-app-name>/0 \
               PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
-	      /charm/bin/pebble  exec --context=spring-boot -- bash
+              /charm/bin/pebble  exec --context=spring-boot -- bash
 
 .. important::
 

@@ -447,7 +447,7 @@ class SpringBootFramework(_AppBase):
         },
         "metrics-path": {
             "type": "string",
-            "default": "/metrics",
+            "default": "/actuator/prometheus",
             "description": "Path where the prometheus metrics will be scraped.",
         },
         "app-secret-key": {

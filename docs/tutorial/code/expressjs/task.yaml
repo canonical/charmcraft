@@ -7,34 +7,25 @@
 ###########################################
 summary: Getting started with ExpressJS tutorial
 
-kill-timeout: 180m
+kill-timeout: 50m
 
-prepare: |
+restore: |
+  rm -rf $HOME/tmp $HOME/expressjs-hello-world
   juju destroy-model expressjs-hello-world \
   --destroy-storage --no-prompt --force || true
-  juju destroy-controller --force --destroy-all-models \
-  --destroy-storage --no-prompt --no-wait dev-controller || true
 
 environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.js *.sh $HOME
+  mkdir $HOME/tmp
+  mv *.yaml *.js *.sh $HOME/tmp
   cd $HOME
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # MicroK8s config setup
-  microk8s status --wait-ready --timeout 120
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller --config bootstrap-timeout=240
 
   # [docs:create-working-dir]
   mkdir expressjs-hello-world
@@ -46,9 +37,9 @@ execute: |
   export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   # [docs:export-experimental-env-vars-end]
 
-  cd ..
+  cd $HOME/tmp
   mv *.yaml *.js *.sh $HOME/expressjs-hello-world
-  cd expressjs-hello-world
+  cd  $HOME/expressjs-hello-world
 
   # [docs:install-init-expressjs]
   sudo apt update -y && sudo apt install npm -y

@@ -43,7 +43,6 @@ APP_METADATA = craft_application.AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
-    BuildPlannerClass=models.CharmcraftBuildPlanner,
     source_ignore_patterns=["*.charm", "charmcraft.yaml"],
     docs_url="https://canonical-charmcraft.readthedocs-hosted.com/en/{version}",
 )

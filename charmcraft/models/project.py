@@ -21,7 +21,7 @@ import pathlib
 import re
 import textwrap
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from typing import (
     Annotated,
     Any,
@@ -29,15 +29,11 @@ from typing import (
     cast,
 )
 
-import craft_platforms
 import pydantic
 import pydantic.v1
 from craft_application import errors, models
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
-from craft_platforms import charm
-from craft_providers import bases
-from pydantic import dataclasses
 from typing_extensions import Self, override
 
 from charmcraft import const, preprocess
@@ -158,218 +154,218 @@ class CharmLib(models.CraftBaseModel):
         return int(patch)
 
 
-@dataclasses.dataclass
-class CharmBuildInfo(models.BuildInfo):
-    """Information about a single build option, with charmcraft-specific info.
+# @dataclasses.dataclass
+# class CharmBuildInfo(models.BuildInfo):
+#     """Information about a single build option, with charmcraft-specific info.
+#
+#     With CharmBuildInfo, the build_for may also be the string "multi", meaning the charm
+#     is expected to run on multiple architectures.
+#     """
+#
+#     platform: CharmPlatform
+#
+#     build_for_bases: list[charmcraft.Base]
+#     """Charmcraft base to build for, including potentially multiple architectures."""
+#     bases_index: int
+#     """Index of the base configuration in charmcraft.yaml."""
+#     build_on_index: int
+#     """Index of this base configuration's build-on option."""
+#
+#     @classmethod
+#     def from_build_on_run_on(
+#         cls: type[Self],
+#         build_on_base: charmcraft.Base,
+#         build_on_arch: str,
+#         run_on: list[charmcraft.Base],
+#         *,
+#         bases_index: int,
+#         build_on_index: int,
+#     ) -> Self:
+#         """Create a single CharmBuildInfo from a build_on base and run_on bases.
+#
+#         :param build_on_base: A Base object defining a base on which to build
+#         :param build_on_arch: The architecture on which to run the build (e.g. "amd64")
+#         :param run_on: A list of bases which this charm should run on after the build.
+#         :param bases_index: The index of the BasesConfiguration
+#         :param build_on_index: Which build-on value from the BasesConfiguration to use
+#         """
+#         base = bases.BaseName(name=build_on_base.name, version=build_on_base.channel)
+#
+#         all_architectures = set()
+#         for run_on_base in run_on:
+#             all_architectures.update(run_on_base.architectures)
+#
+#         build_for = "-".join(sorted(all_architectures))
+#
+#         platform = get_charm_file_platform_str(run_on)
+#
+#         return cls(
+#             platform=platform,
+#             build_on=build_on_arch,
+#             build_for=build_for,
+#             base=base,
+#             build_for_bases=run_on,
+#             bases_index=bases_index,
+#             build_on_index=build_on_index,
+#         )
+#
+#     @classmethod
+#     def gen_from_bases_configurations(
+#         cls: type[Self], *bases_configs: charmcraft.BasesConfiguration
+#     ) -> Iterator[Self]:
+#         """Generate CharmBuildInfo objects from a BasesConfiguration object.
+#
+#         :param bases_config: One or more BasesConfiguration objects from which to generate
+#             CharmBuildInfo objects.
+#         :returns: A list of CharmBuildInfo objects from this BasesConfiguration.
+#
+#         Example 1: a simple charm:
+#             bases:
+#               - name: ubuntu
+#                 channel: 24.04
+#         This gets expanded to a standard long-form:
+#             bases:
+#               - build-on:
+#                   - name: ubuntu
+#                     channel: "24.04"
+#                 run-on:
+#                   - name: ubuntu
+#                     channel: "24.04"
+#         Presuming charmcraft is run on riscv64 (if architectures are not specified charmcraft will
+#         use the host architecture as the only architecture), it will output a list containing the
+#         following single BuildInfo object:
+#             CharmBuildInfo(
+#                 build_on="riscv64",
+#                 build_for="riscv64",
+#                 base=BaseName(name="ubuntu", channel="24.04"),
+#                 build_for_base=BaseName(name="ubuntu", channel="24.04"),
+#                 bases_index=0,
+#                 build_on_index=0
+#             )
+#
+#         Example 2: a more complex set of bases:
+#             bases:
+#               - build-on:
+#                   - name: ubuntu
+#                     channel: "24.04"
+#                     architectures: ["amd64", "riscv64"]
+#                   - name: ubuntu
+#                     channel: "22.04"
+#                     architectures: ["arm64"]
+#                 run-on:
+#                   - name: ubuntu
+#                     channel: "22.04"
+#                     architectures: ["amd64", "arm64"]
+#                   - name: ubuntu
+#                     channel: "24.04"
+#                     architectures: ["amd64", "arm64", "riscv64"]
+#         This will result in the following builds in the plan:
+#         [
+#             CharmBuildInfo(
+#                 build_on="amd64",
+#                 build_for="multi",
+#                 base=BaseName(name="ubuntu", channel="24.04"),
+#                 build_for_bases=[
+#                     Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+#                     Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+#                 ]
+#                 bases_index=0,
+#                 build_on_index=0
+#             ),
+#             CharmBuildInfo(
+#                 build_on="riscv64",
+#                 build_for="multi",
+#                 base=BaseName(name="ubuntu", channel="24.04"),
+#                 build_for_bases=[
+#                     Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+#                     Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+#                 ]
+#                 bases_index=0,
+#                 build_on_index=0
+#             ),
+#             CharmBuildInfo(
+#                 build_on="arm64",
+#                 build_for="multi",
+#                 base=BaseName(name="ubuntu", channel="22.04"),
+#                 build_for_bases=[
+#                     Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
+#                     Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
+#                 ]
+#                 bases_index=0,
+#                 build_on_index=1
+#             ),
+#         ]
+#
+#         Here the string "multi" defines a destination platform that has multiple architectures.
+#         """
+#         for bases_index, bases_config in enumerate(bases_configs):
+#             for build_on_index, build_on_base in enumerate(bases_config.build_on):
+#                 for build_on_arch in build_on_base.architectures:
+#                     yield cls.from_build_on_run_on(
+#                         build_on_base,
+#                         build_on_arch,
+#                         bases_config.run_on,
+#                         bases_index=bases_index,
+#                         build_on_index=build_on_index,
+#                     )
 
-    With CharmBuildInfo, the build_for may also be the string "multi", meaning the charm
-    is expected to run on multiple architectures.
-    """
-
-    platform: CharmPlatform
-
-    build_for_bases: list[charmcraft.Base]
-    """Charmcraft base to build for, including potentially multiple architectures."""
-    bases_index: int
-    """Index of the base configuration in charmcraft.yaml."""
-    build_on_index: int
-    """Index of this base configuration's build-on option."""
-
-    @classmethod
-    def from_build_on_run_on(
-        cls: type[Self],
-        build_on_base: charmcraft.Base,
-        build_on_arch: str,
-        run_on: list[charmcraft.Base],
-        *,
-        bases_index: int,
-        build_on_index: int,
-    ) -> Self:
-        """Create a single CharmBuildInfo from a build_on base and run_on bases.
-
-        :param build_on_base: A Base object defining a base on which to build
-        :param build_on_arch: The architecture on which to run the build (e.g. "amd64")
-        :param run_on: A list of bases which this charm should run on after the build.
-        :param bases_index: The index of the BasesConfiguration
-        :param build_on_index: Which build-on value from the BasesConfiguration to use
-        """
-        base = bases.BaseName(name=build_on_base.name, version=build_on_base.channel)
-
-        all_architectures = set()
-        for run_on_base in run_on:
-            all_architectures.update(run_on_base.architectures)
-
-        build_for = "-".join(sorted(all_architectures))
-
-        platform = get_charm_file_platform_str(run_on)
-
-        return cls(
-            platform=platform,
-            build_on=build_on_arch,
-            build_for=build_for,
-            base=base,
-            build_for_bases=run_on,
-            bases_index=bases_index,
-            build_on_index=build_on_index,
-        )
-
-    @classmethod
-    def gen_from_bases_configurations(
-        cls: type[Self], *bases_configs: charmcraft.BasesConfiguration
-    ) -> Iterator[Self]:
-        """Generate CharmBuildInfo objects from a BasesConfiguration object.
-
-        :param bases_config: One or more BasesConfiguration objects from which to generate
-            CharmBuildInfo objects.
-        :returns: A list of CharmBuildInfo objects from this BasesConfiguration.
-
-        Example 1: a simple charm:
-            bases:
-              - name: ubuntu
-                channel: 24.04
-        This gets expanded to a standard long-form:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                run-on:
-                  - name: ubuntu
-                    channel: "24.04"
-        Presuming charmcraft is run on riscv64 (if architectures are not specified charmcraft will
-        use the host architecture as the only architecture), it will output a list containing the
-        following single BuildInfo object:
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="riscv64",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_base=BaseName(name="ubuntu", channel="24.04"),
-                bases_index=0,
-                build_on_index=0
-            )
-
-        Example 2: a more complex set of bases:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "riscv64"]
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["arm64"]
-                run-on:
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["amd64", "arm64"]
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "arm64", "riscv64"]
-        This will result in the following builds in the plan:
-        [
-            CharmBuildInfo(
-                build_on="amd64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="arm64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="22.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=1
-            ),
-        ]
-
-        Here the string "multi" defines a destination platform that has multiple architectures.
-        """
-        for bases_index, bases_config in enumerate(bases_configs):
-            for build_on_index, build_on_base in enumerate(bases_config.build_on):
-                for build_on_arch in build_on_base.architectures:
-                    yield cls.from_build_on_run_on(
-                        build_on_base,
-                        build_on_arch,
-                        bases_config.run_on,
-                        bases_index=bases_index,
-                        build_on_index=build_on_index,
-                    )
-
-
-class CharmcraftBuildPlanner(models.BuildPlanner):
-    """Build planner for Charmcraft."""
-
-    type: str = ""
-    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
-    base: str | None = None
-    build_base: str | None = None
-    platforms: dict[str, models.Platform | None] | None = None  # type: ignore[assignment]
-
-    @override
-    @pydantic.field_validator("platforms", mode="before")
-    @classmethod
-    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
-        """Overrides the validator to prevent platforms from being modified.
-
-        Modifying the platforms field can break multi-base builds."""
-        return platforms
-
-    def get_build_plan(self) -> list[models.BuildInfo]:
-        """Get build bases for this charm.
-
-        This method provides a flattened version of every way to build the charm, unfiltered.
-
-        If a charm uses the older "bases" model, it defers to
-        `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
-        as expected with platforms.
-        """
-        if not self.base and not self.platforms:
-            return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
-
-        if self.platforms is None:
-            raise CraftError("Must define at least one platform.")
-        platforms = cast(
-            # https://github.com/canonical/craft-platforms/issues/43
-            craft_platforms.Platforms,  # pyright: ignore[reportPrivateImportUsage]
-            {
-                name: (platform.marshal() if platform else None)
-                for name, platform in self.platforms.items()
-            },
-        )
-        build_infos = charm.get_platforms_charm_build_plan(
-            base=self.base,
-            build_base=self.build_base,
-            platforms=platforms,
-        )
-        return [
-            models.BuildInfo(
-                platform=info.platform,
-                build_on=str(info.build_on),
-                build_for=str(info.build_for),
-                base=bases.BaseName(
-                    name=info.build_base.distribution, version=info.build_base.series
-                ),
-            )
-            for info in build_infos
-        ]
+#
+# class CharmcraftBuildPlanner(models.BuildPlanner):
+#     """Build planner for Charmcraft."""
+#
+#     type: str = ""
+#     bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
+#     base: str | None = None
+#     build_base: str | None = None
+#     platforms: dict[str, models.Platform | None] | None = None  # type: ignore[assignment]
+#
+#     @override
+#     @pydantic.field_validator("platforms", mode="before")
+#     @classmethod
+#     def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
+#         """Overrides the validator to prevent platforms from being modified.
+#
+#         Modifying the platforms field can break multi-base builds."""
+#         return platforms
+#
+#     def get_build_plan(self) -> list[models.BuildInfo]:
+#         """Get build bases for this charm.
+#
+#         This method provides a flattened version of every way to build the charm, unfiltered.
+#
+#         If a charm uses the older "bases" model, it defers to
+#         `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
+#         as expected with platforms.
+#         """
+#         if not self.base and not self.platforms:
+#             return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
+#
+#         if self.platforms is None:
+#             raise CraftError("Must define at least one platform.")
+#         platforms = cast(
+#             # https://github.com/canonical/craft-platforms/issues/43
+#             craft_platforms.Platforms,  # pyright: ignore[reportPrivateImportUsage]
+#             {
+#                 name: (platform.marshal() if platform else None)
+#                 for name, platform in self.platforms.items()
+#             },
+#         )
+#         build_infos = charm.get_platforms_charm_build_plan(
+#             base=self.base,
+#             build_base=self.build_base,
+#             platforms=platforms,
+#         )
+#         return [
+#             models.BuildInfo(
+#                 platform=info.platform,
+#                 build_on=str(info.build_on),
+#                 build_for=str(info.build_for),
+#                 base=bases.BaseName(
+#                     name=info.build_base.distribution, version=info.build_base.series
+#                 ),
+#             )
+#             for info in build_infos
+#         ]
 
 
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):

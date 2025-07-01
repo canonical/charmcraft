@@ -29,8 +29,8 @@ from typing import cast
 import craft_application
 import craft_providers
 from craft_application import services
-from craft_application.models import BuildInfo
 from craft_cli import emit
+from craft_platforms import BuildInfo
 from craft_providers import bases
 
 from charmcraft import env, models
@@ -53,9 +53,7 @@ class ProviderService(services.ProviderService):
         super().__init__(
             app,
             services,
-            project=project,
             work_dir=work_dir,
-            build_plan=build_plan,
             provider_name=provider_name,
             install_snap=install_snap,
         )

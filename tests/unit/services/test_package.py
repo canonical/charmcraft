@@ -24,8 +24,7 @@ import craft_cli.pytest_plugin
 import pytest
 import pytest_check
 from craft_application import util
-from craft_application.models import BuildInfo
-from craft_providers.bases import BaseName
+from craft_platforms import BuildInfo, DistroBase
 
 from charmcraft import const, models
 from charmcraft.application.main import APP_METADATA
@@ -94,7 +93,7 @@ def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
                     platform="distro-1-test64",
                     build_on="riscv64",
                     build_for="riscv64",
-                    base=BaseName("ubuntu", "24.04"),
+                    build_base=DistroBase("ubuntu", "24.04"),
                 )
             ],
             "charmy-mccharmface_distro-1-test64.charm",
@@ -106,7 +105,7 @@ def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
                     platform="ubuntu@24.04:riscv64",
                     build_on="riscv64",
                     build_for="riscv64",
-                    base=BaseName("ubuntu", "24.04"),
+                    build_base=DistroBase("ubuntu", "24.04"),
                 )
             ],
             "charmy-mccharmface_ubuntu@24.04-riscv64.charm",
@@ -215,7 +214,7 @@ def test_do_not_overwrite_config_yaml(
                 platform=util.get_host_architecture(),
                 build_for=util.get_host_architecture(),
                 build_on=util.get_host_architecture(),
-                base=BaseName("ubuntu", "20.04"),
+                build_base=DistroBase("ubuntu", "20.04"),
             ),
             [
                 {
@@ -248,7 +247,7 @@ def test_do_not_overwrite_config_yaml(
                 platform="riscv64",
                 build_for="riscv64",
                 build_on="riscv64",
-                base=BaseName("ubuntu", "22.04"),
+                build_base=DistroBase("ubuntu", "22.04"),
             ),
             [
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
@@ -260,7 +259,7 @@ def test_do_not_overwrite_config_yaml(
                 platform=util.get_host_architecture(),
                 build_on=util.get_host_architecture(),
                 build_for=util.get_host_architecture(),
-                base=BaseName("centos", "7"),
+                build_base=DistroBase("centos", "7"),
             ),
             [
                 {
@@ -300,7 +299,7 @@ def test_do_not_overwrite_config_yaml(
                 platform="amd64",
                 build_on="amd64",
                 build_for="arm64",
-                base=BaseName("ubuntu", "22.04"),
+                build_base=DistroBase("ubuntu", "22.04"),
             ),
             [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
             id="cross-compile",
@@ -342,7 +341,7 @@ def test_get_manifest_bases_from_bases(
                 platform="test-platform",
                 build_on="amd64",
                 build_for="riscv64",
-                base=BaseName("not-to-be-used", "100"),
+                build_base=DistroBase("not-to-be-used", "100"),
             ),
             models.Base(
                 # uses the project base
@@ -361,7 +360,7 @@ def test_get_manifest_bases_from_bases(
                 build_on="amd64",
                 build_for="riscv64",
                 # the BuildInfo will use the build-base, which shouldn't go in the manifest
-                base=BaseName("ubuntu", "devel"),
+                build_base=DistroBase("ubuntu", "devel"),
             ),
             models.Base(
                 name="ubuntu",
@@ -378,7 +377,7 @@ def test_get_manifest_bases_from_bases(
                 platform="ubuntu@24.04:amd64",
                 build_on="amd64",
                 build_for="amd64",
-                base=BaseName("ubuntu", "24.04"),
+                build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
                 name="ubuntu",
@@ -400,7 +399,7 @@ def test_get_manifest_bases_from_bases(
                 platform="test-platform",
                 build_on="amd64",
                 build_for="riscv64",
-                base=BaseName("ubuntu", "24.04"),
+                build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
                 name="ubuntu",
@@ -455,7 +454,7 @@ def test_get_manifest_bases_from_platforms_invalid(package_service):
             platform="test-platform",
             build_on="amd64",
             build_for="riscv64",
-            base=BaseName("ubuntu", "24.04"),
+            build_base=DistroBase("ubuntu", "24.04"),
         )
     ]
 

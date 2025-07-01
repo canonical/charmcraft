@@ -25,7 +25,6 @@ import pytest
 from craft_cli.pytest_plugin import RecordingEmitter
 from craft_providers import bases
 
-from charmcraft import models
 from charmcraft.application.main import APP_METADATA
 from charmcraft.services.provider import ProviderService, _maybe_lock_cache
 
@@ -34,7 +33,7 @@ from charmcraft.services.provider import ProviderService, _maybe_lock_cache
 def provider_service(
     fake_path: pathlib.Path,
     service_factory: craft_application.ServiceFactory,
-    default_build_plan: list[models.CharmBuildInfo],
+    # default_build_plan: list[models.CharmBuildInfo],
 ) -> craft_application.ProviderService:
     fake_cache_dir = fake_path / "cache"
     fake_cache_dir.mkdir(parents=True)
@@ -42,7 +41,7 @@ def provider_service(
     service_factory.update_kwargs(
         "provider",
         work_dir=fake_path,
-        build_plan=default_build_plan,
+        # build_plan=default_build_plan,
         provider_name="host",
     )
 

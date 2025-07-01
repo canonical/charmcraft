@@ -27,13 +27,13 @@ from unittest import mock
 
 import craft_application
 import craft_parts
+import craft_platforms
 import craft_store
 import pytest
 import responses as responses_module
 import yaml
-from craft_application import models, util
+from craft_application import util
 from craft_parts import callbacks, plugins
-from craft_providers import bases
 
 import charmcraft.parts
 from charmcraft import const, env, instrum, parts, services, store
@@ -140,11 +140,12 @@ def service_factory(
     return factory
 
 
+# TODO: Get rid of this and default_build_plan
 @pytest.fixture
-def default_build_info() -> models.BuildInfo:
+def default_build_info() -> craft_platforms.BuildInfo:
     arch = util.get_host_architecture()
-    return models.BuildInfo(
-        base=bases.BaseName("ubuntu", "22.04"),
+    return craft_platforms.BuildInfo(
+        build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
         build_on=arch,
         build_for="arm64",
         platform="distro-1-test64",
@@ -152,7 +153,7 @@ def default_build_info() -> models.BuildInfo:
 
 
 @pytest.fixture
-def default_build_plan(default_build_info: models.BuildInfo):
+def default_build_plan(default_build_info: craft_platforms.BuildInfo):
     return [default_build_info]
 
 

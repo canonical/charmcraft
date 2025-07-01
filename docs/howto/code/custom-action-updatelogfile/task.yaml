@@ -7,28 +7,25 @@
 ###########################################
 summary: Custom action in a Flask app
 
-kill-timeout: 120m
+kill-timeout: 60m
+
+restore: |
+  rm -rf $HOME/flask-app
+  juju destroy-model flask-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
-  cd $HOME
+  mkdir $HOME/flask-app
+  mv *.yaml *.py *.txt $HOME/flask-app
+  cd $HOME/flask-app
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # [docs:create-venv]
   sudo apt update && sudo apt install python3-venv -y
@@ -108,15 +105,18 @@ execute: |
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
+  # wait until the endpoint works
+  retry -n 5 --wait 2 curl --fail http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
   # [docs:curl-init-deployment]
   curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
 
   # add custom action to charmcraft.yaml
-  cat $HOME/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
+  cat $HOME/flask-app/updatelogfile_action_charmcraft.yaml >> charmcraft.yaml
 
   # add custom action to src/charm.py
-  cat $HOME/updatelogfile_action_charm.py > $HOME/charm/src/charm.py
+  cat $HOME/flask-app/updatelogfile_action_charm.py > $HOME/flask-app/charm/src/charm.py
 
   # charmcraft clean and charmcraft pack
   charmcraft clean
@@ -128,14 +128,13 @@ execute: |
     --resource flask-app-image=localhost:32000/flask-hello-world:0.1
 
   # wait for the Flask app to come back to active idle
-  juju wait-for application flask-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # make sure it's in listed actions
-  juju actions flask-hello-world | grep updatelogfile
+  retry -n 10 --wait 20 sh -c 'juju actions flask-hello-world | grep updatelogfile'
 
   # make sure the action runs successfully
-  juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"
+  retry -n 10 --wait 20 sh -c 'juju run flask-hello-world/0 updatelogfile logfile="/tmp/example.log" | grep "written to"'
 
   # [docs:clean-environment]
   charmcraft clean

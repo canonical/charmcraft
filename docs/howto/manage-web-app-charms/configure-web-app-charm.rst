@@ -314,9 +314,13 @@ Add the Juju secret ID to the application:
 Write a Kubernetes charm for an async Flask app
 -----------------------------------------------
 
-In this how-to guide you will configure a 12-factor Flask
-application to use asynchronous Gunicorn workers to be
+In this guide you will configure a 12-factor Flask
+app to use asynchronous Gunicorn workers to be
 able to serve to multiple users easily.
+
+.. note::
+
+    This guide also applies to Django apps.
 
 Make the rock async
 ~~~~~~~~~~~~~~~~~~~
@@ -325,6 +329,7 @@ To make the rock async, make sure to put the following in its ``requirements.txt
 file:
 
 .. literalinclude:: ../code/flask-async/requirements.txt
+    :caption: requirements.txt
 
 Pack the rock using ``rockcraft pack`` and redeploy the charm with the new rock using
 :external+juju:ref:`command-juju-refresh`.
@@ -334,7 +339,8 @@ Configure the async application
 
 Now let's enable async Gunicorn workers. We will
 expect this configuration option to be available in the Flask app configuration
-under the ``webserver-worker-class`` key. Verify that the new configuration
+under the ``webserver-worker-class`` key. Assuming the app name is
+``flask-async-app``, verify that the new configuration
 has been added by running:
 
 .. code:: bash
@@ -373,4 +379,5 @@ The results should arrive simultaneously and contain five instances of ``ok``:
    ok
 
 It can take up to a minute for the configuration to take effect. When the
-configuration changes, the charm will re-enter the active state.
+configuration changes, the charm will re-enter the active state, which you
+can monitor using ``juju status``.

@@ -41,7 +41,6 @@ def provider_service(
     service_factory.update_kwargs(
         "provider",
         work_dir=fake_path,
-        # build_plan=default_build_plan,
         provider_name="host",
     )
 
@@ -130,9 +129,7 @@ def test_get_base_no_cache_if_locked(
     provider_service = ProviderService(
         app=APP_METADATA,
         services=None,  # pyright: ignore[reportArgumentType]
-        project=None,  # pyright: ignore[reportArgumentType]
         work_dir=tmp_path,
-        build_plan=[],
     )
 
     base = provider_service.get_base(

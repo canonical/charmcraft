@@ -33,7 +33,7 @@ from craft_cli import emit
 from craft_platforms import BuildInfo
 from craft_providers import bases
 
-from charmcraft import env, models
+from charmcraft import env
 
 
 class ProviderService(services.ProviderService):
@@ -44,9 +44,7 @@ class ProviderService(services.ProviderService):
         app: craft_application.AppMetadata,
         services: craft_application.ServiceFactory,
         *,
-        project: models.CharmcraftProject,
         work_dir: pathlib.Path,
-        build_plan: list[BuildInfo],
         provider_name: str | None = None,
         install_snap: bool = True,
     ) -> None:

@@ -72,7 +72,7 @@ def main(docs_dir):
         commands_ref_dir.mkdir()
 
     # Create a dispatcher like Charmcraft does to get access to the same options.
-    charmcraft_services = services.CharmcraftServiceFactory(app=application.APP_METADATA)
+    charmcraft_services = craft_application.ServiceFactory(app=application.APP_METADATA)
     app = application.Charmcraft(app=application.APP_METADATA, services=charmcraft_services)
     application.commands.fill_command_groups(app)
     command_groups = app.command_groups

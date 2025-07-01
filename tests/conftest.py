@@ -22,9 +22,10 @@ import pathlib
 import tempfile
 import types
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, cast
 from unittest import mock
 
+import craft_application
 import craft_parts
 import craft_store
 import pytest
@@ -38,6 +39,7 @@ import charmcraft.parts
 from charmcraft import const, env, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models import project
+from charmcraft.services.store import StoreService
 
 
 @pytest.fixture
@@ -108,8 +110,9 @@ def service_factory(
     mock_store_anonymous_client,
     mock_publisher_gateway,
     default_build_plan,
-) -> services.CharmcraftServiceFactory:
-    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
+) -> craft_application.ServiceFactory:
+    services.register_services()
+    factory = craft_application.ServiceFactory(app=APP_METADATA)
 
     factory.update_kwargs(
         "package",
@@ -129,9 +132,10 @@ def service_factory(
 
     factory.project = simple_charm
 
-    factory.store.client = mock_store_client
-    factory.store.anonymous_client = mock_store_anonymous_client
-    factory.store._publisher = mock_publisher_gateway
+    store_svc = cast(StoreService, factory.get("store"))
+    store_svc.client = mock_store_client
+    store_svc.anonymous_client = mock_store_anonymous_client
+    store_svc._publisher = mock_publisher_gateway
 
     return factory
 

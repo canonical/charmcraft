@@ -10,7 +10,7 @@ configuration file.
     See more: `tox |
     Configuration <https://tox.wiki/en/latest/user_guide.html#configuration>`_
 
-Charmcraft creates this file and defines the following environments:
+Charmcraft creates this file and defines the following tox environments:
 
 - ``format`` - Apply coding style standards
 - ``lint`` - Check code against coding style standards
@@ -20,9 +20,9 @@ Charmcraft creates this file and defines the following environments:
 
 To run an environment, use ``tox -e <env-name>``.
 
-For :ref:`ref_commands_init` with the ``kubernetes`` or ``machine`` profile,
-``tox.ini`` requires the `tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin, so you
-should use `uv <https://docs.astral.sh/uv/>`_ to install tox:
+For the Kubernetes and machine profiles, ``tox.ini`` requires the
+`tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin, so you should use
+`uv <https://docs.astral.sh/uv/>`_ to install tox:
 
 .. code-block:: bash
 
@@ -33,6 +33,5 @@ Configuration of testing and linting tools is specified in the
 you manually modify the dependencies in ``pyproject.toml``, you'll need to update the
 :ref:`uv-lock-file` before using tox.
 
-For ``init`` with a 12-factor profile (``django-framework`` and so on), ``tox.ini``
-doesn't require any plugins. Dependencies are specified in the
-:ref:`requirements-txt-file` instead of ``pyproject.toml``.
+For 12-factor app profiles, ``tox.ini`` doesn't require any plugins. Dependencies are
+specified in the :ref:`requirements-txt-file` instead of ``pyproject.toml``.

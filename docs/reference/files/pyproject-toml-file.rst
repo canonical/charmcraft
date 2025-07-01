@@ -11,16 +11,15 @@ Python ``pyproject.toml`` file.
     pyproject.toml
     <https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/>`_
 
-For :ref:`ref_commands_init` with the ``kubernetes`` or ``machine`` profile, Charmcraft
-creates this file with the following contents:
+When a charm is initialized with the Kubernetes or machine profile, Charmcraft creates
+this file with the following contents:
 
 - Dependencies of the charm code, pre-populated with :external+ops:doc:`Ops <index>`
-- Dependencies of static type checks, unit tests, and integration tests
-- Configuration of testing and linting tools
+- Dependencies of tests and linters
+- Configuration of tests and linters
 
 If you manually modify the dependencies, you'll need to update the :ref:`uv-lock-file`.
 
-For ``init`` with a 12-factor profile (``django-framework`` and so on),
-``pyproject.toml`` only contains configuration of testing and linting tools.
-Dependencies are specified in the :ref:`requirements-txt-file` and there's no
-``uv.lock`` file.
+When a charm is initialized with a 12-factor app profile, ``pyproject.toml`` contains
+the configuration for tests and linters. Dependencies are specified in the
+:ref:`requirements-txt-file`, and there's no ``uv.lock`` file.

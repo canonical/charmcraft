@@ -83,7 +83,7 @@ files and directories:
     │                                your charm if profile is 'kubernetes' or 'machine'
     ├── README.md                  - Frontpage for your charmhub.io/charm/
     ├── requirements.txt           - Python dependencies for your charm, with Ops,
-    │                                created for 12-factor profiles only
+    │                                created for 12-factor app profiles only
     ├── src
     │   ├── charm.py               - Python code that operates your charm's workload
     │   └── <workload>.py          - Standalone module for workload-specific logic,

@@ -19,6 +19,7 @@ import argparse
 import json
 import pathlib
 from collections.abc import Container
+from typing import TYPE_CHECKING, cast
 
 from craft_cli import emit
 from pydantic.json import pydantic_encoder
@@ -33,6 +34,9 @@ Analyze a charm.
 Report the attributes and lint results directly in the terminal. Use
 `--force` to run even those configured to be ignored.
 """
+
+if TYPE_CHECKING:
+    from charmcraft.services.analysis import AnalysisService
 
 
 class Analyse(base.CharmcraftCommand):
@@ -72,19 +76,19 @@ class Analyse(base.CharmcraftCommand):
 
     def _run_formatted(self, filepath: pathlib.Path, *, ignore: Container[str]) -> int:
         """Run the command, formatting the output into JSON or similar at the end."""
-        results = list(self._services.analysis.lint_file(filepath))
+        svc = cast("AnalysisService", self._services.get("analysis"))
+        results = list(svc.lint_file(filepath))
         emit.message(json.dumps(results, indent=4, default=pydantic_encoder))
         return max(r.level for r in results).return_code
 
     def _run_streaming(self, filepath: pathlib.Path, *, ignore: Container[str]) -> int:
         """Run the command, printing linter results as we get them."""
         max_level = lint.ResultLevel.OK
+        svc = cast("AnalysisService", self._services.get("analysis"))
         with emit.progress_bar(
             f"Linting {filepath.name}...", total=len(linters.CHECKERS)
         ) as progress:
-            for result in self._services.analysis.lint_file(
-                filepath, ignore=ignore, include_ignored=False
-            ):
+            for result in svc.lint_file(filepath, ignore=ignore, include_ignored=False):
                 emit.progress(str(result), permanent=True)
                 max_level = max(result.level, max_level)
                 progress.advance(1)

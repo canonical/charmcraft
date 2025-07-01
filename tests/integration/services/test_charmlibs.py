@@ -17,8 +17,7 @@
 
 import pytest
 
-from charmcraft import services
-from charmcraft.services.charmlibs import CharmLibDelta
+from charmcraft.services.charmlibs import CharmLibDelta, CharmLibsService
 from charmcraft.store.models import Library
 
 
@@ -59,7 +58,7 @@ def service(service_factory):
 def test_get_unpublished_libs(
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     local_libs: dict[str, Library],
     expected: list[CharmLibDelta],
 ):

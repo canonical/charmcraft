@@ -654,7 +654,7 @@ class AdditionalFiles(Linter):
     IGNORE_FILES: set[pathlib.Path] = {
         pathlib.Path(f)
         for f in (
-            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            {const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
             | const.CHARM_MANDATORY_FILES
             | const.CHARM_OPTIONAL_FILES
         )
@@ -713,9 +713,6 @@ class PipCheck(Linter):
             return self.Result.NONAPPLICABLE
         if not (venv_dir / "lib").is_dir():
             self.text = "Python venv is not valid."
-            return self.Result.NONAPPLICABLE
-        if sys.platform == "win32":
-            self.text = "Linter does not work on Windows."
             return self.Result.NONAPPLICABLE
         python_exe = venv_dir / "bin" / "python"
         delete_parent = False

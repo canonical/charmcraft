@@ -17,13 +17,10 @@
 """Commands related to Charmhub."""
 
 import argparse
-import collections
 import dataclasses
-import datetime
 import os
 import pathlib
 import re
-import shutil
 import string
 import sys
 import tempfile
@@ -38,7 +35,6 @@ import yaml
 from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
-from craft_parts import Step
 from craft_store import attenuations, models, publisher
 from craft_store.errors import CredentialsUnavailable
 from craft_store.models import ResponseCharmResourceBase
@@ -47,16 +43,15 @@ from tabulate import tabulate
 from typing_extensions import override
 
 import charmcraft.store.models
-from charmcraft import const, env, errors, parts, utils
+from charmcraft import const, env, errors, utils
 from charmcraft.application.commands.base import CharmcraftCommand
 from charmcraft.models import project
 from charmcraft.services.store import StoreService
 from charmcraft.store import Store
-from charmcraft.store.models import Entity
 from charmcraft.utils import cli
 
 if TYPE_CHECKING:
-    from argparse import ArgumentParser, Namespace
+    from argparse import ArgumentParser
 
     from charmcraft.services.charmlibs import CharmLibsService
 
@@ -364,64 +359,6 @@ class RegisterCharmNameCommand(CharmcraftCommand):
         )
 
 
-class RegisterBundleNameCommand(CharmcraftCommand):
-    """Register a bundle name in the Store."""
-
-    name = "register-bundle"
-    help_msg = "Register a bundle name in the Store"
-    overview = textwrap.dedent(
-        f"""
-        Register a bundle name in the Store.
-
-        Claim a name for your bundle in Charmhub. Once you have registered
-        a name, you can upload bundle packages for that name and
-        release them for wider consumption.
-
-        Charmhub operates on the 'principle of least surprise' with regard
-        to naming. A bundle with a well-known name should provide the best
-        system for the service most people associate with that name.  Bundles
-        can be renamed in the Charmhub, but we would nonetheless ask
-        you to use a qualified name, such as `yourname-bundlename` if you are
-        in any doubt about your ability to meet that standard.
-
-        We discuss registrations on Charmhub's Discourse:
-
-           https://discourse.charmhub.io/c/charm
-
-        Registration will take you through login if needed.
-
-        \u001b[31mWARNING:\u001b[0m Charmhub will stop accepting new bundle registrations on 2024-11-01.
-        For more information, see:
-        {BUNDLE_REGISTRATION_REMOVAL_URL}
-    """
-    )
-
-    def fill_parser(self, parser: argparse.ArgumentParser):
-        """Add own parameters to the general parser."""
-        parser.add_argument("name", help="The name to register in Charmhub")
-
-    def run(self, parsed_args: argparse.Namespace) -> int:
-        """Run the command."""
-        if datetime.date.today() >= datetime.date(2024, 11, 1):
-            emit.message(
-                "\u001b[31mERROR:\u001b[0m New bundle registration is discontinued as of 2024-11-01.  For more "
-                f"information, see: {BUNDLE_REGISTRATION_REMOVAL_URL}"
-            )
-            return 1
-        emit.progress(
-            "\u001b[31mWARNING:\u001b[0m New bundle registration will stop working on 2024-11-01. For "
-            f"more information, see: {BUNDLE_REGISTRATION_REMOVAL_URL}",
-            permanent=True,
-        )
-        store = Store(env.get_store_config())
-        store.register_name(parsed_args.name, EntityType.bundle)
-        emit.message(
-            f"You are now the publisher of bundle {parsed_args.name!r} in Charmhub."
-        )
-        # TODO(#1810): Replace this with os.EX_OK
-        return 0
-
-
 class UnregisterNameCommand(CharmcraftCommand):
     """Unregister a name in the Store."""
 
@@ -436,7 +373,7 @@ class UnregisterNameCommand(CharmcraftCommand):
         A package cannot be unregistered if something has been uploaded to
         the name. This command is only for unregistering names that have
         never been used. Unregistering must be done by the publisher.
-        Attempting to unregister a charm or bundle as a collaborator will
+        Attempting to unregister a charm as a collaborator will
         fail.
 
         We discuss registrations on Charmhub's Discourse:
@@ -460,7 +397,7 @@ class ListNamesCommand(CharmcraftCommand):
     """List the entities registered in Charmhub."""
 
     name = "names"
-    help_msg = "List your registered charm and bundle names in Charmhub"
+    help_msg = "List your registered charm names in Charmhub"
     overview = textwrap.dedent(
         """
         An overview of names you have registered to publish in Charmhub.
@@ -523,7 +460,7 @@ class ListNamesCommand(CharmcraftCommand):
             return
 
         if not result:
-            emit.message("No charms or bundles registered.")
+            emit.message("No charmss registered.")
             return
 
         table = tabulate(data, headers=headers, tablefmt="plain")
@@ -558,29 +495,28 @@ def get_name_from_zip(filepath):
             ) from err
     else:
         raise CraftError(
-            f"The indicated zip file {str(filepath)!r} is not a charm ('metadata.yaml' not found) "
-            "nor a bundle ('bundle.yaml' not found)."
+            f"The indicated zip file {str(filepath)!r} is not a charm ('metadata.yaml' not found)."
         )
 
     return name
 
 
 class UploadCommand(CharmcraftCommand):
-    """Upload a charm or bundle to Charmhub."""
+    """Upload a charm to Charmhub."""
 
     name = "upload"
-    help_msg = "Upload a charm or bundle to Charmhub"
+    help_msg = "Upload a charm to Charmhub"
     overview = textwrap.dedent(
         """
-        Upload a charm or bundle to Charmhub.
+        Upload a charm to Charmhub.
 
-        Push a charm or bundle to Charmhub where it will be verified.
+        Push a charm to Charmhub where it will be verified.
         This command will finish successfully once the package is
         approved by Charmhub.
 
         In the event of a failure in the verification process, charmcraft
         will report details of the failure, otherwise it will give you the
-        new charm or bundle revision.
+        new charm revision.
 
         Upload will take you through login if needed.
     """
@@ -602,7 +538,7 @@ class UploadCommand(CharmcraftCommand):
         super().fill_parser(parser)
 
         parser.add_argument(
-            "filepath", type=utils.useful_filepath, help="The charm or bundle to upload"
+            "filepath", type=utils.useful_filepath, help="The charm to upload"
         )
         parser.add_argument(
             "--release",
@@ -612,7 +548,7 @@ class UploadCommand(CharmcraftCommand):
         parser.add_argument(
             "--name",
             type=str,
-            help="Name of the charm or bundle on Charmhub to upload to",
+            help="Name of the charm on Charmhub to upload to",
         )
         parser.add_argument(
             "--resource",
@@ -709,10 +645,10 @@ class UploadCommand(CharmcraftCommand):
 
 
 class ListRevisionsCommand(CharmcraftCommand):
-    """List revisions for a charm or a bundle."""
+    """List revisions for a charm."""
 
     name = "revisions"
-    help_msg = "List revisions for a charm or a bundle in Charmhub"
+    help_msg = "List revisions for a charm in Charmhub"
     overview = textwrap.dedent(
         """
         Show version, date and status for each revision in Charmhub.
@@ -732,7 +668,7 @@ class ListRevisionsCommand(CharmcraftCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         super().fill_parser(parser)
-        parser.add_argument("name", help="The name of the charm or bundle")
+        parser.add_argument("name", help="The name of the charm")
 
     def run(self, parsed_args):
         """Run the command."""
@@ -787,17 +723,17 @@ class ListRevisionsCommand(CharmcraftCommand):
 
 
 class ReleaseCommand(CharmcraftCommand):
-    """Release a charm or bundle revision to specific channels."""
+    """Release a charm revision to specific channels."""
 
     name = "release"
-    help_msg = "Release a charm or bundle revision in one or more channels"
+    help_msg = "Release a charm revision in one or more channels"
     overview = textwrap.dedent(
         """
-        Release a charm or bundle revision in the channel(s) provided.
+        Release a charm revision in the channel(s) provided.
 
-        Charm or bundle revisions are not published for anybody else until you
+        Charm revisions are not published for anybody else until you
         release them in a channel. When you release a revision into a channel,
-        users who deploy the charm or bundle from that channel will get see
+        users who deploy the charm from that channel will get see
         the new revision as a potential update.
 
         A channel is made up of `track/risk/branch` with both the track and
@@ -834,7 +770,7 @@ class ReleaseCommand(CharmcraftCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument("name", help="The name of charm or bundle")
+        parser.add_argument("name", help="The name of charm")
         parser.add_argument(
             "-r",
             "--revision",
@@ -955,7 +891,7 @@ class PromoteCommand(CharmcraftCommand):
                     resolution="Provide channel names as '<track>/<risk>'.",
                     reportable=False,
                     logpath_report=False,
-                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                    retcode=os.EX_USAGE,
                 )
             package_metadata = store.get_package_metadata(name)
             default_track = package_metadata.default_track
@@ -967,7 +903,7 @@ class PromoteCommand(CharmcraftCommand):
         if to_channel == from_channel:
             raise CraftError(
                 "Cannot promote from a channel to the same channel.",
-                retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                retcode=os.EX_USAGE,
             )
         if to_channel.risk > from_channel.risk:
             command_parts = [
@@ -988,14 +924,14 @@ class PromoteCommand(CharmcraftCommand):
                     "Cross-track promotion can only occur at the same risk level.",
                     reportable=False,
                     logpath_report=False,
-                    retcode=64,  # Replace with os.EX_USAGE once we drop Windows.
+                    retcode=os.EX_USAGE,
                 )
             if not parsed_args.yes and not utils.confirm_with_user(
                 "Did you mean to promote to a different track? (from "
                 f"{from_channel.track} to {to_channel.track})",
             ):
                 emit.message("Cancelling.")
-                return 64  # Replace with os.EX_USAGE once we drop Windows.
+                return os.EX_USAGE
 
         candidates = store.get_revisions_on_channel(name, from_channel.name)
 
@@ -1041,271 +977,14 @@ class PromoteCommand(CharmcraftCommand):
         return 0
 
 
-class PromoteBundleCommand(CharmcraftCommand):
-    """Promote a bundle in the Store."""
-
-    name = "promote-bundle"
-    help_msg = "Promote a bundle to another channel in the Store"
-    overview = textwrap.dedent(
-        """
-        Promote a bundle to another channel in the Store.
-
-        This command must be run from the bundle project directory to be
-        promoted.
-        """
-    )
-    always_load_project = True
-
-    def fill_parser(self, parser: "ArgumentParser") -> None:
-        """Add promote-bundle parameters to the general parser."""
-        parser.add_argument(
-            "--from-channel",
-            type=utils.SingleOptionEnsurer(str),
-            required=True,
-            help="The channel from which to promote the bundle",
-        )
-        parser.add_argument(
-            "--to-channel",
-            type=utils.SingleOptionEnsurer(str),
-            required=True,
-            help="The target channel for the promoted bundle",
-        )
-        parser.add_argument(
-            "--output-bundle",
-            type=pathlib.Path,
-            help="A path where the created bundle.yaml file can be written",
-        )
-        parser.add_argument(
-            "--exclude",
-            action="append",
-            default=[],
-            help="Any charms to exclude from the promotion process",
-        )
-
-    def run(self, parsed_args: "Namespace") -> None:
-        """Run the command."""
-        emit.progress(
-            "Bundle commands are deprecated and will be removed in Charmcraft 4.",
-            permanent=True,
-        )
-
-        if not isinstance(self._services.project, project.Bundle):
-            raise CraftError("promote-bundle must be run on a bundle.")
-
-        # Check snapcraft for equiv logic
-        from_channel = charmcraft.store.models.ChannelData.from_str(
-            parsed_args.from_channel
-        )
-        to_channel = charmcraft.store.models.ChannelData.from_str(
-            parsed_args.to_channel
-        )
-
-        if to_channel == from_channel:
-            raise CraftError("Cannot promote from a channel to the same channel.")
-        if to_channel.risk > from_channel.risk:
-            command_parts = [
-                "charmcraft",
-                "promote-bundle",
-                to_channel.name,
-                from_channel.name,
-            ]
-            if parsed_args.output_bundle:
-                command_parts.extend(["--output-bundle", parsed_args.output_bundle])
-            for exclusion in parsed_args.exclude:
-                command_parts.extend(["--exclude", exclusion])
-            command = " ".join(command_parts)
-            raise CraftError(
-                f"Target channel ({to_channel.name}) must be lower risk "
-                f"than the source channel ({from_channel.name}).\n"
-                f"Did you mean: {command}"
-            )
-        if to_channel.track != from_channel.track:
-            emit.message(
-                "Promoting to a different track (from "
-                f"{from_channel.track} to {to_channel.track})"
-            )
-
-        output_bundle: pathlib.Path | None = parsed_args.output_bundle
-        if output_bundle is not None and output_bundle.exists():
-            if output_bundle.is_file() or output_bundle.is_symlink():
-                emit.verbose(f"Overwriting existing bundle file: {str(output_bundle)}")
-            elif output_bundle.is_dir():
-                emit.debug(f"Creating bundle file in {str(output_bundle)}")
-                output_bundle /= "bundle.yaml"
-            else:
-                raise CraftError(
-                    f"Not a valid bundle output path: {str(output_bundle)}"
-                )
-        elif output_bundle is not None:
-            if not output_bundle.suffix:
-                output_bundle /= "bundle.yaml"
-            for parent in output_bundle.parents:
-                if parent.exists():
-                    if os.access(parent, os.W_OK):
-                        break
-                    raise CraftError(
-                        f"Bundle output directory not writable: {str(parent)}"
-                    )
-
-        # Load bundle
-        # TODO: When this goes into the StoreService, use the service's own project_path
-        bundle_path = self._services.package.project_dir / "bundle.yaml"
-        bundle_config = utils.load_yaml(bundle_path)
-        if bundle_config is None:
-            raise CraftError(
-                f"Missing or invalid main bundle file: {(str(bundle_path))}"
-            )
-        bundle_name = bundle_config.get("name")
-        if not bundle_name:
-            raise CraftError(
-                "Invalid bundle config; missing a 'name' field indicating the bundle's name in "
-                f"file {str(bundle_path)!r}."
-            )
-        emit.progress("Determining charms to promote")
-        charms = [c["charm"] for c in bundle_config.get("applications", {}).values()]
-        errant_excludes = []
-        for excluded in parsed_args.exclude:
-            try:
-                charms.remove(excluded)
-            except ValueError:
-                errant_excludes.append(excluded)
-        if errant_excludes:
-            bad_charms = utils.humanize_list(errant_excludes, "and")
-            raise CraftError(
-                f"Bundle does not contain the following excluded charms: {bad_charms}"
-            )
-
-        store = Store(env.get_store_config())
-        registered_names: list[Entity] = store.list_registered_names(
-            include_collaborations=True
-        )
-        name_map = {entity.name: entity for entity in registered_names}
-
-        if bundle_name not in name_map:
-            raise CraftError(
-                f"Cannot modify bundle {bundle_name}. Ensure the bundle exists and that you have "
-                "been made a collaborator."
-            )
-        elif name_map[bundle_name].entity_type != EntityType.bundle:
-            entity_type = name_map[bundle_name].entity_type
-            raise CraftError(
-                f"Store Entity {bundle_name} is a {entity_type}, not a bundle."
-            )
-
-        invalid_charms = []
-        non_charms = []
-        for charm_name in charms:
-            if charm_name not in name_map:
-                invalid_charms.append(charm_name)
-            elif name_map[charm_name].entity_type != EntityType.charm:
-                non_charms.append(charm_name)
-        if invalid_charms:
-            charm_list = utils.humanize_list(invalid_charms, "and")
-            raise CraftError(
-                "The following entities do not exist or you are not a collaborator on them: "
-                f"{charm_list}"
-            )
-        if non_charms:
-            non_charm_list = utils.humanize_list(non_charms, "and")
-            raise CraftError(
-                f"The following store entities are not charms: {non_charm_list}"
-            )
-
-        # Revision in the source channel
-        channel_map, *_ = store.list_releases(bundle_name)
-        bundle_revision = None
-        for release in channel_map:
-            if release.channel == from_channel.name:
-                bundle_revision = release.revision
-                break
-        if bundle_revision is None:
-            raise CraftError(
-                "Cannot find a bundle released to the given source channel."
-            )
-
-        # Get source channel charms
-        charm_revisions: dict[str, int] = {}
-        charm_resources: dict[str, list[str]] = collections.defaultdict(list)
-        error_charms = []
-        for charm_name in charms:
-            channel_map, *_ = store.list_releases(charm_name)
-            for release in channel_map:
-                if release.channel == from_channel.name:
-                    charm_revisions[charm_name] = release.revision
-                    if release.resources:
-                        charm_resources[charm_name] = release.resources
-                    break
-            else:
-                error_charms.append(charm_name)
-        if error_charms:
-            charm_list = utils.humanize_list(error_charms, "and")
-            raise CraftError(f"Not found in channel {from_channel.name}: {charm_list}")
-
-        for application in bundle_config.get("applications", {}).values():
-            application["channel"] = to_channel.name
-
-        if parsed_args.output_bundle:
-            with parsed_args.output_bundle.open("w+") as bundle_file:
-                yaml.dump(bundle_config, bundle_file)
-
-        for charm_name, charm_revision in charm_revisions.items():
-            store.release(
-                charm_name,
-                charm_revision,
-                channels=[to_channel.name],
-                resources=charm_resources[charm_name],
-            )
-
-        # Export a temporary bundle file with the charms in the target channel
-        with tempfile.TemporaryDirectory(prefix="charmcraft-") as bundle_dir:
-            bundle_dir_path = pathlib.Path(bundle_dir) / bundle_name
-            shutil.copytree(self._services.package.project_dir, bundle_dir_path)
-            bundle_path = bundle_dir_path / "bundle.yaml"
-            with bundle_path.open("w+") as bundle_file:
-                yaml.dump(bundle_config, bundle_file)
-
-            # Pack the bundle using the modified bundle file
-            emit.verbose(f"Packing temporary bundle in {bundle_dir}...")
-            lifecycle = parts.PartsLifecycle(
-                {},
-                work_dir=bundle_dir_path / "build",
-                project_dir=bundle_dir_path,
-                project_name=bundle_name,
-                ignore_local_sources=[bundle_name + ".zip"],
-            )
-            try:
-                lifecycle.run(Step.PRIME)
-            except (RuntimeError, CraftError) as error:
-                emit.debug(f"Error when running PRIME step: {error}")
-                raise
-
-            self._services.package.write_metadata(lifecycle.prime_dir)
-
-            zipname = bundle_dir_path / (bundle_name + ".zip")
-            utils.build_zip(zipname, lifecycle.prime_dir)
-
-            # Upload the bundle and release it to the target channel.
-            store.upload(bundle_name, zipname)
-        release_info = store.release(
-            bundle_name, bundle_revision, [parsed_args.to_channel], []
-        )
-
-        # There should only be one revision.
-        release_info = release_info["released"][0]
-        emit.message(
-            f"Created revision {release_info['revision']!r} and "
-            f"released it to the {release_info['channel']!r} channel"
-        )
-
-
 class CloseCommand(CharmcraftCommand):
-    """Close a channel for a charm or bundle."""
+    """Close a channel for a charm."""
 
     name = "close"
-    help_msg = "Close a channel for a charm or bundle"
+    help_msg = "Close a channel for a charm"
     overview = textwrap.dedent(
         """
-        Close the specified channel for a charm or bundle.
+        Close the specified channel for a charm.
 
         The channel is made up of `track/risk/branch` with both the track and
         the branch as optional items, so formally:
@@ -1322,7 +1001,7 @@ class CloseCommand(CharmcraftCommand):
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
-        parser.add_argument("name", help="The name of charm or bundle")
+        parser.add_argument("name", help="The name of the charm")
         parser.add_argument("channel", help="The channel to close")
 
     def run(self, parsed_args):
@@ -1340,7 +1019,7 @@ class CloseCommand(CharmcraftCommand):
 
 
 class StatusCommand(CharmcraftCommand):
-    """Show channel status for a charm or bundle."""
+    """Show channel status for a charm."""
 
     name = "status"
     help_msg = "Show channel and released revisions"
@@ -1370,7 +1049,7 @@ class StatusCommand(CharmcraftCommand):
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
         super().fill_parser(parser)
-        parser.add_argument("name", help="The name of the charm or bundle")
+        parser.add_argument("name", help="The name of the charm")
 
     def _build_resources_repr(self, resources):
         """Build a representation of a list of resources."""

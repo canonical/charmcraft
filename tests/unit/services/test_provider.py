@@ -15,13 +15,8 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for the provider service."""
 
-try:
-    import fcntl
-except ModuleNotFoundError:  # Windows
-    fcntl = None
 import functools
 import pathlib
-import sys
 from collections.abc import Iterator
 from unittest import mock
 
@@ -84,7 +79,6 @@ def mock_register(monkeypatch) -> Iterator[mock.Mock]:
         bases.BaseName("almalinux", "9"),
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 def test_get_base_forwards_cache(
     monkeypatch,
     provider_service: services.ProviderService,
@@ -113,7 +107,6 @@ def test_get_base_forwards_cache(
         bases.BaseName("almalinux", "9"),
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 def test_get_base_no_cache_if_locked(
     monkeypatch,
     mock_register,
@@ -154,12 +147,10 @@ def test_get_base_no_cache_if_locked(
     )
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 def test_maybe_lock_cache_locks_single_lock(tmp_path: pathlib.Path) -> None:
     assert _maybe_lock_cache(tmp_path)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 def test_maybe_lock_cache_with_another_lock(tmp_path: pathlib.Path) -> None:
     # Need to save the open file so it's not closed when we try a second time.
     first_file_descriptor = _maybe_lock_cache(tmp_path)

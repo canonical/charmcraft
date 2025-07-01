@@ -16,7 +16,6 @@
 
 
 import json
-import sys
 import zipfile
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
@@ -38,7 +37,6 @@ def test_options_format_possible_values(config):
     assert action.choices == ["json"]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("modebits", [0o777, 0o750, 0o444])
 def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modebits):
     """Check that the expanded charm keeps original permissions."""
@@ -54,7 +52,6 @@ def test_expanded_charm_permissions(config, fake_project_dir, monkeypatch, modeb
     Analyse(config).run(args)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_corrupt_charm(new_path, config):
     """There was a problem opening the indicated charm."""
     charm_file = new_path / "foobar.charm"

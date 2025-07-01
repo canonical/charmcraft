@@ -76,7 +76,8 @@ To view the Pebble logs for a deployed web app, run:
 
         .. code-block:: bash
 
-            juju ssh --container app <spring-boot-app-name>/0 pebble logs
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
 .. seealso::
 
@@ -118,7 +119,8 @@ To view more details about the web app itself, run:
 
         .. code-block:: bash
 
-            juju ssh --container app <spring-boot-app-name>/0 pebble plan
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
@@ -169,8 +171,9 @@ Juju container:
 
         .. code-block:: bash
 
-            juju ssh --container app <spring-boot-app-name>/0 \
-              pebble exec --context=spring-boot -- bash
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
+	      /charm/bin/pebble  exec --context=spring-boot -- bash
 
 .. important::
 

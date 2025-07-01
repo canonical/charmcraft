@@ -12,17 +12,26 @@ configuration file.
 
 Charmcraft creates this file and defines the following tox environments:
 
-- ``format`` - Apply coding style standards
-- ``lint`` - Check code against coding style standards
-- ``static`` - Run static type checks
-- ``unit`` - Run the charm's unit tests
-- ``integration`` - Run the charm's integration tests
++-------------+-------------------------------------------+
+| Environment | Description                               |
++=============+===========================================+
+| format      | Apply coding style standards              |
++-------------+-------------------------------------------+
+| lint        | Check code against coding style standards |
++-------------+-------------------------------------------+
+| static      | Run static type checks                    |
++-------------+-------------------------------------------+
+| unit        | Run the charm's unit tests                |
++-------------+-------------------------------------------+
+| integration | Run the charm's integration tests         |
++-------------+-------------------------------------------+
 
-To run an environment, use ``tox -e <env-name>``.
+To run the commands in an environment, use ``tox -e <env-name>``.
 
 For the Kubernetes and machine profiles, ``tox.ini`` requires the
-`tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin, so you should use
-`uv <https://docs.astral.sh/uv/>`_ to install tox:
+`tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin. First make sure that
+`uv <https://docs.astral.sh/uv/>`_ is installed on the current host. Then use uv to
+install tox and tox-uv:
 
 .. code-block:: bash
 

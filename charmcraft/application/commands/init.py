@@ -75,7 +75,7 @@ Available profiles are:
         A basic Kubernetes charm for a 12-factor Spring Boot app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
-files and directories:
+files and directories::
 
     .
     ├── charmcraft.yaml            - Charm build configuration

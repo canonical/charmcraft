@@ -54,7 +54,6 @@ as below, this will generate a ``APP_TOKEN`` environment variable, and a user of
 charm can set it by running ``juju config <application> token=<token>``.
 
 .. code-block:: yaml
-
     :caption: charmcraft.yaml
 
     config:

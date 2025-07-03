@@ -80,9 +80,11 @@ files and directories::
     │                                your charm
     ├── LICENSE                    - Your charm license, we recommend Apache 2
     ├── pyproject.toml             - Configuration for testing, formatting and
-    │                                linting tools
+    │                                linting tools. Specifies Python dependencies for
+    │                                your charm if profile is 'kubernetes' or 'machine'
     ├── README.md                  - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt           - PyPI dependencies for your charm, with `ops`
+    ├── requirements.txt           - Python dependencies for your charm, with Ops,
+    │                                created for 12-factor app profiles only
     ├── src
     │   ├── charm.py               - Python code that operates your charm's workload
     │   └── <workload>.py          - Standalone module for workload-specific logic,
@@ -92,7 +94,9 @@ files and directories::
     │   │   └── test_charm.py      - Integration tests
     │   └── unit
     │       └── test_charm.py      - Unit tests
-    └── tox.ini                    - Configuration for tox, the tool to run all tests
+    ├── tox.ini                    - Configuration for tox, the tool to run all tests
+    ├── uv.lock                    - Specifies exact versions of Python dependencies,
+    │                                created if profile is 'kubernetes' or 'machine'
 
 You will need to edit at least charmcraft.yaml and README.md.
 

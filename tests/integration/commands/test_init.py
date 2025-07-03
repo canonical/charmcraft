@@ -45,7 +45,6 @@ BASIC_INIT_FILES = frozenset(
         "LICENSE",
         "pyproject.toml",
         "README.md",
-        "requirements.txt",
         "src",
         "src/charm.py",
         "tests",
@@ -54,6 +53,7 @@ BASIC_INIT_FILES = frozenset(
         "tests/unit",
         "tests/unit/test_charm.py",
         "tox.ini",
+        "uv.lock",
     )
 )
 UNKNOWN_AUTHOR_REGEX = re.compile(

@@ -5,9 +5,43 @@ on:
     branches:
       - main
       - "feature/**"
+      - "hotfix/**"
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/tests.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/spread/**
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
+      - spread.yaml
 
   pull_request:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/tests.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/spread/**
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
+      - spread.yaml
   merge_group:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/tests.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/spread/**
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
+      - spread.yaml
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

@@ -54,6 +54,12 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container django-app <django-app-name>/0 pebble logs
 
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            juju ssh --container app <express-app-name>/0 pebble logs
+
     .. group-tab:: FastAPI
 
         .. code-block:: bash
@@ -72,6 +78,7 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
+
 .. seealso::
 
    `Pebble CLI commands | logs
@@ -89,6 +96,12 @@ To view more details about the web app itself, run:
         .. code-block:: bash
 
             juju ssh --container django-app <django-app-name>/0 pebble plan
+
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            juju ssh --container app <express-app-name>/0 pebble plan
 
     .. group-tab:: FastAPI
 
@@ -132,6 +145,13 @@ Juju container:
             juju ssh --container django-app <django-app-name>/0 \
               pebble exec --context=django -- bash
 
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            juju ssh --container app <express-app-name>/0 \
+              pebble exec --context=expressjs -- bash
+
     .. group-tab:: FastAPI
 
         .. code-block:: bash
@@ -152,6 +172,7 @@ Juju container:
 
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
+
 
 .. important::
 
@@ -202,6 +223,12 @@ name of the web app with the ``-c`` option.
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
     .. group-tab:: FastAPI
 

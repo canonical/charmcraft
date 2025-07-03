@@ -40,6 +40,7 @@ PROFILES = {
     "django-framework": "init-django-framework",
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
+    "expressjs-framework": "init-expressjs-framework",
 }
 DEFAULT_PROFILE = "kubernetes"
 

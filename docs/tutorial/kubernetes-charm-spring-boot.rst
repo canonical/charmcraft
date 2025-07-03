@@ -79,7 +79,7 @@ Install ``devpack-for-spring`` and Java.
     :end-before: [docs:install-devpack-for-spring-end]
     :dedent: 2
 
-Create the Demo Spring Boot application that will be used for
+Create the demo Spring Boot app that will be used for
 this tutorial.
 
 .. literalinclude:: code/spring-boot/task.yaml
@@ -88,7 +88,7 @@ this tutorial.
     :end-before: [docs:init-spring-boot-end]
     :dedent: 2
 
-Create a new Java file with
+Create a new "Hello world" file with
 ``nano ~/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java``.
 Then, copy the following text into it, and save:
 
@@ -108,20 +108,22 @@ First, we need to build the Spring Boot app so it can run:
     :end-before: [docs:spring-boot-build-end]
     :dedent: 2
 
-A jar called ``demo-0.0.1.jar`` is created in the ``target``
+A jar called ``demo-0.0.1.jar`` is created in the
+``~/spring-boot-hello-world/target``
 directory. This jar is only needed for local testing, as
-Rockcraft will package the Spring Boot application when we pack the rock.
+Rockcraft will package the Spring Boot app when we pack the rock.
 
-Let's run the Spring Boot application to verify that it works:
+Let's run the Spring Boot app to verify that it works:
 
 .. code:: bash
 
   java -jar target/demo-0.0.1.jar
 
-The application starts an HTTP server listening on port 8080
+The app starts an HTTP server listening on port 8080
 that we can test by using ``curl`` to send a request to the root
-endpoint. We may need a new terminal for this -- if using Multipass, run
-``multipass shell charm-dev`` to get another terminal:
+endpoint. You will need a new terminal for this -- use
+``multipass shell charm-dev`` to open a new terminal
+in Multipass:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -129,9 +131,9 @@ endpoint. We may need a new terminal for this -- if using Multipass, run
     :end-before: [docs:curl-spring-boot-end]
     :dedent: 2
 
-The Spring Boot application should respond with ``Hello, world!``
+The Spring Boot app should respond with ``Hello, world!``
 
-The Spring Boot application looks good, so let's stop it for now
+The Spring Boot app looks good, so let's stop it for now
 with :kbd:`Ctrl` + :kbd:`C` and close the second terminal.
 
 
@@ -615,7 +617,7 @@ Create the class ``VisitorRepository`` in a new file
               VisitorRepository.java
     :language: java
 
-Create the class ``VisitorService`` in a new file
+Finally, create the class ``VisitorService`` in a new file
 ``VisitorService.java`` with the following content:
 
 .. literalinclude:: code/spring-boot/VisitorService.java.visitors.txt

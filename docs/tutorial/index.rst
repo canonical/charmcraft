@@ -24,6 +24,7 @@ with one of these workflows, start with its tutorial:
     :hidden:
 
     kubernetes-charm-django
+    kubernetes-charm-express
     kubernetes-charm-fastapi
     kubernetes-charm-flask
     kubernetes-charm-go

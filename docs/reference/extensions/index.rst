@@ -15,6 +15,7 @@ An extension is usually associated with a particular :ref:`profile <profile>`.
     :maxdepth: 2
 
     django-framework-extension
+    express-framework-extension
     fastapi-framework-extension
     flask-framework-extension
     go-framework-extension

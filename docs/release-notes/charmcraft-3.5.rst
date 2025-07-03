@@ -152,6 +152,11 @@ The following bugs have been resolved in Charmcraft 3.5.1:
 - `#2323 <https://github.com/canonical/charmcraft/issues/2323>`_ Documentation is
   missing a sitemap.
 
+The following bugs have been resolved in Charmcraft 3.5.2:
+
+- `#2077 <https://github.com/canonical/charmcraft/issues/2077>`_ Internal error when
+  uploading OCI image resources.
+
 Contributors
 ------------
 

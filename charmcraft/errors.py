@@ -138,20 +138,31 @@ class ExtensionError(CraftError):
     """Error related to extension handling."""
 
 
-class SubprocessError(CraftError):
-    """A craft-cli friendly subprocess error."""
+class SkopeoError(CraftError):
+    """Errors from when we call the skopeo executable."""
 
     @classmethod
     def from_subprocess(cls, error: subprocess.CalledProcessError) -> Self:
-        """Convert a CalledProcessError to a craft-cli error."""
-        error_details = f"Full command: {shlex.join(error.cmd)}\nError text:\n"
+        """Convert a CalledProcessError into a Skopeo error."""
         if isinstance(error.stderr, str):
-            error_details += textwrap.indent(error.stderr, "  ")
+            stderr = error.stderr
         else:
-            stderr = cast(io.TextIOBase, error.stderr)
-            stderr.seek(io.SEEK_SET)
-            error_details += textwrap.indent(stderr.read(), "  ")
-        return cls(
-            f"Error while running {error.cmd[0]} (return code {error.returncode})",
-            details=error_details,
-        )
+            stderr_stream = cast(io.TextIOBase, error.stderr)
+            stderr_stream.seek(io.SEEK_SET)
+            stderr = stderr_stream.read()
+        # Example stderr string:
+        # time="2025-06-25T19:14:57-04:00" level=fatal msg="Error parsing image name \"docker://ghcr.io/canonical/spark-integration-hub:3.4-22.04_edge@sha256:0b9a40435440256b1c10020bd59d19e186ea68d8973fc8f2310010f9bd4e3459\": Docker references with both a tag and digest are currently not supported"
+        # This lexes it and splits it into key/value pairs.
+        error_parts = {
+            key: value
+            for key, _, value in (token.partition("=") for token in shlex.split(stderr))
+        }
+        if "msg" in error_parts:
+            return cls(error_parts["msg"])
+        else:
+            return cls(
+                "Unknown error from skopeo.",
+                details=f"Error from skopeo. Return code {error.returncode}\nError text:\n"
+                + textwrap.indent(error.stderr, "  "),
+                resolution="Report a bug at https://github.com/canonical/charmcraft/issues",
+            )

@@ -19,3 +19,6 @@
 "reference/files/bundle-yaml-file.rst" "index.rst"
 "reference/commands/promote-bundle.rst" "index.rst"
 "reference/commands/register-bundle.rst" "index.rst"
+
+# requirements-dev.txt removal (docs only)
+"reference/files/requirements-dev-txt-file.rst" "reference/files/requirements-txt-file.rst"

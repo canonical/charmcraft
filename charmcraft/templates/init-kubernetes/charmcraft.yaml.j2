@@ -20,11 +20,12 @@ platforms:
   amd64:
   arm64:
 
-
 parts:
   charm:
-    plugin: charm
+    plugin: uv
     source: .
+    build-snaps:
+      - astral-uv
 
 # (Optional) Configuration options for the charm
 # This config section defines charm config options, and populates the Configure
@@ -32,7 +33,7 @@ parts:
 # More information on this section at:
 # https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#config
 # General configuration documentation:
-# https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/configuration/#application-configuration
+# https://documentation.ubuntu.com/juju/3.6/reference/configuration/#application-configuration
 config:
   options:
     # An example config option to customise the log level of the workload
@@ -44,13 +45,11 @@ config:
       default: "info"
       type: string
 
-
-# Your workload’s containers.
+# Your workload's containers.
 # https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#containers
 containers:
   some-container:
     resource: some-container-image
-
 
 # This field populates the Resources tab on Charmhub.
 # https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/#resources

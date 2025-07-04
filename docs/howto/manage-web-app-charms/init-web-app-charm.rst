@@ -27,23 +27,29 @@ and description are correct.
 
 .. tabs::
 
-    .. group-tab:: Flask
-
-        .. code-block:: bash
-
-            charmcraft init --profile flask-framework
-
     .. group-tab:: Django
 
         .. code-block:: bash
 
             charmcraft init --profile django-framework
 
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            charmcraft init --profile expressjs-framework
+
     .. group-tab:: FastAPI
 
         .. code-block:: bash
 
             charmcraft init --profile fastapi-framework
+
+    .. group-tab:: Flask
+
+        .. code-block:: bash
+
+            charmcraft init --profile flask-framework
 
     .. group-tab:: Go
 

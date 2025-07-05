@@ -168,6 +168,7 @@ class Client(craft_store.StoreClient):
             user_agent=user_agent,
             environment_auth=environment_auth,
             ephemeral=ephemeral,
+            file_fallback=True,
         )
 
     def login(self, *args, **kwargs):

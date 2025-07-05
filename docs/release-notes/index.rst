@@ -11,6 +11,11 @@ release and support policies for Charmcraft.
 Current releases
 ----------------
 
+Charmcraft 4
+~~~~~~~~~~~~
+
+- :doc:`Charmcraft 4.0 <charmcraft-4.0>`
+
 
 Charmcraft 3
 ~~~~~~~~~~~~

@@ -14,15 +14,57 @@ the 12-factor app charm workflow.
 Initialization
 --------------
 
-You need both a rock and a charm to have a deployable 12-factor app in Juju.
+.. _init-12-factor-charms:
 
-The charm initialization step uses the ``--profile`` flag to cater the initial
-charm files for your specific framework.
+You will need a rock for your 12-factor app charm.
+:external+rockcraft:ref:`Prepare a 12-factor app rock <set-up-web-app-rock>`
+with Rockcraft.
 
-.. toctree::
-   :maxdepth: 2
+Once you have a rock, use ``charmcraft init`` and specify the relevant profile:
 
-   Initialize your 12-factor app charm <init-web-app-charm>
+.. code-block:: bash
+
+  charmcraft init --profile <profile>
+
+Charmcraft automatically creates a ``charmcraft.yaml`` project file, a
+``requirements.txt`` file and source code for the charm in your current directory. You
+will need to check the project file and ``README.md`` to verify that the charm's name
+and description are correct.
+
+    See also: :ref:`ref_commands_init`
+
+.. tabs::
+
+    .. group-tab:: Django
+
+        .. code-block:: bash
+
+            charmcraft init --profile django-framework
+
+    .. group-tab:: Express
+
+        .. code-block:: bash
+
+            charmcraft init --profile expressjs-framework
+
+    .. group-tab:: FastAPI
+
+        .. code-block:: bash
+
+            charmcraft init --profile fastapi-framework
+
+    .. group-tab:: Flask
+
+        .. code-block:: bash
+
+            charmcraft init --profile flask-framework
+
+    .. group-tab:: Go
+
+        .. code-block:: bash
+
+            charmcraft init --profile go-framework
+
 
 Configuration
 -------------

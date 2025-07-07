@@ -520,6 +520,7 @@ the Spring Boot app. Add the following to the end of the
 ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/spring-boot/greeting_charmcraft.yaml
+    :caption: ~/spring-boot-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -688,6 +689,7 @@ The Spring Boot app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/spring-boot/visitors_charmcraft.yaml
+    :caption: ~/spring-boot-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Spring Boot app:

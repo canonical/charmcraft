@@ -79,14 +79,13 @@ Install ``devpack-for-spring`` and Java.
     :end-before: [docs:install-devpack-for-spring-end]
     :dedent: 2
 
+Create the demo Spring Boot app that will be used for
+this tutorial.
+
 .. seealso::
 
     For more information about the options: `Spring Boot CLI | Using the CLI
     <https://docs.spring.io/spring-boot/cli/using-the-cli.html>`_
-
-
-Create the demo Spring Boot app that will be used for
-this tutorial.
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash

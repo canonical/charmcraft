@@ -449,8 +449,15 @@ to send a request via the ingress. It should return the
     setting a DNS record.
 
 
+The development cycle
+---------------------
+
+So far, we have worked though the entire cycle, from creating an app to deploying it.
+But now – as in every real-world case – we will go through the experience of iterating to
+develop the app, and deploy each iteration.
+
 Configure the Spring Boot app
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the Spring Boot app,
 we will make the greeting configurable. We will expect this
@@ -463,6 +470,9 @@ keyword ``GREETING``. Change back to the ``~/spring-boot-hello-world`` directory
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               HelloController.java
     :language: java
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -498,6 +508,9 @@ Let's pack and upload the rock:
     :start-after: [docs:skopeo-update]
     :end-before: [docs:skopeo-update-end]
     :dedent: 2
+
+Update the charm
+~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -626,6 +639,9 @@ Finally, create the class ``VisitorService`` in a new file
     :language: java
 
 
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -661,6 +677,9 @@ Let's pack and upload the rock:
     :start-after: [docs:skopeo-2nd-update]
     :end-before: [docs:skopeo-2nd-update-end]
     :dedent: 2
+
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 

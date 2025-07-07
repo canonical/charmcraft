@@ -453,11 +453,7 @@ class SpringBootFramework(_AppBase):
 
     framework = "spring-boot"
     options = {
-        "app-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Default port where the application will listen on.",
-        },
+        **APP_PORT_OPTION,
         "metrics-port": {
             "type": "int",
             "default": 8080,
@@ -468,18 +464,7 @@ class SpringBootFramework(_AppBase):
             "default": "/actuator/prometheus",
             "description": "Path where the prometheus metrics will be scraped.",
         },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: "
-            "`juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key spring-boot-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **SECRET_OPTIONS,
     }
 
     @staticmethod

@@ -48,6 +48,7 @@ from charmcraft.models.charmcraft import (
     Charmhub,
     Links,
 )
+from charmcraft.models.platform import CharmPlatform
 from charmcraft.parts import process_part_config
 
 CharmcraftSummaryStr = Annotated[
@@ -74,7 +75,7 @@ def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
     return "_".join(base_strings)
 
 
-CharmPlatform = Annotated[str, pydantic.StringConstraints(min_length=4, strict=True)]
+# CharmPlatform = Annotated[str, pydantic.StringConstraints(min_length=4, strict=True)]
 
 
 class CharmLib(models.CraftBaseModel):
@@ -447,6 +448,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 docs_url="https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/charmcraft-yaml-file",
             )
         raise ValueError(f"field type cannot be {project_type!r}")
+
+    @classmethod
+    @override
+    def from_yaml_data(cls, data: dict[str, Any], filepath: pathlib.Path) -> Self:
+        return cls.unmarshal(data)
 
     @classmethod
     def from_yaml_file(cls, path: pathlib.Path) -> Self:
@@ -1049,7 +1055,7 @@ class PlatformCharm(CharmProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
+    platforms: dict[str, CharmPlatform | None]  # type: ignore[assignment]
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         description=textwrap.dedent(

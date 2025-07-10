@@ -20,6 +20,7 @@ import pathlib
 import zipfile
 from typing import Any
 
+import craft_application
 import craft_cli.pytest_plugin
 import pytest
 import pytest_check
@@ -47,24 +48,22 @@ MANIFEST_WITH_ATTRIBUTE = models.Manifest.model_validate(
 
 
 @pytest.fixture
-def package_service(fake_path, simple_charm, service_factory, default_build_plan):
+def package_service(
+    fake_path, simple_charm, service_factory: craft_application.ServiceFactory
+):
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)
 
-    service_factory.update_kwargs(
-        "lifecycle",
-        work_dir=fake_path,
-        cache_dir=fake_path / "cache",
-        build_plan=[],  # Only okay now because we're not asking the lifecycle service to use the plan.
-    )
+    # service_factory.update_kwargs(
+    #     "lifecycle",
+    #     work_dir=fake_path,
+    #     cache_dir=fake_path / "cache",
+    # )
 
     return PackageService(
         app=APP_METADATA,
-        project=simple_charm,
         # The package service doesn't call other services
         services=service_factory,
-        project_dir=fake_project_dir,
-        build_plan=default_build_plan,
     )
 
 

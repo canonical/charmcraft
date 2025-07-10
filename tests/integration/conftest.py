@@ -59,17 +59,24 @@ def charm_project(
 
 @pytest.fixture
 def service_factory(
-    new_path: pathlib.Path, charm_project, default_build_plan, project_path
+    new_path: pathlib.Path,
+    # charm_project,
+    default_build_plan,
+    project_path,
 ):
     services.register_services()
     factory = craft_application.ServiceFactory(app=application.APP_METADATA)
     factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # pyright: ignore[reportAttributeAccessIssue]
-    factory.project = charm_project
+    # factory.project = charm_project
     factory.update_kwargs(
         "lifecycle",
         work_dir=new_path,
         build_plan=default_build_plan,
         cache_dir="~/.cache",
+    )
+    factory.update_kwargs(
+        "project",
+        project_dir=project_path,
     )
     return factory
 

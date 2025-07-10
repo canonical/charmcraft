@@ -29,6 +29,7 @@ import craft_application
 import craft_parts
 import craft_platforms
 import craft_store
+import distro
 import pytest
 import responses as responses_module
 import yaml
@@ -40,6 +41,41 @@ from charmcraft import const, env, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models import project
 from charmcraft.services.store import StoreService
+
+FAKE_BASES_CHARM_TEMPLATE = """\
+name: example-charm
+summary: An example charm with bases
+description: |
+  A description for an example charm with bases.
+type: charm
+bases:
+  - name: ubuntu
+    channel: {series}
+
+parts:
+  charm:
+    plugin: charm
+
+"""
+
+FAKE_PLATFORMS_CHARM_TEMPLATE = """\
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+type: charm
+base: {base}
+build-base: {build_base}
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+  s390x:
+
+parts:
+  charm:
+    plugin: charm
+"""
 
 
 @pytest.fixture
@@ -90,6 +126,29 @@ def mock_store_client():
     return client
 
 
+@pytest.fixture(scope="session", params=["bases", "platforms"])
+def fake_project_yaml(request) -> str:
+    current_base = craft_platforms.DistroBase.from_linux_distribution(
+        distro.LinuxDistribution(
+            include_lsb=True, include_uname=False, include_oslevel=False
+        )
+    )
+    if request.param == "bases":
+        return FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{current_base.series}'")
+    return FAKE_PLATFORMS_CHARM_TEMPLATE.format(
+        base=f"{current_base.distribution}@{current_base.series}",
+        build_base="ubuntu@devel",
+    )
+
+
+@pytest.fixture
+def fake_project_file(project_path, fake_project_yaml):
+    project_file = project_path / "charmcraft.yaml"
+    project_file.write_text(fake_project_yaml)
+
+    return project_file
+
+
 @pytest.fixture
 def mock_store_anonymous_client() -> mock.Mock:
     return mock.Mock(spec_set=store.AnonymousClient)
@@ -102,35 +161,44 @@ def mock_publisher_gateway() -> mock.Mock:
 
 @pytest.fixture
 def service_factory(
+    fake_project_yaml,  # Needs the real filesystem.
     fs,
-    fake_project_dir,
+    fake_project_file,
     fake_prime_dir,
     simple_charm,
     mock_store_client,
     mock_store_anonymous_client,
     mock_publisher_gateway,
     default_build_plan,
+    project_path,
 ) -> craft_application.ServiceFactory:
     services.register_services()
     factory = craft_application.ServiceFactory(app=APP_METADATA)
 
     factory.update_kwargs(
         "package",
-        project_dir=fake_project_dir,
+        project_dir=project_path,
         build_plan=default_build_plan,
     )
     factory.update_kwargs(
+        "project",
+        project_dir=project_path,
+    )
+    factory.update_kwargs(
         "lifecycle",
-        work_dir=pathlib.Path("/project"),
+        work_dir=project_path,
         cache_dir=pathlib.Path("/cache"),
         build_plan=default_build_plan,
     )
     factory.update_kwargs(
         "charm_libs",
-        project_dir=fake_project_dir,
+        project_dir=project_path,
     )
 
-    factory.project = simple_charm
+    factory.get("project").configure(
+        platform=None,
+        build_for=None,
+    )
 
     store_svc = cast(StoreService, factory.get("store"))
     store_svc.client = mock_store_client

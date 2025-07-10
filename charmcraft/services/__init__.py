@@ -50,6 +50,9 @@ def register_services():
         module="charmcraft.services.package",
     )
     ServiceFactory.register(
+        "project", "ProjectService", module="charmcraft.services.project"
+    )
+    ServiceFactory.register(
         "provider",
         "ProviderService",
         module="charmcraft.services.provider",

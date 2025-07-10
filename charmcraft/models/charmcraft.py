@@ -16,6 +16,7 @@
 
 """Charmcraft configuration pydantic model."""
 
+from collections.abc import Sequence
 from typing import TypedDict, cast
 
 import pydantic
@@ -70,6 +71,12 @@ class Base(CraftBaseModel):
         """
         name, _, channel = base_str.partition("@")
         return cls(name=name, channel=channel, architectures=architectures)
+
+    def to_strings(self) -> Sequence[str]:
+        return [f"{self.name}@{self.channel}:{arch}" for arch in self.architectures]
+
+    def to_os_string(self) -> str:
+        return f"{self.name}@{self.channel}"
 
 
 class BasesConfiguration(CraftBaseModel):

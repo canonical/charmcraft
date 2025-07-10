@@ -27,7 +27,7 @@ HOST_ARCH = util.get_host_architecture()
 
 @pytest.fixture
 def service(service_factory) -> LifecycleService:
-    return service_factory.lifecycle
+    return service_factory.get("lifecycle")
 
 
 @pytest.mark.parametrize(

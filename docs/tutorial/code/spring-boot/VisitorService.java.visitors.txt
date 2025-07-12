@@ -1,0 +1,27 @@
+package com.example.demo;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class VisitorService {
+    private final VisitorRepository visitorRepository;
+
+    public VisitorService( VisitorRepository visitorRepository) {
+        this.visitorRepository = visitorRepository;
+    }
+
+    public Visitor createVisitor(String userAgent) {
+    	Visitor visitor = new Visitor();
+    	visitor.setUserAgent(userAgent);
+    	visitorRepository.save(visitor);
+        return visitor;
+    }
+    
+    public Long countVisitors() {
+        return visitorRepository.count();
+    }
+
+}
+

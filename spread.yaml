@@ -55,6 +55,8 @@ backends:
 
   multipass:
     type: adhoc
+    environment:
+      CONTAINER_REGISTRY_URL: "$(HOST: echo $CONTAINER_REGISTRY_URL)"
     allocate: |
       sleep 0.$RANDOM  # Minimize chances of a race condition
       mkdir -p $HOME/.spread
@@ -168,9 +170,11 @@ suites:
       refresh_or_install_snap microk8s "$microk8s_channel"
       refresh_or_install_snap rockcraft latest/edge --classic
 
+      printenv
       if [[ -v CONTAINER_REGISTRY_URL ]]; then
+        CONTAINER_REGISTRY_HOSTPORT=$(echo "$CONTAINER_REGISTRY_URL" | awk -F/ '{print $3}')
         echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-        echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo "[host.\"$CONTAINER_REGISTRY_HOSTPORT\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         microk8s stop
         microk8s start
@@ -188,6 +192,7 @@ suites:
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc
     debug-each: |
+      microk8s kubectl get all -A
       juju status
       juju debug-log --no-tail --limit 1000
     restore: |

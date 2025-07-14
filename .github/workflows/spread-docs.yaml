@@ -96,9 +96,9 @@ jobs:
         run: |
           $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
-      # - name: Setup tmate session
-      #   if: ${{ failure() }}
-      #   uses: canonical/action-tmate@main
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: canonical/action-tmate@main
 
       - name: Discard spread workers
         if: always()

@@ -81,6 +81,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -164,6 +165,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -237,6 +239,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -310,6 +313,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -383,6 +387,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -551,4 +556,83 @@ def test_handle_charm_part(flask_input_yaml, tmp_path):
         "source": ".",
         "build-snaps": ["rustup"],
         "override-build": "rustup default stable\ncraftctl default",
+    }
+
+@pytest.mark.parametrize(
+    ("requires", "expected_dymamic_options"),
+    [
+        pytest.param(
+            {"oidc-foobar": {"interface": "oauth"}},
+            {
+                "oidc-foobar-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "oidc-foobar-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+                "oidc-foobar-user-name-attribute": {
+                    "type": "string",
+                    "description": "The name of the attribute returned in the UserInfo Response "
+                    "that references the Name or Identifier of the end-user.",
+                    "default": "sub",
+                },
+            },
+            id="one-oauth-relation"
+        ),
+        pytest.param(
+            {
+                "oidc-foobar": {"interface": "oauth"},
+                "other-oidc": {"interface": "oauth"}
+            },
+            {
+                "oidc-foobar-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "oidc-foobar-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+                "oidc-foobar-user-name-attribute": {
+                    "type": "string",
+                    "description": "The name of the attribute returned in the UserInfo Response "
+                    "that references the Name or Identifier of the end-user.",
+                    "default": "sub",
+                },
+                "other-oidc-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "other-oidc-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+                "other-oidc-user-name-attribute": {
+                    "type": "string",
+                    "description": "The name of the attribute returned in the UserInfo Response "
+                    "that references the Name or Identifier of the end-user.",
+                    "default": "sub",
+                },
+            },
+            id="two-oauth-relations"
+        ),
+    ]
+)
+def test_oauth_relation(flask_input_yaml, tmp_path, requires, expected_dymamic_options):
+    flask_input_yaml["requires"] = requires
+    applied = apply_extensions(tmp_path, flask_input_yaml)
+    assert applied["config"] == {
+        "options": {
+            **FlaskFramework.options,
+            **NON_OPTIONAL_OPTIONS["options"],
+            **expected_dymamic_options
+        }
     }

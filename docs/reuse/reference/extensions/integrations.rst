@@ -130,6 +130,20 @@ the following charms:
               optional: True
               limit: 1
 
+  * - `OpenID Connect <https://charmhub.io/hydra>`__ charm
+    - Several OpenId Connect endpoints can coexists, each one
+      using the ``oauth`` interface name. The endpoint name
+      will be used to create the configuration options related
+      to this endpoint.
+
+      .. code-block:: yaml
+
+          requires:
+            oauth-endpoint-name:
+              interface: oauth
+              optional: True
+              limit: 1
+
 
 .. note::
 
@@ -265,4 +279,13 @@ Ingress relation.
         - ``FGA_TOKEN``
         - ``FGA_GRPC_API_URL``
         - ``FGA_HTTP_API_URL``
-
+  * - OpenID Connect
+    - TODO MISSING THINGS AND FRAMEWORK SPECIFIC...
+        - ``{endpoint_name}_CLIENT_ID``
+	- ``{endpoint_name}_CLIENT_SECRET``
+	- ``{endpoint_name}_ACCESS_TOKEN_URL``
+	- ``{endpoint_name}_AUTHORIZE_URL``
+	- ``{endpoint_name}_USERINFO_URL``
+	- ``{endpoint_name}_JWKS_URL``
+	- ``{endpoint_name}_API_BASE_URL``
+	- ``{endpoint_name}_CLIENT_KWARGS``

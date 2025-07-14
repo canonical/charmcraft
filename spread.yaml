@@ -173,11 +173,12 @@ suites:
         echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo "[host.\"$CONTAINER_REGISTRY_HOSTPORT\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         microk8s stop
         microk8s start
       fi
 
-      microk8s status --wait-ready --timeout 360
+      microk8s status --wait-ready --timeout 600
       microk8s enable hostpath-storage
       microk8s enable registry
       microk8s enable ingress

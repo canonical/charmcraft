@@ -69,6 +69,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |framework| replace:: ExpressJS
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy

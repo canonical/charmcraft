@@ -68,6 +68,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |framework| replace:: Spring Boot
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables_spring_boot.rst
 
 
 HTTP Proxy

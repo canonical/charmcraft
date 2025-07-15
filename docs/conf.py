@@ -151,6 +151,7 @@ exclude_patterns = [
     # Extra non-craft-parts exclusions can be added after this comment
     "reuse/reference/extensions/integrations.rst",
     "reuse/reference/extensions/environment_variables.rst",
+    "reuse/reference/extensions/environment_variables_spring_boot.rst",
     "reuse/tutorial/*"
 ]
 

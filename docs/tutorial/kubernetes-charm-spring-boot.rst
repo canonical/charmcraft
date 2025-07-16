@@ -113,12 +113,12 @@ First, we need to build the Spring Boot app so it can run:
     :end-before: [docs:spring-boot-build-end]
     :dedent: 2
 
-A jar called ``demo-0.0.1.jar`` is created in the
-``~/spring-boot-hello-world/target``
-directory. This jar is only needed for local testing, as
-Rockcraft will package the Spring Boot app when we pack the rock.
+The app compiles to a JAR called ``demo-0.0.1.jar`` in
+``~/spring-boot-hello-world/target/``. We'll only use this JAR for
+local testing, as Rockcraft will package the Spring Boot app when
+we pack the rock later.
 
-Let's run the Spring Boot app to verify that it works:
+Let's run the app to verify that it works:
 
 .. code:: bash
 
@@ -612,8 +612,8 @@ Replace the code into
 
 
 Now we'll create some new classes in the ``src/main/java/com/example/demo/`` directory.
-Create the class ``ApplicationConfig`` in a new file
-``ApplicationConfig.java`` with the following content:
+Create the class ``ApplicationConfig`` in a new
+``ApplicationConfig.java`` file with the following content:
 
 .. literalinclude:: code/spring-boot/ApplicationConfig.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\

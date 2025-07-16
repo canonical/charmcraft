@@ -604,44 +604,49 @@ under the ``dependencies`` tag:
 Replace the contents of ``src/main/java/com/example/demo/HelloController.java``
 with the following:
 
-.. literalinclude:: code/spring-boot/HelloController.java.visitors.txt
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+.. dropdown:: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               HelloController.java
-    :language: java
+
+    .. literalinclude:: code/spring-boot/HelloController.java.visitors.txt
+        :language: java
 
 
 Now we'll create some new classes in the ``src/main/java/com/example/demo/`` directory.
 Create the class ``ApplicationConfig`` in a new
 ``ApplicationConfig.java`` file with the following content:
 
-.. literalinclude:: code/spring-boot/ApplicationConfig.java.visitors.txt
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+.. dropdown:: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               ApplicationConfig.java
-    :language: java
+
+    .. literalinclude:: code/spring-boot/ApplicationConfig.java.visitors.txt
+        :language: java
 
 Create the class ``Visitor`` in a new
 ``Visitor.java`` file with the following content:
 
-.. literalinclude:: code/spring-boot/Visitor.java.visitors.txt
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+.. dropdown:: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               Visitor.java
-    :language: java
+
+    .. literalinclude:: code/spring-boot/Visitor.java.visitors.txt
+        :language: java
 
 Create the class ``VisitorRepository`` in a new
 ``VisitorRepository.java`` file with the following content:
 
-.. literalinclude:: code/spring-boot/VisitorRepository.java.visitors.txt
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+.. dropdown:: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               VisitorRepository.java
-    :language: java
+
+    .. literalinclude:: code/spring-boot/VisitorRepository.java.visitors.txt
+        :language: java
 
 Finally, create the class ``VisitorService`` in a new
 ``VisitorService.java`` file with the following content:
 
-.. literalinclude:: code/spring-boot/VisitorService.java.visitors.txt
-    :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
+.. dropdown:: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               VisitorService.java
-    :language: java
+
+    .. literalinclude:: code/spring-boot/VisitorService.java.visitors.txt
+        :language: java
 
 
 Update the rock again

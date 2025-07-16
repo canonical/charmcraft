@@ -592,10 +592,9 @@ file:
 
     spring.jpa.generate-ddl=true
 
-
-To connect the Spring Boot app to PostgreSQL, we will need
-Spring Data JPA, the ``postgresl`` driver. We will also need the ``h2`` driver
-for the tests to pass. Add the following snippet in the ``pom.xml``
+To connect the Spring Boot app to PostgreSQL, we need
+Spring Data JPA and the ``postgresl`` driver. We also need the ``h2`` driver
+for the tests to pass. Add the following snippet to the app's ``pom.xml``,
 under the ``dependencies`` tag:
 
 .. literalinclude:: code/spring-boot/pom.xml.visitors.dependencies.txt

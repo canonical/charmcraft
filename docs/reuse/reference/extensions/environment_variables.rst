@@ -5,7 +5,7 @@ Environment variables
 Each relation adds its own environment variables to your |framework| app. Some
 are required, meaning they must be set for the relation to function.
 
-The environment variable |base_url| provides the Ingress URL
+The environment variable |base_url| provides the ingress URL
 for an Ingress relation or the Kubernetes service URL if there is no
 Ingress relation.
 

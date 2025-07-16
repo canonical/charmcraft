@@ -60,14 +60,18 @@ def charm_project(
 @pytest.fixture
 def service_factory(
     new_path: pathlib.Path,
-    # charm_project,
+    fake_project_file,
     default_build_plan,
     project_path,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     services.register_services()
     factory = craft_application.ServiceFactory(app=application.APP_METADATA)
     factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # pyright: ignore[reportAttributeAccessIssue]
-    # factory.project = charm_project
+    factory.update_kwargs(
+        "charm_libs",
+        project_dir=project_path,
+    )
     factory.update_kwargs(
         "lifecycle",
         work_dir=new_path,
@@ -77,6 +81,18 @@ def service_factory(
     factory.update_kwargs(
         "project",
         project_dir=project_path,
+    )
+    factory.update_kwargs(
+        "provider",
+        work_dir=new_path,
+    )
+    factory.get("project").configure(
+        platform=None,
+        build_for=None,
+    )
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(new_path / "state"))
+    factory.get("state").set(
+        "charmcraft", "started_at", value="2020-03-14T00:00:00+00:00"
     )
     return factory
 

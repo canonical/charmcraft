@@ -16,11 +16,14 @@
 """Project service for Charmcraft."""
 
 import itertools
+import pathlib
 
 import craft_platforms
 from craft_application.services.project import ProjectService as BaseProjectService
-from typing_extensions import override
+from craft_cli import CraftError
+from typing_extensions import Any, override
 
+from charmcraft import const, extensions, preprocess
 from charmcraft.models.charmcraft import BasesConfiguration
 
 
@@ -37,6 +40,7 @@ class ProjectService(BaseProjectService):
         ]
 
         platforms = {}
+        invalid_build_bases: set[str] = set()
 
         for base in bases_config:
             platform_parts = [
@@ -54,10 +58,40 @@ class ProjectService(BaseProjectService):
                     build_for.to_strings() for build_for in base.run_on
                 )
             )
+            for build_on in base.build_on:
+                if (build_str := build_on.to_os_string()) not in const.LEGACY_BASES:
+                    invalid_build_bases.add(build_str)
 
             platforms[platform] = {
                 "build-on": build_ons,
                 "build-for": build_fors,
             }
 
+        if invalid_build_bases:
+            bases_str = ", ".join(f"'{base}'" for base in sorted(invalid_build_bases))
+            brief = f"Not valid for use with the 'bases' key: {bases_str}"
+            raise CraftError(
+                brief,
+                resolution="Use the 'platforms' keyword in order to use newer bases.",
+            )
+
         return platforms
+
+    @override
+    @staticmethod
+    def _app_preprocess_project(
+        project: dict[str, Any],
+        *,
+        build_on: str,
+        build_for: str,
+        platform: str,
+    ) -> None:
+        """Run Charmcraft-specific pre-processing on the project."""
+        # Extensions get applied on as close as possible to what the user provided.
+        project_dir = pathlib.Path.cwd()
+        extensions.apply_extensions(project_dir, project)
+        # Preprocessing "magic" to create a fully-formed charm.
+        preprocess.add_default_parts(project)
+        preprocess.add_config(project_dir, project)
+        preprocess.add_actions(project_dir, project)
+        preprocess.add_metadata(project_dir, project)

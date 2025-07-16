@@ -22,8 +22,8 @@ import sys
 
 import craft_application
 import pytest
-from craft_application.models import BuildInfo
 from craft_cli.pytest_plugin import RecordingEmitter
+from craft_platforms import BuildInfo
 
 from charmcraft.services.provider import _maybe_lock_cache
 

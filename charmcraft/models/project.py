@@ -32,6 +32,7 @@ from typing import (
 import pydantic
 import pydantic.v1
 from craft_application import errors, models
+from craft_application.models import PlatformsDict
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
 from typing_extensions import Self, override
@@ -48,7 +49,6 @@ from charmcraft.models.charmcraft import (
     Charmhub,
     Links,
 )
-from charmcraft.models.platform import CharmPlatform
 from charmcraft.parts import process_part_config
 
 CharmcraftSummaryStr = Annotated[
@@ -506,6 +506,26 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             raise ValueError("Project type must be declared in charmcraft.yaml.")
 
         return values
+
+    @pydantic.field_validator("platforms", mode="before")
+    @classmethod
+    def _preprocess_platforms(
+        cls, values: dict[str, dict[str, list[str]] | None]
+    ) -> dict[str, dict[str, list[str]]]:
+        """Expand the dictionary into the real platforms."""
+        platforms = {
+            name: value
+            if value
+            else {
+                "build-on": [name],
+                "build-for": [name],
+            }
+            for name, value in values.items()
+        }
+        for name, value in platforms.items():
+            if value.get("build-for") is None:
+                value["build-for"] = [name]
+        return platforms
 
     @pydantic.field_validator("parts", mode="before")
     @classmethod
@@ -969,18 +989,8 @@ class CharmProject(CharmcraftProject):
 
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
     """Check that the given base is a legacy base, usable with 'bases'."""
-    # This pyright ignore can go away once we're on Python minimum version 3.11.
-    # At that point we can mark items as required or not required.
-    # https://docs.python.org/3/library/typing.html#typing.Required
-    if (
-        base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-    ):
-        return True
-    return base in (
-        {"name": "centos", "channel": "7"},
-        {"name": "almalinux", "channel": "9"},
-    )
+    base_str = f"{base['name']}@{base['channel']}"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+    return base_str in const.LEGACY_BASES
 
 
 def _validate_base(
@@ -1055,7 +1065,7 @@ class PlatformCharm(CharmProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, CharmPlatform | None]  # type: ignore[assignment]
+    platforms: PlatformsDict
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         description=textwrap.dedent(

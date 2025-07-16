@@ -24,7 +24,7 @@ from typing import cast
 
 import craft_application
 
-from charmcraft import models, utils
+from charmcraft import utils
 from charmcraft.services.store import StoreService
 from charmcraft.store.models import Library
 
@@ -38,20 +38,17 @@ class CharmLibDelta:
     store_version: tuple[int, int] | None
 
 
-class CharmLibsService(craft_application.ProjectService):
+class CharmLibsService(craft_application.AppService):
     """Business logic for creating packages."""
-
-    _project: models.CharmcraftProject  # type: ignore[assignment]
 
     def __init__(
         self,
         app: craft_application.AppMetadata,
         services: craft_application.ServiceFactory,
         *,
-        project: models.CharmcraftProject,
         project_dir: pathlib.Path,
     ) -> None:
-        super().__init__(app, services, project=project)
+        super().__init__(app, services)
         self._project_dir = project_dir
 
     def is_downloaded(
@@ -115,7 +112,8 @@ class CharmLibsService(craft_application.ProjectService):
 
         Get the charmlibs owned by this charm that are newer on disk than on Charmhub.
         """
-        local_libs = utils.get_libs_from_tree(self._project.name, self._project_dir)
+        project_name = self._services.get("project").get().name
+        local_libs = utils.get_libs_from_tree(project_name, self._project_dir)
 
         store = cast(StoreService, self._services.get("store"))
         store_libs = store.get_libraries_metadata_by_id(

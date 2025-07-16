@@ -34,21 +34,21 @@ def service(service_factory):
         pytest.param({}, [], id="no-libs"),
         pytest.param(
             {
-                "lib/charms/charmcraft_test_charm/v0/test_lib.py": 'LIBID = "e000776021fd4b73ade744727654ac72"\nLIBAPI = 0\nLIBPATCH = 1'
+                "lib/charms/example_charm/v0/test_lib.py": 'LIBID = "e000776021fd4b73ade744727654ac72"\nLIBAPI = 0\nLIBPATCH = 1'
             },
             [],
             id="up-to-date-lib",
         ),
         pytest.param(
             {
-                "lib/charms/charmcraft_test_charm/v0/unpublished_lib.py": 'LIBID = "unpublished"\nLIBAPI = 0\nLIBPATCH = 1'
+                "lib/charms/example_charm/v0/unpublished_lib.py": 'LIBID = "unpublished"\nLIBAPI = 0\nLIBPATCH = 1'
             },
             [CharmLibDelta("unpublished_lib", (0, 1), None)],
             id="unpublished-lib",
         ),
         pytest.param(
             {
-                "lib/charms/charmcraft_test_charm/v0/test_lib.py": 'LIBID = "e000776021fd4b73ade744727654ac72"\nLIBAPI = 0\nLIBPATCH = 2'
+                "lib/charms/example_charm/v0/test_lib.py": 'LIBID = "e000776021fd4b73ade744727654ac72"\nLIBAPI = 0\nLIBPATCH = 2'
             },
             [CharmLibDelta("test_lib", (0, 2), (0, 1))],
             id="out-of-date-lib",
@@ -63,7 +63,6 @@ def test_get_unpublished_libs(
     expected: list[CharmLibDelta],
 ):
     service._project_dir = tmp_path
-    service._project.name = "charmcraft-test-charm"
     for lib_path_str, lib_contents in local_libs.items():
         lib_path = tmp_path / lib_path_str
         lib_path.parent.mkdir(parents=True)

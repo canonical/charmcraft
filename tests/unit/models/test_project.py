@@ -1133,8 +1133,6 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         ({"name": "ubuntu", "channel": "18.04"}, True),
         ({"name": "ubuntu", "channel": "20.04"}, True),
         ({"name": "ubuntu", "channel": "22.04"}, True),
-        ({"name": "ubuntu", "channel": "23.04"}, True),
-        ({"name": "ubuntu", "channel": "23.10"}, True),
         ({"name": "ubuntu", "channel": "24.04"}, False),
         ({"name": "ubuntu", "channel": "24.10"}, False),
         ({"name": "ubuntu", "channel": "25.04"}, False),

@@ -21,7 +21,24 @@ import shutil
 import pytest
 from craft_application import ServiceFactory
 
+from charmcraft.application.main import APP_METADATA
+from charmcraft.services import register_services
+
 SAMPLE_PROJECTS_DIR = pathlib.Path(__file__).parent / "sample_projects"
+
+
+@pytest.fixture
+def service_factory(project_path: pathlib.Path) -> ServiceFactory:
+    """Override the service factory since we're generating our own project file."""
+    register_services()
+    factory = ServiceFactory(app=APP_METADATA)
+    factory.update_kwargs("project", project_dir=project_path)
+    return factory
+
+
+@pytest.fixture
+def service(service_factory: ServiceFactory, project_path):
+    return service_factory.get("project")
 
 
 @pytest.fixture(
@@ -37,10 +54,18 @@ def project_path(project_path: pathlib.Path, project_data_path: pathlib.Path):
     return project_path
 
 
-def test_project_renders(project_path, service_factory: ServiceFactory):
-    project_service = service_factory.get("project")
+@pytest.mark.filterwarnings("ignore:The 'charmhub' field")
+def test_project_renders_with_build_plan(
+    monkeypatch: pytest.MonkeyPatch, project_path, service, service_factory
+):
+    monkeypatch.chdir(project_path)
+    # projec//t_service = service_factory.get("project")
+    # Deconfigure the project service
+    # project_service.__raw_project = None
+    # project_service._build_on, project_service._build_for, project_service._platform = None, None, None
 
-    project_service.__raw_project = None
+    service.configure(platform=None, build_for=None)
 
-    project_service.configure(platform=None, build_for=None)
-    project_service.get()
+    service.get()
+
+    service_factory.get("build_plan").plan()

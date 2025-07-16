@@ -30,6 +30,11 @@ def register_services():
         module="charmcraft.services.analysis",
     )
     ServiceFactory.register(
+        "build_plan",
+        "CharmBuildPlanService",
+        module="charmcraft.services.buildplan",
+    )
+    ServiceFactory.register(
         "charm_libs",
         "CharmLibsService",
         module="charmcraft.services.charmlibs",

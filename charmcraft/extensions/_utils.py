@@ -30,8 +30,6 @@ def apply_extensions(project_root: Path, yaml_data: dict[str, Any]) -> dict[str,
     :param dict yaml_data: Loaded, unprocessed charmcraft.yaml
     :returns: Modified charmcraft.yaml data with extensions applied
     """
-    # Don't modify the dict passed in
-    yaml_data = copy.deepcopy(yaml_data)
     declared_extensions: list[str] = cast(list[str], yaml_data.get("extensions", []))
     if not declared_extensions:
         return yaml_data

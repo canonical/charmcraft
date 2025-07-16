@@ -20,7 +20,8 @@ from __future__ import annotations
 from typing import cast
 
 import craft_parts
-from craft_application import services
+from craft_application import services, util
+from craft_cli import emit
 from overrides import override
 
 from charmcraft import dispatch
@@ -34,32 +35,33 @@ class LifecycleService(services.LifecycleService):
     #     self._manager_kwargs.setdefault("project_name", self._project.name)
     #     super().setup()
 
-    # @override
-    # def _get_build_for(self) -> str:
-    #     build_for = super()._get_build_for()
-    #     if "-" not in build_for:
-    #         if self._build_plan and self._build_plan[0].build_for == "all":
-    #             emit.progress(
-    #                 "WARNING: Charmcraft does not validate that charms with "
-    #                 "architecture 'all' are fully architecture agnostic.",
-    #                 permanent=True,
-    #             )
-    #         return build_for
-    #
-    #     # Multi-arch builds: Tell craft-parts that we're building for any foreign
-    #     # architecture (to trick it into trying to cross-compile anything, leading
-    #     # to more likely failures.)
-    #     emit.progress(
-    #         "WARNING: Charmcraft does not validate that charms with multiple "
-    #         "given architectures are architecture agnostic.",
-    #         permanent=True,
-    #     )
-    #     host_arch = util.get_host_architecture()
-    #     for arch in build_for.split("-"):
-    #         if arch != host_arch:
-    #             return arch
-    #
-    #     return host_arch
+    @override
+    def _get_build_for(self) -> str:
+        build_for = super()._get_build_for()
+        if "-" not in build_for:
+            build_plan = self._services.get("build_plan").plan()
+            if build_plan and build_plan[0].build_for == "all":
+                emit.progress(
+                    "WARNING: Charmcraft does not validate that charms with "
+                    "architecture 'all' are fully architecture agnostic.",
+                    permanent=True,
+                )
+            return build_for
+
+        # Multi-arch builds: Tell craft-parts that we're building for any foreign
+        # architecture (to trick it into trying to cross-compile anything, leading
+        # to more likely failures.)
+        emit.progress(
+            "WARNING: Charmcraft does not validate that charms with multiple "
+            "given architectures are architecture agnostic.",
+            permanent=True,
+        )
+        host_arch = util.get_host_architecture()
+        for arch in build_for.split("-"):
+            if arch != host_arch:
+                return arch
+
+        return host_arch
 
     @override
     def post_prime(self, step_info: craft_parts.StepInfo) -> bool:

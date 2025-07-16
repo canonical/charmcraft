@@ -169,14 +169,17 @@ suites:
       refresh_or_install_snap rockcraft latest/edge --classic
 
       if [[ -v CONTAINER_REGISTRY_URL ]]; then
+        CONTAINER_REGISTRY_HOSTPORT=$(echo "$CONTAINER_REGISTRY_URL" | awk -F/ '{print $3}')
         echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-        echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo "[host.\"$CONTAINER_REGISTRY_HOSTPORT\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        cat /var/snap/microk8s/current/args/certs.d/docker.io/*
         microk8s stop
         microk8s start
       fi
 
-      microk8s status --wait-ready --timeout 360
+      microk8s status --wait-ready --timeout 600
       microk8s enable hostpath-storage
       microk8s enable registry
       microk8s enable ingress
@@ -188,6 +191,7 @@ suites:
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc
     debug-each: |
+      microk8s kubectl get all -A
       juju status
       juju debug-log --no-tail --limit 1000
     restore: |

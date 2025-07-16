@@ -601,8 +601,8 @@ under the ``dependencies`` tag:
     :caption: ~/spring-boot-hello-world/pom.xml
     :language: xml
 
-Replace the code into
-``src/main/java/com/example/demo/HelloController.java`` with the following:
+Replace the contents of ``src/main/java/com/example/demo/HelloController.java``
+with the following:
 
 .. literalinclude:: code/spring-boot/HelloController.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
@@ -619,24 +619,24 @@ Create the class ``ApplicationConfig`` in a new
               ApplicationConfig.java
     :language: java
 
-Create the class ``Visitor`` in a new file
-``Visitor.java`` with the following content:
+Create the class ``Visitor`` in a new
+``Visitor.java`` file with the following content:
 
 .. literalinclude:: code/spring-boot/Visitor.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               Visitor.java
     :language: java
 
-Create the class ``VisitorRepository`` in a new file
-``VisitorRepository.java`` with the following content:
+Create the class ``VisitorRepository`` in a new
+``VisitorRepository.java`` file with the following content:
 
 .. literalinclude:: code/spring-boot/VisitorRepository.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\
               VisitorRepository.java
     :language: java
 
-Finally, create the class ``VisitorService`` in a new file
-``VisitorService.java`` with the following content:
+Finally, create the class ``VisitorService`` in a new
+``VisitorService.java`` file with the following content:
 
 .. literalinclude:: code/spring-boot/VisitorService.java.visitors.txt
     :caption: ~/spring-boot-hello-world/src/main/java/com/example/demo/\

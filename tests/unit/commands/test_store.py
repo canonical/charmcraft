@@ -130,7 +130,7 @@ def test_set_resource_architectures_output_json(emitter, updates, expected):
 
 def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
     mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
-    mock_service_factory.project.name = "test-project"
+    mock_service_factory.get.return_value.get.return_value.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
     lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
@@ -166,7 +166,7 @@ def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
     # Publishing the same version of a library with the same hash should not result
     # in an error return.
     mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
-    mock_service_factory.project.name = "test-project"
+    mock_service_factory.get.return_value.get.return_value.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
     lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
@@ -267,8 +267,9 @@ def test_fetch_libs_no_charm_libs(
     ],
 )
 def test_fetch_libs_missing_from_store(service_factory, libs, expected):
-    service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = []
+    project = service_factory.get("project").get()
+    project.charm_libs = libs
+    service_factory.get("store").anonymous_client.fetch_libraries_metadata.return_value = []
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     with pytest.raises(errors.CraftError) as exc_info:
@@ -309,7 +310,7 @@ def test_fetch_libs_missing_from_store(service_factory, libs, expected):
 def test_fetch_libs_no_content(
     new_path, service_factory, libs, store_libs, dl_lib, expected
 ):
-    service_factory.project.charm_libs = libs
+    service_factory.get("project").get().charm_libs = libs
     service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
         store_libs
     )
@@ -354,7 +355,7 @@ def test_fetch_libs_no_content(
 def test_fetch_libs_success(
     new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
 ) -> None:
-    service_factory.project.charm_libs = libs
+    service_factory.get("project").get().charm_libs = libs
     service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
         store_libs
     )

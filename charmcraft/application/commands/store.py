@@ -583,7 +583,7 @@ class UploadCommand(CharmcraftCommand):
                     emit.message(f"- {error.code}: {error.message}")
             return 1
 
-        if self._services.project:
+        if project := self._services.get("project").get():
             libs_service = cast("CharmLibsService", self._services.get("charm_libs"))
             unpublished_libs = libs_service.get_unpublished_libs()
             if unpublished_libs:
@@ -593,7 +593,7 @@ class UploadCommand(CharmcraftCommand):
                 )
                 display_libs = [
                     {
-                        "name": f"{self._services.project.name}.{lib.lib_name}",
+                        "name": f"{project.name}.{lib.lib_name}",
                         "local": "-"
                         if not lib.local_version
                         else ".".join(str(i) for i in lib.local_version),
@@ -876,7 +876,7 @@ class PromoteCommand(CharmcraftCommand):
         )
         store = cast(StoreService, self._services.get("store"))
 
-        name = parsed_args.name or self._services.project.name
+        name = parsed_args.name or self._services.get("project").get().name
 
         from_channel = charmcraft.store.models.ChannelData.from_str(
             parsed_args.from_channel
@@ -1276,7 +1276,7 @@ class CreateLibCommand(CharmcraftCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = self._services.project.name or utils.get_name_from_yaml()
+        charm_name = self._services.get("project").get().name or utils.get_name_from_yaml()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1355,7 +1355,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = self._services.project.name or utils.get_name_from_yaml()
+        charm_name = self._services.get("project").get().name or utils.get_name_from_yaml()
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1671,7 +1671,7 @@ class FetchLibs(CharmcraftCommand):
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
         store = cast("StoreService", self._services.get("store"))
-        project = cast("CharmcraftProject", self._services.project)
+        project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
         if not charm_libs:
             raise errors.LibraryError(

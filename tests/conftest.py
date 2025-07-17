@@ -18,6 +18,7 @@ import contextlib
 import importlib
 import json
 import pathlib
+import platform
 import tempfile
 import types
 from collections.abc import Iterator
@@ -132,15 +133,21 @@ def fake_project_yaml(request: pytest.FixtureRequest) -> Iterator[str]:
             include_lsb=True, include_uname=False, include_oslevel=False
         )
     )
+    if platform.system() != "Linux":
+        base_str = "ubuntu@24.04"
+        series = "24.04"
+    else:
+        base_str = f"{current_base.distribution}@{current_base.series}"
+        series = current_base.series
     if request.param == "bases":
         # Add the current system to legacy bases so we can test legacy bases.
         orig_legacy_bases = const.LEGACY_BASES
-        const.LEGACY_BASES += (f"{current_base.distribution}@{current_base.series}",)
-        yield FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{current_base.series}'")
+        const.LEGACY_BASES += (base_str,)
+        yield FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{series}'")
         const.LEGACY_BASES = orig_legacy_bases
         return
     yield FAKE_PLATFORMS_CHARM_TEMPLATE.format(
-        base=f"{current_base.distribution}@{current_base.series}",
+        base=base_str,
         build_base="ubuntu@devel",
     )
 

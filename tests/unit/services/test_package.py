@@ -30,6 +30,7 @@ from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
+from tools.gen_cli_docs import sys
 
 if TYPE_CHECKING:
     from charmcraft.services.package import PackageService
@@ -50,6 +51,11 @@ MANIFEST_WITH_ATTRIBUTE = models.Manifest.model_validate(
     | {
         "analysis": {"attributes": [models.Attribute(name="boop", result="success")]},
     }
+)
+
+
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux", reason="The package service always runs in Linux."
 )
 
 

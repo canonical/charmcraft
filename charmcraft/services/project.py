@@ -28,6 +28,8 @@ from charmcraft.models.charmcraft import BasesConfiguration
 
 
 class ProjectService(BaseProjectService):
+    """Charmcraft-specific project service."""
+
     @override
     def _app_render_legacy_platforms(self) -> dict[str, craft_platforms.PlatformDict]:
         """Convert a bases charm to a platforms charm."""
@@ -39,7 +41,7 @@ class ProjectService(BaseProjectService):
             BasesConfiguration.model_validate(base) for base in raw["bases"]
         ]
 
-        platforms = {}
+        platforms: dict[str, craft_platforms.PlatformDict] = {}
         invalid_build_bases: set[str] = set()
 
         for base in bases_config:

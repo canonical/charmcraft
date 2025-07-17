@@ -17,6 +17,7 @@
 
 import argparse
 import pathlib
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
 import pytest
@@ -25,6 +26,10 @@ from craft_cli.pytest_plugin import RecordingEmitter
 from charmcraft import application, models, services, utils
 from charmcraft.application.commands import lifecycle
 from charmcraft.store.models import Library
+
+if TYPE_CHECKING:
+    from charmcraft.models.project import CharmcraftProject
+    from charmcraft.services.charmlibs import CharmLibsService
 
 
 def get_namespace(
@@ -76,13 +81,13 @@ def test_pack_update_charm_libs_empty(
     mock_store_anonymous_client: mock.Mock,
     check,
 ):
-    project = service_factory.get("project").get()
+    project = cast("CharmcraftProject", service_factory.get("project").get())
     project.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
     mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
     mock_store_anonymous_client.get_library.return_value = store_lib
 
-    libs_service = service_factory.get("charm_libs")
+    libs_service = cast("CharmLibsService", service_factory.get("charm_libs"))
     libs_service.write = mock.Mock(wraps=libs_service.write)
 
     pack._update_charm_libs()

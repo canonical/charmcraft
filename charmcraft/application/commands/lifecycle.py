@@ -158,7 +158,7 @@ class PackCommand(lifecycle.PackCommand):
         step_name: str | None = None,
         **kwargs: Any,
     ) -> None:
-        project = cast(models.CharmcraftProject, self._services.project)
+        project = cast(models.CharmcraftProject, self._services.get("project").get())
         if project.charm_libs:
             self._update_charm_libs()
 

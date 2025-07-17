@@ -73,9 +73,11 @@ class Base(CraftBaseModel):
         return cls(name=name, channel=channel, architectures=architectures)
 
     def to_strings(self) -> Sequence[str]:
+        """Convert this base into a sequence of distro@base:arch strings."""
         return [f"{self.name}@{self.channel}:{arch}" for arch in self.architectures]
 
     def to_os_string(self) -> str:
+        """Convert this base to a distro@arch string."""
         return f"{self.name}@{self.channel}"
 
 

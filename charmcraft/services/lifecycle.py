@@ -30,11 +30,6 @@ from charmcraft import dispatch
 class LifecycleService(services.LifecycleService):
     """Business logic for lifecycle builds."""
 
-    # def setup(self) -> None:
-    #     """Do Charmcraft-specific setup work."""
-    #     self._manager_kwargs.setdefault("project_name", self._project.name)
-    #     super().setup()
-
     @override
     def _get_build_for(self) -> str:
         build_for = super()._get_build_for()

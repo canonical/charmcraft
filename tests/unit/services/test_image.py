@@ -25,8 +25,8 @@ import docker.models.images
 import pytest
 
 from charmcraft import application, const, utils
-from charmcraft.services.image import ImageService, OCIMetadata
 from charmcraft.errors import SkopeoError
+from charmcraft.services.image import ImageService, OCIMetadata
 
 
 @pytest.fixture

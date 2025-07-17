@@ -14,10 +14,11 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import copy
+
 import pytest
 
-from charmcraft.errors import ExtensionError
 from charmcraft import extensions
+from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
     DjangoFramework,
     ExpressJSFramework,
@@ -546,6 +547,7 @@ def test_handle_charm_part_requires_no_parts(flask_input_yaml, tmp_path):
     flask_input_yaml["parts"] = {"charm": {}}
     with pytest.raises(ExtensionError):
         extensions.apply_extensions(tmp_path, flask_input_yaml)
+
 
 def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)

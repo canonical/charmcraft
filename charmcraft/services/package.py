@@ -25,6 +25,7 @@ import shutil
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
+import craft_application
 import craft_platforms
 import yaml
 from craft_application import services
@@ -88,7 +89,7 @@ class PackageService(services.PackageService):
     def metadata(self) -> CharmMetadata:
         """Metadata model for this project."""
         return CharmMetadata.from_charm(
-            cast("BasesCharm | PlatformsCharm", self._services.get("project").get())
+            cast("BasesCharm | PlatformCharm", self._services.get("project").get())
         )
 
     def _write_file_or_object(
@@ -146,7 +147,7 @@ class PackageService(services.PackageService):
     def get_manifest_bases(self) -> list[models.Base]:
         """Get the bases used for a charm manifest from the project."""
         project = cast(
-            "BasesCharm | PlatformsCharm", self._services.get("project").get()
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         build_item = self._services.get("build_plan").plan()[0]
         if isinstance(project, BasesCharm):
@@ -164,7 +165,7 @@ class PackageService(services.PackageService):
                 raise RuntimeError("Could not determine run-on bases.")
             return run_on_bases
         if isinstance(project, PlatformCharm):
-            archs = [build_item.build_for]
+            archs = [str(build_item.build_for)]
 
             # single base recipes will have a base
             if project.base:
@@ -205,7 +206,7 @@ class PackageService(services.PackageService):
         :param path: The path to the prime directory.
         """
         project = cast(
-            "BasesCharm | PlatformsCharm", self._services.get("project").get()
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         path.mkdir(parents=True, exist_ok=True)
         if isinstance(project, BasesCharm | PlatformCharm):

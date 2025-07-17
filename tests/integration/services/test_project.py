@@ -23,6 +23,7 @@ from craft_application import ServiceFactory
 
 from charmcraft.application.main import APP_METADATA
 from charmcraft.services import register_services
+from charmcraft.services.project import ProjectService
 
 SAMPLE_PROJECTS_DIR = pathlib.Path(__file__).parent / "sample_projects"
 
@@ -56,14 +57,10 @@ def project_path(project_path: pathlib.Path, project_data_path: pathlib.Path):
 
 @pytest.mark.filterwarnings("ignore:The 'charmhub' field")
 def test_project_renders_with_build_plan(
-    monkeypatch: pytest.MonkeyPatch, project_path, service, service_factory
+    in_project_path: pathlib.Path,
+    service: ProjectService,
+    service_factory: ServiceFactory,
 ):
-    monkeypatch.chdir(project_path)
-    # projec//t_service = service_factory.get("project")
-    # Deconfigure the project service
-    # project_service.__raw_project = None
-    # project_service._build_on, project_service._build_for, project_service._platform = None, None, None
-
     service.configure(platform=None, build_for=None)
 
     service.get()

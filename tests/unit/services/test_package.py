@@ -17,7 +17,7 @@
 
 import pathlib
 import zipfile
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import craft_application
 import craft_cli.pytest_plugin
@@ -30,6 +30,9 @@ from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
+
+if TYPE_CHECKING:
+    from charmcraft.services.package import PackageService
 
 HOST_BASE = craft_platforms.DistroBase.from_linux_distribution(
     distro.LinuxDistribution()
@@ -146,7 +149,7 @@ def test_get_manifest(
     service_factory: craft_application.ServiceFactory,
 ):
     build_item = service_factory.get("build_plan").plan()[0]
-    platforms = service_factory.get("project").get_platforms()
+    service_factory.get("project").get_platforms()
     expected = models.Manifest.model_validate(
         {
             "charmcraft-started-at": "2020-03-14T00:00:00+00:00",
@@ -228,16 +231,16 @@ def test_do_not_overwrite_config_yaml(
         (
             [{"name": "ubuntu", "channel": "20.04"}],
             BuildInfo(
-                platform=util.get_host_architecture(),
-                build_for=util.get_host_architecture(),
-                build_on=util.get_host_architecture(),
+                platform=craft_platforms.DebianArchitecture.from_host(),
+                build_for=craft_platforms.DebianArchitecture.from_host(),
+                build_on=craft_platforms.DebianArchitecture.from_host(),
                 build_base=DistroBase("ubuntu", "20.04"),
             ),
             [
                 {
                     "name": "ubuntu",
                     "channel": "20.04",
-                    "architectures": [util.get_host_architecture()],
+                    "architectures": [craft_platforms.DebianArchitecture.from_host()],
                 }
             ],
         ),
@@ -262,8 +265,8 @@ def test_do_not_overwrite_config_yaml(
             ],
             BuildInfo(
                 platform="riscv64",
-                build_for="riscv64",
-                build_on="riscv64",
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
+                build_on=craft_platforms.DebianArchitecture.RISCV64,
                 build_base=DistroBase("ubuntu", "22.04"),
             ),
             [
@@ -273,16 +276,16 @@ def test_do_not_overwrite_config_yaml(
         (
             [{"name": "centos", "channel": "7"}],
             BuildInfo(
-                platform=util.get_host_architecture(),
-                build_on=util.get_host_architecture(),
-                build_for=util.get_host_architecture(),
+                platform=craft_platforms.DebianArchitecture.from_host(),
+                build_on=craft_platforms.DebianArchitecture.from_host(),
+                build_for=craft_platforms.DebianArchitecture.from_host(),
                 build_base=DistroBase("centos", "7"),
             ),
             [
                 {
                     "name": "centos",
                     "channel": "7",
-                    "architectures": [util.get_host_architecture()],
+                    "architectures": [craft_platforms.DebianArchitecture.from_host()],
                 }
             ],
         ),
@@ -314,8 +317,8 @@ def test_do_not_overwrite_config_yaml(
             ],
             BuildInfo(
                 platform="amd64",
-                build_on="amd64",
-                build_for="arm64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.ARM64,
                 build_base=DistroBase("ubuntu", "22.04"),
             ),
             [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
@@ -354,7 +357,7 @@ def test_get_manifest_bases_from_bases(
         "package",
         project_dir=project_path,
     )
-    package_service = service_factory.get("package")
+    package_service = cast("PackageService", service_factory.get("package"))
 
     charm = models.BasesCharm.model_validate(
         {
@@ -382,8 +385,8 @@ def test_get_manifest_bases_from_bases(
             {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
                 build_base=DistroBase("not-to-be-used", "100"),
             ),
             models.Base(
@@ -400,8 +403,8 @@ def test_get_manifest_bases_from_bases(
             {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
                 # the BuildInfo will use the build-base, which shouldn't go in the manifest
                 build_base=DistroBase("ubuntu", "devel"),
             ),
@@ -418,8 +421,8 @@ def test_get_manifest_bases_from_bases(
             {"ubuntu@24.04:amd64": None},
             BuildInfo(
                 platform="ubuntu@24.04:amd64",
-                build_on="amd64",
-                build_for="amd64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.AMD64,
                 build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
@@ -440,8 +443,8 @@ def test_get_manifest_bases_from_bases(
             },
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
                 build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
@@ -488,7 +491,7 @@ def test_get_manifest_bases_from_platforms(
         "package",
         project_dir=project_path,
     )
-    package_service = service_factory.get("package")
+    package_service = cast("PackageService", service_factory.get("package"))
     service_factory.get("project").configure(platform=None, build_for=None)
     bases = package_service.get_manifest_bases()
 

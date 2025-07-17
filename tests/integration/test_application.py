@@ -19,11 +19,10 @@ import pathlib
 import shutil
 
 import pytest
-from charmcraft.application.main import APP_METADATA, Charmcraft, create_app
-import craft_application
 from craft_application import util
 
 from charmcraft import utils
+from charmcraft.application.main import create_app
 
 
 @pytest.mark.parametrize(

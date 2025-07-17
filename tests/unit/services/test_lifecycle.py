@@ -19,12 +19,11 @@ from unittest import mock
 
 import craft_platforms
 import pytest
-from craft_application import util
 from craft_cli.pytest_plugin import RecordingEmitter
 
 from charmcraft.services.lifecycle import LifecycleService
 
-HOST_ARCH = util.get_host_architecture()
+HOST_ARCH = craft_platforms.DebianArchitecture.from_host()
 
 
 @pytest.fixture
@@ -92,7 +91,7 @@ def test_build_for_warns_on_multi(
                 build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
                 platform="something",
                 build_on=HOST_ARCH,
-                build_for=f"{HOST_ARCH}-foreign",
+                build_for=f"{HOST_ARCH}-foreign",  # pyright: ignore[reportArgumentType]
             )
         ]
     )

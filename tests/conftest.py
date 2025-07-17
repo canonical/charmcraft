@@ -39,6 +39,7 @@ from craft_parts import callbacks, plugins
 import charmcraft.parts
 from charmcraft import const, env, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
+from charmcraft.extensions import registry
 from charmcraft.models import project
 from charmcraft.services.store import StoreService
 
@@ -439,8 +440,6 @@ def build_charm_directory():
 
 @pytest.fixture
 def stub_extensions(monkeypatch):
-    from charmcraft.extensions import registry
-
     extensions_dict = {}
     monkeypatch.setattr(registry, "_EXTENSIONS", extensions_dict)
 

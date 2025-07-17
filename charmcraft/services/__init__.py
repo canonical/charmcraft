@@ -24,6 +24,7 @@ from craft_application import ServiceFactory
 
 
 def register_services():
+    """Register the services to use in Charmcraft."""
     ServiceFactory.register(
         "analysis",
         "AnalysisService",

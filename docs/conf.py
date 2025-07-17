@@ -89,13 +89,11 @@ extensions.extend(
         "sphinx.ext.viewcode",
         "sphinx.ext.coverage",
         "sphinx.ext.doctest",
-        "sphinx-pydantic",
         "sphinx_toolbox",
         "sphinx_toolbox.more_autodoc",
         "sphinx.ext.autodoc",  # Must be loaded after more_autodoc
         "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-        "sphinxcontrib.autodoc_pydantic",
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon

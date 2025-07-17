@@ -13,10 +13,11 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import copy
 import pytest
 
 from charmcraft.errors import ExtensionError
-from charmcraft.extensions import apply_extensions
+from charmcraft import extensions
 from charmcraft.extensions.app import (
     DjangoFramework,
     FastAPIFramework,
@@ -43,7 +44,7 @@ def make_flask_input_yaml():
         "description": "test description",
         "bases": [{"name": "ubuntu", "channel": "22.04"}],
         "extensions": ["flask-framework"],
-        "config": NON_OPTIONAL_OPTIONS,
+        "config": copy.deepcopy(NON_OPTIONAL_OPTIONS),
     }
 
 
@@ -351,7 +352,7 @@ def test_apply_extensions_correct(
     if experimental:
         monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
-    applied = apply_extensions(tmp_path, input_yaml)
+    applied = extensions.apply_extensions(tmp_path, copy.deepcopy(input_yaml))
     assert applied == expected
 
 
@@ -367,13 +368,13 @@ PROTECTED_FIELDS_TEST_PARAMETERS = [
 def test_flask_protected_fields(modification, flask_input_yaml, tmp_path):
     flask_input_yaml.update(modification)
     with pytest.raises(ExtensionError):
-        apply_extensions(tmp_path, flask_input_yaml)
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
 
 
 def test_flask_merge_options(flask_input_yaml, tmp_path):
     added_options = {"api_secret": {"type": "string"}}
     flask_input_yaml["config"] = {"options": added_options}
-    applied = apply_extensions(tmp_path, flask_input_yaml)
+    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["config"] == {
         "options": {
             **FlaskFramework.options,
@@ -385,7 +386,7 @@ def test_flask_merge_options(flask_input_yaml, tmp_path):
 def test_flask_merge_action(flask_input_yaml, tmp_path):
     added_actions = {"foobar": {}}
     flask_input_yaml["actions"] = added_actions
-    applied = apply_extensions(tmp_path, flask_input_yaml)
+    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["actions"] == {**FlaskFramework.actions, **added_actions}
 
 
@@ -394,7 +395,7 @@ def test_flask_merge_relation(flask_input_yaml, tmp_path):
     new_requires = {"requires-foobar": {"interface": "foobar"}}
     flask_input_yaml["provides"] = new_provides
     flask_input_yaml["requires"] = new_requires
-    applied = apply_extensions(tmp_path, flask_input_yaml)
+    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["provides"] == {
         "metrics-endpoint": {"interface": "prometheus_scrape"},
         "grafana-dashboard": {"interface": "grafana_dashboard"},
@@ -410,7 +411,7 @@ def test_flask_merge_relation(flask_input_yaml, tmp_path):
 def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):
     added_charm_libs = [{"lib": "smtp_integrator.smtp", "version": "0"}]
     flask_input_yaml["charm-libs"] = added_charm_libs
-    applied = apply_extensions(tmp_path, flask_input_yaml)
+    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["charm-libs"] == [*FlaskFramework._CHARM_LIBS, *added_charm_libs]
 
 
@@ -457,21 +458,23 @@ INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
 
 @pytest.mark.parametrize("modification", INCOMPATIBLE_FIELDS_TEST_PARAMETERS)
 def test_flask_incompatible_fields(modification, flask_input_yaml, tmp_path):
-    flask_input_yaml.update(modification)
+    charm = copy.deepcopy(flask_input_yaml)
+    charm.update(modification)
     with pytest.raises(ExtensionError):
-        apply_extensions(tmp_path, flask_input_yaml)
+        extensions.apply_extensions(tmp_path, copy.deepcopy(charm))
 
 
-def test_handle_charm_part(flask_input_yaml, tmp_path):
+def test_handle_charm_part_requires_no_parts(flask_input_yaml, tmp_path):
     # Currently, in the flask-framework extension, we will reject any project that
     # includes a charm part. This is to prevent issues where a non-default charm part is
-    # incompatible with this extension. This might change in the future.
+    # incompatible with extensions.this extension. This might change in the future.
     # For the same reason, the Flask-Framework extension will also add a default charm part.
     flask_input_yaml["parts"] = {"charm": {}}
     with pytest.raises(ExtensionError):
-        apply_extensions(tmp_path, flask_input_yaml)
-    del flask_input_yaml["parts"]
-    applied = apply_extensions(tmp_path, flask_input_yaml)
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
+    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["parts"]["charm"] == {
         "plugin": "charm",
         "source": ".",

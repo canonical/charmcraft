@@ -37,7 +37,7 @@ def provider_service(
     # default_build_plan: list[models.CharmBuildInfo],
 ) -> craft_application.ProviderService:
     # Workaround for https://github.com/canonical/craft-application/issues/816
-    monkeypatch.delenv("SNAP")
+    monkeypatch.delenv("SNAP", raising=False)
     fake_cache_dir = fake_path / "cache"
     fake_cache_dir.mkdir(parents=True)
 

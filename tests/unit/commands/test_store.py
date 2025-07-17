@@ -269,7 +269,9 @@ def test_fetch_libs_no_charm_libs(
 def test_fetch_libs_missing_from_store(service_factory, libs, expected):
     project = service_factory.get("project").get()
     project.charm_libs = libs
-    service_factory.get("store").anonymous_client.fetch_libraries_metadata.return_value = []
+    service_factory.get(
+        "store"
+    ).anonymous_client.fetch_libraries_metadata.return_value = []
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     with pytest.raises(errors.CraftError) as exc_info:

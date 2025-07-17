@@ -30,12 +30,12 @@ from typing import (
 )
 
 import pydantic
-from pydantic.json_schema import SkipJsonSchema
 import pydantic.v1
 from craft_application import errors, models
 from craft_application.models import PlatformsDict
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
+from pydantic.json_schema import SkipJsonSchema
 from typing_extensions import Self, override
 
 from charmcraft import const, preprocess

@@ -23,7 +23,6 @@ from typing import Any
 
 import craft_application
 import craft_cli
-from craft_application import util
 from craft_parts.plugins.plugins import PluginType
 from overrides import override
 

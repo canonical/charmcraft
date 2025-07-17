@@ -145,13 +145,9 @@ class ImageService(craft_application.AppService):
         :param image: A skopeo-friendly image name
         :returns: An OCIMetadata object containing metadata about the image.
         """
-        try:
-            raw_manifest = self._skopeo.inspect(image, raw=True)
-            image_info = self._skopeo.inspect(image)
-        except errors.SubprocessError as exc:
-            raise errors.CraftError(
-                "Could not inspect OCI image.", details=f"{exc.message}\n{exc.details}"
-            )
+        raw_manifest = self._skopeo.inspect(image, raw=True)
+        image_info = self._skopeo.inspect(image)
+
         try:
             image_digest = image_info["Digest"]
         except KeyError:

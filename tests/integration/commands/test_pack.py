@@ -15,139 +15,64 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for packing."""
 
+import pathlib
 import zipfile
 
+import craft_platforms
 import pytest
 import yaml
-from craft_application import util
+from craft_application import ServiceFactory
+from craft_cli.pytest_plugin import RecordingEmitter
 
-from charmcraft import models, utils
+from charmcraft import utils
+from charmcraft.application.main import Charmcraft
 
 CURRENT_PLATFORM = utils.get_os_platform()
 
 
-@pytest.mark.parametrize(
-    ("charmcraft_project", "platform"),
-    [
-        pytest.param(
-            {
-                "type": "charm",
-                "name": "my-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing",
-                "bases": [
-                    {
-                        "build-on": [{"name": "ubuntu", "channel": "22.04"}],
-                        "run-on": [
-                            {
-                                "name": "ubuntu",
-                                "channel": "22.04",
-                                "architectures": ["amd64"],
-                            }
-                        ],
-                    }
-                ],
-            },
-            "ubuntu-22.04-amd64",
-            marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04",
-                reason="Bases charm only tested on jammy.",
-            ),
-            id="bases-charm",
-        ),
-        pytest.param(
-            {
-                "type": "charm",
-                "name": "my-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing",
-                "base": "ubuntu@22.04",
-                "platforms": {
-                    "ubuntu-22.04-amd64": {
-                        "build-on": ["amd64"],
-                        "build-for": ["amd64"],
-                    }
-                },
-                "parts": {"my-part": {"plugin": "nil"}},
-            },
-            "ubuntu-22.04-amd64",
-            marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04",
-                reason="Jammy charms only tested on jammy",
-            ),
-            id="platforms-jammy-charm",
-        ),
-        pytest.param(
-            {
-                "type": "charm",
-                "name": "my-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing",
-                "base": "ubuntu@22.04",
-                "platforms": {util.get_host_architecture(): None},
-                "parts": {"my-part": {"plugin": "nil"}},
-            },
-            util.get_host_architecture(),
-            marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "22.04",
-                reason="Jammy charms only tested on jammy",
-            ),
-            id="platforms-jammy-basic",
-        ),
-        pytest.param(
-            {
-                "type": "charm",
-                "name": "my-charm",
-                "summary": "A test charm",
-                "description": "A charm for testing",
-                "base": "ubuntu@24.04",
-                "build-base": "ubuntu@devel",
-                "platforms": {util.get_host_architecture(): None},
-                "parts": {"my-part": {"plugin": "nil"}},
-            },
-            util.get_host_architecture(),
-            marks=pytest.mark.skipif(
-                CURRENT_PLATFORM.release != "24.04", reason="Noble charm needs noble"
-            ),
-            id="platforms-noble",
-        ),
-    ],
-)
 @pytest.mark.skipif(
     CURRENT_PLATFORM.system != "ubuntu",
     reason="Basic charm tests use destructive mode.",
 )
 def test_build_basic_charm(
-    monkeypatch, emitter, new_path, charmcraft_project, service_factory, app, platform
+    monkeypatch: pytest.MonkeyPatch,
+    emitter: RecordingEmitter,
+    new_path: pathlib.Path,
+    service_factory: ServiceFactory,
+    app: Charmcraft,
 ):
-    (new_path / "charmcraft.yaml").write_text(yaml.dump(charmcraft_project))
-    service_factory.project = models.CharmcraftProject.unmarshal(charmcraft_project)
-
     monkeypatch.setenv("CRAFT_DEBUG", "1")
     monkeypatch.setattr(
         "sys.argv",
-        ["charmcraft", "pack", "--destructive-mode", f"--platform={platform}"],
+        ["charmcraft", "pack", "--destructive-mode"],
     )
 
     app.configure({})
     assert app.run() == 0
 
-    with zipfile.ZipFile(new_path / f"my-charm_{platform}.charm") as charm_zip:
+    charm_files = list(new_path.glob("example-charm_*.charm"))
+    assert len(charm_files) == 1
+
+    with zipfile.ZipFile(charm_files[0]) as charm_zip:
         metadata = yaml.safe_load(charm_zip.read("metadata.yaml"))
         manifest = yaml.safe_load(charm_zip.read("manifest.yaml"))
 
-    emitter.assert_progress(f"Packing charm my-charm_{platform}.charm")
+    emitter.assert_progress(f"Packing charm {charm_files[0].name}")
 
     assert "bases" in manifest
-    if "platforms" in charmcraft_project:
+    project = app.services.get("project").get().marshal()
+    if "platforms" in project:
         base_name = manifest["bases"][0]["name"]
         base_version = manifest["bases"][0]["channel"]
-        assert f"{base_name}@{base_version}" == charmcraft_project["base"]
+        assert f"{base_name}@{base_version}" == project["base"]
     else:
-        assert manifest["bases"][0]["name"] in platform
-        assert manifest["bases"][0]["channel"] in platform
-    assert manifest["bases"][0]["architectures"][0] in platform
+        assert manifest["bases"][0]["name"] == CURRENT_PLATFORM.system
+        assert manifest["bases"][0]["channel"] == CURRENT_PLATFORM.release
+    assert (
+        manifest["bases"][0]["architectures"][0]
+        == craft_platforms.DebianArchitecture.from_host()
+    )
 
-    assert metadata["name"] == charmcraft_project["name"]
-    assert metadata["summary"] == charmcraft_project["summary"]
-    assert metadata["description"] == charmcraft_project["description"]
+    assert metadata["name"] == project["name"]
+    assert metadata["summary"] == project["summary"]
+    assert metadata["description"] == project["description"]

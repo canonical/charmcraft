@@ -17,7 +17,6 @@
 import contextlib
 import importlib
 import json
-import os
 import pathlib
 import tempfile
 import types
@@ -31,7 +30,6 @@ import craft_platforms
 import craft_store
 import distro
 import pytest
-import responses as responses_module
 import yaml
 from craft_application import util
 from craft_parts import callbacks, plugins
@@ -255,11 +253,6 @@ def fake_path(fs) -> Iterator[pathlib.Path]:
 
 
 @pytest.fixture
-def global_debug():
-    os.environ["CRAFT_DEBUG"] = "1"
-
-
-@pytest.fixture
 def new_path(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     return tmp_path
@@ -307,13 +300,6 @@ def intertests_cleanups():
 
 
 @pytest.fixture
-def responses():
-    """Simple helper to use responses module as a fixture, for easier integration in tests."""
-    with responses_module.RequestsMock() as rsps:
-        yield rsps
-
-
-@pytest.fixture
 def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     """Helper to create a charmcraft.yaml file in disk.
 
@@ -357,24 +343,6 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     If content is not given, remove metadata.yaml if exists.
     """
     return prepare_file(tmp_path, const.METADATA_FILENAME)
-
-
-@pytest.fixture
-def prepare_actions_yaml(tmp_path: pathlib.Path):
-    """Helper to create a actions.yaml file in disk.
-
-    If content is not given, remove actions.yaml if exists.
-    """
-    return prepare_file(tmp_path, const.JUJU_ACTIONS_FILENAME)
-
-
-@pytest.fixture
-def prepare_config_yaml(tmp_path: pathlib.Path):
-    """Helper to create a config.yaml file in disk.
-
-    If content is not given, remove config.yaml if exists.
-    """
-    return prepare_file(tmp_path, const.JUJU_CONFIG_FILENAME)
 
 
 @pytest.fixture

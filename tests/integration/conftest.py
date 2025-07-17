@@ -16,19 +16,14 @@
 """General fixtures for integration tests."""
 
 import pathlib
-from typing import Any
 from unittest import mock
 
 import craft_application
-import craft_platforms
 import craft_store
-import distro
 import pytest
-from craft_application import util
 
 from charmcraft import application, services
 from charmcraft.application import commands
-from charmcraft.models import project
 
 
 @pytest.fixture
@@ -36,25 +31,6 @@ def project_path(tmp_path: pathlib.Path):
     path = tmp_path / "project"
     path.mkdir()
     return path
-
-
-@pytest.fixture
-def charm_project(
-    basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request
-):
-    # Workaround for testing across systems. If we're not on Ubuntu, make an Ubuntu 24.04 charm.
-    # If we are on Ubuntu, use the current version.
-    distro_id = "ubuntu"
-    distro_version = distro.version() if craft_platforms.is_ubuntu_like() else "24.04"
-
-    return project.PlatformCharm.unmarshal(
-        basic_charm_dict
-        | {
-            "base": f"{distro_id}@{distro_version}",
-            "platforms": {util.get_host_architecture(): None},
-            "parts": {"charm": {"plugin": "charm", "source": "."}},
-        },
-    )
 
 
 @pytest.fixture

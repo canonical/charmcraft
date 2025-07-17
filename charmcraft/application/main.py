@@ -95,21 +95,6 @@ class Charmcraft(craft_application.Application):
         if has_primed_part:
             craft_cli.emit.progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
 
-    # def _extra_yaml_transform(
-    #     self, yaml_data: dict[str, Any], *, build_on: str, build_for: str | None
-    # ) -> dict[str, Any]:
-    #     # Extensions get applied on as close as possible to what the user provided.
-    #     yaml_data = extensions.apply_extensions(self.project_dir, yaml_data.copy())
-    #
-    #     # Preprocessing "magic" to create a fully-formed charm.
-    #     preprocess.add_default_parts(yaml_data)
-    #     preprocess.add_config(self.project_dir, yaml_data)
-    #     preprocess.add_actions(self.project_dir, yaml_data)
-    #     preprocess.add_metadata(self.project_dir, yaml_data)
-    #
-    #     self._check_deprecated(yaml_data)
-    #     return yaml_data
-
     def _configure_services(self, provider_name: str | None) -> None:
         super()._configure_services(provider_name)
         self.services.update_kwargs(
@@ -147,48 +132,6 @@ class Charmcraft(craft_application.Application):
             dispatcher.parsed_args(), "project_dir", None
         ):
             self.project_dir = pathlib.Path().expanduser().resolve()
-
-    # def run_managed(self, platform: str | None, build_for: str | None) -> None:
-    #     """Run charmcraft in managed mode.
-    #
-    #     Overrides the craft-application managed mode runner to move packed files
-    #     as needed.
-    #     """
-    #     dispatcher = self._dispatcher or self._get_dispatcher()
-    #     command = dispatcher.load_command(self.app_config)
-    #     self._work_dir = self.project_dir
-    #
-    #     super().run_managed(platform, build_for)
-    #
-    #     if not self.is_managed() and isinstance(command, commands.PackCommand):
-    #         if output_dir := getattr(dispatcher.parsed_args(), "output", None):
-    #             output_path = pathlib.Path(output_dir).resolve()
-    #             output_path.mkdir(parents=True, exist_ok=True)
-    #             package_file_path = self._work_dir / ".charmcraft_output_packages.txt"
-    #             if package_file_path.exists():
-    #                 package_files = package_file_path.read_text().splitlines(
-    #                     keepends=False
-    #                 )
-    #                 package_file_path.unlink(missing_ok=True)
-    #                 for filename in package_files:
-    #                     shutil.move(
-    #                         str(self._work_dir / filename), output_path / filename
-    #                     )
-
-    def _expand_environment(self, yaml_data: dict[str, Any], build_for: str) -> None:
-        """Perform expansion of project environment variables.
-
-        :param yaml_data: The project's yaml data.
-        :param build_for: The architecture to build for.
-        """
-        if "-" in build_for:
-            build_for = util.get_host_architecture()
-            craft_cli.emit.debug(
-                "Expanding environment variables with the host architecture "
-                f"{build_for!r} as the build-for architecture because multiple "
-                "run-on architectures were specified."
-            )
-        super()._expand_environment(yaml_data, build_for)
 
 
 def create_app() -> Charmcraft:

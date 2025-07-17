@@ -95,6 +95,10 @@ class Charmcraft(craft_application.Application):
             craft_cli.emit.progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
 
     def _configure_services(self, provider_name: str | None) -> None:
+        self.services.update_kwargs(
+            "project",
+            project_dir=self.project_dir,
+        )
         super()._configure_services(provider_name)
         self.services.update_kwargs(
             "package",

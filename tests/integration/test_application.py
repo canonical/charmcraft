@@ -16,8 +16,11 @@
 """Integration tests for the Charmcraft class."""
 
 import pathlib
+import shutil
 
 import pytest
+from charmcraft.application.main import APP_METADATA, Charmcraft, create_app
+import craft_application
 from craft_application import util
 
 from charmcraft import utils
@@ -30,10 +33,15 @@ from charmcraft import utils
         for path in sorted((pathlib.Path(__file__).parent / "sample-charms").iterdir())
     ],
 )
-def test_load_charm(app, charm_dir):
-    app.project_dir = charm_dir
+def test_load_charm(in_project_path, charm_dir):
+    shutil.copytree(charm_dir, in_project_path, dirs_exist_ok=True)
 
-    project = app.get_project()
+    app = create_app()
+    app._configure_services(None)
+    app.configure({})
+
+    app.services.get("project").configure(platform=None, build_for=None)
+    project = app.services.get("project").get()
     with (charm_dir / "expected.yaml").open() as f:
         expected_data = util.safe_yaml_load(f)
 

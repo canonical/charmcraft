@@ -5,6 +5,7 @@ import os
 import pathlib
 import sys
 
+import craft_application
 from craft_cli.dispatcher import Dispatcher, _CustomArgumentParser
 
 this_dir = pathlib.Path(os.path.split(__file__)[0])

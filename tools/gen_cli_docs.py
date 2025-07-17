@@ -8,6 +8,8 @@ import sys
 import craft_application
 from craft_cli.dispatcher import Dispatcher, _CustomArgumentParser
 
+from charmcraft.application.main import create_app
+
 this_dir = pathlib.Path(os.path.split(__file__)[0])
 sys.path.insert(0, str((this_dir / "..").absolute()))
 
@@ -73,17 +75,11 @@ def main(docs_dir):
         commands_ref_dir.mkdir()
 
     # Create a dispatcher like Charmcraft does to get access to the same options.
-    charmcraft_services = craft_application.ServiceFactory(app=application.APP_METADATA)
-    app = application.Charmcraft(app=application.APP_METADATA, services=charmcraft_services)
-    application.commands.fill_command_groups(app)
+    app = create_app()
+    # application.commands.fill_command_groups(app)
     command_groups = app.command_groups
 
-    dispatcher = Dispatcher(
-        app.app.name,
-        command_groups,
-        summary=str(app.app.summary),
-        extra_global_args=app._global_arguments,
-    )
+    dispatcher = app._create_dispatcher()
 
     help_builder = dispatcher._help_builder
 

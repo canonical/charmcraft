@@ -688,7 +688,7 @@ data from different sources that end up being a part of the final charm.
 **Structure:** Mapping. Keys are user-defined part names. The value of each key
 is a map where keys are part properties.
 
-    See more: :ref:`part_properties`
+..     See more: :ref:`part_properties`
 
 .. collapse:: Example
 

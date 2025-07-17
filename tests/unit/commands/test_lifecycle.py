@@ -69,25 +69,30 @@ def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
 
 
 def test_pack_update_charm_libs_empty(
-    fake_project_dir: pathlib.Path,
+    project_path: pathlib.Path,
     pack: lifecycle.PackCommand,
-    simple_charm,
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
     mock_store_anonymous_client: mock.Mock,
     check,
 ):
-    simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
+    project = service_factory.get("project").get()
+    project.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
     mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
     mock_store_anonymous_client.get_library.return_value = store_lib
 
+    libs_service = service_factory.get("charm_libs")
+    libs_service.write = mock.Mock(wraps=libs_service.write)
+
     pack._update_charm_libs()
+
+    libs_service.write.assert_called_once_with(store_lib)
 
     with check():
         emitter.assert_debug(repr(store_lib))
 
-    path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
+    path = project_path / utils.get_lib_path("my_charm", "my_lib", 0)
     assert path.read_text() == "Lib contents"
 
 

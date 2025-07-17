@@ -126,8 +126,8 @@ class PackCommand(lifecycle.PackCommand):
         craft_cli.emit.progress(
             "Checking that charmlibs match 'charmcraft.yaml' values"
         )
-        project = cast(models.CharmcraftProject, self._services.project)
-        libs_svc = cast("CharmLibsService", self._services.charm_libs)
+        project = cast(models.CharmcraftProject, self._services.get("project").get())
+        libs_svc = cast("CharmLibsService", self._services.get("charm_libs"))
         installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
             library_name = utils.QualifiedLibraryName.from_string(lib.lib)

@@ -30,6 +30,7 @@ from typing import (
 )
 
 import pydantic
+from pydantic.json_schema import SkipJsonSchema
 import pydantic.v1
 from craft_application import errors, models
 from craft_application.models import PlatformsDict
@@ -1024,7 +1025,13 @@ class BasesCharm(CharmProject):
         - Alma Linux 9
     """
 
-    platforms: None = None  # type: ignore[assignment]
+    # For bases charms, accept anything so we can use platforms internally, but
+    # exclude it from serialization and the JSON schema.
+    platforms: SkipJsonSchema[Any] = pydantic.Field(
+        default=None,
+        exclude=True,
+        repr=False,
+    )
 
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be

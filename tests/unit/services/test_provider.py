@@ -31,10 +31,13 @@ from charmcraft.services.provider import ProviderService, _maybe_lock_cache
 
 @pytest.fixture
 def provider_service(
+    monkeypatch: pytest.MonkeyPatch,
     fake_path: pathlib.Path,
     service_factory: craft_application.ServiceFactory,
     # default_build_plan: list[models.CharmBuildInfo],
 ) -> craft_application.ProviderService:
+    # Workaround for https://github.com/canonical/craft-application/issues/816
+    monkeypatch.delenv("SNAP")
     fake_cache_dir = fake_path / "cache"
     fake_cache_dir.mkdir(parents=True)
 

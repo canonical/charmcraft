@@ -30,6 +30,7 @@ from charmcraft.application.main import Charmcraft
 CURRENT_PLATFORM = utils.get_os_platform()
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(
     CURRENT_PLATFORM.system != "ubuntu",
     reason="Basic charm tests use destructive mode.",

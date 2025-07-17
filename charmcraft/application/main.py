@@ -99,7 +99,6 @@ class Charmcraft(craft_application.Application):
         self.services.update_kwargs(
             "package",
             project_dir=self.project_dir,
-            build_plan=self._build_plan,
         )
         self.services.update_kwargs(
             "charm_libs",
@@ -111,7 +110,7 @@ class Charmcraft(craft_application.Application):
         super().configure(global_args)
         self._global_args = global_args
         self.services.get("state").set(
-            "charmcraft", "started_at", value=datetime.datetime.now().isoformat()
+            "charmcraft", "started_at", value=datetime.datetime.now().isoformat(), overwrite=True,
         )
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:

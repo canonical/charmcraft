@@ -24,7 +24,7 @@ from charmcraft import extensions
 from tests.extensions.test_extensions import FakeExtension
 
 
-class TestExtension(FakeExtension):
+class MyFakeExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
     name = "test-extension"
@@ -36,93 +36,26 @@ class TestExtension(FakeExtension):
         return {"terms": ["https://example.com/test"]}
 
 
+# Add an extension to the project YAML.
+@pytest.fixture
+def fake_project_yaml(fake_project_yaml):
+    return fake_project_yaml + "\nextensions: [test-extension]"
+
+
 @pytest.fixture
 def fake_extensions(stub_extensions):
-    extensions.register(TestExtension.name, TestExtension)
+    extensions.register(MyFakeExtension.name, MyFakeExtension)
 
 
-@pytest.mark.parametrize(
-    ("charmcraft_yaml", "expected"),
-    [
-        pytest.param(
-            dedent(
-                f"""
-                name: test-charm-name
-                type: charm
-                summary: test-summary
-                description: test-description
-                extensions: [{TestExtension.name}]
-                base: ubuntu@22.04
-                platforms:
-                  amd64:
-                parts:
-                  my-part:
-                    plugin: nil
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name
-                summary: test-summary
-                description: test-description
-                base: ubuntu@22.04
-                platforms:
-                  amd64: null
-                parts:
-                  my-part:
-                    plugin: nil
-                type: charm
-                terms:
-                - https://example.com/test
-                """
-            ),
-            id="platforms",
-        ),
-        pytest.param(
-            dedent(
-                f"""
-                name: test-charm-name
-                type: charm
-                summary: test-summary
-                description: test-description
-                extensions: [{TestExtension.name}]
-                bases:
-                  - name: ubuntu
-                    channel: "22.04"
-                """
-            ),
-            dedent(
-                """\
-                name: test-charm-name
-                summary: test-summary
-                description: test-description
-                parts:
-                  charm:
-                    plugin: charm
-                    source: .
-                type: charm
-                terms:
-                - https://example.com/test
-                bases:
-                - build-on:
-                  - name: ubuntu
-                    channel: '22.04'
-                  run-on:
-                  - name: ubuntu
-                    channel: '22.04'
-                """
-            ),
-            id="bases",
-        ),
-    ],
-)
 def test_expand_extensions_simple(
-    monkeypatch, new_path, app, fake_extensions, emitter, charmcraft_yaml, expected
+    fake_project_yaml, monkeypatch, new_path, app, fake_extensions, emitter
 ):
     """Expand a charmcraft.yaml with a single extension."""
-    (new_path / "charmcraft.yaml").write_text(charmcraft_yaml)
     monkeypatch.setattr(sys, "argv", ["charmcraft", "expand-extensions"])
+    project = app.services.get("project").get()
 
     app.run()
 
-    emitter.assert_message(expected)
+    assert project.terms == ["https://example.com/test"]
+
+    emitter.assert_message(project.to_yaml_string())

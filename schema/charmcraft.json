@@ -119,11 +119,6 @@
 					"default": null,
 					"title": "Build-Base"
 				},
-				"platforms": {
-					"default": null,
-					"title": "Platforms",
-					"type": "null"
-				},
 				"contact": {
 					"default": null,
 					"title": "Contact",
@@ -809,7 +804,7 @@
 		},
 		"Platform": {
 			"additionalProperties": false,
-			"description": "Project platform definition.",
+			"description": "A single platform entry in the platforms dictionary.\n\nThis model defines how a single value under the ``platforms`` key works for a project.",
 			"properties": {
 				"build-on": {
 					"anyOf": [
@@ -817,14 +812,21 @@
 							"items": {
 								"type": "string"
 							},
-							"minItems": 1,
 							"type": "array",
 							"uniqueItems": true
 						},
 						{
-							"type": "null"
+							"type": "string"
 						}
 					],
+					"examples": [
+						"amd64",
+						[
+							"arm64",
+							"riscv64"
+						]
+					],
+					"minLength": 1,
 					"title": "Build-On"
 				},
 				"build-for": {
@@ -838,15 +840,21 @@
 							"type": "array"
 						},
 						{
-							"type": "null"
+							"type": "string"
 						}
 					],
-					"default": null,
+					"examples": [
+						"amd64",
+						[
+							"riscv64"
+						]
+					],
 					"title": "Build-For"
 				}
 			},
 			"required": [
-				"build-on"
+				"build-on",
+				"build-for"
 			],
 			"title": "Platform",
 			"type": "object"
@@ -960,14 +968,52 @@
 				},
 				"platforms": {
 					"additionalProperties": {
-						"anyOf": [
-							{
-								"$ref": "#/$defs/Platform"
-							},
-							{
-								"type": "null"
-							}
-						]
+						"$ref": "#/$defs/Platform"
+					},
+					"patternProperties": {
+						"(amd64|arm64|armhf|i386|ppc64el|riscv64|s390x)": {
+							"anyOf": [
+								{
+									"type": "null"
+								},
+								{
+									"properties": {
+										"build-on": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												}
+											],
+											"title": "Build-On"
+										},
+										"build-for": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												}
+											],
+											"title": "Build-For"
+										}
+									},
+									"required": [
+										"build-on"
+									],
+									"type": "object"
+								}
+							]
+						}
 					},
 					"title": "Platforms",
 					"type": "object"

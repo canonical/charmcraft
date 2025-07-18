@@ -23,3 +23,7 @@
 
 # requirements-dev.txt removal (docs only)
 "reference/files/requirements-dev-txt-file.rst" "reference/files/requirements-txt-file.rst"
+
+# Charmcraft.yaml file reference modernisation
+"reference/models/bases-charm.rst" "reference/files/charmcraft-yaml-file.rst"
+"reference/models/index.rst" "reference/files/charmcraft-yaml-file.rst"

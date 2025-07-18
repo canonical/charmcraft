@@ -20,32 +20,33 @@ import pathlib
 from collections.abc import Iterator
 from unittest import mock
 
+import craft_application
 import pytest
 from craft_cli.pytest_plugin import RecordingEmitter
 from craft_providers import bases
 
-from charmcraft import models, services
 from charmcraft.application.main import APP_METADATA
-from charmcraft.services.provider import _maybe_lock_cache
+from charmcraft.services.provider import ProviderService, _maybe_lock_cache
 
 
 @pytest.fixture
 def provider_service(
+    monkeypatch: pytest.MonkeyPatch,
     fake_path: pathlib.Path,
-    service_factory: services.CharmcraftServiceFactory,
-    default_build_plan: list[models.CharmBuildInfo],
-) -> services.ProviderService:
+    service_factory: craft_application.ServiceFactory,
+) -> craft_application.ProviderService:
+    # Workaround for https://github.com/canonical/craft-application/issues/816
+    monkeypatch.delenv("SNAP", raising=False)
     fake_cache_dir = fake_path / "cache"
     fake_cache_dir.mkdir(parents=True)
 
-    service_factory.set_kwargs(
+    service_factory.update_kwargs(
         "provider",
         work_dir=fake_path,
-        build_plan=default_build_plan,
         provider_name="host",
     )
 
-    return service_factory.provider
+    return service_factory.get("provider")
 
 
 @pytest.fixture
@@ -81,7 +82,7 @@ def mock_register(monkeypatch) -> Iterator[mock.Mock]:
 )
 def test_get_base_forwards_cache(
     monkeypatch,
-    provider_service: services.ProviderService,
+    provider_service: ProviderService,
     fake_path: pathlib.Path,
     base_name: bases.BaseName,
 ):
@@ -127,12 +128,10 @@ def test_get_base_no_cache_if_locked(
     )
 
     # Can't use the fixture as pyfakefs doesn't handle locks.
-    provider_service = services.ProviderService(
+    provider_service = ProviderService(
         app=APP_METADATA,
         services=None,  # pyright: ignore[reportArgumentType]
-        project=None,  # pyright: ignore[reportArgumentType]
         work_dir=tmp_path,
-        build_plan=[],
     )
 
     base = provider_service.get_base(

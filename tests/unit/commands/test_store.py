@@ -22,6 +22,7 @@ import textwrap
 import types
 from unittest import mock
 
+import craft_application
 import craft_cli.pytest_plugin
 import craft_store
 import pytest
@@ -40,7 +41,6 @@ from charmcraft.application.commands.store import (
 )
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
-from charmcraft.services import CharmcraftServiceFactory
 from charmcraft.store.models import Library
 from charmcraft.utils import cli
 from tests import get_fake_revision
@@ -129,8 +129,8 @@ def test_set_resource_architectures_output_json(emitter, updates, expected):
 
 
 def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
-    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
-    mock_service_factory.project.name = "test-project"
+    mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
+    mock_service_factory.get.return_value.get.return_value.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
     lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
@@ -165,8 +165,8 @@ def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
 def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
     # Publishing the same version of a library with the same hash should not result
     # in an error return.
-    mock_service_factory = mock.Mock(spec=CharmcraftServiceFactory)
-    mock_service_factory.project.name = "test-project"
+    mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
+    mock_service_factory.get.return_value.get.return_value.name = "test-project"
     lib_path = new_path / "lib/charms/test_project/v0/my_lib.py"
     lib_path.parent.mkdir(parents=True)
     lib_path.write_text("LIBAPI=0\nLIBID='blah'\nLIBPATCH=1")
@@ -267,8 +267,11 @@ def test_fetch_libs_no_charm_libs(
     ],
 )
 def test_fetch_libs_missing_from_store(service_factory, libs, expected):
-    service_factory.project.charm_libs = libs
-    service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = []
+    project = service_factory.get("project").get()
+    project.charm_libs = libs
+    service_factory.get(
+        "store"
+    ).anonymous_client.fetch_libraries_metadata.return_value = []
     fetch_libs = FetchLibs({"app": APP_METADATA, "services": service_factory})
 
     with pytest.raises(errors.CraftError) as exc_info:
@@ -309,7 +312,7 @@ def test_fetch_libs_missing_from_store(service_factory, libs, expected):
 def test_fetch_libs_no_content(
     new_path, service_factory, libs, store_libs, dl_lib, expected
 ):
-    service_factory.project.charm_libs = libs
+    service_factory.get("project").get().charm_libs = libs
     service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
         store_libs
     )
@@ -354,7 +357,7 @@ def test_fetch_libs_no_content(
 def test_fetch_libs_success(
     new_path, emitter, service_factory, libs, store_libs, dl_lib, expected
 ) -> None:
-    service_factory.project.charm_libs = libs
+    service_factory.get("project").get().charm_libs = libs
     service_factory.store.anonymous_client.fetch_libraries_metadata.return_value = (
         store_libs
     )
@@ -369,7 +372,7 @@ def test_fetch_libs_success(
 
 def test_promote_no_track_inference_noninteractive(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway,
 ):
     mock_publisher_gateway.get_package_metadata.return_value = types.SimpleNamespace(
@@ -394,7 +397,7 @@ def test_promote_no_track_inference_noninteractive(
 )
 def test_promote_to_same_channel(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     channel: str,
 ):
@@ -423,7 +426,7 @@ def test_promote_to_same_channel(
 )
 def test_promote_infers_channel(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -459,7 +462,7 @@ def test_promote_infers_channel(
 )
 def test_promote_not_demote(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -494,7 +497,7 @@ def test_promote_not_demote(
 )
 def test_promote_cross_track_cannot_be_different_risk(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -522,7 +525,7 @@ def test_promote_cross_track_cannot_be_different_risk(
 )
 def test_promote_cross_track_defaults_no(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -548,7 +551,7 @@ def test_promote_cross_track_defaults_no(
 )
 def test_promote_defaults_no(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
     from_channel: str,
     to_channel: str,
@@ -571,7 +574,7 @@ def test_promote_defaults_no(
 
 def test_promote_revisions(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    service_factory: CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     mock_publisher_gateway: mock.Mock,
 ):
     mock_publisher_gateway.list_releases.return_value = Releases(

@@ -15,70 +15,83 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the lifecycle service."""
 
+import craft_platforms
 import distro
 import pytest
-from craft_application import errors, models, util
-from craft_providers import bases
-
-from charmcraft.services import CharmcraftServiceFactory
+from craft_application import ServiceFactory, errors, util
 
 
-def test_init_lifecycle(service_factory: CharmcraftServiceFactory):
+def test_init_lifecycle(service_factory: ServiceFactory):
     """Test the setup of a parts lifecycle, implicitly testing setup."""
 
-    service_factory.lifecycle._init_lifecycle_manager()
+    service_factory.get("lifecycle")._init_lifecycle_manager()
 
 
-def test_lifecycle_build_for_invalid(service_factory: CharmcraftServiceFactory):
-    lifecycle = service_factory.lifecycle
-
-    lifecycle._build_plan = [
-        models.BuildInfo(
-            platform="something",
-            build_on=util.get_host_architecture(),
-            build_for="invalid",
-            base=bases.BaseName(distro.id(), distro.version()),
-        )
-    ]
+def test_lifecycle_build_for_invalid(
+    monkeypatch: pytest.MonkeyPatch, service_factory: ServiceFactory
+):
+    monkeypatch.setattr(
+        service_factory.get("build_plan"),
+        "plan",
+        lambda: [
+            craft_platforms.BuildInfo(
+                platform="something",
+                build_on=craft_platforms.DebianArchitecture.from_host(),
+                build_for="invalid",  # pyright: ignore[reportArgumentType]
+                build_base=craft_platforms.DistroBase(distro.id(), distro.version()),
+            )
+        ],
+    )
 
     with pytest.raises(
         errors.PartsLifecycleError, match="[Aa]rchitecture '[a-z]+' is not supported"
     ):
-        lifecycle._init_lifecycle_manager()
+        service_factory.get("lifecycle")
 
 
-def test_lifecycle_build_for_all(service_factory: CharmcraftServiceFactory):
-    lifecycle = service_factory.lifecycle
-
-    lifecycle._build_plan = [
-        models.BuildInfo(
-            platform="something",
-            build_on=util.get_host_architecture(),
-            build_for="all",
-            base=bases.BaseName(distro.id(), distro.version()),
-        )
-    ]
+def test_lifecycle_build_for_all(
+    monkeypatch: pytest.MonkeyPatch, service_factory: ServiceFactory
+):
+    monkeypatch.setattr(
+        service_factory.get("build_plan"),
+        "plan",
+        lambda: [
+            craft_platforms.BuildInfo(
+                platform="something",
+                build_on=craft_platforms.DebianArchitecture.from_host(),
+                build_for="all",
+                build_base=craft_platforms.DistroBase(distro.id(), distro.version()),
+            )
+        ],
+    )
+    lifecycle = service_factory.get("lifecycle")
 
     lcm = lifecycle._init_lifecycle_manager()
 
     assert lcm._target_arch == util.get_host_architecture()
 
 
-def test_lifecycle_build_for_multi(service_factory: CharmcraftServiceFactory):
-    lifecycle = service_factory.lifecycle
-
-    host_arch = util.get_host_architecture()
+def test_lifecycle_build_for_multi(
+    monkeypatch: pytest.MonkeyPatch, service_factory: ServiceFactory
+):
+    host_arch = craft_platforms.DebianArchitecture.from_host()
     arches = {"arm64", "riscv64", "amd64"} - {host_arch}
     foreign_arch = next(iter(arches))
 
-    lifecycle._build_plan = [
-        models.BuildInfo(
-            platform="something",
-            build_on=util.get_host_architecture(),
-            build_for=f"{foreign_arch}-{host_arch}",
-            base=bases.BaseName(distro.id(), distro.version()),
-        )
-    ]
+    monkeypatch.setattr(
+        service_factory.get("build_plan"),
+        "plan",
+        lambda: [
+            craft_platforms.BuildInfo(
+                platform="something",
+                build_on=host_arch,
+                build_for=f"{foreign_arch}-{host_arch}",  # pyright: ignore[reportArgumentType]
+                build_base=craft_platforms.DistroBase(distro.id(), distro.version()),
+            )
+        ],
+    )
+
+    lifecycle = service_factory.get("lifecycle")
 
     lcm = lifecycle._init_lifecycle_manager()
 

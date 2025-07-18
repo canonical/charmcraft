@@ -23,6 +23,9 @@ include:
 
 prepare: |
   charmcraft init --project-dir=charm
+  pushd charm
+    uv export --no-hashes -o requirements.txt
+  popd
   cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL${EXTRA:+}.yaml charm/charmcraft.yaml
 
 restore: |

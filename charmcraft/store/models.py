@@ -215,7 +215,7 @@ class RegistryCredentials:
 
 @functools.total_ordering
 @enum.unique
-class Risk(enum.Enum):
+class Risk(enum.Enum):  # noqa: PLW1641
     """Standard risk tracks for a channel, orderable but not comparable to an int."""
 
     STABLE = 0
@@ -235,7 +235,7 @@ class Risk(enum.Enum):
 
 
 @dataclass(frozen=True)
-class ChannelData:
+class ChannelData:  # noqa: PLW1641
     """Data class for a craft store channel."""
 
     track: str | None

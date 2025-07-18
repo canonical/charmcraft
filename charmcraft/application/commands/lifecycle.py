@@ -26,10 +26,13 @@ from craft_application.commands import lifecycle
 from craft_cli import CraftError
 from typing_extensions import override
 
-from charmcraft import models, services, utils
+from charmcraft import models, utils
 
 if TYPE_CHECKING:  # pragma: no cover
     import argparse
+
+    from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.store import StoreService
 
 
 def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
@@ -123,8 +126,8 @@ class PackCommand(lifecycle.PackCommand):
         craft_cli.emit.progress(
             "Checking that charmlibs match 'charmcraft.yaml' values"
         )
-        project = cast(models.CharmcraftProject, self._services.project)
-        libs_svc = cast(services.CharmLibsService, self._services.charm_libs)
+        project = cast(models.CharmcraftProject, self._services.get("project").get())
+        libs_svc = cast("CharmLibsService", self._services.get("charm_libs"))
         installable_libs: list[models.CharmLib] = []
         for lib in project.charm_libs:
             library_name = utils.QualifiedLibraryName.from_string(lib.lib)
@@ -133,7 +136,7 @@ class PackCommand(lifecycle.PackCommand):
             ):
                 installable_libs.append(lib)
         if installable_libs:
-            store = cast(services.StoreService, self._services.store)
+            store = cast("StoreService", self._services.store)
             libraries_md = store.get_libraries_metadata(installable_libs)
             with craft_cli.emit.progress_bar(
                 "Downloading charmlibs...", len(installable_libs)
@@ -155,7 +158,7 @@ class PackCommand(lifecycle.PackCommand):
         step_name: str | None = None,
         **kwargs: Any,
     ) -> None:
-        project = cast(models.CharmcraftProject, self._services.project)
+        project = cast(models.CharmcraftProject, self._services.get("project").get())
         if project.charm_libs:
             self._update_charm_libs()
 

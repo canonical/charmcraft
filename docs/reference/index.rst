@@ -72,5 +72,4 @@ applications.
     parts/index
     platforms
     profile
-    models/index
     changelog

@@ -68,6 +68,7 @@ else:
 # Template and asset locations
 extensions = [
     "canonical_sphinx",
+    "pydantic_kitbash",
     "sphinx_sitemap",
 ]
 
@@ -88,13 +89,11 @@ extensions.extend(
         "sphinx.ext.viewcode",
         "sphinx.ext.coverage",
         "sphinx.ext.doctest",
-        "sphinx-pydantic",
         "sphinx_toolbox",
         "sphinx_toolbox.more_autodoc",
         "sphinx.ext.autodoc",  # Must be loaded after more_autodoc
         "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-        "sphinxcontrib.autodoc_pydantic",
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
@@ -105,6 +104,9 @@ extensions.extend(
 # endregion
 
 exclude_patterns = [
+    # Workaround for https://github.com/canonical/pydantic-kitbash/issues/49
+    "common/craft-parts/reference/part_properties.rst",
+
     "_build",
     "Thumbs.db",
     ".DS_Store",
@@ -120,9 +122,11 @@ exclude_patterns = [
     "common/craft-parts/explanation/parts.rst",
     "common/craft-parts/explanation/how_parts_are_built.rst",
     "common/craft-parts/explanation/dump_plugin.rst",
+    "common/craft-parts/explanation/file-migration.rst",
     "common/craft-parts/explanation/gradle_plugin.rst",
     "common/craft-parts/explanation/overlay_step.rst",
     "common/craft-parts/how-to/craftctl.rst",
+    "common/craft-parts/how-to/customise-the-build-with-craftctl.rst",
     "common/craft-parts/how-to/include_files.rst",
     "common/craft-parts/how-to/use_parts.rst",
     "common/craft-parts/how-to/override_build.rst",
@@ -133,6 +137,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_plugin.rst",
+    "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
     "common/craft-parts/reference/plugins/gradle_plugin.rst",
     "common/craft-parts/reference/plugins/jlink_plugin.rst",

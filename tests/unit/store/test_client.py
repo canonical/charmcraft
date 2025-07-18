@@ -23,11 +23,6 @@ from charmcraft import store
 
 
 @pytest.fixture
-def client() -> store.Client:
-    return store.Client(api_base_url="http://charmhub.local")
-
-
-@pytest.fixture
 def anonymous_client() -> store.AnonymousClient:
     return store.AnonymousClient(
         "http://charmhub.local", "http://storage.charmhub.local"

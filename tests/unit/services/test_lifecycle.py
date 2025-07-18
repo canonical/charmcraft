@@ -15,19 +15,20 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for the lifecycle service."""
 
+from unittest import mock
+
+import craft_platforms
 import pytest
-from craft_application import models, util
 from craft_cli.pytest_plugin import RecordingEmitter
-from craft_providers import bases
 
 from charmcraft.services.lifecycle import LifecycleService
 
-HOST_ARCH = util.get_host_architecture()
+HOST_ARCH = craft_platforms.DebianArchitecture.from_host()
 
 
 @pytest.fixture
 def service(service_factory) -> LifecycleService:
-    return service_factory.lifecycle
+    return service_factory.get("lifecycle")
 
 
 @pytest.mark.parametrize(
@@ -43,22 +44,34 @@ def service(service_factory) -> LifecycleService:
     ],
 )
 def test_get_build_for_values(
-    service: LifecycleService, plan_build_for: str, expected: str
+    service: LifecycleService, plan_build_for: str, expected: str, service_factory
 ):
-    service._build_plan = [
-        models.BuildInfo(
-            base=bases.BaseName("ubuntu", "22.04"),
-            platform="something",
-            build_on=HOST_ARCH,
-            build_for=plan_build_for,
-        )
-    ]
-
+    service_factory.get("build_plan").plan = mock.Mock(
+        return_value=[
+            craft_platforms.BuildInfo(
+                build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
+                platform="something",
+                build_on=HOST_ARCH,
+                build_for=plan_build_for,  # pyright: ignore[reportArgumentType]
+            )
+        ]
+    )
     assert service._get_build_for() == expected
 
 
-def test_build_for_warns_on_all(service: LifecycleService, emitter: RecordingEmitter):
-    service._build_plan[0].build_for = "all"
+def test_build_for_warns_on_all(
+    service: LifecycleService, emitter: RecordingEmitter, service_factory
+):
+    service_factory.get("build_plan").plan = mock.Mock(
+        return_value=[
+            craft_platforms.BuildInfo(
+                build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
+                platform="something",
+                build_on=HOST_ARCH,
+                build_for="all",
+            )
+        ]
+    )
 
     assert service._get_build_for() == HOST_ARCH
 
@@ -69,8 +82,19 @@ def test_build_for_warns_on_all(service: LifecycleService, emitter: RecordingEmi
     )
 
 
-def test_build_for_warns_on_multi(service: LifecycleService, emitter: RecordingEmitter):
-    service._build_plan[0].build_for = f"{HOST_ARCH}-foreign"
+def test_build_for_warns_on_multi(
+    service: LifecycleService, emitter: RecordingEmitter, service_factory
+):
+    service_factory.get("build_plan").plan = mock.Mock(
+        return_value=[
+            craft_platforms.BuildInfo(
+                build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
+                platform="something",
+                build_on=HOST_ARCH,
+                build_for=f"{HOST_ARCH}-foreign",  # pyright: ignore[reportArgumentType]
+            )
+        ]
+    )
 
     assert service._get_build_for() == "foreign"
 

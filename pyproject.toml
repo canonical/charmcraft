@@ -4,12 +4,12 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=4.8",
+    "craft-application~=5.5",
     "craft-cli>=2.15.0",
     "craft-grammar>=2.0.0",
     "craft-parts>=2.2.1",
     "craft-providers>=2.1.0",
-    "craft-platforms~=0.5",
+    "craft-platforms~=0.10",
     "craft-providers>=2.0.0",
     "craft-store~=3.2",
     "distro>=1.7.0",
@@ -61,15 +61,14 @@ dev = [
 docs = [
     "canonical-sphinx[full]~=0.2",
     "pyspelling",
-    "autodoc-pydantic~=2.0",
     "sphinx-autobuild~=2024.2",
-    "sphinx-pydantic~=0.1",
     "sphinx-sitemap>=2.6.0",
     "sphinx-toolbox~=3.5",
     "sphinx-lint~=1.0",
     "sphinxcontrib-details-directive",
     "sphinxext-rediraffe==0.2.7",
     "matplotlib",
+    "pydantic-kitbash==0.0.6",
 ]
 lint = [
     "codespell[toml]",
@@ -204,6 +203,10 @@ testpaths = "tests"
 xfail_strict = true
 addopts = "--ignore=tests/spread"
 markers = ["slow: slow tests"]
+filterwarnings = [
+    # Several upstream libraries use this outside of our control.
+    "ignore:.*pkg_resources.*:DeprecationWarning",
+]
 
 [tool.coverage.run]
 branch = true

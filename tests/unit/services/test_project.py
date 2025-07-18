@@ -16,6 +16,7 @@
 """Unit tests for the charmcraft-specific project service."""
 
 import pathlib
+import re
 
 import craft_platforms
 import pytest
@@ -97,7 +98,8 @@ def test_render_legacy_platforms_error(
     )
 
     with pytest.raises(
-        CraftError, match=f"^Not valid for use with the 'bases' key: {exc_string}"
+        CraftError,
+        match=f"^Not valid for use with the 'bases' key: {re.escape(exc_string)}",
     ):
         service._app_render_legacy_platforms()
 

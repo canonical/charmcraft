@@ -232,7 +232,10 @@ class PackageService(services.PackageService):
         project_dict = project.marshal()
 
         # If there is a reactive part, defer to it for the existence of metadata.yaml.
-        plugins = {part.get("plugin") or name for name, part in project.parts.items()}
+        plugins = {
+            part.get("plugin") or name  # NOTE: Not the same as part.get("plugin", name)
+            for name, part in project.parts.items()
+        }
         is_reactive = "reactive" in plugins
         stage_dir = self._services.get("lifecycle").project_info.dirs.stage_dir
         if is_reactive and (stage_dir / const.METADATA_FILENAME).exists():

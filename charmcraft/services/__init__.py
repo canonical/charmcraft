@@ -19,54 +19,26 @@ from __future__ import annotations
 
 from craft_application import ServiceFactory
 
+# Add new services to this mapping to add them to the service factory
+# Internal service name : Stringified service class name
+_SERVICES: dict[str, str] = {
+    "analysis": "AnalysisService",
+    "build_plan": "CharmBuildPlanService",
+    "charm_libs": "CharmLibsService",
+    "image": "ImageService",
+    "lifecycle": "LifecycleService",
+    "package": "PackageService",
+    "project": "ProjectService",
+    "provider": "ProviderService",
+    "remote_build": "RemoteBuildService",
+    "store": "StoreService",
+}
 
-def register_services():
-    """Register the services to use in Charmcraft."""
-    ServiceFactory.register(
-        "analysis",
-        "AnalysisService",
-        module="charmcraft.services.analysis",
-    )
-    ServiceFactory.register(
-        "build_plan",
-        "CharmBuildPlanService",
-        module="charmcraft.services.buildplan",
-    )
-    ServiceFactory.register(
-        "charm_libs",
-        "CharmLibsService",
-        module="charmcraft.services.charmlibs",
-    )
-    ServiceFactory.register(
-        "image",
-        "ImageService",
-        module="charmcraft.services.image",
-    )
-    ServiceFactory.register(
-        "lifecycle",
-        "LifecycleService",
-        module="charmcraft.services.lifecycle",
-    )
-    ServiceFactory.register(
-        "package",
-        "PackageService",
-        module="charmcraft.services.package",
-    )
-    ServiceFactory.register(
-        "project", "ProjectService", module="charmcraft.services.project"
-    )
-    ServiceFactory.register(
-        "provider",
-        "ProviderService",
-        module="charmcraft.services.provider",
-    )
-    ServiceFactory.register(
-        "remote_build",
-        "RemoteBuildService",
-        module="charmcraft.services.remotebuild",
-    )
-    ServiceFactory.register(
-        "store",
-        "StoreService",
-        module="charmcraft.services.store",
-    )
+
+def register_services() -> None:
+    """Register Snapcraft-specific services."""
+    for name, service in _SERVICES.items():
+        module_name = name.replace("_", "")
+        ServiceFactory.register(
+            name, service, module=f"charmcraft.services.{module_name}"
+        )

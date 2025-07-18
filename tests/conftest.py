@@ -139,12 +139,13 @@ def fake_project_yaml(request: pytest.FixtureRequest) -> Iterator[str]:
     else:
         base_str = f"{current_base.distribution}@{current_base.series}"
         series = current_base.series
+
     if request.param == "bases":
-        # Add the current system to legacy bases so we can test legacy bases.
-        orig_legacy_bases = const.LEGACY_BASES
-        const.LEGACY_BASES += (base_str,)
-        yield FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{series}'")
-        const.LEGACY_BASES = orig_legacy_bases
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            # Add the current system to legacy bases so we can test legacy bases.
+            monkeypatch.setattr(const, "LEGACY_BASES", (*const.LEGACY_BASES, base_str))
+            assert str(current_base) in const.LEGACY_BASES
+            yield FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{series}'")
         return
     yield FAKE_PLATFORMS_CHARM_TEMPLATE.format(
         base=base_str,

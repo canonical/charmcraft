@@ -499,7 +499,7 @@ dev-questing = [{ name = "python-apt", marker = "sys_platform == 'linux'", speci
 docs = [
     { name = "canonical-sphinx", extras = ["full"], specifier = "~=0.2" },
     { name = "matplotlib" },
-    { name = "pydantic-kitbash", specifier = ">=0.0.6" },
+    { name = "pydantic-kitbash", specifier = "==0.0.6" },
     { name = "pyspelling" },
     { name = "sphinx-autobuild", specifier = "~=2024.2" },
     { name = "sphinx-lint", specifier = "~=1.0" },

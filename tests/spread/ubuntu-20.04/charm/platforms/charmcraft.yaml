@@ -1,0 +1,35 @@
+name: platforms
+type: charm
+title: Charm Template
+summary: A very short one-line summary of the charm.
+description: |
+  A single sentence that says what the charm is, concisely and memorably.
+
+base: ubuntu@20.04
+platforms:
+  amd64:
+  arm64:
+  ppc64el:
+  s390x:
+
+parts:
+  charm:
+    charm-binary-python-packages:
+      - pyyaml==6.0.2
+      - websocket-client==1.8.0
+
+# (Optional) Configuration options for the charm
+# This config section defines charm config options, and populates the Configure
+# tab on Charmhub.
+# More information on this section at https://juju.is/docs/sdk/charmcraft-yaml#heading--config
+# General configuration documentation: https://juju.is/docs/sdk/config
+config:
+  options:
+    # An example config option to customise the log level of the workload
+    log-level:
+      description: |
+        Configures the log level of gunicorn.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string

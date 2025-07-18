@@ -1,0 +1,9 @@
+metadata.yaml
+manifest.yaml
+config.yaml
+dispatch
+hooks/install
+hooks/start
+hooks/upgrade-charm
+src/charm.py
+venv/ops/charm.py

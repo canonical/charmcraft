@@ -17,9 +17,6 @@
 
 from __future__ import annotations
 
-import dataclasses
-from typing import TYPE_CHECKING
-
 from craft_application import ServiceFactory
 
 

@@ -39,7 +39,7 @@ class CharmLibDelta:
 
 
 class CharmLibsService(craft_application.AppService):
-    """Business logic for creating packages."""
+    """Business logic for dealing with charm libraries."""
 
     def __init__(
         self,

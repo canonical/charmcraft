@@ -359,10 +359,6 @@ def test_get_manifest_bases_from_bases(
         "project",
         project_dir=project_path,
     )
-    service_factory.update_kwargs(
-        "package",
-        project_dir=project_path,
-    )
     package_service = cast("PackageService", service_factory.get("package"))
 
     charm = models.BasesCharm.model_validate(
@@ -491,10 +487,6 @@ def test_get_manifest_bases_from_platforms(
     service_factory = craft_application.ServiceFactory(app=APP_METADATA)
     service_factory.update_kwargs(
         "project",
-        project_dir=project_path,
-    )
-    service_factory.update_kwargs(
-        "package",
         project_dir=project_path,
     )
     package_service = cast("PackageService", service_factory.get("package"))

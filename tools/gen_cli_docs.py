@@ -6,7 +6,7 @@ import pathlib
 import sys
 
 import craft_application
-from craft_cli.dispatcher import Dispatcher, _CustomArgumentParser
+from craft_cli.dispatcher import _CustomArgumentParser
 
 from charmcraft.application.main import create_app
 
@@ -76,7 +76,6 @@ def main(docs_dir):
 
     # Create a dispatcher like Charmcraft does to get access to the same options.
     app = create_app()
-    # application.commands.fill_command_groups(app)
     command_groups = app.command_groups
 
     dispatcher = app._create_dispatcher()

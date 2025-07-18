@@ -54,7 +54,6 @@ def package_service(
     svc = PackageService(
         app=APP_METADATA,
         services=service_factory,
-        project_dir=project_path,
     )
     service_factory.package = svc
     return svc

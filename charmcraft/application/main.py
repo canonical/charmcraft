@@ -101,10 +101,6 @@ class Charmcraft(craft_application.Application):
         )
         super()._configure_services(provider_name)
         self.services.update_kwargs(
-            "package",
-            project_dir=self.project_dir,
-        )
-        self.services.update_kwargs(
             "charm_libs",
             project_dir=self.project_dir,
         )

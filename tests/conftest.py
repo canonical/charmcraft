@@ -187,10 +187,6 @@ def service_factory(
     factory = craft_application.ServiceFactory(app=APP_METADATA)
 
     factory.update_kwargs(
-        "package",
-        project_dir=project_path,
-    )
-    factory.update_kwargs(
         "project",
         project_dir=project_path,
     )

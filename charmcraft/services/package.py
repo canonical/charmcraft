@@ -25,7 +25,6 @@ import shutil
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
-import craft_application
 import craft_platforms
 import yaml
 from craft_application import services
@@ -47,16 +46,6 @@ if TYPE_CHECKING:
 
 class PackageService(services.PackageService):
     """Business logic for creating packages."""
-
-    def __init__(
-        self,
-        app: craft_application.AppMetadata,
-        services: craft_application.ServiceFactory,
-        *,
-        project_dir: pathlib.Path,
-    ) -> None:
-        super().__init__(app, services)
-        self.project_dir = project_dir.resolve(strict=True)
 
     def pack(self, prime_dir: pathlib.Path, dest: pathlib.Path) -> list[pathlib.Path]:
         """Create one or more packages as appropriate.

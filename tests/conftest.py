@@ -50,7 +50,7 @@ description: |
 type: charm
 bases:
   - name: ubuntu
-    channel: {series}
+    channel: "{series}"
 
 parts:
   charm:
@@ -137,15 +137,14 @@ def fake_project_yaml(request: pytest.FixtureRequest) -> Iterator[str]:
         base_str = "ubuntu@24.04"
         series = "24.04"
     else:
-        base_str = f"{current_base.distribution}@{current_base.series}"
+        base_str = str(current_base)
         series = current_base.series
 
     if request.param == "bases":
         with pytest.MonkeyPatch.context() as monkeypatch:
             # Add the current system to legacy bases so we can test legacy bases.
             monkeypatch.setattr(const, "LEGACY_BASES", (*const.LEGACY_BASES, base_str))
-            assert str(current_base) in const.LEGACY_BASES
-            yield FAKE_BASES_CHARM_TEMPLATE.format(series=f"'{series}'")
+            yield FAKE_BASES_CHARM_TEMPLATE.format(series=series)
         return
     yield FAKE_PLATFORMS_CHARM_TEMPLATE.format(
         base=base_str,

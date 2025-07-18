@@ -146,6 +146,9 @@ prepare: |
   #shellcheck source=tests/spread/tools/prepare.sh
   . "/charmcraft/tests/spread/tools/prepare.sh"
 
+  # We use uv for the default templates now, but we may need to write requirements files.
+  snap install astral-uv --classic
+
   install_charmcraft
 
 suites:

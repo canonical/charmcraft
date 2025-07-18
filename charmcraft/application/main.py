@@ -23,6 +23,7 @@ from typing import Any
 
 import craft_application
 import craft_cli
+from craft_application import util
 from craft_parts.plugins.plugins import PluginType
 from overrides import override
 
@@ -109,12 +110,13 @@ class Charmcraft(craft_application.Application):
         """Configure the application using any global arguments."""
         super().configure(global_args)
         self._global_args = global_args
-        self.services.get("state").set(
-            "charmcraft",
-            "started_at",
-            value=datetime.datetime.now().isoformat(),
-            overwrite=True,
-        )
+        if not util.is_managed_mode():
+            self.services.get("state").set(
+                "charmcraft",
+                "started_at",
+                value=datetime.datetime.now().isoformat(),
+                overwrite=True,
+            )
 
     def _get_dispatcher(self) -> craft_cli.Dispatcher:
         """Get the dispatcher, with a charmcraft-specific side-effect of storing it on the app."""

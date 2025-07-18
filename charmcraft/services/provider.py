@@ -115,6 +115,7 @@ class ProviderService(services.ProviderService):
             **kwargs,  # type: ignore[arg-type]
         ) as instance:
             try:
+                instance.execute_run(["chown", "a+rwx", "/tmp/craft-state"])
                 # Use /root/.cache even if we're in the snap.
                 instance.execute_run(
                     ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True

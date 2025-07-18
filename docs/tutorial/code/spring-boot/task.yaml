@@ -33,7 +33,7 @@ execute: |
   # [docs:export-experimental-env-vars-end]
 
   # [docs:install-devpack-for-spring]
-  sudo snap install devpack-for-spring --classic --edge
+  sudo snap install devpack-for-spring --classic
   sudo apt update && sudo apt install -y openjdk-21-jdk
   # [docs:install-devpack-for-spring-end]
 

@@ -37,7 +37,6 @@ def project_path(tmp_path: pathlib.Path):
 def service_factory(
     new_path: pathlib.Path,
     fake_project_file,
-    default_build_plan,
     project_path,
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -51,7 +50,6 @@ def service_factory(
     factory.update_kwargs(
         "lifecycle",
         work_dir=new_path,
-        build_plan=default_build_plan,
         cache_dir="~/.cache",
     )
     factory.update_kwargs(

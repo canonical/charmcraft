@@ -33,9 +33,9 @@ class CharmBuildPlanService(BuildPlanService):
         :param project_data: The unprocessed project data retrieved from a YAML file.
         :returns: An iterable of BuildInfo objects that make the exhaustive build plan.
         """
-        if "bases" in project_data:
-            return craft_platforms.charm.get_bases_charm_build_plan(
-                project_data["bases"]
-            )
-        project_data["platforms"] = self._services.get("project").get_raw()["platforms"]
+        raw_project = self._services.get("project").get_raw()
+        if "platforms" in raw_project:
+            project_data["platforms"] = raw_project["platforms"]
+        else:
+            del project_data["platforms"]
         return super()._gen_exhaustive_build_plan(project_data=project_data)

@@ -180,7 +180,6 @@ def service_factory(
     mock_store_client,
     mock_store_anonymous_client,
     mock_publisher_gateway,
-    default_build_plan,
     project_path,
 ) -> craft_application.ServiceFactory:
     services.register_services()
@@ -194,7 +193,6 @@ def service_factory(
         "lifecycle",
         work_dir=project_path,
         cache_dir=pathlib.Path("/cache"),
-        build_plan=default_build_plan,
     )
     factory.update_kwargs(
         "charm_libs",
@@ -217,7 +215,6 @@ def service_factory(
     return factory
 
 
-# TODO: Get rid of this and default_build_plan
 @pytest.fixture
 def default_build_info() -> craft_platforms.BuildInfo:
     arch = util.get_host_architecture()
@@ -227,11 +224,6 @@ def default_build_info() -> craft_platforms.BuildInfo:
         build_for="arm64",
         platform="distro-1-test64",
     )
-
-
-@pytest.fixture
-def default_build_plan(default_build_info: craft_platforms.BuildInfo):
-    return [default_build_info]
 
 
 @pytest.fixture

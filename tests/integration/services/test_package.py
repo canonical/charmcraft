@@ -47,7 +47,6 @@ def fake_project_yaml(project_path: pathlib.Path) -> str:
 def package_service(
     project_path: pathlib.Path,
     service_factory,
-    default_build_plan,
     monkeypatch: pytest.MonkeyPatch,
 ):
     monkeypatch.chdir(project_path)

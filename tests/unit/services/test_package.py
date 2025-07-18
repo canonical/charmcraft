@@ -460,9 +460,7 @@ def test_get_manifest_bases_from_bases(
 )
 def test_get_manifest_bases_from_platforms(
     monkeypatch: pytest.MonkeyPatch,
-    # service_factory: craft_application.ServiceFactory,
     project_path: pathlib.Path,
-    # package_service,
     base,
     build_base,
     platforms,

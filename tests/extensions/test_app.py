@@ -23,6 +23,7 @@ from charmcraft.extensions.app import (
     FastAPIFramework,
     FlaskFramework,
     GoFramework,
+    SpringBootFramework,
 )
 
 NON_OPTIONAL_OPTIONS = {
@@ -410,6 +411,79 @@ def flask_input_yaml_fixture():
                 "resources": {
                     "app-image": {
                         "description": "expressjs application image.",
+                        "type": "oci-image",
+                    },
+                },
+                "summary": "test summary",
+                "type": "charm",
+            },
+        ),
+        (
+            {
+                "type": "charm",
+                "name": "test-springboot",
+                "summary": "test summary",
+                "description": "test description",
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "amd64": None,
+                },
+                "extensions": ["spring-boot-framework"],
+                "config": NON_OPTIONAL_OPTIONS,
+            },
+            True,
+            {
+                "actions": SpringBootFramework.actions,
+                "assumes": ["k8s-api"],
+                "base": "ubuntu@24.04",
+                "platforms": {
+                    "amd64": None,
+                },
+                "containers": {
+                    "app": {"resource": "app-image"},
+                },
+                "description": "test description",
+                "name": "test-springboot",
+                "charm-libs": [
+                    {"lib": "traefik_k8s.ingress", "version": "2"},
+                    {"lib": "observability_libs.juju_topology", "version": "0"},
+                    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+                    {"lib": "loki_k8s.loki_push_api", "version": "1"},
+                    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+                    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "data_platform_libs.s3", "version": "0"},
+                    {"lib": "saml_integrator.saml", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
+                    {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "openfga_k8s.openfga", "version": "1"},
+                ],
+                "config": {
+                    "options": {
+                        **SpringBootFramework.options,
+                        **NON_OPTIONAL_OPTIONS["options"],
+                    },
+                },
+                "parts": {
+                    "charm": {
+                        "plugin": "charm",
+                        "source": ".",
+                        "build-snaps": ["rustup"],
+                        "override-build": "rustup default stable\ncraftctl default",
+                    }
+                },
+                "peers": {"secret-storage": {"interface": "secret-storage"}},
+                "provides": {
+                    "metrics-endpoint": {"interface": "prometheus_scrape"},
+                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                },
+                "requires": {
+                    "logging": {"interface": "loki_push_api"},
+                    "ingress": {"interface": "ingress", "limit": 1},
+                },
+                "resources": {
+                    "app-image": {
+                        "description": "spring-boot application image.",
                         "type": "oci-image",
                     },
                 },

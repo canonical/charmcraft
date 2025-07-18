@@ -30,7 +30,7 @@ from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
-from tools.gen_cli_docs import sys
+import sys
 
 if TYPE_CHECKING:
     from charmcraft.services.package import PackageService

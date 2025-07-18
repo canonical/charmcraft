@@ -16,6 +16,7 @@
 """Tests for package service."""
 
 import pathlib
+import sys
 import zipfile
 from typing import TYPE_CHECKING, Any, cast
 
@@ -30,7 +31,6 @@ from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
-import sys
 
 if TYPE_CHECKING:
     from charmcraft.services.package import PackageService

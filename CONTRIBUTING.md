@@ -68,7 +68,7 @@ is provided on GitHub for continuous integration and delivery.
 Start by [creating a personal fork](https://github.com/canonical/charmcraft/fork) of the
 repository on GitHub.
 
-Next, on your host system, clone your fork and sync it with the upstream repository:
+Next, on your host system, clone your fork and sync it with the upstream repository.
 
 If you authenticate your GitHub account with
 [SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account),
@@ -270,6 +270,29 @@ make setup
 
 There are also special tests that are feature-specific. Run `make help` to view all of
 them.
+
+### Try the change
+
+You can test the app without packing it into a Python package.
+
+Start by manually activating the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Then, run Charmcraft as a Python module, calling the command that's relevant to your
+change:
+
+```bash
+CHARMCRAFT_DEVELOPER=1 python -m charmcraft <command>
+```
+
+When you're done with live testing, exit the virtual environment:
+
+```bash
+deactivate
+```
 
 ### Document the change
 

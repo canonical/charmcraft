@@ -98,6 +98,7 @@ jobs:
           $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
       - name: Aproxy logs
+        if: ${{ failure() }}
         run: |
           sudo snap logs aproxy -n=all
 

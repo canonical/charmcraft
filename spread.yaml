@@ -196,10 +196,11 @@ suites:
     debug: |
       cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
       cat /var/snap/microk8s/current/args/certs.d/docker.io/*
+      curl -v -k --connect-timeout 10 https://github-runner-dockerhub-cache.canonical.com
       microk8s kubectl get all -A
+      microk8s kubectl get pods -A
       juju status
       juju debug-log --no-tail --limit 1000
-      curl -v -k --connect-timeout 10 https://github-runner-dockerhub-cache.canonical.com
     debug-each: |
       microk8s kubectl get all -A
       juju status

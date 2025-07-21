@@ -97,6 +97,10 @@ jobs:
         run: |
           $(go env GOPATH)/bin/spread "${{ matrix.system }}"
 
+      - name: Aproxy logs
+        run: |
+          sudo snap logs aproxy -n=all
+
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: canonical/action-tmate@main

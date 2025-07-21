@@ -186,6 +186,8 @@ suites:
       microk8s enable ingress
       microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
 
+      # TODO DEBUG
+      microk8s kubectl get all -A
       # Bootstrap controller
       juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
 

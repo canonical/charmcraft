@@ -190,6 +190,12 @@ suites:
 
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc
+    debug: |
+      cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+      cat /var/snap/microk8s/current/args/certs.d/docker.io/*
+      microk8s kubectl get all -A
+      juju status
+      juju debug-log --no-tail --limit 1000
     debug-each: |
       microk8s kubectl get all -A
       juju status

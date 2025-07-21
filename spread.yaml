@@ -197,6 +197,7 @@ suites:
       microk8s kubectl get all -A
       juju status
       juju debug-log --no-tail --limit 1000
+      curl -v -k --connect-timeout 10 https://github-runner-dockerhub-cache.canonical.com
     debug-each: |
       microk8s kubectl get all -A
       juju status

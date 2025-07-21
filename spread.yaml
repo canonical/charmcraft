@@ -177,6 +177,7 @@ suites:
         cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         cat /var/snap/microk8s/current/args/certs.d/docker.io/*
         microk8s stop
+
         microk8s start
       fi
 

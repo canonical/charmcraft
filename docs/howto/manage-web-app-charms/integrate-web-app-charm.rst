@@ -127,7 +127,7 @@ URL of your app with a command like:
 
 .. note::
 
-    The ``--insecure`` option is needed because the CA in the
+    The ``--insecure`` option is needed because the certificate authority in the
     ``self-signed-certificate`` charm is not trusted.
     The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option to the ``curl``
     command is a way of resolving the hostname of the request without

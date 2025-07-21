@@ -72,6 +72,9 @@ configure your 12-factor application.
 - ``POSTGRESQL_DB_HOSTNAME``
 - ``POSTGRESQL_DB_PORT``
 
+.. _integrate_web_app_ingress:
+
+
 Integrate with ingress
 ----------------------
 
@@ -88,55 +91,6 @@ You don't need to add an endpoint definition to your charm's
 project file.
 
 .. _integrate_web_app_cos:
-
-
-Configure TLS to access the 12-Factor app over HTTPS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can configure TLS if your ingress provider charm supports integration with
-a certificate provider charm. To test locally, you can use the
-`Self Signed Certificates <https://charmhub.io/self-signed-certificates>`_
-charm as a certificate provider.
-
-For example, using the
-`Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
-charm as an ingress provider, you can set the hostname with:
-
-.. code-block:: bash
-
-    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
-
-Deploy the ``self-signed-certificates`` charm and integrate with the
-``nginx-ingress-integrator`` charm:
-
-.. code-block:: bash
-
-    juju deploy self-signed-certificates
-    juju integrate self-signed-certificates nginx-ingress-integrator
-
-At this point your 12-factor app can be accessed using HTTPS.
-In the case of the ``nginx-ingress-integrator`` charm, if you access the
-external URL of your charm using HTTP, you will get a 308 Permanent Redirect
-HTTP status code that will redirect to the https URL. You can access the HTTPS
-URL of your app with a command like:
-
-.. code-block:: bash
-
-   curl -v --insecure https://<yourdomain.example.com> \
-     --resolve <yourdomain.example.com>:443:<ingress-ip>
-
-.. note::
-
-    The ``--insecure`` option is needed because the certificate authority in the
-    ``self-signed-certificate`` charm is not trusted.
-    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option to the ``curl``
-    command is a way of resolving the hostname of the request without
-    setting a DNS record.
-
-To obtain a TLS certificate signed by a trusted certificate authority (CA)
-using the ACME protocol, you can use the  `LEGO <https://charmhub.io/lego>`_
-charm instead.
-
 
 Integrate with observability
 ----------------------------

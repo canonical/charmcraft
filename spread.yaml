@@ -177,7 +177,6 @@ suites:
         cat /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         cat /var/snap/microk8s/current/args/certs.d/docker.io/*
         microk8s stop
-
         microk8s start
       fi
 
@@ -200,7 +199,7 @@ suites:
       cat /var/snap/microk8s/current/args/certs.d/docker.io/*
       curl -v -k --connect-timeout 10 https://github-runner-dockerhub-cache.canonical.com
       microk8s kubectl get all -A
-      microk8s kubectl get pods -A
+      microk8s kubectl describe pods -A
       juju status
       juju debug-log --no-tail --limit 1000
     debug-each: |

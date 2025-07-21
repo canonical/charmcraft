@@ -104,9 +104,9 @@ jobs:
           sudo nft list ruleset
           sudo snap logs aproxy -n=all
 
-      - name: Setup tmate session
-        if: ${{ failure() }}
-        uses: canonical/action-tmate@main
+      # - name: Setup tmate session
+      #   if: ${{ failure() }}
+      #   uses: canonical/action-tmate@main
 
       - name: Discard spread workers
         if: always()

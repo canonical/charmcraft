@@ -236,7 +236,7 @@ All nontrivial code changes should be accompanied by a reasonable set of tests.
 Charmcraft's test suite includes integration, unit, and
 [Spread](https://github.com/canonical/spread/blob/master/README.md) tests. If you're not
 sure which tests you should add, go with your best judgement – additional tests can be
-added during the [review process](?tab=t.0#heading=h.ahvkx7vrs5d0).
+added during the [review process](#follow-up-for-the-review).
 
 For low-complexity changes that require basic testing, run the fast tests:
 

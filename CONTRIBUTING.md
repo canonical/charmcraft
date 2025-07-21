@@ -32,7 +32,7 @@ incorporated into the repository.
 
 ### Open source license
 
-Charmcraft is licensed under [GPL-3.0](LICENSE).
+Charmcraft is licensed under [Apache-2.0](LICENSE).
 
 ## Report an issue or open a request
 

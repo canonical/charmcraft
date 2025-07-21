@@ -377,7 +377,7 @@ Deploy the ``self-signed-certificates`` charm and integrate with the
 At this point your 12-factor app can be accessed using HTTPS.
 In the case of the ``nginx-ingress-integrator`` charm, if you access the
 external URL of your charm using HTTP, you will get a 308 Permanent Redirect
-HTTP status code that will redirect to the https URL. You can access the HTTPS
+HTTP status code that will redirect to the HTTPS URL. You can access the HTTPS
 URL of your app with a command like:
 
 .. code-block:: bash

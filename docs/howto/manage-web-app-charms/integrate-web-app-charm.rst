@@ -90,7 +90,7 @@ project file.
 .. _integrate_web_app_cos:
 
 
-Configure TLS to Access the 12-Factor App over HTTPS
+Configure TLS to access the 12-Factor app over HTTPS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can configure TLS if your ingress provider charm supports integration with
@@ -100,21 +100,21 @@ charm as a certificate provider.
 
 For example, using the
 `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
-charm as an ingress provider charm, you can set the hostname with:
+charm as an ingress provider, you can set the hostname with:
 
 .. code-block:: bash
 
     juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
 
 Deploy the ``self-signed-certificates`` charm and integrate with the
-``nginx-ingress-integrator`` app:
+``nginx-ingress-integrator`` charm:
 
 .. code-block:: bash
 
     juju deploy self-signed-certificates
     juju integrate self-signed-certificates nginx-ingress-integrator
 
-At this point your 12 factor application can be accessed using HTTPS.
+At this point your 12-factor app can be accessed using HTTPS.
 In the case of the ``nginx-ingress-integrator`` charm, if you access the
 external URL of your charm using HTTP, you will get a 308 Permanent Redirect
 HTTP status code that will redirect to the https URL. You can access the HTTPS
@@ -122,7 +122,8 @@ URL of your app with a command like:
 
 .. code-block:: bash
 
-   curl -v --insecure https://<yourdomain.example.com> --resolve <yourdomain.example.com>:443:<ingress-ip>
+   curl -v --insecure https://<yourdomain.example.com> \
+     --resolve <yourdomain.example.com>:443:<ingress-ip>
 
 .. note::
 

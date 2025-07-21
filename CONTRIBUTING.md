@@ -145,7 +145,7 @@ Starcraft team will review your proposal and, if everything looks complete, assi
 issue to you.
 
 Certain high-value issues are allocated monetary bounties. If you're interested in
-taking one on, we welcome you to [apply](?tab=t.0#heading=h.byuybwuu1qf).
+taking one on, we welcome you to [apply](#apply-for-a-bounty).
 
 ### Create a development branch
 

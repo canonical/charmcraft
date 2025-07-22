@@ -563,10 +563,7 @@ class UploadCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> int:
         """Run the command."""
-        if parsed_args.name:
-            name = parsed_args.name
-        else:
-            name = get_name_from_zip(parsed_args.filepath)
+        name = parsed_args.name or get_name_from_zip(parsed_args.filepath)
         store = Store(env.get_store_config())
         result = store.upload(name, parsed_args.filepath)
 
@@ -875,7 +872,6 @@ class PromoteCommand(CharmcraftCommand):
             permanent=True,
         )
         store = cast(StoreService, self._services.get("store"))
-
         name = parsed_args.name or self._services.project.name
 
         from_channel = charmcraft.store.models.ChannelData.from_str(

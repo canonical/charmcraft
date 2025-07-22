@@ -501,12 +501,11 @@ specification. Each container can be specified in terms of ``resource``, ``bases
 ``uid``, ``gid`` and ``mounts``, where one of either the ``resource`` or the
 ``bases`` subkeys must be defined, and ``mounts`` is optional.
 
-.. note::
-    The location attribute must be specified when mounting a storage into a workload
-    container - this will dictate the mount point for the specific container.
+The location attribute must be specified when mounting a storage into a workload
+container. It dictates the mount point for the specific container.
 
-    Optionally, developers can specify the location attribute on the `storage`_ itself,
-    which will specify the mount point in the charm container.
+Optionally, you can specify the location attribute on the `storage`_ itself,
+which also sets the mount point in the charm container.
 
 .. code-block:: yaml
 

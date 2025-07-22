@@ -1,10 +1,6 @@
 summary: pack a simple charm on various bases
 kill-timeout: 30m # These sometimes take a while to download bases.
 priority: 50 # Because these can take a while, run them early.
-systems:
-  # These run in managed mode, so we only need to run them on one system.
-  # Prefer an old system to root out any packaging issues
-  - ubuntu-18.04-64
 
 environment:
   BASE_CHANNEL/focal_bases: 20.04

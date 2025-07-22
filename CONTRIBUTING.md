@@ -205,7 +205,7 @@ done browsing, press `Q` to exit the interactive log.
 > bug. That should be two separate commits.
 >
 > In other scenarios, multiple types could be appropriate because of the nature of the
-> commit. This can happen with test and docs, which can be used as either types or
+> commit. This can happen with `test` and `docs`, which can be used as either types or
 > scopes.
 >
 > Run down the following list and select the highest-ranked type that fits your change:

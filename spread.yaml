@@ -156,7 +156,7 @@ suites:
     manual: true
     prepare: |
       juju_channel=3.6/stable
-      microk8s_channel=1.31-strict/stable
+      microk8s_channel=1.32/stable
 
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -165,7 +165,7 @@ suites:
       . "/charmcraft/tests/spread/tools/prepare.sh"
 
       refresh_or_install_snap juju "$juju_channel"
-      refresh_or_install_snap microk8s "$microk8s_channel"
+      refresh_or_install_snap microk8s "$microk8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
 
       if [[ -v CONTAINER_REGISTRY_URL ]]; then
@@ -184,7 +184,8 @@ suites:
       microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
 
       # Bootstrap controller
-      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
+      microk8s config | juju add-k8s my-k8s --client
+      juju bootstrap my-k8s dev-controller --config bootstrap-timeout=500
 
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc

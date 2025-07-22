@@ -36,7 +36,7 @@ _SERVICES: dict[str, str] = {
 
 
 def register_services() -> None:
-    """Register Snapcraft-specific services."""
+    """Register Charmcraft-specific services."""
     for name, service in _SERVICES.items():
         module_name = name.replace("_", "")
         ServiceFactory.register(

@@ -136,16 +136,14 @@ channel](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com). It's possible tha
 on it has been started, or that it fits into an existing plan. Often, you will save time
 and effort by checking for prior work.
 
-Once you've found or [created an
-issue](https://docs.github.com/articles/creating-an-issue) you'd like to take on,
-propose your solution in the issue's thread. In your proposal, describe a plan for the
-change, its tests, and its documentation. If the feature warrants a new page in the
-documentation, propose a [Diátaxis](https://diataxis.fr) category for the page. The
-Starcraft team will review your proposal and, if everything looks complete, assign the
-issue to you.
+Once you've found or created an issue you'd like to take on, propose your solution in
+the issue's thread. In your proposal, describe a plan for the change, its tests, and its
+documentation. If the feature warrants a new page in the documentation, propose a
+[Diátaxis](https://diataxis.fr) category for the page. The Starcraft team will review
+your proposal and, if everything looks complete, assign the issue to you.
 
 Certain high-value issues are allocated monetary bounties. If you're interested in
-taking one on, we welcome you to [apply](#apply-for-a-bounty).
+taking one on, we welcome you to apply.
 
 ### Create a development branch
 
@@ -236,7 +234,7 @@ All nontrivial code changes should be accompanied by a reasonable set of tests.
 Charmcraft's test suite includes integration, unit, and
 [Spread](https://github.com/canonical/spread/blob/master/README.md) tests. If you're not
 sure which tests you should add, go with your best judgement – additional tests can be
-added during the [review process](#follow-up-for-the-review).
+added during the review process.
 
 For low-complexity changes that require basic testing, run the fast tests:
 
@@ -352,13 +350,3 @@ interface, as it leads to fewer potential conflicts with syncs.
 
 Don't force-push further changes to the branch after your PR is fully approved. It makes
 it harder for reviewers to see whether any additional changes were made.
-
-### Evaluating pull requests
-
-Oftentimes all you want to do is see if a given pull request solves the issue you were
-having. To make this easier, snaps are published for AMD64 and ARM64 on a channel named
-`latest/edge/pr-<PR-number>` where `PR number` is the number of the pull request.
-
-For feature branches, snaps are published for AMD64 and ARM64 on a channel named
-`latest/edge/<branch-name>`. For example, a branch named `feature/offline-mode` would be
-available on the channel `latest/edge/offline-mode`.

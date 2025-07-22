@@ -615,7 +615,7 @@ def test_from_yaml_file_exception(
 def test_warn_on_deprecated_charmhub(
     emitter: craft_cli.pytest_plugin.RecordingEmitter, cls, content
 ):
-    with pytest.warns(DeprecationWarning, match="charmhub"):
+    with pytest.warns(DeprecationWarning, match="'charmhub' field"):
         cls.model_validate(content)
     emitter.assert_progress(
         "WARNING: The 'charmhub' field is deprecated and no longer used. It will be removed in a "

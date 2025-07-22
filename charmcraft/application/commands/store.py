@@ -875,9 +875,7 @@ class PromoteCommand(CharmcraftCommand):
             permanent=True,
         )
         store = cast(StoreService, self._services.get("store"))
-
         name = parsed_args.name or self._services.get("project").get().name
-
         from_channel = charmcraft.store.models.ChannelData.from_str(
             parsed_args.from_channel
         )

@@ -24,6 +24,7 @@ from urllib import parse
 
 import craft_application
 import craft_store
+import distro
 from craft_cli import emit
 from craft_store import models, publisher
 from craft_store.errors import StoreServerError
@@ -68,8 +69,6 @@ class BaseStoreService(craft_application.AppService):
             f"{platform.python_implementation()} {platform.python_version()}",
         ]
         if platform.system() == "Linux":
-            import distro
-
             segments.append(f"{distro.name()} {distro.version()}")
 
         return "; ".join(segments)

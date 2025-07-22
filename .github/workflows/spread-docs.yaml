@@ -57,11 +57,8 @@ jobs:
     steps:
       - name: Fix network issues related to docker and lxd
         run: |
-          sudo ip a
           sudo iptables -P FORWARD ACCEPT
           sudo ip6tables -P FORWARD ACCEPT
-          sudo nft list ruleset
-          curl -v -k --connect-timeout 10 https://github-runner-dockerhub-cache.canonical.com
 
       - name: Checkout charmcraft
         uses: actions/checkout@v4
@@ -97,16 +94,6 @@ jobs:
       - name: Run spread
         run: |
           $(go env GOPATH)/bin/spread "${{ matrix.system }}"
-
-      - name: Aproxy logs
-        if: ${{ failure() }}
-        run: |
-          sudo nft list ruleset
-          sudo snap logs aproxy -n=all
-
-      # - name: Setup tmate session
-      #   if: ${{ failure() }}
-      #   uses: canonical/action-tmate@main
 
       - name: Discard spread workers
         if: always()

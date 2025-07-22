@@ -586,7 +586,7 @@ class OpsMainCall(Linter):
         rv = {}
 
         class ImportVisitor(ast.NodeVisitor):
-            def visit_Import(self, node: ast.Import):  # noqa: N802
+            def visit_Import(self, node: ast.Import):
                 for alias in node.names:
                     # Detect statements like `import ops`
                     if alias.name == "ops":
@@ -596,7 +596,7 @@ class OpsMainCall(Linter):
                     elif alias.name.startswith("ops.") and not alias.asname:
                         rv["ops"] = "ops"
 
-            def visit_ImportFrom(self, node: ast.ImportFrom):  # noqa: N802
+            def visit_ImportFrom(self, node: ast.ImportFrom):
                 for alias in node.names:
                     # Detect statements like `from ops import main [as ops_main]`
                     if node.module in ("ops", "ops.main") and alias.name == "main":
@@ -609,7 +609,7 @@ class OpsMainCall(Linter):
         main_call_sites = []
 
         class OpsMainFinder(ast.NodeVisitor):
-            def visit_Call(self, node: ast.Call):  # noqa: N802
+            def visit_Call(self, node: ast.Call):
                 match node.func:
                     # Matches statements like `ops.main.main(...)`
                     case ast.Attribute(

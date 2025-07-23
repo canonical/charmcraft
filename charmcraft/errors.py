@@ -85,7 +85,7 @@ class DuplicateCharmsError(CraftError):
     def __init__(
         self, charms: Mapping[str, Iterable[pathlib.Path]], source: bool = True
     ):
-        import charmcraft.utils
+        import charmcraft.utils  # noqa: PLC0415 (circular imports)
 
         charm_names = charmcraft.utils.humanize_list(charms.keys(), "and")
         super().__init__(

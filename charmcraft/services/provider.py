@@ -29,11 +29,11 @@ from typing import cast
 import craft_application
 import craft_providers
 from craft_application import services
-from craft_application.models import BuildInfo
 from craft_cli import emit
+from craft_platforms import BuildInfo
 from craft_providers import bases
 
-from charmcraft import env, models
+from charmcraft import env
 
 
 class ProviderService(services.ProviderService):
@@ -44,18 +44,14 @@ class ProviderService(services.ProviderService):
         app: craft_application.AppMetadata,
         services: craft_application.ServiceFactory,
         *,
-        project: models.CharmcraftProject,
         work_dir: pathlib.Path,
-        build_plan: list[BuildInfo],
         provider_name: str | None = None,
         install_snap: bool = True,
     ) -> None:
         super().__init__(
             app,
             services,
-            project=project,
             work_dir=work_dir,
-            build_plan=build_plan,
             provider_name=provider_name,
             install_snap=install_snap,
         )
@@ -119,6 +115,7 @@ class ProviderService(services.ProviderService):
             **kwargs,  # type: ignore[arg-type]
         ) as instance:
             try:
+                instance.execute_run(["chown", "a+rwx", "/tmp/craft-state"])
                 # Use /root/.cache even if we're in the snap.
                 instance.execute_run(
                     ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True

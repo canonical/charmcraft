@@ -1,0 +1,39 @@
+type: charm
+bases:
+- build-on:
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - amd64
+    - riscv64
+  - name: ubuntu
+    channel: '20.04'
+    architectures:
+    - amd64
+    - arm64
+  run-on:
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - amd64
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - riscv64
+  - name: ubuntu
+    channel: '22.04'
+    architectures:
+    - arm64
+- build-on:
+  - name: ubuntu
+    channel: '20.04'
+  run-on:
+  - name: ubuntu
+    channel: '20.04'
+    architectures:
+    - amd64
+    - arm64
+    - riscv64
+    - s390x
+    - ppc64el
+    - armhf

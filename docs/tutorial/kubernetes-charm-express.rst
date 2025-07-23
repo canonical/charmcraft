@@ -326,6 +326,10 @@ pack, subsequent charm packings are faster.
 Deploy the Express app
 ------------------------
 
+So far, we've packed our Express app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Express app with Juju.
+
 A Juju model is needed to handle Kubernetes resources while deploying
 the Express app. The Juju model holds the app along with any supporting
 components. In this tutorial, our model will hold the Express app, ingress,

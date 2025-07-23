@@ -414,6 +414,10 @@ pack, subsequent charm packings are faster.
 Deploy the Django app
 ---------------------
 
+So far, we've packed our Django app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Django app with Juju.
+
 A Juju model is needed to handle Kubernetes resources while deploying
 the Django app. The Juju model holds the app along with any supporting
 components. In this tutorial, our model will hold the Django app, the

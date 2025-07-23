@@ -353,6 +353,10 @@ pack, subsequent charm packings are faster.
 Deploy the FastAPI app
 ----------------------
 
+So far, we've packed our FastAPI app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the FastAPI app with Juju.
+
 A Juju model is needed to handle Kubernetes resources while deploying
 the FastAPI app. The Juju model holds the app along with any supporting
 components. In this tutorial, our model will hold the FastAPI app, ingress,

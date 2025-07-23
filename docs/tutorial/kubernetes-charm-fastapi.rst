@@ -602,7 +602,7 @@ and paste the following code into it:
 .. note::
 
     The charm will pass the Database connection string in the
-    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
+    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has
     been integrated with the charm.
 
 

@@ -789,9 +789,8 @@ After we wait for a moment for the app to be restarted, using
 ``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
 or visiting http://django-hello-world should now respond with ``Hi!``.
 
-
-Tear things down
-----------------
+Celebrate and reflect
+---------------------
 
 We've reached the end of this tutorial. We went through the entire
 development process, including:
@@ -804,6 +803,10 @@ development process, including:
 - Integrating the app with PostgreSQL to be production ready
 - Exposing the app using an ingress
 - Adding an initial app and configuring the app
+
+
+Tear things down
+----------------
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 

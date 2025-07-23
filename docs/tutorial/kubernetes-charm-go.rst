@@ -724,9 +724,8 @@ repeat this process, the output should be as follows:
     :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
     Number of visitors 2
 
-
-Tear things down
-----------------
+Celebrate and reflect
+---------------------
 
 We've reached the end of this tutorial. We went through the entire
 development process, including:
@@ -739,6 +738,9 @@ development process, including:
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database
+
+Tear things down
+----------------
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 

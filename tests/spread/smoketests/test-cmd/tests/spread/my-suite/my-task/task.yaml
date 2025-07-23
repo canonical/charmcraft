@@ -1,0 +1,13 @@
+summary: An example spread test.
+
+prepare: |
+  echo Preparing the test
+
+execute: |
+  echo Running the test
+  env
+  test -f "$CRAFT_ARTIFACT"
+  unzip -l "${CRAFT_ARTIFACT}" | MATCH metadata.yaml
+
+restore: |
+  echo Restoring the test

@@ -1,0 +1,11 @@
+summary: test the test command as though running in CI.
+
+environment:
+  CI: "1"
+
+execute: |
+  charmcraft test
+
+restore: |
+  rm -f *.charm
+  charmcraft clean

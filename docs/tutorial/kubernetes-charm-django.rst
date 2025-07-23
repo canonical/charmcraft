@@ -154,6 +154,8 @@ Multipass VM, run:
 
     multipass info charm-dev | grep IP
 
+Verify the app
+~~~~~~~~~~~~~~
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -162,6 +164,9 @@ browser. Open a new tab and visit
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
+
+Destroy the app
+~~~~~~~~~~~~~~~
 
 The Django app looks good, so we can stop it for now from the
 original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.

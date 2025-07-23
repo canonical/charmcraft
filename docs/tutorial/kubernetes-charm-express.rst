@@ -105,6 +105,9 @@ that it works:
 
    npm start
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the Express app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -117,6 +120,9 @@ endpoint. You will need a new terminal for this; use
 
 If the output has an *HTTP/1.1 200 OK* status message, then we know the newly-built
 app is working.
+
+Destroy the app
+~~~~~~~~~~~~~~~
 
 The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.

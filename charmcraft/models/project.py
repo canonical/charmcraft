@@ -467,7 +467,7 @@ class CharmProject(CharmcraftProject):
               container (that you will then define further in the resources block).
             - ``bases`` is a list of bases to be used for resolving a container image,
               in descending order of preference. To use it, specify a base name (for
-              example, ``ubuntu`` or ``centos``), a ``channel`` and an
+              example, ``ubuntu`` or ``almalinux``), a ``channel`` and an
               ``architecture``.
             - ``mounts`` is a list of mounted storage volumes for this container. To
               use it, specify the name of the storage to mount from the charm
@@ -804,7 +804,6 @@ class BasesCharm(CharmProject):
         - Ubuntu 18.04
         - Ubuntu 20.04
         - Ubuntu 22.04
-        - CentOS 7
         - Alma Linux 9
     """
 

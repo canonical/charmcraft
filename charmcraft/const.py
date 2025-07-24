@@ -58,7 +58,6 @@ LEGACY_BASES = (  # Legacy bases that can use the "bases" syntax.
     "ubuntu@18.04",
     "ubuntu@20.04",
     "ubuntu@22.04",
-    "centos@7",
     "almalinux@9",
 )
 
@@ -70,7 +69,6 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@24.10",
     "ubuntu@25.04",
     "ubuntu@25.10",
-    "centos@7",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
@@ -90,7 +88,6 @@ SUPPORTED_BASES = frozenset(
         BaseName("ubuntu", "24.04"),
         BaseName("ubuntu", "25.10"),
         BaseName("ubuntu", "devel"),
-        BaseName("centos", "7"),
         BaseName("almalinux", "9"),
     )
 )

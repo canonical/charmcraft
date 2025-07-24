@@ -191,7 +191,6 @@ Supported bases are:
 * ``ubuntu@24.04``
 * ``ubuntu@24.10``
 * ``ubuntu@25.04``
-* ``centos@7``
 * ``almalinux@9``
 
 ``build-base``

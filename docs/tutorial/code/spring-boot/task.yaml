@@ -166,7 +166,7 @@ execute: |
   juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config spring-boot-hello-world greeting='Hi!'

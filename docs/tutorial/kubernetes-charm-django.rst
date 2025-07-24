@@ -301,6 +301,18 @@ Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
 
+.. note::
+
+    You can use the ``migrate.sh`` file to run cli tools for database migration.
+    This script runs before the app is initialized.
+
+    See more:
+    :ref:`Django framework extension | Regarding the migrate.sh file <django-migrate-sh>`.
+
+    See more:
+    `Django database migration tooling
+    <https://docs.djangoproject.com/en/5.2/topics/migrations/>`__
+
 Now let's pack the rock:
 
 .. literalinclude:: code/django/task.yaml

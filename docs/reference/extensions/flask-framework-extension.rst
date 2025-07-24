@@ -103,6 +103,7 @@ See the `OpenTelemetry documentation
 <https://opentelemetry-python.readthedocs.io/en/latest/>`__
 for further information about tracing.
 
+.. _flask-migrate-sh:
 
 Regarding the ``migrate.sh`` file
 ---------------------------------
@@ -117,6 +118,9 @@ blocked state. The migration script will be run on every unit and it is assumed 
 is idempotent (can be run multiple times) and that it can be run on multiple units at
 the same time without causing issues. This can be achieved by, for example, locking any
 tables during the migration.
+
+If you prefer you can also use different tooling for migration, for example `Alembic
+<https://alembic.sqlalchemy.org/en/latest/>`__.
 
 
 Secrets

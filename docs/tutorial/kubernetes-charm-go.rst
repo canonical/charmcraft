@@ -603,6 +603,14 @@ end of the file:
     :caption: ~/go-hello-world/rockcraft.yaml
     :language: yaml
 
+.. note::
+
+    If you prefer you can also use different tooling for migration, for example
+    `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
+    `goose <https://github.com/pressly/goose/>`__ .
+
+    See more:
+    :ref:`Go framework extension | Regarding the migrate.sh file <go-migrate-sh>`.
 
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~

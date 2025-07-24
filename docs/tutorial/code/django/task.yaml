@@ -194,7 +194,7 @@ execute: |
   # [docs:disable-debug-mode-end]
 
   # give Juju some time to refresh the app
-  sleep 10
+  sleep 20
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!

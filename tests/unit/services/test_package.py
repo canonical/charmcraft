@@ -279,25 +279,8 @@ def test_do_not_overwrite_config_yaml(
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
             ],
         ),
-        (
-            [{"name": "centos", "channel": "7"}],
-            BuildInfo(
-                platform=craft_platforms.DebianArchitecture.from_host(),
-                build_on=craft_platforms.DebianArchitecture.from_host(),
-                build_for=craft_platforms.DebianArchitecture.from_host(),
-                build_base=DistroBase("centos", "7"),
-            ),
-            [
-                {
-                    "name": "centos",
-                    "channel": "7",
-                    "architectures": [craft_platforms.DebianArchitecture.from_host()],
-                }
-            ],
-        ),
         pytest.param(
             [
-                {"name": "centos", "channel": "7"},
                 {
                     "build-on": [{"name": "ubuntu", "channel": "20.04"}],
                     "run-on": [

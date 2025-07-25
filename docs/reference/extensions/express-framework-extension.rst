@@ -137,7 +137,7 @@ Regarding the ``migrate.sh`` file
 If your app depends on a database it is common to run a database migration script before
 app startup which, for example, creates or modifies tables. This can be done by
 including the ``migrate.sh`` script in the root of your project. It will be executed
-with the same environment variables and context as the Express application.
+with the same environment variables and context as the Express app.
 
 If the migration script fails, the app won't be started and the app charm will go into
 blocked state. The migration script will be run on every unit and it is assumed that it

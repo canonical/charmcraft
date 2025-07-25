@@ -598,7 +598,7 @@ and paste the following code into it:
 .. note::
 
     In production you can also use the ``migrate.sh`` file
-    and run cli tools for database migration.
+    and run CLI tools for database migration.
 
     See more:
     :ref:`FastAPI framework extension | Regarding the migrate.sh file <fastapi-migrate-sh>`.

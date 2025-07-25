@@ -1,4 +1,6 @@
 summary: test the test command as though running in CI.
+systems:
+  - ubuntu-24.04-64
 
 environment:
   CI: "1"

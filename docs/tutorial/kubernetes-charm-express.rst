@@ -585,7 +585,7 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :end-before: [docs:change-migrate-permissions-end]
     :dedent: 2
 
-.. note::
+.. tip::
 
     If you prefer you can also use different tooling for migration, for example `prisma
     <https://www.npmjs.com/package/prisma/>`__ or

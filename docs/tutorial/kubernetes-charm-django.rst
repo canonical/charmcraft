@@ -301,7 +301,7 @@ Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
 
-.. note::
+.. tip::
 
     You can use the ``migrate.sh`` file to run cli tools for database migration.
     This script runs before the app is initialized.

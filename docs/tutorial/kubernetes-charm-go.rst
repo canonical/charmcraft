@@ -603,7 +603,7 @@ end of the file:
     :caption: ~/go-hello-world/rockcraft.yaml
     :language: yaml
 
-.. note::
+.. tip::
 
     If you prefer you can also use different tooling for migration, for example
     `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or

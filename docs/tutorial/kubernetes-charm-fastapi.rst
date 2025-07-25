@@ -595,7 +595,7 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
     been integrated with the charm.
 
-.. note::
+.. tip::
 
     In production you can also use the ``migrate.sh`` file
     and run CLI tools for database migration.

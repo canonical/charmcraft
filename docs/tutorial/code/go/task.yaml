@@ -148,7 +148,6 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  sleep 20
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello

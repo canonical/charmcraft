@@ -157,7 +157,6 @@ execute: |
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
-  sleep 20
   juju wait-for application expressjs-hello-world \
   --query='status=="active"' --timeout 10m
 

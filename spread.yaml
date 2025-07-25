@@ -19,7 +19,6 @@ exclude:
   - .venv
   - .*_cache
   - charmcraft
-  - docs
   - libexec
   - schema
   - snap

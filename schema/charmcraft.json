@@ -47,7 +47,7 @@
 		},
 		"BasesCharm": {
 			"additionalProperties": false,
-			"description": "A charm using the deprecated ``bases`` keyword.\n\nThis type of charm only supports the following bases:\n    - Ubuntu 18.04\n    - Ubuntu 20.04\n    - Ubuntu 22.04\n    - CentOS 7\n    - Alma Linux 9",
+			"description": "A charm using the deprecated ``bases`` keyword.\n\nThis type of charm only supports the following bases:\n    - Ubuntu 18.04\n    - Ubuntu 20.04\n    - Ubuntu 22.04\n    - Alma Linux 9",
 			"properties": {
 				"name": {
 					"description": "The name of the project on Charmhub.\n\nThis value will be used both in the URL of the charm on Charmhub and when\ndeploying the charm with juju.\n\nCharms should follow the\n`charm naming guidelines <https://juju.is/docs/sdk/naming>`_.",
@@ -118,11 +118,6 @@
 					],
 					"default": null,
 					"title": "Build-Base"
-				},
-				"platforms": {
-					"default": null,
-					"title": "Platforms",
-					"type": "null"
 				},
 				"contact": {
 					"default": null,
@@ -302,7 +297,7 @@
 						}
 					],
 					"default": null,
-					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``centos``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
+					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``almalinux``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
 					"examples": [
 						{
 							"super-app": {
@@ -809,7 +804,7 @@
 		},
 		"Platform": {
 			"additionalProperties": false,
-			"description": "Project platform definition.",
+			"description": "A single platform entry in the platforms dictionary.\n\nThis model defines how a single value under the ``platforms`` key works for a project.",
 			"properties": {
 				"build-on": {
 					"anyOf": [
@@ -817,14 +812,21 @@
 							"items": {
 								"type": "string"
 							},
-							"minItems": 1,
 							"type": "array",
 							"uniqueItems": true
 						},
 						{
-							"type": "null"
+							"type": "string"
 						}
 					],
+					"examples": [
+						"amd64",
+						[
+							"arm64",
+							"riscv64"
+						]
+					],
+					"minLength": 1,
 					"title": "Build-On"
 				},
 				"build-for": {
@@ -838,15 +840,21 @@
 							"type": "array"
 						},
 						{
-							"type": "null"
+							"type": "string"
 						}
 					],
-					"default": null,
+					"examples": [
+						"amd64",
+						[
+							"riscv64"
+						]
+					],
 					"title": "Build-For"
 				}
 			},
 			"required": [
-				"build-on"
+				"build-on",
+				"build-for"
 			],
 			"title": "Platform",
 			"type": "object"
@@ -919,7 +927,6 @@
 								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
-								"centos@7",
 								"almalinux@9"
 							],
 							"type": "string"
@@ -942,7 +949,6 @@
 								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
-								"centos@7",
 								"almalinux@9"
 							],
 							"type": "string"
@@ -960,14 +966,52 @@
 				},
 				"platforms": {
 					"additionalProperties": {
-						"anyOf": [
-							{
-								"$ref": "#/$defs/Platform"
-							},
-							{
-								"type": "null"
-							}
-						]
+						"$ref": "#/$defs/Platform"
+					},
+					"patternProperties": {
+						"(amd64|arm64|armhf|i386|ppc64el|riscv64|s390x)": {
+							"anyOf": [
+								{
+									"type": "null"
+								},
+								{
+									"properties": {
+										"build-on": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												}
+											],
+											"title": "Build-On"
+										},
+										"build-for": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"items": {
+														"type": "string"
+													},
+													"type": "array"
+												}
+											],
+											"title": "Build-For"
+										}
+									},
+									"required": [
+										"build-on"
+									],
+									"type": "object"
+								}
+							]
+						}
 					},
 					"title": "Platforms",
 					"type": "object"
@@ -1145,7 +1189,7 @@
 						}
 					],
 					"default": null,
-					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``centos``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
+					"description": "Define a map of containers to be created adjacent to the charm (as a\nsidecar, in the same pod).\n\nThis is required for Kubernetes charms.\n\nThis key consists of a dictionary mapping container names to their\nspecifications. Each container can be specified in terms of ``resource``,\n``bases`` and ``mounts``, where one of either the ``resource`` or the\n``bases`` subkeys must be defined and ``mounts`` is optional.\n\n- ``resource`` is the name of an OCI image resource used to create the\n  container (that you will then define further in the resources block).\n- ``bases`` is a list of bases to be used for resolving a container image,\n  in descending order of preference. To use it, specify a base name (for\n  example, ``ubuntu`` or ``almalinux``), a ``channel`` and an\n  ``architecture``.\n- ``mounts`` is a list of mounted storage volumes for this container. To\n  use it, specify the name of the storage to mount from the charm\n  storage and, optionally, the location where to mount the storage.\n\nStructure::\n\n    containers:\n      <container name>:\n        resource: <resource name>\n        bases:\n          - name: <base name>\n            channel: <track[/risk][/branch]>\n            architectures:\n              - <architecture>\n        mounts:\n          - storage: <storage name>\n            location: <path>",
 					"examples": [
 						{
 							"super-app": {

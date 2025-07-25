@@ -504,7 +504,7 @@ for the OCI image resource used to create the container; to use it, specify  an 
 image resource name (that you will then define further in the `resources`_ block).
 ``bases`` is a list of bases to be used for resolving a container image, in descending
 order of preference; to use it, specify a base name (for example, ``ubuntu``,
-``centos``, ``osx``, ``opensuse``), a
+``almalinux``), a
 `channel <https://snapcraft.io/docs/channels>`_, and an architecture. ``mounts`` is a
 list of mounted storages for this container; to use it, specify the name of the
 storage to mount from the charm storage and, optionally, the location where to mount
@@ -688,7 +688,8 @@ data from different sources that end up being a part of the final charm.
 **Structure:** Mapping. Keys are user-defined part names. The value of each key
 is a map where keys are part properties.
 
-    See more: :ref:`part_properties`
+..     https://github.com/canonical/charmcraft/issues/2378
+..     See more: :ref:`part_properties`
 
 .. collapse:: Example
 

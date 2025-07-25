@@ -44,6 +44,7 @@ def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
         lifecycle.StageCommand,
         lifecycle.PrimeCommand,
         PackCommand,
+        lifecycle.TestCommand,
     ]
 
 

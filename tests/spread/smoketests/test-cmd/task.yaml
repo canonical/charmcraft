@@ -1,0 +1,16 @@
+summary: test the test command as though running in CI.
+systems:
+  - ubuntu-24.04-64
+
+environment:
+  CI: "1"
+
+execute: |
+  charmcraft test > test.log
+  MATCH test.log "Testing platform 'amd64'"
+  MATCH test.log "Testing platform 'arm64'"
+
+restore: |
+  rm -f test.log
+  rm -f *.charm
+  charmcraft clean

@@ -59,7 +59,6 @@ from charmcraft.application.commands.store import (
     SetResourceArchitecturesCommand,
     UploadResourceCommand,
 )
-from charmcraft.application.commands.test import TestCommand
 from charmcraft.application.commands.version import Version
 
 
@@ -120,7 +119,6 @@ def fill_command_groups(app: craft_application.Application) -> None:
             Analyse,
             Analyze,
             InitCommand,
-            TestCommand,
             Version,
         ],
     )

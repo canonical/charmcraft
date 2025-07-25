@@ -7,7 +7,7 @@ backends:
     systems:
       - ubuntu-24.04:
 
-  other:
+  other:  # Ensure that charmmcraft test only runs the craft backend.
     type: adhoc
     allocate: "false"
     systems:

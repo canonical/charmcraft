@@ -2,6 +2,7 @@ summary: An example spread test.
 
 prepare: |
   echo Preparing the test
+  sudo apt-get install unzip
 
 execute: |
   echo Running the test

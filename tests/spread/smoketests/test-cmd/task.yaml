@@ -6,8 +6,11 @@ environment:
   CI: "1"
 
 execute: |
-  charmcraft test
+  charmcraft test > test.log
+  cat test.log | MATCH "Testing platform 'amd64'"
+  cat test.log | MATCH "Testing platform 'arm64'"
 
 restore: |
+  rm -f test.log
   rm -f *.charm
   charmcraft clean

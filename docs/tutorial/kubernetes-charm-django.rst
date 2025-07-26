@@ -154,6 +154,8 @@ Multipass VM, run:
 
     multipass info charm-dev | grep IP
 
+Verify the app
+~~~~~~~~~~~~~~
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -162,6 +164,9 @@ browser. Open a new tab and visit
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
+
+Destroy the app
+~~~~~~~~~~~~~~~
 
 The Django app looks good, so we can stop it for now from the
 original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
@@ -413,6 +418,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Django app
 ---------------------
+
+So far, we've packed our Django app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Django app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Django app. The Juju model holds the app along with any supporting
@@ -780,9 +789,8 @@ After we wait for a moment for the app to be restarted, using
 ``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
 or visiting http://django-hello-world should now respond with ``Hi!``.
 
-
-Tear things down
-----------------
+Celebrate and reflect
+---------------------
 
 We've reached the end of this tutorial. We went through the entire
 development process, including:
@@ -795,6 +803,10 @@ development process, including:
 - Integrating the app with PostgreSQL to be production ready
 - Exposing the app using an ingress
 - Adding an initial app and configuring the app
+
+
+Tear things down
+----------------
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 

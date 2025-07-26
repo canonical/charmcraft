@@ -120,6 +120,9 @@ let's run the FastAPI app to verify that it works:
 
     fastapi dev app.py --port 8080
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the FastAPI app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -131,6 +134,9 @@ endpoint. You will need a new terminal for this; use
     :dedent: 2
 
 The FastAPI app should respond with ``{"message":"Hello, world!"}``.
+
+Destroy the app
+~~~~~~~~~~~~~~~
 
 The FastAPI app looks good, so we can stop for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -352,6 +358,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the FastAPI app
 ----------------------
+
+So far, we've packed our FastAPI app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the FastAPI app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the FastAPI app. The Juju model holds the app along with any supporting
@@ -592,7 +602,7 @@ and paste the following code into it:
 .. note::
 
     The charm will pass the Database connection string in the
-    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
+    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has
     been integrated with the charm.
 
 
@@ -697,9 +707,8 @@ this process, the output should be as follows:
     :input: curl http://fastapi-hello-world/visitors  --resolve fastapi-hello-world:80:127.0.0.1
     {"count":2}
 
-
-Tear things down
-----------------
+Celebrate and reflect
+---------------------
 
 We've reached the end of this tutorial. We went through the entire
 development process, including:
@@ -712,6 +721,9 @@ development process, including:
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database
+
+Tear things down
+----------------
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 

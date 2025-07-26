@@ -68,6 +68,7 @@ will be set automatically.
 .. |framework| replace:: Django
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy

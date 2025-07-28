@@ -534,7 +534,7 @@ and paste the following code into it:
     See more:
     :ref:`Flask framework extension | Regarding the migrate.sh file <flask-migrate-sh>`.
 
-    If you prefer you can also use different tooling for migration, for example
+    You could also use different tooling for migration, for example
     `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__.
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the

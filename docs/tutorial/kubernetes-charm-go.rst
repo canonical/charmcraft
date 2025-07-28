@@ -605,7 +605,7 @@ end of the file:
 
 .. tip::
 
-    If you prefer you can also use different tooling for migration, for example
+    You could also use different tooling for migration, for example
     `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
     `goose <https://github.com/pressly/goose/>`__ .
 

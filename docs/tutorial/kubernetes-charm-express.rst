@@ -587,7 +587,7 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
 
 .. tip::
 
-    If you prefer you can also use different tooling for migration, for example `prisma
+    You could also use different tooling for migration, for example `prisma
     <https://www.npmjs.com/package/prisma/>`__ or
     `knex <https://www.npmjs.com/package/knex/>`__ .
 

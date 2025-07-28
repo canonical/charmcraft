@@ -30,7 +30,8 @@ without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
 
 Using the ``migrate.sh`` file is not mandatory. You can use programmatic approaches
-instead of the script. Some popular libraries for programmatic database migration include: 
+instead of the script. Some popular libraries for programmatic database migration
+include:
 
 - Flask and FastAPI: `Alembic
 <https://alembic.sqlalchemy.org/en/latest/>`__

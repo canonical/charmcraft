@@ -67,16 +67,6 @@ def mock_register(monkeypatch) -> Iterator[mock.Mock]:
         bases.BaseName("ubuntu", "22.04"),
         bases.BaseName("ubuntu", "24.04"),
         bases.BaseName("ubuntu", "devel"),
-        pytest.param(
-            bases.BaseName("centos", "7"),
-            marks=[
-                pytest.mark.xfail(
-                    raises=AssertionError,
-                    strict=True,
-                    reason="https://github.com/canonical/craft-providers/issues/608",
-                )
-            ],
-        ),
         bases.BaseName("almalinux", "9"),
     ],
 )

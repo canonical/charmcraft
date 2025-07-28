@@ -330,7 +330,7 @@ containers.
       - - `mongodb <https://charmhub.io/mongodb>`_
         - `mongodb-k8s <https://charmhub.io/mongodb-k8s>`_
         - `postgresql <https://charmhub.io/postgresql>`_
-        - `grafana-agent-k8s <https://charmhub.io/grafana-agent-k8s>`_
+        - `grafana-agent <https://charmhub.io/grafana-agent>`_
         - `kafka <https://charmhub.io/kafka>`_
       - Install and manage packages via ``snapd``.
     * - `sysctl <https://charmhub.io/operator-libs-linux/libraries/sysctl>`_

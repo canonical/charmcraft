@@ -16,6 +16,7 @@
 
 """Gunicorn based extensions."""
 
+import copy
 from typing import Any
 
 from overrides import override
@@ -73,7 +74,21 @@ class _AppBase(Extension):
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
         {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
+        {"lib": "hydra.oauth", "version": "0"},
     ]
+
+    _OAUTH_DYNAMIC_OPTIONS = {
+        "redirect-path": {
+            "type": "string",
+            "description": "The path that the user will be redirected upon completing login.",
+            "default": "/callback",
+        },
+        "scopes": {
+            "type": "string",
+            "description": "A list of scopes with spaces in between.",
+            "default": "openid profile email",
+        },
+    }
 
     @staticmethod
     @override
@@ -199,7 +214,7 @@ class _AppBase(Extension):
                 "metrics-endpoint": {"interface": "prometheus_scrape"},
                 "grafana-dashboard": {"interface": "grafana_dashboard"},
             },
-            "config": {"options": self.options},
+            "config": {"options": copy.deepcopy(self.options)},
             "parts": {
                 "charm": {
                     "plugin": "charm",
@@ -214,7 +229,32 @@ class _AppBase(Extension):
     def get_root_snippet(self) -> dict[str, Any]:
         """Fill in some required root components."""
         self._check_input()
-        return self._get_root_snippet()
+        root_snippet = self._get_root_snippet()
+        dynamic_config_options = self._get_dynamic_config_options(root_snippet)
+        root_snippet["config"]["options"].update(dynamic_config_options)
+        return root_snippet
+
+    def _get_dynamic_config_options(
+        self, root_snippet: dict[str, Any]
+    ) -> dict[str, Any]:
+        oauth_endpoint_names = []
+        requires = self._get_nested(self.yaml_data, "requires")
+        for endpoint_name, require in requires.items():
+            interface_name = require.get("interface")
+            if interface_name == "oauth":
+                oauth_endpoint_names.append(endpoint_name)
+
+        dynamic_config_options = {}
+        for oauth_endpoint_name in oauth_endpoint_names:
+            oidc_config_options = self._get_oidc_config_options(oauth_endpoint_name)
+            dynamic_config_options.update(oidc_config_options)
+        return dynamic_config_options
+
+    def _get_oidc_config_options(self, endpoint_name: str) -> dict[str, Any]:
+        return {
+            f"{endpoint_name}-{config}": value
+            for config, value in self._OAUTH_DYNAMIC_OPTIONS.items()
+        }
 
     @override
     def get_part_snippet(self) -> dict[str, Any]:

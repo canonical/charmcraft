@@ -18,6 +18,10 @@ exclude:
   - .tox
   - .venv
   - .*_cache
+  - charmcraft
+  - libexec
+  - schema
+  - snap
 
 backends:
   google:
@@ -304,3 +308,21 @@ suites:
       # tests (except in the names registration tests, of course); register them manually
       # in staging Charmhub authenticating with the configured credentials
       CHARM_DEFAULT_NAME: "$(HOST: echo ${CHARM_DEFAULT_NAME:-$USER-test-charm})"
+
+  # Tests that run on a specific system in destructive mode.
+  # These tests run in destructive mode for speed, since creating the containers takes
+  # a little while each time.
+  tests/spread/ubuntu-20.04/:
+    summary: Destructive tests for Ubuntu Focal (20.04 LTS) builds
+    systems:
+      - ubuntu-20.04-64
+
+  tests/spread/ubuntu-22.04/:
+    summary: Destructive tests for Ubuntu Jammy (22.04 LTS) builds
+    systems:
+      - ubuntu-22.04-64
+
+  tests/spread/ubuntu-24.04/:
+    summary: Destructive tests for Ubuntu Noble (24.04 LTS) builds
+    systems:
+      - ubuntu-24.04-64

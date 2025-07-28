@@ -1,0 +1,6 @@
+[project]
+name = "testcharm"
+version = "0.1.0"
+description = "a revolutionary charm"
+requires-python = "~=3.8.0"  # Python 3.8 specifically for a smaller lock file.
+dependencies = ["overrides", "ops"]

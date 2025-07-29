@@ -121,8 +121,8 @@ endpoint. You will need a new terminal for this; use
 If the output has an *HTTP/1.1 200 OK* status message, then we know the newly-built
 app is working.
 
-Destroy the app
-~~~~~~~~~~~~~~~
+Close the app
+~~~~~~~~~~~~~
 
 The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -734,21 +734,6 @@ repeat this process, the output should be as follows:
     :input: curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1
     Number of visitors 2
 
-Celebrate and reflect
----------------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Express app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
-
 Tear things down
 ----------------
 
@@ -777,10 +762,22 @@ following in the rock directory ``~/expressjs-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Express app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial, you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

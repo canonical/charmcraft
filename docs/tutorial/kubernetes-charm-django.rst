@@ -165,8 +165,8 @@ browser. Open a new tab and visit
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
 
-Destroy the app
-~~~~~~~~~~~~~~~
+Close the app
+~~~~~~~~~~~~~
 
 The Django app looks good, so we can stop it for now from the
 original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
@@ -789,22 +789,6 @@ After we wait for a moment for the app to be restarted, using
 ``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
 or visiting http://django-hello-world should now respond with ``Hi!``.
 
-Celebrate and reflect
----------------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Django app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Integrating the app with PostgreSQL to be production ready
-- Exposing the app using an ingress
-- Adding an initial app and configuring the app
-
-
 Tear things down
 ----------------
 
@@ -833,10 +817,22 @@ following in the rock directory ``~/django-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Django app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Integrating the app with PostgreSQL to be production ready
+- Exposing the app using an ingress
+- Adding an initial app and configuring the app
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

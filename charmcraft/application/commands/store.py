@@ -2307,11 +2307,13 @@ class CreateTrack(CharmcraftCommand):
         """Add own parameters to the general parser."""
         super().fill_parser(parser=parser)
         parser.add_argument(
-            "name",
+            "--name",
+            required=True,
             help="The store name onto which to create the track",
         )
         parser.add_argument(
-            "track",
+            "--track",
+            required=True,
             nargs="+",
             help="The track name to create",
         )

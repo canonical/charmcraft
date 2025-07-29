@@ -340,7 +340,7 @@ charm as an ingress provider, set the hostname with:
     juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
 
 Deploy the `Self Signed X.509 Certificates
-<https://charmhub.io/self-signed-certificates>` charm and integrate the two charms:
+<https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
 
 .. code-block:: bash
 

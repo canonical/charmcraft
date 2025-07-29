@@ -1,6 +1,3 @@
-# Copyright 2025 Alex Lowe
-# See LICENSE file for licensing details.
-
 """Functions for managing and interacting with the workload.
 
 The intention is that this module could be used outside the context of a charm.

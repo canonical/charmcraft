@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-# Copyright 2025 Alex Lowe
-# See LICENSE file for licensing details.
-
 import asyncio
 import logging
 from pathlib import Path

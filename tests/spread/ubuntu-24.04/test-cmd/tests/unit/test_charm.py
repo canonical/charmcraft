@@ -1,8 +1,3 @@
-# Copyright 2025 Alex Lowe
-# See LICENSE file for licensing details.
-#
-# To learn more about testing, see https://ops.readthedocs.io/en/latest/explanation/testing.html
-
 import pytest
 from ops import testing
 

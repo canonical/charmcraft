@@ -330,7 +330,8 @@ a certificate provider charm. To configure TLS locally, you can use the
 `Self Signed Certificates <https://charmhub.io/self-signed-certificates>`_
 charm as a certificate provider.
 
-First, :ref:`integrate your web app with ingress <integrate-web-app-charm-integrate-ingress>`.
+First, :ref:`integrate your web app with ingress
+<integrate-web-app-charm-integrate-ingress>`.
 
 Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
 charm as an ingress provider, set the hostname with:

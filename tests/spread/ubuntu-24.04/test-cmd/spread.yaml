@@ -2,12 +2,12 @@ project: test-cmd
 
 backends:
   craft:
-    type: adhoc
+    type: craft
     allocate: "false"
     systems:
       - ubuntu-24.04:
 
-  other:  # Ensure that charmmcraft test only runs the craft backend.
+  other:  # Ensure that charmcraft test only runs the craft backend.
     type: adhoc
     allocate: "false"
     systems:

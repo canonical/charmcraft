@@ -6,7 +6,7 @@ environment:
   CI: "1"
 
 execute: |
-  charmcraft test > test.log
+  charmcraft test |& tee test.log
   cat test.log | MATCH "Testing platform 'amd64'"
   cat test.log | MATCH "Testing platform 'arm64'"
 

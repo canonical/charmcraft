@@ -213,8 +213,13 @@ execute: |
     --resource app-image=localhost:32000/expressjs-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
+  # In the relation with postgresql-k8s test we may hit the issue
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+  # so we have to wait before integrating.
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 20m
   juju integrate expressjs-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

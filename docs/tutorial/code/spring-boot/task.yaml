@@ -1,0 +1,257 @@
+###########################################
+# IMPORTANT
+# Comments matter!
+# The docs use the wrapping comments as
+# markers for including said instructions
+# as snippets in the docs.
+###########################################
+summary: Getting started with Spring Boot tutorial
+
+kill-timeout: 50m
+
+restore: |
+  rm -rf $HOME/tmp $HOME/spring-boot-hello-world
+  juju destroy-model spring-boot-hello-world \
+  --destroy-storage --no-prompt --force || true
+
+environment:
+
+execute: |
+  # Move everything to $HOME so that Juju deployment works
+  mkdir $HOME/tmp
+  cp *.txt *.yaml *.java $HOME/tmp
+  cd $HOME
+
+  # Don't use the staging store for this test
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+
+  # [docs:export-experimental-env-vars]
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  # [docs:export-experimental-env-vars-end]
+
+  # [docs:install-devpack-for-spring]
+  sudo snap install devpack-for-spring --classic
+  sudo apt update && sudo apt install -y openjdk-21-jdk
+  # [docs:install-devpack-for-spring-end]
+
+  # [docs:init-spring-boot]
+  devpack-for-spring boot start \
+    --path spring-boot-hello-world \
+    --project maven-project \
+    --language java \
+    --boot-version 3.4.4 \
+    --version 0.0.1 \
+    --group com.example \
+    --artifact demo \
+    --name demo \
+    --description "Demo project for Spring Boot" \
+    --package-name com.example.demo \
+    --dependencies web \
+    --packaging jar \
+    --java-version 21
+  cd spring-boot-hello-world
+  # [docs:init-spring-boot-end]
+
+  cp $HOME/tmp/HelloController.java $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+
+  # [docs:spring-boot-build]
+  ./mvnw clean install
+  # [docs:spring-boot-build-end]
+
+  java -jar target/demo-0.0.1.jar &
+  retry -n 5 --wait 2 curl localhost:8080
+
+  # [docs:curl-spring-boot]
+  curl localhost:8080
+  # [docs:curl-spring-boot-end]
+
+  kill $!
+
+  # [docs:create-rockcraft-yaml]
+  rockcraft init --profile spring-boot-framework
+  # [docs:create-rockcraft-yaml-end]
+
+  # [docs:pack]
+  rockcraft pack
+  # [docs:pack-end]
+
+  # [docs:ls-rock]
+  ls *.rock -lh
+  # [docs:ls-rock-end]
+
+  # [docs:skopeo-copy]
+  rockcraft.skopeo copy \
+    --insecure-policy \
+    --dest-tls-verify=false \
+    oci-archive:spring-boot-hello-world_0.1_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/spring-boot-hello-world:0.1
+  # [docs:skopeo-copy-end]
+
+  # [docs:create-charm-dir]
+  mkdir charm
+  cd charm
+  # [docs:create-charm-dir-end]  
+
+  # [docs:charm-init]
+  charmcraft init --profile spring-boot-framework --name spring-boot-hello-world
+  # [docs:charm-init-end]
+
+  # update platforms in charmcraft.yaml file
+  sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
+
+  # [docs:charm-pack]
+  charmcraft pack
+  # [docs:charm-pack-end]
+
+  # [docs:add-juju-model]
+  juju add-model spring-boot-hello-world
+  # [docs:add-juju-model-end]
+
+  #[docs:add-model-constraints]
+  juju set-model-constraints -m spring-boot-hello-world \
+    arch=$(dpkg --print-architecture)
+  #[docs:add-model-constraints-end]
+
+  # [docs:deploy-app]
+  juju deploy \
+    ./spring-boot-hello-world_$(dpkg --print-architecture).charm \
+    spring-boot-hello-world --resource \
+    app-image=localhost:32000/spring-boot-hello-world:0.1
+  # [docs:deploy-app-end]
+
+  # [docs:deploy-nginx]
+  juju deploy nginx-ingress-integrator --channel=latest/stable --trust
+  juju integrate nginx-ingress-integrator spring-boot-hello-world
+  # [docs:deploy-nginx-end]
+
+  # [docs:config-nginx]
+  juju config nginx-ingress-integrator \
+    service-hostname=spring-boot-hello-world path-routes=/
+  # [docs:config-nginx-end]
+
+  # give Juju some time to deploy the apps
+  juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
+
+  # [docs:curl-init-deployment]
+  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+  # [docs:curl-init-deployment-end]
+
+  cd ..
+  cat $HOME/tmp/HelloController.java.greeting.txt > $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+  sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
+
+  # [docs:skopeo-update]
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:spring-boot-hello-world_0.2_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/spring-boot-hello-world:0.2
+  # [docs:skopeo-update-end]
+
+  cat $HOME/tmp/greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cd charm
+
+  # [docs:refresh-deployment]
+  charmcraft pack
+  juju refresh spring-boot-hello-world \
+    --path=./spring-boot-hello-world_$(dpkg --print-architecture).charm \
+    --resource app-image=localhost:32000/spring-boot-hello-world:0.2
+  # [docs:refresh-deployment-end]
+
+  # give Juju some time to refresh the app
+  juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
+
+  # curl and check that the response is Hello
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hello"
+
+  # [docs:change-config]
+  juju config spring-boot-hello-world greeting='Hi!'
+  # [docs:change-config-end]
+
+  juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
+
+  # curl and check that the response is now Hi
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi"
+
+  cd ..
+  # [docs:add-generate-ddl]
+  echo "spring.jpa.generate-ddl=true" >> src/main/resources/application.properties
+  # [docs:add-generate-ddl-end]
+
+  cp $HOME/tmp/ApplicationConfig.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/ApplicationConfig.java
+  cp $HOME/tmp/HelloController.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/HelloController.java
+  cp $HOME/tmp/Visitor.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/Visitor.java
+  cp $HOME/tmp/VisitorRepository.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorRepository.java
+  cp $HOME/tmp/VisitorService.java.visitors.txt $HOME/spring-boot-hello-world/src/main/java/com/example/demo/VisitorService.java
+
+  sed -i "s/version: .*/version: 0.3/" rockcraft.yaml
+
+  mv pom.xml pom.xml.original
+  cp $HOME/tmp/pom.xml.visitors.dependencies.txt .
+  awk '
+  /<dependencies>/ {
+    print
+    while ((getline line < "pom.xml.visitors.dependencies.txt") > 0)
+      print line
+    close("pom.xml.visitors.dependencies.txt")
+    next
+  }
+  { print }
+  ' pom.xml.original > pom.xml
+  rm pom.xml.visitors.dependencies.txt
+
+  # [docs:skopeo-2nd-update]
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:spring-boot-hello-world_0.3_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/spring-boot-hello-world:0.3
+  # [docs:skopeo-2nd-update-end]
+  
+  cat $HOME/tmp/visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cd charm
+
+  # [docs:refresh-2nd-deployment]
+  charmcraft pack
+  juju refresh spring-boot-hello-world \
+    --path=./spring-boot-hello-world_$(dpkg --print-architecture).charm \
+    --resource app-image=localhost:32000/spring-boot-hello-world:0.3
+  # [docs:refresh-2nd-deployment-end]
+
+  # In the relation with postgresql-k8s test we may hit the issue
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+  # so we have to wait before integrating.
+
+  # [docs:deploy-postgres]
+  juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 20m
+  juju integrate spring-boot-hello-world postgresql-k8s
+  # [docs:deploy-postgres-end]
+
+  # give Juju some time to deploy and refresh the apps
+  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
+  juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 20m | juju status --relations
+
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi"
+  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1 | grep 1
+  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi
+  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1 | grep 2
+
+  # [docs:clean-environment]
+  charmcraft clean
+  # Back out to main directory for cleanup
+  cd ..
+  rockcraft clean
+  # exit and delete the charm dir
+  rm -rf charm
+  # delete all the files created during the tutorial
+  rm spring-boot-hello-world_0.1_$(dpkg --print-architecture).rock \
+    spring-boot-hello-world_0.2_$(dpkg --print-architecture).rock \
+    spring-boot-hello-world_0.3_$(dpkg --print-architecture).rock \
+    rockcraft.yaml mvnw.cmd mvnw HELP.md pom.xml
+  rm -rf src target
+  # Remove the juju model
+  juju destroy-model spring-boot-hello-world --destroy-storage --no-prompt --force
+  # [docs:clean-environment-end]

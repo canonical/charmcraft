@@ -45,6 +45,7 @@ by running ``juju config <application> token=<token>``.
 .. |base_url| replace:: ``APP_BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <fastapi charm> postgresql``
 .. |framework| replace:: FastAPI
+.. |framework_prefix| replace:: ``APP_``
 
 .. include:: /reuse/reference/extensions/integrations.rst
 

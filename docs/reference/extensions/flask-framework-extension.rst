@@ -42,6 +42,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |base_url| replace:: ``FLASK_BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <flask charm> postgresql``
 .. |framework| replace:: Flask
+.. |framework_prefix| replace:: ``FLASK_``
 
 .. include:: /reuse/reference/extensions/integrations.rst
 

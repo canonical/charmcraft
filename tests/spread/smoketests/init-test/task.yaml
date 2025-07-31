@@ -1,6 +1,6 @@
 summary: Check a full init and test run.
 systems:
-  - ubuntu-24.04-64  # Only run this on the default base for our templates.
+  - ubuntu-24.04-64 # Only run this on the default base for our templates.
 
 environment:
   CI: "1"

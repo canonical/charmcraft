@@ -29,18 +29,14 @@ can be run multiple times) and that it can be run on multiple units simultaneous
 without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
 
-Using the ``migrate.sh`` file is not mandatory. You can use programmatic approaches
-instead of the script. Some popular libraries for programmatic database migration
-include:
+Using ``migrate.sh`` isn't mandatory. You can use programmatic approaches instead. Some
+popular libraries for programmatic database migration are:
 
-- Flask and FastAPI: `Alembic
-<https://alembic.sqlalchemy.org/en/latest/>`__
-- Go: `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
-`goose <https://github.com/pressly/goose/>`__ .
-- Express: `prisma
-<https://www.npmjs.com/package/prisma/>`__ or
-`knex <https://www.npmjs.com/package/knex/>`__ .
-
+- `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__ for Flask and FastAPI.
+- `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or `goose
+   <https://github.com/pressly/goose/>`__ for Go.
+- `prisma <https://www.npmjs.com/package/prisma/>`__ and `knex
+   <https://www.npmjs.com/package/knex/>`__ for Express.
 Troubleshoot the charm
 ----------------------
 

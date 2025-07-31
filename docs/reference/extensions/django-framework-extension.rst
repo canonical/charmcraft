@@ -132,7 +132,7 @@ for further information about tracing.
 
 .. _django-migrate-sh:
 
-Regarding the ``migrate.sh`` file
+About the ``migrate.sh`` file
 ---------------------------------
 
 If your app depends on a database it is common to run a database migration script before
@@ -140,11 +140,12 @@ app startup which, for example, creates or modifies tables. This can be done by
 including the ``migrate.sh`` script in the root of your project. It will be executed
 with the same environment variables and context as the Django app.
 
-If the migration script fails, the app won't be started and the app charm will go into
-blocked state. The migration script will be run on every unit and it is assumed that it
-is idempotent (can be run multiple times) and that it can be run on multiple units at
-the same time without causing issues. This can be achieved by, for example, locking any
-tables during the migration.
+Charmcraft runs the migration script on every unit. In doing so, it assumes the script
+is idempotent, meaning it doesn't mutate when rerun with the same input, and can be run
+on multiple units at the same time. You can make your script idempotent by, for example,
+locking any tables for the duration of the migration.
+
+If the migration script fails, the app won't start, and the app charm becomes blocked.
 
 
 Secrets

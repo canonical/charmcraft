@@ -34,9 +34,11 @@ popular libraries for programmatic database migration are:
 
 - `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__ for Flask and FastAPI.
 - `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or `goose
-   <https://github.com/pressly/goose/>`__ for Go.
+  <https://github.com/pressly/goose/>`__ for Go.
 - `prisma <https://www.npmjs.com/package/prisma/>`__ and `knex
-   <https://www.npmjs.com/package/knex/>`__ for Express.
+  <https://www.npmjs.com/package/knex/>`__ for Express.
+
+
 Troubleshoot the charm
 ----------------------
 

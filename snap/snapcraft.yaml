@@ -65,7 +65,7 @@ apps:
       CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
 
   spread:
-    command: bin/spread
+    command: libexec/charmcraft/craft.spread
 
 confinement: classic
 
@@ -228,6 +228,8 @@ parts:
       - CGO_ENABLED: "0"
     stage:
       - -bin/humbox
+    organize:
+      bin/spread: libexec/charmcraft/craft.spread
 
 hooks:
   configure:

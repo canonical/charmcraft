@@ -1,0 +1,42 @@
+project: {{ name }}
+
+backends:
+  craft:
+    type: craft
+    systems:
+      - ubuntu-24.04:
+
+prepare: |
+  # Juju needs the charm etc. to be owned by the running user.
+  chown -R "${USER}" "${PROJECT_PATH}"
+
+suites:
+  spread/deploy/:
+    summary: Deployment tests
+
+    prepare: |
+      juju_change=$(sudo snap install --no-wait juju --channel=3/stable)
+      microk8s_change=$(sudo snap install --no-wait --classic microk8s --channel=1.33/stable)
+      mkdir -p ~/.local/share/juju  # Strictly-confined Juju needs this.
+
+      # Perform configuration that doesn't need the Juju controller here.
+
+      if [[ -n "${microk8s_change}" ]]; then
+        snap watch "${microk8s_change}"
+        sudo microk8s status --wait-ready
+      fi
+
+      if [[ -n "${juju_change}" ]]; then
+        snap watch "${juju_change}"
+        juju bootstrap microk8s
+      fi
+
+      # We don't need to do OS updates for each machine - this just takes up time.
+      juju model-defaults enable-os-refresh-update=false
+      juju model-defaults enable-os-upgrade=false
+
+
+exclude:
+  - .git
+
+kill-timeout: 1h

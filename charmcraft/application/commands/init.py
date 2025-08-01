@@ -41,6 +41,8 @@ PROFILES = {
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
     "expressjs-framework": "init-expressjs-framework",
+    "test-kubernetes": "test-kubernetes",
+    "test-machine": "test-machine",
 }
 DEFAULT_PROFILE = "kubernetes"
 
@@ -229,7 +231,12 @@ class InitCommand(base.CharmcraftCommand):
         template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
-        executables = ["run_tests", "src/charm.py", "tests/spread/lib/tools/retry"]
+        executables = [
+            "run_tests",
+            "src/charm.py",
+            "tests/spread/lib/tools/retry",
+            "spread/.extension",
+        ]
         src_files = ["src/charm.py"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):

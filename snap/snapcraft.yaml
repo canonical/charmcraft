@@ -221,11 +221,14 @@ parts:
   spread:
     plugin: go
     source: https://github.com/snapcore/spread.git
-    source-depth: 1
-    build-packages:
-      - golang-go
+    source-commit: ae284792596e00d325a1787604fe4ec7e00574aa # 'main' as of 2025-07-30
+    build-snaps:
+      - go
+    build-attributes:
+      - enable-patchelf
     build-environment:
       - CGO_ENABLED: "0"
+      - GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
     stage:
       - -bin/humbox
     organize:

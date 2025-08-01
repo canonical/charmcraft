@@ -2,6 +2,8 @@ summary: Check a full init and test run.
 systems:
   - ubuntu-24.04-64 # Only run this on the default base for our templates.
 
+manual: true # This is very flaky and mostly breaks in Google runners.
+
 environment:
   CI: "1"
   PROFILE/machine: machine

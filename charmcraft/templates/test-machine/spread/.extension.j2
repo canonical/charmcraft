@@ -72,9 +72,9 @@ allocate_lxdvm() {
     fi
 
     VM_NAME="${VM_NAME:-spread-${name}-${RANDOM}}"
-    DISK="${DISK:-20}"
+    DISK="${DISK:-40}"
     CPU="${CPU:-4}"
-    MEM="${MEM:-8}"
+    MEM="${MEM:-12}"
 
     lxc launch --vm \
         "${image}" \

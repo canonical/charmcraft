@@ -22,6 +22,9 @@ parts:
     build-environment:
       - PIP_CONSTRAINT: constraints.txt
     build-packages:
-      - python3-pip
+      - cargo
+      - libffi-dev
+      - libssl-dev
+      - pkg-config
     python-requirements:
       - requirements.txt

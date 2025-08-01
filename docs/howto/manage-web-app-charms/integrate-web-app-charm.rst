@@ -72,6 +72,9 @@ configure your 12-factor application.
 - ``POSTGRESQL_DB_HOSTNAME``
 - ``POSTGRESQL_DB_PORT``
 
+.. _integrate-web-app-charm-integrate-ingress:
+
+
 Integrate with ingress
 ----------------------
 

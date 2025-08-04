@@ -320,3 +320,51 @@ The Pebble logs are available via Grafana or Loki and can be viewed in
 the **WebApp Operator** dashboard for Flask and Django.
 For other frameworks, you may access the logs by picking ``loki`` in the
 ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore`` page.
+
+
+Configure TLS for a web app charm
+---------------------------------
+
+You can configure TLS if your ingress provider charm supports integration with
+a certificate provider charm. To configure TLS locally, you can use the
+`Self Signed Certificates <https://charmhub.io/self-signed-certificates>`_
+charm as a certificate provider.
+
+First, :ref:`integrate your web app with ingress
+<integrate-web-app-charm-integrate-ingress>`.
+
+Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
+charm as an ingress provider, set the hostname with:
+
+.. code-block:: bash
+
+    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
+
+Deploy the `Self Signed X.509 Certificates
+<https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
+
+.. code-block:: bash
+
+    juju deploy self-signed-certificates
+    juju integrate self-signed-certificates nginx-ingress-integrator
+
+Your 12-factor app is now accessible over HTTPS. If you access the external URL of your
+app using HTTP, it returns an HTTP ``308 Permanent Redirect`` status and a redirect to
+the HTTPS URL. You can access the HTTPS URL of your app with a command like:
+
+.. code-block:: bash
+
+   curl -v --insecure https://<yourdomain.example.com> \
+     --resolve <yourdomain.example.com>:443:<ingress-ip>
+
+.. note::
+
+    The ``--insecure`` option is needed because the certificate authority in the
+    ``self-signed-certificate`` charm is not trusted.
+    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option is a way of
+    resolving the hostname of the request without
+    setting a DNS record.
+
+To obtain a TLS certificate signed by a trusted certificate authority (CA)
+using the ACME protocol, use the `LEGO <https://charmhub.io/lego>`_
+charm instead.

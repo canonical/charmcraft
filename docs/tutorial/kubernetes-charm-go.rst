@@ -106,6 +106,9 @@ that it works:
 
     ./go-hello-world
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the Go app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -117,6 +120,9 @@ endpoint. You will need a new terminal for this; use
     :dedent: 2
 
 The Go app should respond with ``Hello, world!``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Go app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -340,6 +346,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Go app
 -----------------
+
+So far, we've packed our Go app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Go app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Go app. The Juju model holds the app along with any supporting
@@ -714,21 +724,8 @@ repeat this process, the output should be as follows:
     :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
     Number of visitors 2
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Go app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deploying the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -755,10 +752,22 @@ following in the rock directory ``~/go-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You reached the end of this tutorial! You made it through the entire
+development process, including:
+
+- Creating a Go app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deploying the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

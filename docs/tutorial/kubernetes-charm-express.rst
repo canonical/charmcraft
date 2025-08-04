@@ -595,6 +595,16 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :end-before: [docs:change-migrate-permissions-end]
     :dedent: 2
 
+.. tip::
+
+    You could also use different tooling for migration, for example `prisma
+    <https://www.npmjs.com/package/prisma/>`__ or
+    `knex <https://www.npmjs.com/package/knex/>`__ .
+
+    See more:
+    :ref:`Express framework extension | Regarding the migrate.sh file <express-migrate-sh>`.
+
+
 To connect the Express app to PostgreSQL, we will use
 the ``pg-promise`` library. The app code needs to be updated to keep track of
 the number of visitors and to include a new endpoint to retrieve the

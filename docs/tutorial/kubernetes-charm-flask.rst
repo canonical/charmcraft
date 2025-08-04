@@ -536,6 +536,17 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
     PostgreSQL has been integrated with the charm.
 
+.. tip::
+
+    In production you can also use the ``migrate.sh`` file
+    and run CLI tools for database migration.
+
+    See more:
+    :ref:`Flask framework extension | Regarding the migrate.sh file <flask-migrate-sh>`.
+
+    You could also use different tooling for migration, for example
+    `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__.
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 

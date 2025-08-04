@@ -605,6 +605,16 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has
     been integrated with the charm.
 
+.. tip::
+
+    In production you can also use the ``migrate.sh`` file
+    and run CLI tools for database migration.
+
+    See more:
+    :ref:`FastAPI framework extension | Regarding the migrate.sh file <fastapi-migrate-sh>`.
+
+    You could also use different tooling for migration, for example `Alembic
+    <https://alembic.sqlalchemy.org/en/latest/>`__.
 
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~

@@ -1,0 +1,42 @@
+project: {{ name }}
+
+backends:
+  craft:
+    type: craft
+    systems:
+      - ubuntu-24.04:
+
+prepare: |
+  # Juju needs the charm etc. to be owned by the running user.
+  chown -R "${USER}" "${PROJECT_PATH}"
+
+suites:
+  spread/deploy/:
+    summary: Deployment tests
+
+    prepare: |
+      juju_change=$(sudo snap install --no-wait juju --channel=3/stable)
+      lxd_change=$(sudo snap install --no-wait lxd --channel=5.21/stable)
+      mkdir -p ~/.local/share/juju  # Strictly-confined Juju needs this.
+
+      # Perform configuration that doesn't need the Juju controller here.
+
+      if [[ -n "${lxd_change}" ]]; then
+        snap watch "${lxd_change}"
+        sudo lxd init --minimal
+      fi
+
+      if [[ -n "${juju_change}" ]]; then
+        snap watch "${juju_change}"
+        juju bootstrap localhost
+      fi
+
+      # We don't need to do OS updates for each machine - this just takes up time.
+      juju model-defaults enable-os-refresh-update=false
+      juju model-defaults enable-os-upgrade=false
+
+
+exclude:
+  - .git
+
+kill-timeout: 1h

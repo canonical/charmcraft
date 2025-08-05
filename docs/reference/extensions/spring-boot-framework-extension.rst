@@ -1,12 +1,12 @@
-.. _expressjs-framework-extension:
+.. _spring-boot-framework-extension:
 
 
-Express framework extension
-=============================
+Spring Boot framework extension
+===============================
 
-The ``expressjs-framework`` extension includes configuration options customised
-for an Express application. This document describes all the keys that a user
-may interact with.
+The ``spring-boot-framework`` extension includes configuration options customised for a
+Spring Boot application. This document describes all the keys that a user may interact
+with.
 
 .. tip::
 
@@ -20,7 +20,7 @@ may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``expressjs-framework`` are:
+The predefined configuration options for the ``spring-boot-framework`` are:
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
@@ -36,17 +36,17 @@ The predefined configuration options for the ``expressjs-framework`` are:
   this option. If this configuration option is not set, the environment variable
   ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
 
-* **metrics-port**: Port where the Prometheus metrics will be scraped. The environment
-  variable passed to the app is ``METRICS_PORT``. Default value is 8080.
+* **metrics-port**: Port where the prometheus metrics will be scraped. The environment
+  variable passed to the app is ``APP_PORT``. Default value is 8080.
 
-* **metrics-path**: Path where the Prometheus metrics will be scraped. The environment
-  variable passed to the app is ``METRICS_PATH``. Default value is ``/metrics``.
+* **metrics-path**:
+  Path where the prometheus metrics will be scraped. The environment variable passed to
+  the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
 generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where the option name
-is converted to upper case, dashes are converted to underscores and ``APP_`` is added at
-the front.
+is converted to upper case and dashes are converted to underscores.
 
 In either case, you will be able to set it in the usual way by running ``juju config
 <application> <option>=<value>``. For example, if you define an option called ``token``,
@@ -54,7 +54,6 @@ as below, this will generate a ``APP_TOKEN`` environment variable, and a user of
 charm can set it by running ``juju config <application> token=<token>``.
 
 .. code-block:: yaml
-    :caption: charmcraft.yaml
 
     config:
       options:
@@ -65,21 +64,21 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. include:: /reuse/reference/extensions/non_optional_config.rst
 
 .. |base_url| replace:: ``APP_BASE_URL``
-.. |juju_integrate_postgresql| replace:: ``juju integrate <expressjs charm> postgresql``
-.. |framework| replace:: ExpressJS
+.. |juju_integrate_postgresql| replace:: ``juju integrate <Spring Boot charm> postgresql``
+.. |framework| replace:: Spring Boot
 
 .. include:: /reuse/reference/extensions/integrations.rst
-.. include:: /reuse/reference/extensions/environment_variables.rst
+.. include:: /reuse/reference/extensions/environment_variables_spring_boot.rst
 
 
 HTTP Proxy
 ----------
 
 Proxy settings should be set as model configurations. Charms generated using the
-``expressjs-framework`` extension will make the Juju proxy settings available as the
+``spring-boot-framework`` extension will make the Juju proxy settings available as the
 ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environment variables. For example, the
-``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the
-Express service.
+``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the Spring
+Boot service.
 
     See more: `List of model configuration
     keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
@@ -110,9 +109,9 @@ You can easily integrate your charm with
 
 .. code-block:: bash
 
-    juju integrate expressjs-k8s grafana
-    juju integrate expressjs-k8s loki
-    juju integrate expressjs-k8s prometheus
+    juju integrate spring-boot-k8s grafana
+    juju integrate spring-boot-k8s loki
+    juju integrate spring-boot-k8s prometheus
 
 After integration, you will be able to observe your workload
 using Grafana dashboards.
@@ -130,33 +129,12 @@ See the `OpenTelemetry documentation
 for further information about tracing.
 
 
-.. _express-migrate-sh:
-
-Regarding the ``migrate.sh`` file
----------------------------------
-
-If your app depends on a database it is common to run a database migration script before
-app startup which, for example, creates or modifies tables. This can be done by
-including the ``migrate.sh`` script in the root of your project. It will be executed
-with the same environment variables and context as the Express app.
-
-If the migration script fails, the app won't be started and the app charm will go into
-blocked state. The migration script will be run on every unit and it is assumed that it
-is idempotent (can be run multiple times) and that it can be run on multiple units at
-the same time without causing issues. This can be achieved by, for example, locking any
-tables during the migration.
-
-If you prefer you can also use different tooling for migration, for example `prisma
-<https://www.npmjs.com/package/prisma/>`__ or
-`knex <https://www.npmjs.com/package/knex/>`__ .
-
-
 Secrets
 -------
 
-Juju secrets can be passed as environment variables to your Express application. The
-secret ID has to be passed to the application as a config option in the project file of
-type ``secret``. This config option has to be populated with the secret ID, in the
+Juju secrets can be passed as environment variables to your Spring Boot application.
+The secret ID has to be passed to the application as a config option in the project file
+of type ``secret``. This config option has to be populated with the secret ID, in the
 format ``secret:<secret ID>``.
 
 The environment variable name passed to the application will be:

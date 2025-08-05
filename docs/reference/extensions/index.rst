@@ -19,3 +19,4 @@ An extension is usually associated with a particular :ref:`profile <profile>`.
     fastapi-framework-extension
     flask-framework-extension
     go-framework-extension
+    spring-boot-framework-extension

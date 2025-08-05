@@ -44,7 +44,7 @@ APP_METADATA = craft_application.AppMetadata(
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
     source_ignore_patterns=["*.charm", "charmcraft.yaml"],
-    docs_url="https://canonical-charmcraft.readthedocs-hosted.com/en/{version}",
+    docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
 )
 

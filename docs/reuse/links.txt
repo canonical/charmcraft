@@ -1,4 +1,4 @@
-.. _Charmcraft: https://canonical-charmcraft.readthedocs-hosted.com
+.. _Charmcraft: https://documentation.ubuntu.com/charmcraft
 .. _Charmhub: https://charmhub.io
 .. _Chisel: https://github.com/canonical/chisel
 .. _`Chisel releases`: https://github.com/canonical/chisel-releases

@@ -20,7 +20,8 @@ To view all the available Rockcraft / Charmcraft extensions, run the
 
 ..
 
-   See more: `Rockcraft | rockcraft list-extensions <https://documentation.ubuntu.com/rockcraft/latest/reference/commands/list-extensions/>`_, :ref:`ref_commands_list-extensions`
+   See more: :external+rockcraft:ref:`Rockcraft | rockcraft list-extensions
+   <ref_commands_list-extensions>`, :ref:`ref_commands_list-extensions`
 
 View details about the extension in use
 ---------------------------------------
@@ -214,4 +215,5 @@ then run  ``charmcraft expand-extensions``. For example:
 
 ..
 
-   See more: `Rockcraft | rockcraft expand-extensions <https://documentation.ubuntu.com/rockcraft/latest/reference/commands/expand-extensions/>`_, :ref:`ref_commands_expand-extensions`
+   See more: :external+rockcraft:ref:`Rockcraft | rockcraft expand-extensions
+   <ref_commands_expand-extensions>`, :ref:`ref_commands_expand-extensions`

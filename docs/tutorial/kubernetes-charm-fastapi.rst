@@ -120,6 +120,9 @@ let's run the FastAPI app to verify that it works:
 
     fastapi dev app.py --port 8080
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the FastAPI app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -131,6 +134,9 @@ endpoint. You will need a new terminal for this; use
     :dedent: 2
 
 The FastAPI app should respond with ``{"message":"Hello, world!"}``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The FastAPI app looks good, so we can stop for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -352,6 +358,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the FastAPI app
 ----------------------
+
+So far, we've packed our FastAPI app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the FastAPI app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the FastAPI app. The Juju model holds the app along with any supporting
@@ -592,9 +602,19 @@ and paste the following code into it:
 .. note::
 
     The charm will pass the Database connection string in the
-    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once postgres has
+    ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has
     been integrated with the charm.
 
+.. tip::
+
+    In production you can also use the ``migrate.sh`` file
+    and run CLI tools for database migration.
+
+    See more:
+    :ref:`FastAPI framework extension | Regarding the migrate.sh file <fastapi-migrate-sh>`.
+
+    You could also use different tooling for migration, for example `Alembic
+    <https://alembic.sqlalchemy.org/en/latest/>`__.
 
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~
@@ -697,21 +717,8 @@ this process, the output should be as follows:
     :input: curl http://fastapi-hello-world/visitors  --resolve fastapi-hello-world:80:127.0.0.1
     {"count":2}
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a FastAPI app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deploying the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -738,10 +745,22 @@ following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial, you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a FastAPI app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deploying the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial, you built a charm and evolved it
 in a number of typical ways, but there is a lot more to explore:
 
 .. list-table::

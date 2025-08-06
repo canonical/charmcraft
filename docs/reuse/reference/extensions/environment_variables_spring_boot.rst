@@ -108,3 +108,16 @@ Ingress relation.
         - ``openfga.credentials.method``
         - ``openfga.credentials.config.api-token``
         - ``openfga.api-url``
+  * - OpenID Connect
+    -
+        - ``spring.security.oauth2.client.registration.{endpoint_name}.client-id``
+        - ``spring.security.oauth2.client.registration.{endpoint_name}.client-secret``
+        - ``spring.security.oauth2.client.registration.{endpoint_name}.redirect-uri``
+        - ``spring.security.oauth2.client.registration.{endpoint_name}.scope``
+        - ``spring.security.oauth2.client.registration.{endpoint_name}.user-name-attribute``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.authorization-uri``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.issuer-uri``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.jwk-set-uri``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.token-uri``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.user-info-uri``
+        - ``spring.security.oauth2.client.provider.{endpoint_name}.user-name-attribute``

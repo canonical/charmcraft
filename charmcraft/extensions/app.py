@@ -56,6 +56,18 @@ SECRET_OPTIONS = {
         "and use the output secret ID to configure this option.",
     },
 }
+OAUTH_DYNAMIC_OPTIONS = {
+    "redirect-path": {
+        "type": "string",
+        "description": "The path that the user will be redirected upon completing login.",
+        "default": "/callback",
+    },
+    "scopes": {
+        "type": "string",
+        "description": "A list of scopes with spaces in between.",
+        "default": "openid profile email",
+    },
+}
 
 
 class _AppBase(Extension):
@@ -77,19 +89,6 @@ class _AppBase(Extension):
         {"lib": "hydra.oauth", "version": "0"},
     ]
 
-    _OAUTH_DYNAMIC_OPTIONS = {
-        "redirect-path": {
-            "type": "string",
-            "description": "The path that the user will be redirected upon completing login.",
-            "default": "/callback",
-        },
-        "scopes": {
-            "type": "string",
-            "description": "A list of scopes with spaces in between.",
-            "default": "openid profile email",
-        },
-    }
-
     @staticmethod
     @override
     def get_supported_bases() -> list[tuple[str, str]]:
@@ -110,6 +109,10 @@ class _AppBase(Extension):
     }
 
     options: dict
+
+    endpoint_dynamic_options: dict[str, dict[str, Any]] = {
+        "oauth": OAUTH_DYNAMIC_OPTIONS
+    }
 
     def _get_nested(self, obj: dict, path: str) -> dict:
         """Get a nested object using a path (a dot-separated list of keys)."""
@@ -230,30 +233,40 @@ class _AppBase(Extension):
         """Fill in some required root components."""
         self._check_input()
         root_snippet = self._get_root_snippet()
-        dynamic_config_options = self._get_dynamic_config_options(root_snippet)
-        root_snippet["config"]["options"].update(dynamic_config_options)
+        for interface_name, config_options in self.endpoint_dynamic_options.items():
+            dynamic_config_options = self._get_dynamic_config_options(
+                root_snippet, interface_name, config_options
+            )
+            root_snippet["config"]["options"].update(dynamic_config_options)
         return root_snippet
 
     def _get_dynamic_config_options(
-        self, root_snippet: dict[str, Any]
+        self,
+        root_snippet: dict[str, Any],
+        interface_name: str,
+        config_options: dict[str, Any],
     ) -> dict[str, Any]:
         oauth_endpoint_names = []
         requires = self._get_nested(self.yaml_data, "requires")
         for endpoint_name, require in requires.items():
-            interface_name = require.get("interface")
-            if interface_name == "oauth":
+            current_interface_name = require.get("interface")
+            if current_interface_name == interface_name:
                 oauth_endpoint_names.append(endpoint_name)
 
         dynamic_config_options = {}
         for oauth_endpoint_name in oauth_endpoint_names:
-            oidc_config_options = self._get_oidc_config_options(oauth_endpoint_name)
+            oidc_config_options = self._get_oidc_config_options(
+                oauth_endpoint_name, config_options
+            )
             dynamic_config_options.update(oidc_config_options)
         return dynamic_config_options
 
-    def _get_oidc_config_options(self, endpoint_name: str) -> dict[str, Any]:
+    def _get_oidc_config_options(
+        self, endpoint_name: str, config_options: dict[str, Any]
+    ) -> dict[str, Any]:
         return {
             f"{endpoint_name}-{config}": value
-            for config, value in self._OAUTH_DYNAMIC_OPTIONS.items()
+            for config, value in config_options.items()
         }
 
     @override
@@ -505,6 +518,17 @@ class SpringBootFramework(_AppBase):
             "description": "Path where the prometheus metrics will be scraped.",
         },
         **SECRET_OPTIONS,
+    }
+    endpoint_dynamic_options: dict[str, dict[str, Any]] = {
+        "oauth": {
+            **OAUTH_DYNAMIC_OPTIONS,
+            "user-name-attribute": {
+                "type": "string",
+                "description": "The name of the attribute returned in the UserInfo Response "
+                "that references the Name or Identifier of the end-user.",
+                "default": "sub",
+            },
+        }
     }
 
     @staticmethod

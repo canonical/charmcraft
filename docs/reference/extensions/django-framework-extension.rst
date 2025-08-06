@@ -69,6 +69,7 @@ will be set automatically.
 .. |framework_prefix| replace:: ``DJANGO_``
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy

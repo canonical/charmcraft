@@ -10,6 +10,7 @@ environment:
   PROFILE/go: go-framework
   PROFILE/fastapi: fastapi-framework
   PROFILE/expressjs: expressjs-framework
+  PROFILE/springboot: spring-boot-framework
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
 
 prepare: |

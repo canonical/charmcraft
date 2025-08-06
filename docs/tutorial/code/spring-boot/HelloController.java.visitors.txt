@@ -1,0 +1,29 @@
+package com.example.demo;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController {
+
+    @Value("${app.greeting:Hello, world!}")
+    private String greeting;
+
+    private final VisitorService visitorService;
+
+    public HelloController(VisitorService visitorService) {
+        this.visitorService = visitorService;
+    }
+    @GetMapping("/")
+    public String index(@RequestHeader(value = "User-Agent") String userAgent) {
+    	visitorService.createVisitor(userAgent);
+        return greeting;
+    }
+    
+    @GetMapping("/visitors")
+    public String visitorsCount() {
+        return String.format("Number of visitors %d", visitorService.countVisitors());
+    }
+}

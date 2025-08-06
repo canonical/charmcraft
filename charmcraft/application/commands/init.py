@@ -41,6 +41,7 @@ PROFILES = {
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
     "expressjs-framework": "init-expressjs-framework",
+    "spring-boot-framework": "init-spring-boot-framework",
     "test-kubernetes": "test-kubernetes",
     "test-machine": "test-machine",
 }
@@ -72,6 +73,9 @@ Available profiles are:
 
     go-framework:
         A basic Kubernetes charm for a 12-factor Go app.
+
+    spring-boot-framework:
+        A basic Kubernetes charm for a 12-factor Spring Boot app.
 
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories::

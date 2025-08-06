@@ -179,7 +179,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
     "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
-    "ops": ("https://ops.readthedocs.io/en/latest/", None),
+    "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
 }
 # See also:

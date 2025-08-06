@@ -134,4 +134,3 @@ Ingress relation.
         - |framework_prefix|\ ``{endpoint_name}_JWKS_URL``
         - |framework_prefix|\ ``{endpoint_name}_API_BASE_URL``
         - |framework_prefix|\ ``{endpoint_name}_CLIENT_KWARGS``
-

@@ -757,7 +757,7 @@ class PyDeps(Linter):
 
     name = "pydeps"
     text = "All charmlibs dependencies are included"
-    url = "https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/manage-libraries/"
+    url = "https://documentation.ubuntu.com/charmcraft/stable/howto/manage-libraries/"
 
     @staticmethod
     def convert_to_fs(name: str) -> str:

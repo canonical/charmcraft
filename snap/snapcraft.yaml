@@ -14,7 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 name: charmcraft
-base: core22
+base: core24
 summary: Charmcraft supports Kubernetes operator development and collaboration
 license: Apache-2.0
 description: |
@@ -39,13 +39,12 @@ description: |
   operator pattern is very exciting for multi-cloud application management.
 
 adopt-info: charmcraft # look for 'craftctl set *' in the charmcraft part
-architectures:
-  - build-on: s390x
-  - build-on: ppc64el
-  - build-on: arm64
-  - build-on: armhf
-  - build-on: amd64
-  - build-on: riscv64
+platforms:
+  amd64:
+  arm64:
+  ppc64el:
+  riscv64:
+  s390x:
 
 # https://github.com/snapcore/snapcraft/issues/4187
 environment:
@@ -55,7 +54,7 @@ environment:
 apps:
   charmcraft:
     # run Python in unbuffered mode
-    command: bin/python3 -u $SNAP/bin/charmcraft
+    command: bin/python -u $SNAP/bin/charmcraft
     completer: completion.sh
     environment:
       # have the cache outside of the version dirs (avoids keeping N copies)
@@ -69,87 +68,81 @@ apps:
 
 confinement: classic
 
-build-packages:
-  - pkg-config
-  - python3.10-dev
-  - libpython3.10-dev
-  - libsodium-dev
-  - libssl-dev
-  - libffi-dev
-  - python3-wheel
-  - python3-pip
-  - python3-setuptools-scm
-  - python3-dev
-  - libapt-pkg-dev
-  - liblzma-dev
-  - libxml2-dev
-  - libxslt1-dev
-  - libyaml-dev
-build-snaps:
-  - rustup
-  - astral-uv
-
 parts:
+  build-deps:
+    plugin: nil
+    build-packages:
+      - cargo-1.82
+      - rustc-1.82
+      # Basic Python build deps
+      - pkg-config
+      - python3.12-dev
+      - libpython3.12-dev
+      - python3-dev
+      - python3-pip
+      - python3-setuptools-scm
+      - python3-wheel
+      # Secure networking
+      - libsodium-dev
+      - libssl-dev
+      # Foreign function integration (libapt, rust deps, etc.)
+      - libffi-dev
+      # Allow building python3-apt
+      - libapt-pkg-dev
+      # Other bits and pieces
+      - libgit2-dev # Needed to build pygit2
+      - liblzma-dev # Compression/decompression
+      - libxml2-dev # Needed for XML integration in craft-parts.
+      - libxslt1-dev
+      - libyaml-dev # Needed to build libyaml from source
+    build-snaps:
+      - astral-uv
+    override-build: |
+      mkdir -p "${CRAFT_PART_INSTALL}/bin"
+      ln -s $(which cargo-1.82) "${CRAFT_PART_INSTALL}/bin/cargo"
+      ln -s $(which rustc-1.82) "${CRAFT_PART_INSTALL}/bin/rustc"
+    prime:
+      - -*
   charmcraft-libs:
     plugin: nil
     stage-packages:
-      - libffi7 # Python3 foreign functions - used for rust modules
-      - libsodium23 # PyNaCl uses this
+      - libffi8 # Python3 foreign functions - used for rust modules
       - libpython3-stdlib
-      - libpython3.10-stdlib
-      - libpython3.10-minimal
-      - python3-pip
-      - python3-setuptools
-      - python3-wheel
-      - python3-venv
+      - libpython3.12-stdlib
+      - libpython3.12-minimal
       - python3-minimal
-      - python3-distutils
       - python3-pkg-resources
-      - python3.10-minimal
+      - python3.12-minimal
+      - libgit2-1.7
     build-attributes:
       - enable-patchelf
-  libgit2:
-    source: https://github.com/libgit2/libgit2/archive/refs/tags/v1.7.2.tar.gz
-    source-checksum: sha256/de384e29d7efc9330c6cdb126ebf88342b5025d920dcb7c645defad85195ea7f
-    plugin: cmake
-    cmake-parameters:
-      - -DCMAKE_INSTALL_PREFIX=/usr
-    build-attributes:
-      - enable-patchelf
-    prime:
-      - -usr/include
   charmcraft:
-    after: [charmcraft-libs, libgit2]
+    after: [charmcraft-libs, build-deps]
     source: .
-    plugin: nil
+    plugin: uv
     build-environment:
-      # CFLAGS for Python 3.10 and libyaml. Allows cryptography and pyyaml to find
-      # the appropriate system libraries.
-      - CFLAGS: "$(pkg-config python-3.10 yaml-0.1 --cflags)"
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
+      - UV_NO_BINARY: "true"
       - CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
       - UV_FROZEN: "true"
-      - MAKEOPTS: -j$(nproc --all)
-      - UV_PYTHON_DOWNLOADS: never
+      - MAKEOPTS: -j$(nproc --all) # Parallel make jobs for things like python-apt
       - UV_COMPILE_BYTECODE: "true"
       - CLICOLOR_FORCE: "true"
-      - UV_PROJECT_ENVIRONMENT: $CRAFT_PART_INSTALL
     build-attributes:
       - enable-patchelf
-    override-pull: |
-      # Need the full path for craftctl because we stage our own craftctl to the path.
-      /snap/snapcraft/current/libexec/snapcraft/craftctl default
-      # Ensure we don't have a dubious ownership error from git with a remote build.
-      git config --global --add safe.directory $CRAFT_PART_SRC
-      # Set up the rust compiler
-      rustup default 1.85
     override-build: |
-      uv venv --relocatable $CRAFT_PART_INSTALL
-      uv sync --no-dev --no-editable --no-binary
+      # uv venv --relocatable $CRAFT_PART_INSTALL
+      # uv sync --no-dev --no-editable --no-binary
+
+      /snap/snapcraft/current/libexec/snapcraft/craftctl default
+
+      # Install python3-apt
       . $CRAFT_PART_INSTALL/bin/activate
-      uv pip install -r requirements-jammy.txt
+      uv pip install -r requirements-noble.txt
+
+      # No need for this symlink
       rm -f $CRAFT_PART_INSTALL/lib64
 
       mkdir -p $CRAFT_PART_INSTALL/libexec/charmcraft
@@ -184,7 +177,7 @@ parts:
     plugin: nil
     build-environment:
       - LD_LIBRARY_PATH: $CRAFT_STAGE/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
-      - PYTHONPATH: $CRAFT_STAGE/lib/python3.10/site-packages
+      - PYTHONPATH: $CRAFT_STAGE/lib/python3.12/site-packages
     override-build: |
       python3 -m craft_cli.completion $CRAFT_PROJECT_NAME charmcraft.application:get_app_info \
         > $CRAFT_PART_INSTALL/completion.sh
@@ -207,14 +200,13 @@ parts:
       - libdevmapper1.02.1
     build-attributes:
       - enable-patchelf
-    build-snaps:
-      - go/1.21/stable
     build-packages:
       - libgpgme-dev
       - libassuan-dev
       - libbtrfs-dev
       - libdevmapper-dev
       - pkg-config
+      - golang-go
     organize:
       bin/skopeo: libexec/charmcraft/skopeo
 
@@ -238,3 +230,5 @@ hooks:
   configure:
     environment:
       PATH: "$SNAP/bin:$PATH"
+      PYTHONHOME: "$SNAP"
+      PYTHONPATH: "$SNAP/lib/python3.12:$SNAP/usr/lib/python3.12"

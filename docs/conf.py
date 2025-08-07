@@ -73,8 +73,16 @@ extensions = [
 ]
 
 # Copy extra files to the _static dir during build
-html_static_path = [
-    "_static/assets"
+html_static_path = ["_static"]
+templates_path = ["_templates"]
+
+# Files for the cookie banner
+html_css_files = [
+    'css/cookie-banner.css'
+]
+
+html_js_files = [
+    'js/bundle.js',
 ]
 
 # endregion

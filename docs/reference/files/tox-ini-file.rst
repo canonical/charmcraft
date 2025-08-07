@@ -12,19 +12,17 @@ configuration file.
 
 Charmcraft creates this file and defines the following tox environments:
 
-+-------------+-------------------------------------------+
-| Environment | Purpose                                   |
-+=============+===========================================+
-| format      | Apply coding style standards              |
-+-------------+-------------------------------------------+
-| lint        | Check code against coding style standards |
-+-------------+-------------------------------------------+
-| static      | Run static type checks                    |
-+-------------+-------------------------------------------+
-| unit        | Run the charm's unit tests                |
-+-------------+-------------------------------------------+
-| integration | Run the charm's integration tests         |
-+-------------+-------------------------------------------+
++-------------+-------------------------------------------------------------+
+| Environment | Purpose                                                     |
++=============+=============================================================+
+| format      | Apply coding style standards                                |
++-------------+-------------------------------------------------------------+
+| lint        | Check code against coding style standards and static checks |
++-------------+-------------------------------------------------------------+
+| unit        | Run the charm's unit tests                                  |
++-------------+-------------------------------------------------------------+
+| integration | Run the charm's integration tests                           |
++-------------+-------------------------------------------------------------+
 
 To run the commands in an environment, use ``tox -e <env-name>``.
 

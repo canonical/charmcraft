@@ -11,8 +11,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-# Dependencies of static type checks
-static = [
+# Dependencies of linting and static type checks
+lint = [
+    "ruff",
+    "codespell",
     "pyright",
 ]
 # Dependencies of unit tests

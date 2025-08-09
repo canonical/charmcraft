@@ -68,7 +68,7 @@ docs = [
     "sphinxcontrib-details-directive",
     "sphinxext-rediraffe==0.2.7",
     "matplotlib",
-    "pydantic-kitbash==0.0.6",
+    "pydantic-kitbash==0.0.7",
 ]
 lint = [
     "codespell[toml]",

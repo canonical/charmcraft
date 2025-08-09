@@ -44,7 +44,7 @@ ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg
 
 html_context = {
     "product_page": "juju.is",
-    "product_tag": "_static/juju-logo-no-text.png",
+    "product_tag": "_static/assets/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
@@ -73,8 +73,16 @@ extensions = [
 ]
 
 # Copy extra files to the _static dir during build
-html_static_path = [
-    "_static/assets"
+html_static_path = ["_static"]
+templates_path = ["_templates"]
+
+# Files for the cookie banner
+html_css_files = [
+    'css/cookie-banner.css'
+]
+
+html_js_files = [
+    'js/bundle.js',
 ]
 
 # endregion

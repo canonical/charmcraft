@@ -56,29 +56,51 @@ Include charm library dependencies
 
 Unlike the Charm plugin, the uv plugin does not install the dependencies for
 included charmlibs. If any of the charm libraries used have ``PYDEPS``, these will
-need to be added to the charm's dependencies, potentially as their own
-`dependency group <dependency groups_>`_.
+need to be added to the charm's dependencies.
 
-To find these dependencies, check each loaded library file for its ``PYDEPS`` by running
-the following command at the root of the charm project:
+To find library dependencies, check each loaded library file for its ``PYDEPS`` by
+running the following command at the root of the charm project:
 
 .. code-block:: bash
 
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
-Next, in ``pyproject.toml``, list them in a ``charmlibs`` dependency group.
+Next, in ``pyproject.toml``, list them in the ``dependencies`` key.
+
+.. code-block:: toml
+    :caption: pyproject.toml
+    :emphasize-lines: 4-6
+
+    # Dependencies of the charm code and PYDEPS from libraries.
+    dependencies = [
+        "ops>=3,<4",
+        "cosl",
+        "pydantic",
+        "cryptography",
+    ]
+
+Alternatively, you could list the library dependencies in a
+`dependency group <dependency groups_>`_ called ``charmlibs``.
 
 .. code-block:: toml
     :caption: pyproject.toml
 
     [dependency-groups]
-    # Dependencies brought from libraries the charm uses.
+    # PYDEPS from libraries that the charm uses.
     charmlibs = [
         "cosl",
         "pydantic",
         "cryptography",
         "ops>=2.0.0",
     ]
+
+Library dependencies are runtime dependencies, and dependency groups are generally
+intended for development dependencies. However, if the charm uses a lot of library
+files, you might find a dependency group helpful for distinguishing the dependencies.
+
+If the charm uses libraries that are distributed as Python packages, list the libraries
+in ``dependencies``, along with other dependencies of the charm code. You don't need to
+inspect Python packages to find their dependencies.
 
 Add dependency groups
 ---------------------

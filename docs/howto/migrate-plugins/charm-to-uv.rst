@@ -51,6 +51,9 @@ Make sure that the project directory has a :ref:`pyproject-toml-file`. Use the
         "ops>=3,<4",
     ]
 
+If you use ``uv add`` to include dependencies, uv updates the ``dependencies`` key in
+``pyproject.toml``.
+
 Include charm library dependencies
 ----------------------------------
 
@@ -101,6 +104,15 @@ files, you might find a dependency group helpful for distinguishing the dependen
 If the charm uses libraries that are distributed as Python packages, list the libraries
 in ``dependencies``, along with other dependencies of the charm code. You don't need to
 inspect Python packages to find their dependencies.
+
+Lock the dependencies
+---------------------
+
+After including dependencies, make sure that the project directory has a
+:ref:`uv-lock-file`.
+
+If you used ``uv add`` to include dependencies, uv created ``uv.lock``. Otherwise, run
+``uv lock``.
 
 Add dependency groups
 ---------------------

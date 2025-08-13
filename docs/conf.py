@@ -46,7 +46,7 @@ slug = "charmcraft"
 
 html_context = {
     "product_page": "juju.is",
-    "product_tag": "_static/juju-logo-no-text.png",
+    "product_tag": "_static/assets/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
@@ -75,8 +75,16 @@ extensions = [
 ]
 
 # Copy extra files to the _static dir during build
-html_static_path = [
-    "_static/assets"
+html_static_path = ["_static"]
+templates_path = ["_templates"]
+
+# Files for the cookie banner
+html_css_files = [
+    'css/cookie-banner.css'
+]
+
+html_js_files = [
+    'js/bundle.js',
 ]
 
 # endregion
@@ -157,6 +165,8 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
     "reuse/reference/extensions/integrations.rst",
+    "reuse/reference/extensions/environment_variables.rst",
+    "reuse/reference/extensions/environment_variables_spring_boot.rst",
     "reuse/tutorial/*"
 ]
 

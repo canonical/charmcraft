@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -499,12 +499,12 @@ dev-questing = [{ name = "python-apt", marker = "sys_platform == 'linux'", speci
 docs = [
     { name = "canonical-sphinx", extras = ["full"], specifier = "~=0.2" },
     { name = "matplotlib" },
-    { name = "pydantic-kitbash", specifier = "==0.0.6" },
+    { name = "pydantic-kitbash", specifier = "==0.0.7" },
     { name = "pyspelling" },
     { name = "sphinx-autobuild", specifier = "~=2024.2" },
     { name = "sphinx-lint", specifier = "~=1.0" },
     { name = "sphinx-sitemap", specifier = ">=2.6.0" },
-    { name = "sphinx-toolbox", specifier = "~=3.5" },
+    { name = "sphinx-toolbox", specifier = "~=4.0" },
     { name = "sphinxcontrib-details-directive" },
     { name = "sphinxext-rediraffe", specifier = "==0.2.7" },
 ]
@@ -2477,7 +2477,7 @@ wheels = [
 
 [[package]]
 name = "pydantic-kitbash"
-version = "0.0.6"
+version = "0.0.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
@@ -2485,9 +2485,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/c0/48066291bb9db968d42d6419fa666be077c893d17cdca0eac44cedb2e3d1/pydantic_kitbash-0.0.6.tar.gz", hash = "sha256:60b18ce727f06b6c5a3f8db5675bb6c423449bb59832c3e04cfef4b1568a84e9", size = 124406, upload-time = "2025-07-03T19:24:33.841Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/b9/630281fa690b2449e70d59ce221c91d9633571c4a7c2dcd8469a59a8c7cc/pydantic_kitbash-0.0.7.tar.gz", hash = "sha256:14eda8a87401b09d746e1ad4157248d8c0d1841803bf609600143e567a687551", size = 131893, upload-time = "2025-08-01T16:26:32.107Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/4e/4f492ee0d832eb9d8ebd9915e35bff6fd09d658bc6fdb1f31d70495492cf/pydantic_kitbash-0.0.6-py3-none-any.whl", hash = "sha256:e16fa65ebfebe7d295e9b476641e253e02b18686e52bedc2ec65c46421d9875d", size = 13156, upload-time = "2025-07-03T19:24:32.342Z" },
+    { url = "https://files.pythonhosted.org/packages/56/05/4a05fbb8f72ae86060430e55349e1d504ee73973e9a767aeb9ecaf85a447/pydantic_kitbash-0.0.7-py3-none-any.whl", hash = "sha256:4ab60369cb8b3cbf289724df295a514bb309d2cb669d1d0c6d1eafaacf530ec5", size = 13645, upload-time = "2025-08-01T16:26:29.879Z" },
 ]
 
 [[package]]
@@ -3576,7 +3576,7 @@ wheels = [
 
 [[package]]
 name = "sphinx-toolbox"
-version = "3.9.0"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "apeye" },
@@ -3597,9 +3597,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/df/32/e10c272614a1f4d84b680007bd45f9b77db3262ee6c3c61a0e27932a55b7/sphinx_toolbox-3.9.0.tar.gz", hash = "sha256:9ee0603b090762d6eed4d0ec9fa91445e3ef95d40a584af125308541c1bf7b8d", size = 114497, upload-time = "2025-02-26T13:32:07.253Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/d2/fd68940102a02cbff392b91317618e0f87458e98a9684c0f74b1c58d4e49/sphinx_toolbox-4.0.0.tar.gz", hash = "sha256:48c31451db2e2d8c71c03939e72a19ef7bc92ca7850a62db63fc7bb8395b6785", size = 113819, upload-time = "2025-05-12T17:11:39.104Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/7e/9811c8cf0df10c2b6c9c72667837d731dd4f0dc0d0e68980938c8eb6f7f8/sphinx_toolbox-3.9.0-py3-none-any.whl", hash = "sha256:49024961c7791ad6e9dd39c611f89b5162550afa26ccad087be38388c3dd3c1e", size = 195429, upload-time = "2025-02-26T13:32:04.4Z" },
+    { url = "https://files.pythonhosted.org/packages/77/fd/5f03a1ad6623b3533a4b7ce8156f0b6a185f4a276d12567e434b855040d1/sphinx_toolbox-4.0.0-py3-none-any.whl", hash = "sha256:c700937baee505e440d44d46bc47ccd036ec282ae61b04e40342944128721117", size = 195781, upload-time = "2025-05-12T17:11:37.45Z" },
 ]
 
 [[package]]

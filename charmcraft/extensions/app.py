@@ -446,3 +446,39 @@ class ExpressJSFramework(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+
+class SpringBootFramework(_AppBase):
+    """Extension for 12-factor Spring Boot applications."""
+
+    framework = "spring-boot"
+    options = {
+        **APP_PORT_OPTION,
+        "metrics-port": {
+            "type": "int",
+            "default": 8080,
+            "description": "Port where the prometheus metrics will be scraped.",
+        },
+        "metrics-path": {
+            "type": "string",
+            "default": "/actuator/prometheus",
+            "description": "Path where the prometheus metrics will be scraped.",
+        },
+        **SECRET_OPTIONS,
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"

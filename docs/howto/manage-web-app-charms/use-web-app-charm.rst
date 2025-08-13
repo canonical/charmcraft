@@ -29,6 +29,16 @@ can be run multiple times) and that it can be run on multiple units simultaneous
 without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
 
+Using ``migrate.sh`` isn't mandatory. You can use programmatic approaches instead. Some
+popular libraries for programmatic database migration are:
+
+- `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__ for Flask and FastAPI.
+- `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or `goose
+  <https://github.com/pressly/goose/>`__ for Go.
+- `prisma <https://www.npmjs.com/package/prisma/>`__ and `knex
+  <https://www.npmjs.com/package/knex/>`__ for Express.
+
+
 Troubleshoot the charm
 ----------------------
 
@@ -78,6 +88,12 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
 .. seealso::
 
@@ -120,6 +136,13 @@ To view more details about the web app itself, run:
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 pebble plan
+
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
@@ -173,6 +196,13 @@ Juju container:
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
+              /charm/bin/pebble  exec --context=spring-boot -- bash
 
 .. important::
 
@@ -243,6 +273,12 @@ name of the web app with the ``-c`` option.
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. group-tab:: Go
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+    .. group-tab:: Spring Boot
 
         .. code-block:: bash
 

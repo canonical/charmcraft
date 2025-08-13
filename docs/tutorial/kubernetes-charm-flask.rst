@@ -115,6 +115,9 @@ run the Flask app to verify that it works:
 
     flask run -p 8000
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the Flask app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -126,6 +129,9 @@ endpoint. You will need a new terminal for this; use
     :dedent: 2
 
 The Flask app should respond with ``Hello, world!``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Flask app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -301,6 +307,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Flask app
 --------------------
+
+So far, we've packed our Flask app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Flask app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Flask app. The Juju model holds the app along with any supporting
@@ -526,6 +536,17 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
     PostgreSQL has been integrated with the charm.
 
+.. tip::
+
+    In production you can also use the ``migrate.sh`` file
+    and run CLI tools for database migration.
+
+    See more:
+    :ref:`Flask framework extension | Regarding the migrate.sh file <flask-migrate-sh>`.
+
+    You could also use different tooling for migration, for example
+    `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__.
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -618,21 +639,8 @@ repeat this process, the output should be as follows:
     :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
     2
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Flask app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -659,10 +667,22 @@ following in the rock directory ``~/flask-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Flask app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

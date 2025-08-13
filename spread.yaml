@@ -74,7 +74,7 @@ backends:
       system=$(echo "${SPREAD_SYSTEM}" | tr . -)
       instance_name="spread-${SPREAD_BACKEND}-${instance_num}-${system}"
 
-      multipass launch --cpus 4 --disk 40G --memory 8G --name "${instance_name}" "${multipass_image}"
+      multipass launch --cpus 4 --disk 40G --memory 16G --name "${instance_name}" "${multipass_image}"
 
       # Enable PasswordAuthentication for root over SSH.
       multipass exec "$instance_name" -- \
@@ -163,7 +163,7 @@ suites:
     manual: true
     prepare: |
       juju_channel=3.6/stable
-      microk8s_channel=1.31-strict/stable
+      microk8s_channel=1.32/stable
 
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -172,12 +172,13 @@ suites:
       . "/charmcraft/tests/spread/tools/prepare.sh"
 
       refresh_or_install_snap juju "$juju_channel"
-      refresh_or_install_snap microk8s "$microk8s_channel"
+      refresh_or_install_snap microk8s "$microk8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
 
       if [[ -v CONTAINER_REGISTRY_URL ]]; then
+        CONTAINER_REGISTRY_HOSTPORT=$(echo "$CONTAINER_REGISTRY_URL" | awk -F/ '{print $3}')
         echo "server = \"$CONTAINER_REGISTRY_URL\"" > /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-        echo "[host.\"$CONTAINER_REGISTRY_URL\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo "[host.\"$CONTAINER_REGISTRY_HOSTPORT\"]" >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' >> /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         microk8s stop
         microk8s start
@@ -190,11 +191,13 @@ suites:
       microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
 
       # Bootstrap controller
-      juju bootstrap microk8s dev-controller --config bootstrap-timeout=1200
+      microk8s config | juju add-k8s my-k8s --client
+      juju bootstrap my-k8s dev-controller --config bootstrap-timeout=500
 
       echo 'connect-timeout = 10' >> ~/.curlrc
       echo 'max-time = 20' >> ~/.curlrc
     debug-each: |
+      microk8s kubectl get all -A
       juju status
       juju debug-log --no-tail --limit 1000
     restore: |

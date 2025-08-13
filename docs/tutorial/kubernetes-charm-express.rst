@@ -105,6 +105,9 @@ that it works:
 
    npm start
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the Express app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -117,6 +120,9 @@ endpoint. You will need a new terminal for this; use
 
 If the output has an *HTTP/1.1 200 OK* status message, then we know the newly-built
 app is working.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Express app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -325,6 +331,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Express app
 ------------------------
+
+So far, we've packed our Express app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Express app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Express app. The Juju model holds the app along with any supporting
@@ -585,6 +595,16 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :end-before: [docs:change-migrate-permissions-end]
     :dedent: 2
 
+.. tip::
+
+    You could also use different tooling for migration, for example `prisma
+    <https://www.npmjs.com/package/prisma/>`__ or
+    `knex <https://www.npmjs.com/package/knex/>`__ .
+
+    See more:
+    :ref:`Express framework extension | Regarding the migrate.sh file <express-migrate-sh>`.
+
+
 To connect the Express app to PostgreSQL, we will use
 the ``pg-promise`` library. The app code needs to be updated to keep track of
 the number of visitors and to include a new endpoint to retrieve the
@@ -724,21 +744,8 @@ repeat this process, the output should be as follows:
     :input: curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1
     Number of visitors 2
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Express app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -765,10 +772,22 @@ following in the rock directory ``~/expressjs-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Express app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial, you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

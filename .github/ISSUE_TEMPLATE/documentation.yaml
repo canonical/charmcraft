@@ -33,7 +33,7 @@ body:
     attributes:
       label: Documentation location
       description: Location of the corresponding documentation page (e.g., file, section, URL), if applicable
-      placeholder: ex. https://canonical-charmcraft.readthedocs-hosted.com/en/stable/release-notes/charmcraft-3.4/
+      placeholder: ex. https://documentation.ubuntu.com/charmcraft/stable/release-notes/charmcraft-3.4/
     validations:
       required: false
   - type: textarea

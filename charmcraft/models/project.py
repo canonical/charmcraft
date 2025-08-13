@@ -229,7 +229,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 details="Support for 'type: bundle' was removed in Charmcraft 4",
                 resolution="To create charm bundles, use Charmcraft 3",
                 reportable=False,
-                docs_url="https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/charmcraft-yaml-file",
+                docs_url="https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file",
             )
         raise ValueError(f"field type cannot be {project_type!r}")
 

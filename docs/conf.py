@@ -38,9 +38,11 @@ if ".post" in release:
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # region Configuration for canonical-sphinx
-ogp_site_url = "https://canonical-charmcraft.readthedocs-hosted.com/"
+ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
 ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
+
+slug = "charmcraft"
 
 html_context = {
     "product_page": "juju.is",
@@ -57,7 +59,7 @@ html_theme_options = {
 }
 
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
-html_baseurl = "https://canonical-charmcraft.readthedocs-hosted.com/"
+html_baseurl = "https://documentation.ubuntu.com/charmcraft/"
 
 if "READTHEDOCS_VERSION" in os.environ:
     version = os.environ["READTHEDOCS_VERSION"]
@@ -186,9 +188,9 @@ autodoc_default_options = {"exclude-members": "model_post_init"}
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
-    "juju": ("https://canonical-juju.readthedocs-hosted.com/3.6/", None),
-    "ops": ("https://ops.readthedocs.io/en/latest/", None),
-    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/en/stable/", None),
+    "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
+    "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
+    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
 }
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes

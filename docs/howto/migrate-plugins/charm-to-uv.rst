@@ -31,6 +31,26 @@ can be created as follows:
         build-snaps:
           - astral-uv
 
+Include charm dependencies
+--------------------------
+
+Make sure that the project directory has a :ref:`pyproject-toml-file`. Use the
+``dependencies`` key to list the dependencies of the charm code.
+
+.. code-block:: toml
+    :caption: pyproject.toml
+    :emphasize-lines: 6-9
+
+    [project]
+    name = "my-charm"
+    version = "0.0.1"
+    requires-python = ">=3.10"
+
+    # Dependencies of the charm code.
+    dependencies = [
+        "ops>=3,<4",
+    ]
+
 Include charm library dependencies
 ----------------------------------
 

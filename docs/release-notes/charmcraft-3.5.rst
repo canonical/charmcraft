@@ -161,7 +161,7 @@ The following bugs have been resolved in Charmcraft 3.5.3:
 
 - Incorrect container name when running ``charmcraft init`` with the default profile.
 - Some rust dependencies no longer build correctly for Python 3.8. The ``charm`` plugin
-  adds `version constraints <https://github.com/canonical/charmcraft/commit/5fb3f0a>`_
+  now adds `version constraints <https://github.com/canonical/charmcraft/commit/5fb3f0a>`_
   for these dependencies.
 
 Contributors

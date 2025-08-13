@@ -28,6 +28,8 @@ can be created as follows:
       my-charm:  # This can be named anything you want
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
 
 Include charm library dependencies
 ----------------------------------
@@ -67,12 +69,14 @@ environment, such as one for charm libraries, the
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 5-6
+    :emphasize-lines: 7-8
 
     parts:
       my-charm:
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
         uv-groups:
           - charmlibs
 
@@ -89,12 +93,14 @@ from the main directory, they can be included again using the
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 7-11
+    :emphasize-lines: 9-13
 
     parts:
       my-charm:
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
         uv-groups:
           - charmlibs
       version-file:

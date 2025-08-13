@@ -94,7 +94,6 @@ Alternatively, you could list the library dependencies in a
         "cosl",
         "pydantic",
         "cryptography",
-        "ops>=2.0.0",
     ]
 
 Library dependencies are runtime dependencies, and dependency groups are generally

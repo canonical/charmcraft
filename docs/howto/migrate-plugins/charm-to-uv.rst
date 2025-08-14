@@ -107,11 +107,12 @@ inspect Python packages to find their dependencies.
 Lock the dependencies
 ---------------------
 
-After including dependencies, make sure that the project directory has a
-:ref:`uv-lock-file`.
+After defining the project's dependencies, make sure that the project directory has a
+:ref:`uv-lock-file` by running:
 
-If you used ``uv add`` to include dependencies, uv created ``uv.lock``. Otherwise, run
-``uv lock``.
+.. code-block:: bash
+
+    uv lock
 
 Add dependency groups
 ---------------------

@@ -14,8 +14,8 @@ prepare: |
   git init
   git config --global --add safe.directory $PWD
   git add .
-  git config --global user.email "you@example.com"
-  git config --global user.name "Your Name"
+  git config user.email "you@example.com"
+  git config user.name "Your Name"
   git commit -m 'initial commit'
 
 restore: |

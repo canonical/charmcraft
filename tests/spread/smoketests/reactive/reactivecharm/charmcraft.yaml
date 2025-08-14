@@ -1,0 +1,15 @@
+type: "charm"
+bases:
+  - build-on:
+      - name: "ubuntu"
+        channel: "22.04"
+    run-on:
+      - name: "ubuntu"
+        channel: "22.04"
+parts:
+  charm:
+    source: .
+    plugin: reactive
+    build-snaps:
+      - charm/CHARM_SNAP_CHANNEL
+    build-packages: [python3-dev]

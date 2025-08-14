@@ -4,100 +4,43 @@
 ``tox.ini`` file
 ================
 
-The ``tox.ini`` file in your charm's root directory is a typical Tox
+The ``tox.ini`` file in your charm's root directory is a typical tox
 configuration file.
 
-    See more: `Tox |
+    See more: `tox |
     Configuration <https://tox.wiki/en/latest/user_guide.html#configuration>`_
 
-This file is generated automatically by ``charmcraft init`` with the
-contents below:
+Charmcraft creates this file and defines the following tox environments:
 
-.. code-block:: yaml
++-------------+-------------------------------------------+
+| Environment | Purpose                                   |
++=============+===========================================+
+| format      | Apply coding style standards              |
++-------------+-------------------------------------------+
+| lint        | Check code against coding style standards |
++-------------+-------------------------------------------+
+| static      | Run static type checks                    |
++-------------+-------------------------------------------+
+| unit        | Run the charm's unit tests                |
++-------------+-------------------------------------------+
+| integration | Run the charm's integration tests         |
++-------------+-------------------------------------------+
 
-      Copyright 2023 Ubuntu
-    # See LICENSE file for licensing details.
+To run the commands in an environment, use ``tox -e <env-name>``.
 
-    [tox]
-    no_package = True
-    skip_missing_interpreters = True
-    env_list = format, lint, static, unit
-    min_version = 4.0.0
+For the Kubernetes and machine profiles, ``tox.ini`` requires the
+`tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin. First make sure that
+`uv <https://docs.astral.sh/uv/>`_ is installed on the current host. Then use uv to
+install tox and tox-uv:
 
-    [vars]
-    src_path = {tox_root}/src
-    tests_path = {tox_root}/tests
-    ;lib_path = {tox_root}/lib/charms/operator_name_with_underscores
-    all_path = {[vars]src_path} {[vars]tests_path}
+.. code-block:: bash
 
-    [testenv]
-    set_env =
-        PYTHONPATH = {tox_root}/lib:{[vars]src_path}
-        PYTHONBREAKPOINT=pdb.set_trace
-        PY_COLORS=1
-    pass_env =
-        PYTHONPATH
-        CHARM_BUILD_DIR
-        MODEL_SETTINGS
+    uv tool install tox --with tox-uv
 
-    [testenv:format]
-    description = Apply coding style standards to code
-    deps =
-        black
-        ruff
-    commands =
-        black {[vars]all_path}
-        ruff --fix {[vars]all_path}
+Configuration of testing and linting tools is specified in the
+:ref:`pyproject-toml-file`. Dependencies are also specified in ``pyproject.toml``. If
+you manually modify the dependencies in ``pyproject.toml``, you'll need to update the
+:ref:`uv-lock-file` before using tox.
 
-    [testenv:lint]
-    description = Check code against coding style standards
-    deps =
-        black
-        ruff
-        codespell
-    commands =
-        # if this charm owns a lib, uncomment "lib_path" variable
-        # and uncomment the following line
-        # codespell {[vars]lib_path}
-        codespell {tox_root}
-        ruff {[vars]all_path}
-        black --check --diff {[vars]all_path}
-
-    [testenv:unit]
-    description = Run unit tests
-    deps =
-        pytest
-        coverage[toml]
-        -r {tox_root}/requirements.txt
-    commands =
-        coverage run --source={[vars]src_path} \
-                      -m pytest \
-                      --tb native \
-                      -v \
-                      -s \
-                      {posargs} \
-                      {[vars]tests_path}/unit
-        coverage report
-
-    [testenv:static]
-    description = Run static type checks
-    deps =
-        pyright
-        -r {tox_root}/requirements.txt
-    commands =
-        pyright {posargs}
-
-    [testenv:integration]
-    description = Run integration tests
-    deps =
-        pytest
-        juju
-        pytest-operator
-        -r {tox_root}/requirements.txt
-    commands =
-        pytest -v \
-                -s \
-                --tb native \
-                --log-cli-level=INFO \
-                {posargs} \
-                {[vars]tests_path}/integration
+For 12-factor app profiles, ``tox.ini`` doesn't require any plugins. Dependencies are
+specified in the :ref:`requirements-txt-file` instead of ``pyproject.toml``.

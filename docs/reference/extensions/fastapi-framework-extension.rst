@@ -47,6 +47,7 @@ by running ``juju config <application> token=<token>``.
 .. |framework| replace:: FastAPI
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy
@@ -109,6 +110,8 @@ See the `OpenTelemetry documentation
 for further information about tracing.
 
 
+.. _fastapi-migrate-sh:
+
 Regarding the ``migrate.sh`` file
 ---------------------------------
 
@@ -124,6 +127,9 @@ every unit and it is assumed that it is idempotent (can be run multiple
 times) and that it can be run on multiple units at the same time without
 causing issues. This can be achieved by, for example, locking any tables
 during the migration.
+
+If you prefer you can also use different tooling for migration, for example `Alembic
+<https://alembic.sqlalchemy.org/en/latest/>`__.
 
 
 Secrets

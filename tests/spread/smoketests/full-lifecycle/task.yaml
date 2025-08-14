@@ -6,7 +6,6 @@ systems:
   - ubuntu-24.04-64
 
 environment:
-  PROFILE/simple: simple
   PROFILE/machine: machine
   PROFILE/kubernetes: kubernetes
 

@@ -50,9 +50,9 @@ mitigations for the issue.
 The [Ubuntu Security disclosure and embargo policy] contains more information about
 what you can expect when you contact us and what we expect from you.
 
-[current major release]: https://canonical-charmcraft.readthedocs-hosted.com/en/stable/release-notes/#current-releases
-[base]: https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/platforms/#base
-[destructive]: https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/commands/pack/
+[current major release]: https://documentation.ubuntu.com/charmcraft/stable/release-notes/#current-releases
+[base]: https://documentation.ubuntu.com/charmcraft/stable/reference/platforms/#base
+[destructive]: https://documentation.ubuntu.com/charmcraft/stable/reference/commands/pack/
 [Juju]: https://documentation.ubuntu.com/juju
 [Private Security Report]: https://github.com/canonical/charmcraft/security/advisories/new
 [LXD]: https://canonical.com/lxd

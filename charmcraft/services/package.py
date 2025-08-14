@@ -25,7 +25,6 @@ import shutil
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
-import craft_application
 import craft_platforms
 import yaml
 from craft_application import services
@@ -35,41 +34,18 @@ import charmcraft
 from charmcraft import const, errors, models, utils
 from charmcraft.models import lint
 from charmcraft.models.manifest import Attribute, Manifest
-from charmcraft.models.metadata import BundleMetadata, CharmMetadata
+from charmcraft.models.metadata import CharmMetadata
 from charmcraft.models.project import (
     BasesCharm,
-    Bundle,
-    CharmcraftProject,
     PlatformCharm,
 )
 
 if TYPE_CHECKING:
-    from charmcraft.services import CharmcraftServiceFactory
-else:
-    CharmcraftServiceFactory = "CharmcraftServiceFactory"
+    from charmcraft.services.analysis import AnalysisService
 
 
 class PackageService(services.PackageService):
     """Business logic for creating packages."""
-
-    _project: models.CharmcraftProject  # type: ignore[assignment]
-    _services: CharmcraftServiceFactory
-
-    def __init__(
-        self,
-        app: craft_application.AppMetadata,
-        project: CharmcraftProject,
-        services: CharmcraftServiceFactory,
-        *,
-        project_dir: pathlib.Path,
-        build_plan: list[craft_application.models.BuildInfo],
-    ) -> None:
-        super().__init__(
-            app, services, project=cast(craft_application.models.Project, project)
-        )
-        self.project_dir = project_dir.resolve(strict=True)
-        self._platform = build_plan[0].platform
-        self._build_plan = build_plan
 
     def pack(self, prime_dir: pathlib.Path, dest: pathlib.Path) -> list[pathlib.Path]:
         """Create one or more packages as appropriate.
@@ -78,59 +54,32 @@ class PackageService(services.PackageService):
         :param dest: Directory into which to write the package(s).
         :returns: A list of paths to created packages.
         """
-        if self._project.type == "charm":
-            packages = [self.pack_charm(prime_dir, dest)]
-        elif self._project.type == "bundle":
-            packages = [self.pack_bundle(prime_dir, dest)]
-        else:
-            raise NotImplementedError(f"Unknown package type {self._project.type}")
-
-        self._write_package_paths(packages)
-        return packages
-
-    def _write_package_paths(self, packages: Iterable[pathlib.Path]) -> None:
-        """Write the paths of packages to a hidden file in the project directory.
-
-        This allows Charmcraft to output the packages to arbitrary directories on the host.
-        """
-        packages_file = self.project_dir / ".charmcraft_output_packages.txt"
-
-        with packages_file.open("at") as file:
-            file.writelines(f"{package.name}\n" for package in packages)
-
-    def pack_bundle(
-        self, prime_dir: pathlib.Path, dest_dir: pathlib.Path
-    ) -> pathlib.Path:
-        """Pack a prime directory as a bundle."""
-        name = self._project.name or "bundle"
-        bundle_path = dest_dir / f"{name}.zip"
-        emit.progress(f"Packing bundle {bundle_path.name}")
-        utils.build_zip(bundle_path, prime_dir)
-        return bundle_path
+        return [self.pack_charm(prime_dir, dest)]
 
     def pack_charm(
         self, prime_dir: pathlib.Path, dest_dir: pathlib.Path
     ) -> pathlib.Path:
         """Pack a prime directory as a charm for a given set of bases."""
-        charm_path = self.get_charm_path(dest_dir)
-        emit.progress(f"Packing charm {charm_path.name}")
+        charm_name = self.get_charm_name()
+        charm_path = dest_dir / charm_name
+        emit.progress(f"Packing charm {charm_name}")
         utils.build_zip(charm_path, prime_dir)
 
         return charm_path
 
-    def get_charm_path(self, dest_dir: pathlib.Path) -> pathlib.Path:
+    def get_charm_name(self) -> str:
         """Get a charm file name for the appropriate set of run-on bases."""
-        platform = self._platform.replace(":", "-")
-        return dest_dir / f"{self._project.name}_{platform}.charm"
+        name = self._services.get("project").get().name
+        platform = self._services.get("build_plan").plan()[0].platform
+        platform = platform.replace(":", "-")
+        return f"{name}_{platform}.charm"
 
     @property
-    def metadata(self) -> BundleMetadata | CharmMetadata:
+    def metadata(self) -> CharmMetadata:
         """Metadata model for this project."""
-        if isinstance(self._project, BasesCharm | PlatformCharm):
-            return CharmMetadata.from_charm(self._project)
-        if isinstance(self._project, Bundle):
-            return BundleMetadata.from_bundle(self._project)
-        raise NotImplementedError(f"Unknown project type {self._project.type!r}")
+        return CharmMetadata.from_charm(
+            cast("BasesCharm | PlatformCharm", self._services.get("project").get())
+        )
 
     def _write_file_or_object(
         self, model: dict | None, filename: str, dest_dir: pathlib.Path
@@ -147,7 +96,9 @@ class PackageService(services.PackageService):
         if not model:
             return
         dest_dir.mkdir(parents=True, exist_ok=True)
-        source_path = self.project_dir / filename
+        source_path = (
+            self._services.get("project").resolve_project_file_path().parent / filename
+        )
         dest_path = dest_dir / filename
         if source_path.is_file():
             shutil.copyfile(source_path, dest_path)
@@ -174,7 +125,9 @@ class PackageService(services.PackageService):
 
         return Manifest(
             charmcraft_version=charmcraft.__version__,
-            charmcraft_started_at=self._project.started_at.isoformat(),
+            charmcraft_started_at=str(
+                self._services.get("state").get("charmcraft", "started_at")
+            ),
             analysis={"attributes": attributes},
             image_info=image_info,
             bases=bases,
@@ -182,29 +135,33 @@ class PackageService(services.PackageService):
 
     def get_manifest_bases(self) -> list[models.Base]:
         """Get the bases used for a charm manifest from the project."""
-        if isinstance(self._project, BasesCharm):
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
+        build_item = self._services.get("build_plan").plan()[0]
+        if isinstance(project, BasesCharm):
             run_on_bases = []
-            for project_base in self._project.bases:
+            for project_base in project.bases:
                 for build_base in project_base.build_on:
-                    if build_base.name != self._build_plan[0].base.name:
+                    if build_base.name != build_item.build_base.distribution:
                         continue
-                    if build_base.channel != self._build_plan[0].base.version:
+                    if build_base.channel != build_item.build_base.series:
                         continue
-                    if self._build_plan[0].build_on not in build_base.architectures:
+                    if build_item.build_on not in build_base.architectures:
                         continue
                     run_on_bases.extend(project_base.run_on)
             if not run_on_bases:
                 raise RuntimeError("Could not determine run-on bases.")
             return run_on_bases
-        if isinstance(self._project, PlatformCharm):
-            archs = [self._build_plan[0].build_for]
+        if isinstance(project, PlatformCharm):
+            archs = [str(build_item.build_for)]
 
             # single base recipes will have a base
-            if self._project.base:
-                return [models.Base.from_str_and_arch(self._project.base, archs)]
+            if project.base:
+                return [models.Base.from_str_and_arch(project.base, archs)]
 
             # multi-base recipes may have the base in the platform name
-            platform_label = self._build_plan[0].platform
+            platform_label = build_item.platform
             if base := craft_platforms.parse_base_and_name(platform_label)[0]:
                 return [
                     models.Base(
@@ -217,7 +174,7 @@ class PackageService(services.PackageService):
             # Otherwise, retrieve the build-for base from the platform in the project.
             # This complexity arises from building on devel bases - the BuildInfo
             # contains the devel base and not the compatibility base.
-            platform = self._project.platforms.get(platform_label)
+            platform = project.platforms.get(platform_label)
             if platform and platform.build_for:
                 if base := craft_platforms.parse_base_and_architecture(
                     platform.build_for[0]
@@ -230,26 +187,28 @@ class PackageService(services.PackageService):
                         )
                     ]
 
-        raise TypeError(
-            f"Unknown charm type {self._project.__class__}, cannot get bases."
-        )
+        raise TypeError(f"Unknown charm type {project.__class__}, cannot get bases.")
 
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
         :param path: The path to the prime directory.
         """
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
         path.mkdir(parents=True, exist_ok=True)
-        if isinstance(self._project, BasesCharm | PlatformCharm):
-            if self._project.analysis:
+        if isinstance(project, BasesCharm | PlatformCharm):
+            if project.analysis:
                 ignore_checkers = {
-                    *self._project.analysis.ignore.linters,
-                    *self._project.analysis.ignore.attributes,
+                    *project.analysis.ignore.linters,
+                    *project.analysis.ignore.attributes,
                 }
             else:
                 ignore_checkers = set()
-            lint_results = self._services.analysis.lint_directory(
-                self._services.lifecycle.prime_dir, ignore=ignore_checkers
+            svc = cast("AnalysisService", self._services.get("analysis"))
+            lint_results = svc.lint_directory(
+                self._services.get("lifecycle").prime_dir, ignore=ignore_checkers
             )
             manifest = self.get_manifest(lint_results)
             # Converting the manifest to a dictionary here is fairly fragile.
@@ -270,14 +229,15 @@ class PackageService(services.PackageService):
                 )
             )
 
-        project_dict = self._project.marshal()
+        project_dict = project.marshal()
 
         # If there is a reactive part, defer to it for the existence of metadata.yaml.
         plugins = {
-            part.get("plugin") or name for name, part in self._project.parts.items()
+            part.get("plugin") or name  # NOTE: Not the same as part.get("plugin", name)
+            for name, part in project.parts.items()
         }
         is_reactive = "reactive" in plugins
-        stage_dir = self._services.lifecycle.project_info.dirs.stage_dir
+        stage_dir = self._services.get("lifecycle").project_info.dirs.stage_dir
         if is_reactive and (stage_dir / const.METADATA_FILENAME).exists():
             emit.debug(
                 f"{const.METADATA_FILENAME!r} generated by charm. Not using original project metadata."

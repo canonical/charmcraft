@@ -143,6 +143,10 @@ Now, run the Django app to verify that it works:
 
     Specifying ``0.0.0.0:8000`` allows for traffic outside of the Multipass VM.
 
+    When you run the command for the first time, you'll see a warning about
+    unapplied migrations. We can ignore this warning for now, as we aren't
+    currently performing any database operations. We'll set up the database later.
+
 Now we need the private IP address of the Multipass VM. Outside of the
 Multipass VM, run:
 
@@ -150,6 +154,8 @@ Multipass VM, run:
 
     multipass info charm-dev | grep IP
 
+Verify the app
+~~~~~~~~~~~~~~
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -158,6 +164,9 @@ browser. Open a new tab and visit
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Django app looks good, so we can stop it for now from the
 original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
@@ -297,6 +306,18 @@ Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
 
+.. tip::
+
+    You can use the ``migrate.sh`` file to run cli tools for database migration.
+    This script runs before the app is initialized.
+
+    See more:
+    :ref:`Django framework extension | Regarding the migrate.sh file <django-migrate-sh>`.
+
+    See more:
+    `Django database migration tooling
+    <https://docs.djangoproject.com/en/5.2/topics/migrations/>`__
+
 Now let's pack the rock:
 
 .. literalinclude:: code/django/task.yaml
@@ -409,6 +430,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Django app
 ---------------------
+
+So far, we've packed our Django app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Django app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Django app. The Juju model holds the app along with any supporting
@@ -776,21 +801,8 @@ After we wait for a moment for the app to be restarted, using
 ``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
 or visiting http://django-hello-world should now respond with ``Hi!``.
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Django app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Integrating the app with PostgreSQL to be production ready
-- Exposing the app using an ingress
-- Adding an initial app and configuring the app
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -817,10 +829,22 @@ following in the rock directory ``~/django-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Django app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Integrating the app with PostgreSQL to be production ready
+- Exposing the app using an ingress
+- Adding an initial app and configuring the app
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::

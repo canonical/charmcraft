@@ -35,9 +35,8 @@ description: |
   and collaboration.
 
   Charmcraft and the Python Operator Framework extend the operator pattern
-  beyond Kubernetes with universal operators that drive Linux and
-  Windows apps. The universal operator pattern is very exciting for
-  multi-cloud application management.
+  beyond Kubernetes with universal operators that drive Linux apps. The universal
+  operator pattern is very exciting for multi-cloud application management.
 
 adopt-info: charmcraft # look for 'craftctl set *' in the charmcraft part
 architectures:
@@ -66,7 +65,7 @@ apps:
       CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
 
   spread:
-    command: bin/spread
+    command: libexec/charmcraft/craft.spread
 
 confinement: classic
 
@@ -222,13 +221,18 @@ parts:
   spread:
     plugin: go
     source: https://github.com/snapcore/spread.git
-    source-depth: 1
-    build-packages:
-      - golang-go
+    source-commit: ae284792596e00d325a1787604fe4ec7e00574aa # 'main' as of 2025-07-30
+    build-snaps:
+      - go
+    build-attributes:
+      - enable-patchelf
     build-environment:
       - CGO_ENABLED: "0"
+      - GOFLAGS: -trimpath -ldflags=-w -ldflags=-s
     stage:
       - -bin/humbox
+    organize:
+      bin/spread: libexec/charmcraft/craft.spread
 
 hooks:
   configure:

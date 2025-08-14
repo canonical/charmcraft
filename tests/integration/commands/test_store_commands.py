@@ -20,14 +20,13 @@ import datetime
 import json
 import pathlib
 import re
-import sys
 from unittest import mock
 
 import craft_cli.pytest_plugin
 import pytest
 from craft_store import publisher
 
-from charmcraft import env, errors, utils
+from charmcraft import errors, utils
 from charmcraft.application.commands import FetchLibCommand
 from charmcraft.application.commands.store import CreateTrack
 from tests import factory
@@ -35,22 +34,6 @@ from tests import factory
 OPERATOR_LIBS_LINUX_APT_ID = "7c3dbc9c2ad44a47bd6fcb25caa270e5"
 OPERATOR_LIBS_LINUX_SNAP_ID = "05394e5893f94f2d90feb7cbe6b633cd"
 MYSQL_MYSQL_ID = "8c1428f06b1b4ec8bf98b7d980a38a8c"
-
-
-@pytest.fixture
-def store_mock():
-    """The fixture to fake the store layer in all the tests."""
-    store_mock = mock.MagicMock()
-
-    def validate_params(config, ephemeral=False, needs_auth=True):
-        """Check that the store received the Charmhub configuration and ephemeral flag."""
-        assert config == env.CharmhubConfig()
-        assert isinstance(ephemeral, bool)
-        assert isinstance(needs_auth, bool)
-        return store_mock
-
-    with mock.patch("charmcraft.application.commands.store.Store", validate_params):
-        yield store_mock
 
 
 # region fetch-lib tests
@@ -127,7 +110,6 @@ def test_fetchlib_simple_updated(
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 @pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_all(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,

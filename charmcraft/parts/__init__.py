@@ -36,7 +36,6 @@ __all__ = [
 def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
     """Get the app-specific plugins for Charmcraft."""
     return {
-        "bundle": plugins.BundlePlugin,
         "charm": plugins.CharmPlugin,
         "poetry": plugins.PoetryPlugin,
         "python": plugins.PythonPlugin,

@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Canonical Ltd.
+# Copyright 2020-2025 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,22 +52,5 @@ def determine_version():
 
     return f"{version}.post{distance}+git{commit[1:]}"
 
-
-def set_charmcraft_iss():
-    charmcraft_iss_path = pathlib.Path("windows/charmcraft.iss")
-    assert (
-        charmcraft_iss_path.exists()
-    ), f"Run from project root and ensure {charmcraft_iss_path!s} exists."
-    with fileinput.input(str(charmcraft_iss_path), inplace=True) as iss_file:
-        for line in iss_file:
-            if line.startswith("AppVersion="):
-                print(f"AppVersion={determine_version()}")
-            else:
-                print(line, end="")
-
-
 if __name__ == "__main__":
-    if len(sys.argv) == 2 and sys.argv[1] == "set-charmcraft-iss":
-        set_charmcraft_iss()
-    else:
-        print(determine_version())
+    print(determine_version())

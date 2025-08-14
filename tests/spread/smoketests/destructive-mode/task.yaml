@@ -1,5 +1,11 @@
 summary: pack a init-created charm in destructive mode
 
+systems:
+  # - ubuntu-18.04-64  # We need a sample charm that works with older python
+  # - ubuntu-20.04-64  # We need a sample charm that works with older python
+  - ubuntu-22.04-64
+  - ubuntu-24.04-64
+
 prepare: |
   apt install --yes build-essential
   charmcraft init --project-dir=charm

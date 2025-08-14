@@ -21,7 +21,7 @@ import pathlib
 import re
 import textwrap
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from typing import (
     Annotated,
     Any,
@@ -29,18 +29,16 @@ from typing import (
     cast,
 )
 
-import craft_platforms
 import pydantic
 import pydantic.v1
-from craft_application import errors, models, util
+from craft_application import errors, models
+from craft_application.models import PlatformsDict
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
-from craft_platforms import charm
-from craft_providers import bases
-from pydantic import dataclasses
+from pydantic.json_schema import SkipJsonSchema
 from typing_extensions import Self, override
 
-from charmcraft import const, preprocess, utils
+from charmcraft import const, preprocess
 from charmcraft.const import (
     BaseStr,
     BuildBaseStr,
@@ -76,9 +74,6 @@ def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
         architectures = "-".join(base.architectures)
         base_strings.append(f"{name}-{version}-{architectures}")
     return "_".join(base_strings)
-
-
-CharmPlatform = Annotated[str, pydantic.StringConstraints(min_length=4, strict=True)]
 
 
 class CharmLib(models.CraftBaseModel):
@@ -158,234 +153,6 @@ class CharmLib(models.CraftBaseModel):
         return int(patch)
 
 
-@dataclasses.dataclass
-class CharmBuildInfo(models.BuildInfo):
-    """Information about a single build option, with charmcraft-specific info.
-
-    With CharmBuildInfo, the build_for may also be the string "multi", meaning the charm
-    is expected to run on multiple architectures.
-    """
-
-    platform: CharmPlatform
-
-    build_for_bases: list[charmcraft.Base]
-    """Charmcraft base to build for, including potentially multiple architectures."""
-    bases_index: int
-    """Index of the base configuration in charmcraft.yaml."""
-    build_on_index: int
-    """Index of this base configuration's build-on option."""
-
-    @classmethod
-    def from_build_on_run_on(
-        cls: type[Self],
-        build_on_base: charmcraft.Base,
-        build_on_arch: str,
-        run_on: list[charmcraft.Base],
-        *,
-        bases_index: int,
-        build_on_index: int,
-    ) -> Self:
-        """Create a single CharmBuildInfo from a build_on base and run_on bases.
-
-        :param build_on_base: A Base object defining a base on which to build
-        :param build_on_arch: The architecture on which to run the build (e.g. "amd64")
-        :param run_on: A list of bases which this charm should run on after the build.
-        :param bases_index: The index of the BasesConfiguration
-        :param build_on_index: Which build-on value from the BasesConfiguration to use
-        """
-        base = bases.BaseName(name=build_on_base.name, version=build_on_base.channel)
-
-        all_architectures = set()
-        for run_on_base in run_on:
-            all_architectures.update(run_on_base.architectures)
-
-        build_for = "-".join(sorted(all_architectures))
-
-        platform = get_charm_file_platform_str(run_on)
-
-        return cls(
-            platform=platform,
-            build_on=build_on_arch,
-            build_for=build_for,
-            base=base,
-            build_for_bases=run_on,
-            bases_index=bases_index,
-            build_on_index=build_on_index,
-        )
-
-    @classmethod
-    def gen_from_bases_configurations(
-        cls: type[Self], *bases_configs: charmcraft.BasesConfiguration
-    ) -> Iterator[Self]:
-        """Generate CharmBuildInfo objects from a BasesConfiguration object.
-
-        :param bases_config: One or more BasesConfiguration objects from which to generate
-            CharmBuildInfo objects.
-        :returns: A list of CharmBuildInfo objects from this BasesConfiguration.
-
-        Example 1: a simple charm:
-            bases:
-              - name: ubuntu
-                channel: 24.04
-        This gets expanded to a standard long-form:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                run-on:
-                  - name: ubuntu
-                    channel: "24.04"
-        Presuming charmcraft is run on riscv64 (if architectures are not specified charmcraft will
-        use the host architecture as the only architecture), it will output a list containing the
-        following single BuildInfo object:
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="riscv64",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_base=BaseName(name="ubuntu", channel="24.04"),
-                bases_index=0,
-                build_on_index=0
-            )
-
-        Example 2: a more complex set of bases:
-            bases:
-              - build-on:
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "riscv64"]
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["arm64"]
-                run-on:
-                  - name: ubuntu
-                    channel: "22.04"
-                    architectures: ["amd64", "arm64"]
-                  - name: ubuntu
-                    channel: "24.04"
-                    architectures: ["amd64", "arm64", "riscv64"]
-        This will result in the following builds in the plan:
-        [
-            CharmBuildInfo(
-                build_on="amd64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="riscv64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="24.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=0
-            ),
-            CharmBuildInfo(
-                build_on="arm64",
-                build_for="multi",
-                base=BaseName(name="ubuntu", channel="22.04"),
-                build_for_bases=[
-                    Base(name="ubuntu", channel="22.04", architectures=["amd64", "arm64"]),
-                    Base(name="ubuntu", channel="24.04", architectures=["amd64", "arm64", "riscv64"])
-                ]
-                bases_index=0,
-                build_on_index=1
-            ),
-        ]
-
-        Here the string "multi" defines a destination platform that has multiple architectures.
-        """
-        for bases_index, bases_config in enumerate(bases_configs):
-            for build_on_index, build_on_base in enumerate(bases_config.build_on):
-                for build_on_arch in build_on_base.architectures:
-                    yield cls.from_build_on_run_on(
-                        build_on_base,
-                        build_on_arch,
-                        bases_config.run_on,
-                        bases_index=bases_index,
-                        build_on_index=build_on_index,
-                    )
-
-
-class CharmcraftBuildPlanner(models.BuildPlanner):
-    """Build planner for Charmcraft."""
-
-    type: str = ""
-    bases: list[BasesConfiguration] = pydantic.Field(default_factory=list)
-    base: str | None = None
-    build_base: str | None = None
-    platforms: dict[str, models.Platform | None] | None = None  # type: ignore[assignment]
-
-    @override
-    @pydantic.field_validator("platforms", mode="before")
-    @classmethod
-    def _populate_platforms(cls, platforms: dict[str, Any]) -> dict[str, Any]:
-        """Overrides the validator to prevent platforms from being modified.
-
-        Modifying the platforms field can break multi-base builds."""
-        return platforms
-
-    def get_build_plan(self) -> list[models.BuildInfo]:
-        """Get build bases for this charm.
-
-        This method provides a flattened version of every way to build the charm, unfiltered.
-
-        If a charm uses the older "bases" model, it defers to
-        `CharmBuildInfo.gen_from_bases_configurations'. Otherwise, it generates the BuildInfo
-        as expected with platforms.
-        """
-        if self.type == "bundle":
-            # A bundle can build anywhere, so just present the current system.
-            current_arch = util.get_host_architecture()
-            current_base = utils.get_os_platform()
-            return [
-                models.BuildInfo(
-                    platform=current_arch,
-                    build_on=current_arch,
-                    build_for=current_arch,
-                    base=bases.BaseName(
-                        name=current_base.system, version=current_base.release
-                    ),
-                )
-            ]
-        if not self.base and not self.platforms:
-            return list(CharmBuildInfo.gen_from_bases_configurations(*self.bases))
-
-        if self.platforms is None:
-            raise CraftError("Must define at least one platform.")
-        platforms = cast(
-            # https://github.com/canonical/craft-platforms/issues/43
-            craft_platforms.Platforms,  # pyright: ignore[reportPrivateImportUsage]
-            {
-                name: (platform.marshal() if platform else None)
-                for name, platform in self.platforms.items()
-            },
-        )
-        build_infos = charm.get_platforms_charm_build_plan(
-            base=self.base,
-            build_base=self.build_base,
-            platforms=platforms,
-        )
-        return [
-            models.BuildInfo(
-                platform=info.platform,
-                build_on=str(info.build_on),
-                build_for=str(info.build_for),
-                base=bases.BaseName(
-                    name=info.build_base.distribution, version=info.build_base.series
-                ),
-            )
-            for info in build_infos
-        ]
-
-
 class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     """A craft-application compatible version of a Charmcraft project.
 
@@ -397,7 +164,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     in order to preserve field order. It's registered as a virtual child class below.
     """
 
-    type: Literal["charm", "bundle"]
+    type: Literal["charm"]
     title: models.ProjectTitle | None = None
     summary: CharmcraftSummaryStr | None = None
     description: str | None = None
@@ -457,8 +224,19 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 return BasesCharm.unmarshal(data)
             return PlatformCharm.unmarshal(data)
         if project_type == "bundle":
-            return Bundle.unmarshal(data)
+            raise errors.CraftValidationError(
+                "Invalid 'charmcraft.yaml' file",
+                details="Support for 'type: bundle' was removed in Charmcraft 4",
+                resolution="To create charm bundles, use Charmcraft 3",
+                reportable=False,
+                docs_url="https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file",
+            )
         raise ValueError(f"field type cannot be {project_type!r}")
+
+    @classmethod
+    @override
+    def from_yaml_data(cls, data: dict[str, Any], filepath: pathlib.Path) -> Self:
+        return cls.unmarshal(data)
 
     @classmethod
     def from_yaml_file(cls, path: pathlib.Path) -> Self:
@@ -488,7 +266,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         project_dir = path.parent
 
         preprocess.add_default_parts(data)
-        preprocess.add_bundle_snippet(project_dir, data)
         preprocess.add_metadata(project_dir, data)
         preprocess.add_config(project_dir, data)
         preprocess.add_actions(project_dir, data)
@@ -514,20 +291,38 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         return values
 
+    @pydantic.field_validator("platforms", mode="before")
+    @classmethod
+    def _preprocess_platforms(
+        cls, values: dict[str, dict[str, list[str]] | None]
+    ) -> dict[str, dict[str, list[str]]]:
+        """Expand the dictionary into the real platforms."""
+        platforms = {
+            name: value
+            if value
+            else {
+                "build-on": [name],
+                "build-for": [name],
+            }
+            for name, value in values.items()
+        }
+        for name, value in platforms.items():
+            if value.get("build-for") is None:
+                value["build-for"] = [name]
+        return platforms
+
     @pydantic.field_validator("parts", mode="before")
     @classmethod
     def _preprocess_parts(
         cls, parts: dict[str, dict[str, Any]] | None, info: pydantic.ValidationInfo
     ) -> dict[str, dict[str, Any]]:
-        """Preprocess parts object for a charm or bundle, creating an implicit part if needed."""
+        """Preprocess parts object for a charm, creating an implicit part if needed."""
         if parts is not None and not isinstance(parts, dict):
             raise TypeError(
                 "'parts' in charmcraft.yaml must conform to the charmcraft.yaml spec."
             )
         if not parts:
-            if info.config and info.config.get("title") == "Bundle":
-                parts = {"bundle": {"plugin": "bundle"}}
-            elif "type" in info.data:
+            if "type" in info.data:
                 parts = {info.data["type"]: {"plugin": info.data["type"]}}
             else:
                 parts = {}
@@ -540,9 +335,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
         for name, part in parts.items():
             if name == "charm" and part["plugin"] == "charm":
-                part.setdefault("source", ".")
-
-            if name == "bundle" and part["plugin"] == "bundle":
                 part.setdefault("source", ".")
         return {name: process_part_config(part) for name, part in parts.items()}
 
@@ -675,7 +467,7 @@ class CharmProject(CharmcraftProject):
               container (that you will then define further in the resources block).
             - ``bases`` is a list of bases to be used for resolving a container image,
               in descending order of preference. To use it, specify a base name (for
-              example, ``ubuntu`` or ``centos``), a ``channel`` and an
+              example, ``ubuntu`` or ``almalinux``), a ``channel`` and an
               ``architecture``.
             - ``mounts`` is a list of mounted storage volumes for this container. To
               use it, specify the name of the storage to mount from the charm
@@ -981,18 +773,8 @@ class CharmProject(CharmcraftProject):
 
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
     """Check that the given base is a legacy base, usable with 'bases'."""
-    # This pyright ignore can go away once we're on Python minimum version 3.11.
-    # At that point we can mark items as required or not required.
-    # https://docs.python.org/3/library/typing.html#typing.Required
-    if (
-        base["name"] == "ubuntu"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        and base["channel"] < "24.04"  # pyright: ignore[reportTypedDictNotRequiredAccess]
-    ):
-        return True
-    return base in (
-        {"name": "centos", "channel": "7"},
-        {"name": "almalinux", "channel": "9"},
-    )
+    base_str = f"{base['name']}@{base['channel']}"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+    return base_str in const.LEGACY_BASES
 
 
 def _validate_base(
@@ -1022,11 +804,16 @@ class BasesCharm(CharmProject):
         - Ubuntu 18.04
         - Ubuntu 20.04
         - Ubuntu 22.04
-        - CentOS 7
         - Alma Linux 9
     """
 
-    platforms: None = None  # type: ignore[assignment]
+    # For bases charms, accept anything so we can use platforms internally, but
+    # exclude it from serialization and the JSON schema.
+    platforms: SkipJsonSchema[Any] = pydantic.Field(
+        default=None,
+        exclude=True,
+        repr=False,
+    )
 
     # This is defined this way because using conlist makes mypy sad and using
     # a ConstrainedList child class has pydantic issues. This appears to be
@@ -1045,7 +832,7 @@ class BasesCharm(CharmProject):
             different sources that end up being a part of the final charm.
 
             Keys are user-defined part names. The value of each key is a map where keys
-            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+            are part names.
 
             Example::
 
@@ -1067,7 +854,7 @@ class PlatformCharm(CharmProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
-    platforms: dict[str, models.Platform | None]  # type: ignore[assignment]
+    platforms: PlatformsDict
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         description=textwrap.dedent(
@@ -1076,7 +863,7 @@ class PlatformCharm(CharmProject):
             different sources that end up being a part of the final charm.
 
             Keys are user-defined part names. The value of each key is a map where keys
-            are part names. Charmcraft provides 3 plugins: charm, bundle, reactive.
+            are part names.
 
             Example::
 
@@ -1111,32 +898,3 @@ class PlatformCharm(CharmProject):
 
 
 Charm = PlatformCharm | BasesCharm
-
-
-class Bundle(CharmcraftProject):
-    """Model for defining a bundle."""
-
-    type: Literal["bundle"]
-    bundle: dict[str, Any] = {}
-    name: models.ProjectName | None = None  # type: ignore[assignment]
-    title: models.ProjectTitle | None = None
-    summary: CharmcraftSummaryStr | None = None
-    description: pydantic.StrictStr | None = None
-    platforms: None = None  # type: ignore[assignment]
-
-    parts: dict[str, dict[str, Any]] = pydantic.Field(
-        default_factory=lambda: {"bundle": {"plugin": "bundle", "source": "."}}
-    )
-
-    @pydantic.model_validator(mode="before")
-    @classmethod
-    def preprocess_bundle(cls, values: dict[str, Any]) -> dict[str, Any]:
-        """Preprocess any values that charmcraft infers, before attribute validation."""
-        emit.progress(
-            "Packing bundles is deprecated and will be removed in Charmcraft 4.",
-            permanent=True,
-        )
-        if "name" not in values:
-            values["name"] = values.get("bundle", {}).get("name")
-
-        return values

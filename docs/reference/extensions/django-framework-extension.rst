@@ -68,6 +68,7 @@ will be set automatically.
 .. |framework| replace:: Django
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy
@@ -128,6 +129,24 @@ and configure the OpenTelemetry SDK to use them.
 See the `OpenTelemetry documentation
 <https://opentelemetry-python.readthedocs.io/en/latest/>`__
 for further information about tracing.
+
+
+.. _django-migrate-sh:
+
+About the ``migrate.sh`` file
+---------------------------------
+
+If your app depends on a database it is common to run a database migration script before
+app startup which, for example, creates or modifies tables. This can be done by
+including the ``migrate.sh`` script in the root of your project. It will be executed
+with the same environment variables and context as the Django app.
+
+Charmcraft runs the migration script on every unit. In doing so, it assumes the script
+is idempotent, meaning it doesn't mutate when rerun with the same input, and can be run
+on multiple units at the same time. You can make your script idempotent by, for example,
+locking any tables for the duration of the migration.
+
+If the migration script fails, the app won't start, and the app charm becomes blocked.
 
 
 Secrets

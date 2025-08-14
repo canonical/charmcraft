@@ -175,7 +175,7 @@ to find out more.
             # specified. These bases are listed as base (instead of name) and
             # channel as in the Base definition, as an unnamed top-level object list
             bases:
-                # Name of the OS. For example ubuntu/centos/windows/osx/opensuse
+                # Name of the OS. For example ubuntu/almalinux/opensuse
               - name: <base name>
 
                 # Channel of the OS in format "track[/risk][/branch]" such as used by
@@ -468,7 +468,7 @@ defined, and ``mounts`` is optional. ``resource`` stands for the OCI image resou
 to create the container; to use it, specify  an OCI image resource name (that you will
 then define further in the `resources`_ block). ``bases`` is a list of bases to be used
 for resolving a container image, in descending order of preference; to use it, specify a
-base name (for example, ``ubuntu``, ``centos``, ``windows``, ``osx``, ``opensuse``), a
+base name (for example, ``ubuntu``, ``almalinux``, ``opensuse``), a
 `channel <https://snapcraft.io/docs/channels>`_, and an architecture. ``mounts`` is a
 list of mounted storages for this container; to use it, specify the name of the storage
 to mount from the charm storage and, optionally, the location where to mount the
@@ -514,7 +514,7 @@ and the default is 0 (root).
 ..         # specified. These bases are listed as base (instead of name) and
 ..         # channel as in the Base definition, as an unnamed top-level object list
 ..         bases:
-..             # Name of the OS. For example ubuntu/centos/windows/osx/opensuse
+..             # Name of the OS. For example ubuntu/almalinux/opensuse
 ..             - name: <base name>
 
 ..               # Channel of the OS in format "track[/risk][/branch]" such as used by

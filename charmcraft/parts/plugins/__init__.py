@@ -16,7 +16,6 @@
 
 """Craft-parts plugins and plugin overrides for charmcraft."""
 
-from ._bundle import BundlePlugin, BundlePluginProperties
 from ._charm import CharmPlugin, CharmPluginProperties
 from ._poetry import PoetryPlugin, PoetryPluginProperties
 from ._python import PythonPlugin, PythonPluginProperties
@@ -25,8 +24,6 @@ from ._uv import UvPlugin
 from craft_parts.plugins.uv_plugin import UvPluginProperties
 
 __all__ = [
-    "BundlePlugin",
-    "BundlePluginProperties",
     "CharmPlugin",
     "CharmPluginProperties",
     "PoetryPlugin",

@@ -58,20 +58,6 @@ def test_useragent_linux(monkeypatch):
     )
 
 
-def test_useragent_windows(monkeypatch):
-    """Construct a user-agent as a patched Windows machine"""
-    monkeypatch.setenv("TRAVIS_TESTING", "1")
-    with (
-        patch("charmcraft.store.client.__version__", "1.2.3"),
-        patch("platform.system", return_value="Windows"),
-        patch("platform.release", return_value="10"),
-        patch("platform.machine", return_value="AMD64"),
-        patch("platform.python_version", return_value="3.9.1"),
-    ):
-        ua = build_user_agent()
-    assert ua == "charmcraft/1.2.3 (testing) Windows/10 (AMD64) python/3.9.1"
-
-
 # --- Client tests
 
 

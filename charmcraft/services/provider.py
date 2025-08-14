@@ -19,26 +19,21 @@
 from __future__ import annotations
 
 import contextlib
+import fcntl
 import io
-from collections.abc import Generator
-
-from craft_application.models import BuildInfo
-
-try:
-    import fcntl
-except ModuleNotFoundError:  # Not available on Windows.
-    fcntl = None  # type: ignore[assignment]
 import os
 import pathlib
+from collections.abc import Generator
 from typing import cast
 
 import craft_application
 import craft_providers
 from craft_application import services
 from craft_cli import emit
+from craft_platforms import BuildInfo
 from craft_providers import bases
 
-from charmcraft import env, models
+from charmcraft import env
 
 
 class ProviderService(services.ProviderService):
@@ -49,18 +44,14 @@ class ProviderService(services.ProviderService):
         app: craft_application.AppMetadata,
         services: craft_application.ServiceFactory,
         *,
-        project: models.CharmcraftProject,
         work_dir: pathlib.Path,
-        build_plan: list[BuildInfo],
         provider_name: str | None = None,
         install_snap: bool = True,
     ) -> None:
         super().__init__(
             app,
             services,
-            project=project,
             work_dir=work_dir,
-            build_plan=build_plan,
             provider_name=provider_name,
             install_snap=install_snap,
         )
@@ -124,6 +115,7 @@ class ProviderService(services.ProviderService):
             **kwargs,  # type: ignore[arg-type]
         ) as instance:
             try:
+                instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])
                 # Use /root/.cache even if we're in the snap.
                 instance.execute_run(
                     ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True
@@ -135,15 +127,13 @@ class ProviderService(services.ProviderService):
                 )
                 yield instance
             finally:
-                if fcntl is not None and self._lock:
+                if self._lock:
                     fcntl.flock(self._lock, fcntl.LOCK_UN)
                     self._lock.close()
 
 
 def _maybe_lock_cache(path: pathlib.Path) -> io.TextIOBase | None:
     """Lock the cache so we only have one copy of Charmcraft using it at a time."""
-    if fcntl is None:  # Don't lock on Windows - just don't cache.
-        return None
     cache_lock_path = path / "charmcraft.lock"
 
     emit.trace("Attempting to lock the cache path")

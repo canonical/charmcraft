@@ -27,17 +27,16 @@ import hypothesis
 import pydantic
 import pyfakefs.fake_filesystem
 import pytest
-import pytest_check
-from craft_application import models, util
+from craft_application import util
 from craft_application.errors import CraftValidationError
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError
 from craft_providers import bases
 from hypothesis import strategies
 
-from charmcraft import const, utils
+from charmcraft import const
 from charmcraft.models import project
-from charmcraft.models.charmcraft import Base, BasesConfiguration
+from charmcraft.models.charmcraft import Base
 
 SIMPLE_BASE = Base(name="simple", channel="0.0")
 BASE_WITH_ONE_ARCH = Base(name="arch", channel="1.0", architectures=["amd64"])
@@ -50,7 +49,6 @@ MULTIARCH_BASENAME = bases.BaseName("multiarch", "2.0")
 UBUNTU_JAMMY = Base(name="ubuntu", channel="22.04", architectures=["amd64"])
 SIMPLE_BASES = (
     UBUNTU_JAMMY,
-    Base(name="centos", channel="7", architectures=["amd64"]),
     Base(name="almalinux", channel="9", architectures=["amd64"]),
 )
 COMPLEX_BASES = (
@@ -239,7 +237,7 @@ def test_platform_from_single_base(base):
 @pytest.mark.parametrize(
     ("bases", "expected"),
     [
-        (SIMPLE_BASES, "ubuntu-22.04-amd64_centos-7-amd64_almalinux-9-amd64"),
+        (SIMPLE_BASES, "ubuntu-22.04-amd64_almalinux-9-amd64"),
         (
             COMPLEX_BASES,
             "ubuntu-devel-amd64-arm64-s390x-riscv64_almalinux-9-amd64-arm64-s390x-ppc64el",
@@ -250,8 +248,6 @@ def test_platform_from_multiple_bases(bases, expected):
     assert project.get_charm_file_platform_str(bases) == expected
 
 
-# endregion
-# region Platform tests
 VALID_PLATFORM_ARCHITECTURES = [
     *(
         list(x) for x in itertools.combinations(const.CharmArch, 1)
@@ -260,29 +256,6 @@ VALID_PLATFORM_ARCHITECTURES = [
         list(x) for x in itertools.combinations(const.CharmArch, 2)
     ),  # Two architectures in a list
 ]
-
-
-# endregion
-# region CharmBuildInfo tests
-@pytest.mark.parametrize(
-    "build_on_base", [SIMPLE_BASE, BASE_WITH_ONE_ARCH, BASE_WITH_MULTIARCH]
-)
-@pytest.mark.parametrize("build_on_arch", ["amd64", "arm64", "riscv64", "s390x"])
-@pytest.mark.parametrize("run_on", [SIMPLE_BASE, BASE_WITH_ONE_ARCH])
-def test_build_info_from_build_on_run_on_basic(
-    build_on_base: Base,
-    build_on_arch: str,
-    run_on: Base,
-):
-    info = project.CharmBuildInfo.from_build_on_run_on(
-        build_on_base, build_on_arch, [run_on], bases_index=10, build_on_index=256
-    )
-
-    pytest_check.equal(info.build_on, build_on_arch)
-    pytest_check.equal(info.build_for_bases, [run_on])
-    pytest_check.equal(info.build_for, run_on.architectures[0])
-    pytest_check.equal(info.base.name, build_on_base.name)
-    pytest_check.equal(info.base.version, build_on_base.channel)
 
 
 @pytest.mark.parametrize(
@@ -368,363 +341,6 @@ def test_bad_version_type(version: Any):
         project.CharmLib(lib="charm_name.lib_name", version=version)
 
 
-@pytest.mark.parametrize(
-    ("run_on", "expected"),
-    [
-        pytest.param(
-            [BASE_WITH_MULTIARCH],
-            "arm64-riscv64",
-            id="one-base",
-        ),
-        pytest.param(
-            [
-                BASE_WITH_ONE_ARCH,
-                Base(name="ubuntu", channel="24.04", architectures=["riscv64"]),
-            ],
-            "amd64-riscv64",
-            id="multiarch-across-bases",
-        ),
-    ],
-)
-def test_build_info_from_build_on_run_on_multi_arch(run_on, expected):
-    info = project.CharmBuildInfo.from_build_on_run_on(
-        SIMPLE_BASE, "amd64", run_on, bases_index=10, build_on_index=256
-    )
-
-    assert info.build_for == expected
-
-
-@pytest.mark.parametrize(
-    ("given", "expected"),
-    [
-        pytest.param([], [], id="empty"),
-        pytest.param(
-            [
-                BasesConfiguration(
-                    **{"build-on": [BASE_WITH_ONE_ARCH], "run-on": [BASE_WITH_ONE_ARCH]}
-                )
-            ],
-            [
-                project.CharmBuildInfo(
-                    platform="arch-1.0-amd64",  # mypy: ignore[assignment]
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=ONE_ARCH_BASENAME,
-                    build_for_bases=[BASE_WITH_ONE_ARCH],
-                    bases_index=0,
-                    build_on_index=0,
-                )
-            ],
-        ),
-    ],
-)
-def test_build_info_generator(given, expected):
-    assert (
-        list(project.CharmBuildInfo.gen_from_bases_configurations(*given)) == expected
-    )
-
-
-# endregion
-# region Build planners
-@pytest.mark.parametrize(
-    ("data", "expected"),
-    [
-        pytest.param(
-            {"type": "bundle"},
-            [
-                project.models.BuildInfo(
-                    platform=util.get_host_architecture(),
-                    build_on=util.get_host_architecture(),
-                    build_for=util.get_host_architecture(),
-                    base=bases.BaseName(
-                        name=utils.get_os_platform().system,
-                        version=utils.get_os_platform().release,
-                    ),
-                ),
-            ],
-            id="bundle",
-        ),
-        pytest.param(
-            {"base": "ubuntu@22.04", "platforms": {"amd64": None}},
-            [
-                project.models.BuildInfo(
-                    platform="amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                )
-            ],
-            id="simple-platforms",
-        ),
-        pytest.param(
-            {
-                "base": "ubuntu@22.04",
-                "platforms": {
-                    "fancy": {
-                        "build-on": ["amd64", "arm64", "riscv64"],
-                        "build-for": ["s390x"],
-                    },
-                    "crossy": {"build-on": ["s390x"], "build-for": ["ppc64el"]},
-                    "amd64": None,
-                    "arm64": None,
-                    "riscv64": None,
-                },
-            },
-            [
-                project.models.BuildInfo(
-                    platform="fancy",
-                    build_on="amd64",
-                    build_for="s390x",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="fancy",
-                    build_on="arm64",
-                    build_for="s390x",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="fancy",
-                    build_on="riscv64",
-                    build_for="s390x",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="crossy",
-                    build_on="s390x",
-                    build_for="ppc64el",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="arm64",
-                    build_on="arm64",
-                    build_for="arm64",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="riscv64",
-                    build_on="riscv64",
-                    build_for="riscv64",
-                    base=bases.BaseName("ubuntu", "22.04"),
-                ),
-            ],
-            id="complex-platforms",
-        ),
-        pytest.param(
-            {
-                "base": "ubuntu@24.04",
-                "build-base": "ubuntu@devel",
-                "platforms": {"amd64": None},
-            },
-            [
-                project.models.BuildInfo(
-                    platform="amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=bases.BaseName("ubuntu", "devel"),
-                )
-            ],
-            id="platforms-with-build-base",
-        ),
-        pytest.param(
-            {"bases": [{"name": "ubuntu", "channel": "22.04"}]},
-            [
-                project.CharmBuildInfo(
-                    platform=f"ubuntu-22.04-{util.get_host_architecture()}",
-                    build_on=util.get_host_architecture(),
-                    build_for=util.get_host_architecture(),
-                    build_for_bases=[
-                        project.charmcraft.Base(name="ubuntu", channel="22.04")
-                    ],
-                    build_on_index=0,
-                    base=bases.BaseName("ubuntu", "22.04"),
-                    bases_index=0,
-                ),
-            ],
-            id="basic-bases",
-        ),
-        pytest.param(
-            {
-                "bases": [
-                    {"build-on": [BASE_WITH_ONE_ARCH], "run-on": [BASE_WITH_ONE_ARCH]}
-                ]
-            },
-            [
-                project.CharmBuildInfo(
-                    platform="arch-1.0-amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    build_for_bases=[BASE_WITH_ONE_ARCH],
-                    build_on_index=0,
-                    base=bases.BaseName("arch", "1.0"),
-                    bases_index=0,
-                ),
-            ],
-            id="arch-base",
-        ),
-        pytest.param(
-            {
-                "platforms": {
-                    # shorthand notation
-                    "ubuntu@22.04:amd64": None,
-                    "ubuntu@22.04:riscv64": None,
-                    # standard notation
-                    "amd64": {
-                        "build-on": ["ubuntu@24.04:amd64"],
-                        "build-for": ["ubuntu@24.04:amd64"],
-                    },
-                    "riscv64-cross": {
-                        "build-on": ["ubuntu@24.04:amd64", "ubuntu@24.04:riscv64"],
-                        "build-for": ["ubuntu@24.04:riscv64"],
-                    },
-                },
-            },
-            [
-                project.models.BuildInfo(
-                    platform="ubuntu@22.04:amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=bases.BaseName(name="ubuntu", version="22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="ubuntu@22.04:riscv64",
-                    build_on="riscv64",
-                    build_for="riscv64",
-                    base=bases.BaseName(name="ubuntu", version="22.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="amd64",
-                    build_on="amd64",
-                    build_for="amd64",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="riscv64-cross",
-                    build_on="amd64",
-                    build_for="riscv64",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="riscv64-cross",
-                    build_on="riscv64",
-                    build_for="riscv64",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-            ],
-            id="multi-base",
-        ),
-        pytest.param(
-            {
-                "platforms": {
-                    "jammy": {
-                        "build-on": ["ubuntu@24.04:amd64"],
-                        "build-for": ["ubuntu@24.04:all"],
-                    },
-                    "noble": {
-                        "build-on": ["ubuntu@24.04:amd64", "ubuntu@24.04:riscv64"],
-                        "build-for": ["ubuntu@24.04:all"],
-                    },
-                },
-            },
-            [
-                project.models.BuildInfo(
-                    platform="jammy",
-                    build_on="amd64",
-                    build_for="all",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="noble",
-                    build_on="amd64",
-                    build_for="all",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-                project.models.BuildInfo(
-                    platform="noble",
-                    build_on="riscv64",
-                    build_for="all",
-                    base=bases.BaseName(name="ubuntu", version="24.04"),
-                ),
-            ],
-            id="multi-base-all",
-        ),
-    ],
-)
-def test_build_planner_correct(data, expected):
-    planner = project.CharmcraftBuildPlanner.model_validate(data)
-
-    assert planner.get_build_plan() == expected
-
-
-@pytest.mark.parametrize("base", ["ubuntu@20.04", "ubuntu@22.04", "ubuntu@24.04"])
-@pytest.mark.parametrize(
-    ("build_base", "build_plan_basename"),
-    [
-        ("ubuntu@20.04", bases.BaseName("ubuntu", "20.04")),
-        ("ubuntu@22.04", bases.BaseName("ubuntu", "22.04")),
-        ("ubuntu@24.04", bases.BaseName("ubuntu", "24.04")),
-        ("almalinux@9", bases.BaseName("almalinux", "9")),
-    ],
-)
-@pytest.mark.parametrize(
-    "platforms",
-    [
-        {"amd64": None},
-        {
-            "amd64": None,
-            "fancy": {"build-on": ["amd64", "riscv64"], "build-for": ["riscv64"]},
-        },
-    ],
-)
-def test_build_planner_platforms_combinations(
-    base, build_base, build_plan_basename, platforms
-):
-    """Test that we're able to create a valid platform for each of these combinations."""
-    planner = project.CharmcraftBuildPlanner(
-        base=base,
-        build_base=build_base,
-        platforms=platforms,
-    )
-    plan = planner.get_build_plan()
-
-    for build_info in plan:
-        pytest_check.equal(build_info.base, build_plan_basename)
-        pytest_check.is_in(build_info.platform, platforms.keys())
-
-
-@pytest.mark.parametrize("architecture", sorted(const.SUPPORTED_ARCHITECTURES))
-@pytest.mark.parametrize("system", ["ubuntu", "linux", "macos", "windows", "plan9"])
-@pytest.mark.parametrize(
-    "release", ["22.04", "2.6.32", "10.5", "vista", "from bell labs"]
-)
-def test_get_bundle_plan(mocker, architecture, release, system):
-    mocker.patch(
-        "craft_application.util.get_host_architecture", return_value=architecture
-    )
-    mocker.patch(
-        "charmcraft.utils.get_os_platform",
-        return_value=utils.OSPlatform(
-            machine=architecture, system=system, release=release
-        ),
-    )
-    planner = project.CharmcraftBuildPlanner(type="bundle")
-
-    assert planner.get_build_plan() == [
-        models.BuildInfo(
-            platform=architecture,
-            build_on=architecture,
-            build_for=architecture,
-            base=bases.BaseName(system, release),
-        )
-    ]
-
-
 # endregion
 # region CharmcraftProject tests
 @pytest.mark.parametrize(
@@ -740,14 +356,15 @@ def test_get_bundle_plan(mocker, architecture, release, system):
             },
             project.Charm,
         ),
-        (
-            {"type": "bundle"},
-            project.Bundle,
-        ),
     ],
 )
 def test_unmarshal_success(data, type_class):
     assert isinstance(project.CharmcraftProject.unmarshal(data), type_class)
+
+
+def test_unmarshal_bundle():
+    with pytest.raises(CraftValidationError, match="Invalid 'charmcraft.yaml' file"):
+        project.CharmcraftProject.unmarshal({"type": "bundle"})
 
 
 @pytest.mark.parametrize("type_", [None, "", "invalid", "Dvorak"])
@@ -814,7 +431,6 @@ def test_unmarshal_invalid_type(type_):
                 parts:
                   charm: {}
                   reactive: {}
-                  bundle: {}
                 """
             ),
             None,
@@ -829,10 +445,6 @@ def test_unmarshal_invalid_type(type_):
                     },
                     "reactive": {
                         "plugin": "reactive",
-                    },
-                    "bundle": {
-                        "plugin": "bundle",
-                        "source": ".",
                     },
                 }
             },
@@ -996,10 +608,6 @@ def test_from_yaml_file_exception(
                 "parts": {"my-part": {"plugin": "nil"}},
                 "charmhub": {"api_url": "http://charmhub.io"},
             },
-        ),
-        (
-            project.Bundle,
-            {"type": "bundle", "charmhub": {"api_url": "http://charmhub.io"}},
         ),
     ],
 )
@@ -1184,12 +792,9 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         ({"name": "ubuntu", "channel": "18.04"}, True),
         ({"name": "ubuntu", "channel": "20.04"}, True),
         ({"name": "ubuntu", "channel": "22.04"}, True),
-        ({"name": "ubuntu", "channel": "23.04"}, True),
-        ({"name": "ubuntu", "channel": "23.10"}, True),
         ({"name": "ubuntu", "channel": "24.04"}, False),
         ({"name": "ubuntu", "channel": "24.10"}, False),
         ({"name": "ubuntu", "channel": "25.04"}, False),
-        ({"name": "centos", "channel": "7"}, True),
         ({"name": "almalinux", "channel": "9"}, True),
     ],
 )

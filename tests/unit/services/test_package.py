@@ -15,28 +15,35 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
 
-import datetime
 import pathlib
 import sys
 import zipfile
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
+import craft_application
 import craft_cli.pytest_plugin
+import craft_platforms
+import distro
 import pytest
 import pytest_check
 from craft_application import util
-from craft_application.models import BuildInfo
-from craft_providers.bases import BaseName
+from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
 from charmcraft import const, models, services
 from charmcraft.application.main import APP_METADATA
-from charmcraft.models.project import BasesCharm
+
+if TYPE_CHECKING:
+    from charmcraft.services.package import PackageService
+
+HOST_BASE = craft_platforms.DistroBase.from_linux_distribution(
+    distro.LinuxDistribution()
+)
 
 SIMPLE_BUILD_BASE = models.charmcraft.Base(
-    name="ubuntu", channel="22.04", architectures=["arm64"]
+    name=HOST_BASE.distribution, channel=HOST_BASE.series, architectures=["arm64"]
 )
 SIMPLE_MANIFEST = models.Manifest(
-    charmcraft_started_at="1970-01-01T00:00:00+00:00",
+    charmcraft_started_at="2020-03-14T00:00:00+00:00",
     bases=[SIMPLE_BUILD_BASE],
 )
 MANIFEST_WITH_ATTRIBUTE = models.Manifest.model_validate(
@@ -47,40 +54,36 @@ MANIFEST_WITH_ATTRIBUTE = models.Manifest.model_validate(
 )
 
 
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux", reason="The package service always runs in Linux."
+)
+
+
 @pytest.fixture
-def package_service(fake_path, simple_charm, service_factory, default_build_plan):
+def package_service(
+    fake_path, simple_charm, service_factory: craft_application.ServiceFactory
+):
     fake_project_dir = fake_path / "project"
     fake_project_dir.mkdir(parents=True)
 
-    service_factory.set_kwargs(
+    service_factory.update_kwargs(
         "lifecycle",
         work_dir=fake_path,
         cache_dir=fake_path / "cache",
-        build_plan=[],  # Only okay now because we're not asking the lifecycle service to use the plan.
     )
 
-    return services.PackageService(
-        app=APP_METADATA,
-        project=simple_charm,
-        # The package service doesn't call other services
-        services=service_factory,
-        project_dir=fake_project_dir,
-        build_plan=default_build_plan,
+    return service_factory.get("package")
+
+
+def test_get_metadata(
+    package_service, service_factory: craft_application.ServiceFactory
+):
+    project = service_factory.get("project").get()
+    metadata = models.CharmMetadata(
+        name=project.name,
+        summary=cast(str, project.summary),
+        description=cast(str, project.description),
     )
-
-
-@pytest.mark.parametrize(
-    "metadata",
-    [
-        models.CharmMetadata(
-            name="charmy-mccharmface",
-            summary="Charmy!",
-            description="Very charming!",
-        ),
-    ],
-)
-def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
-    package_service._project = simple_charm
 
     assert package_service.metadata == metadata
 
@@ -92,55 +95,79 @@ def test_get_metadata(package_service, simple_charm: BasesCharm, metadata):
             [
                 BuildInfo(
                     platform="distro-1-test64",
-                    build_on="riscv64",
-                    build_for="riscv64",
-                    base=BaseName("ubuntu", "24.04"),
+                    build_on=DebianArchitecture.RISCV64,
+                    build_for=DebianArchitecture.RISCV64,
+                    build_base=DistroBase("ubuntu", "24.04"),
                 )
             ],
-            "charmy-mccharmface_distro-1-test64.charm",
+            "example-charm_distro-1-test64.charm",
             id="simple",
         ),
         pytest.param(
             [
                 BuildInfo(
                     platform="ubuntu@24.04:riscv64",
-                    build_on="riscv64",
-                    build_for="riscv64",
-                    base=BaseName("ubuntu", "24.04"),
+                    build_on=DebianArchitecture.RISCV64,
+                    build_for=DebianArchitecture.RISCV64,
+                    build_base=DistroBase("ubuntu", "24.04"),
                 )
             ],
-            "charmy-mccharmface_ubuntu@24.04-riscv64.charm",
+            "example-charm_ubuntu@24.04-riscv64.charm",
             id="multi-base",
         ),
     ],
 )
-def test_get_charm_path(fake_path, package_service, build_plan, expected_name):
-    fake_prime_dir = fake_path / "prime"
-    package_service._build_plan = build_plan
-    package_service._platform = build_plan[0].platform
+def test_get_charm_name(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    build_plan,
+    expected_name,
+):
+    monkeypatch.setattr(service_factory.get("build_plan"), "plan", lambda: build_plan)
 
-    charm_path = package_service.get_charm_path(fake_prime_dir)
-
-    assert charm_path == fake_prime_dir / expected_name
+    assert package_service.get_charm_name() == expected_name
 
 
 @pytest.mark.parametrize(
-    ("lint", "expected"),
+    ("lint", "attributes"),
     [
-        ([], SIMPLE_MANIFEST),
+        ([], {}),
         (
             [models.CheckResult("lint", "lint", "lint", models.CheckType.LINT, "")],
-            SIMPLE_MANIFEST,
+            {},
         ),
         (
             [models.CheckResult("boop", "success", "", models.CheckType.ATTRIBUTE, "")],
-            MANIFEST_WITH_ATTRIBUTE,
+            {
+                "analysis": {
+                    "attributes": [models.Attribute(name="boop", result="success")]
+                },
+            },
         ),
     ],
 )
-def test_get_manifest(package_service, simple_charm, lint, expected):
-    simple_charm._started_at = datetime.datetime(
-        1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+def test_get_manifest(
+    package_service,
+    simple_charm,
+    lint,
+    attributes,
+    service_factory: craft_application.ServiceFactory,
+):
+    build_item = service_factory.get("build_plan").plan()[0]
+    service_factory.get("project").get_platforms()
+    expected = models.Manifest.model_validate(
+        {
+            "charmcraft-started-at": "2020-03-14T00:00:00+00:00",
+            "bases": [
+                models.charmcraft.Base(
+                    name=distro.id(),
+                    channel=distro.version(),
+                    architectures=[build_item.build_for],
+                )
+            ],
+            **attributes,
+        }
     )
 
     assert package_service.get_manifest(lint) == expected
@@ -148,19 +175,18 @@ def test_get_manifest(package_service, simple_charm, lint, expected):
 
 def test_do_not_overwrite_metadata_yaml(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    fake_path,
     package_service,
+    service_factory: craft_application.ServiceFactory,
     simple_charm,
 ):
-    fake_prime_dir = fake_path / "prime"
-    fake_prime_dir.mkdir()
-    fake_stage_dir = fake_path / "stage"
-    fake_stage_dir.mkdir()
-    fake_staged_metadata = fake_stage_dir / const.METADATA_FILENAME
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    stage_dir = dirs.stage_dir
+    stage_dir.mkdir(exist_ok=True)
+    fake_staged_metadata = stage_dir / const.METADATA_FILENAME
     fake_staged_metadata.touch()
-    package_service._project.parts["reactive"] = {"source": "."}
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
 
-    package_service.write_metadata(fake_prime_dir)
+    package_service.write_metadata(dirs.prime_dir)
 
     emitter.assert_debug(
         "'metadata.yaml' generated by charm. Not using original project metadata."
@@ -169,19 +195,18 @@ def test_do_not_overwrite_metadata_yaml(
 
 def test_do_not_overwrite_actions_yaml(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    fake_path,
     package_service,
+    service_factory,
     simple_charm,
 ):
-    fake_prime_dir = fake_path / "prime"
-    fake_prime_dir.mkdir()
-    fake_stage_dir = fake_path / "stage"
-    fake_stage_dir.mkdir()
-    fake_staged_actions = fake_stage_dir / const.JUJU_ACTIONS_FILENAME
-    fake_staged_actions.touch()
-    package_service._project.parts["reactive"] = {"source": "."}
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    stage_dir = dirs.stage_dir
+    stage_dir.mkdir(exist_ok=True)
+    fake_staged_metadata = stage_dir / const.JUJU_ACTIONS_FILENAME
+    fake_staged_metadata.touch()
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
 
-    package_service.write_metadata(fake_prime_dir)
+    package_service.write_metadata(dirs.prime_dir)
 
     emitter.assert_debug("'actions.yaml' generated by charm. Skipping generation.")
 
@@ -190,17 +215,17 @@ def test_do_not_overwrite_config_yaml(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
     fake_path,
     package_service,
+    service_factory: craft_application.ServiceFactory,
     simple_charm,
 ):
-    fake_prime_dir = fake_path / "prime"
-    fake_prime_dir.mkdir()
-    fake_stage_dir = fake_path / "stage"
-    fake_stage_dir.mkdir()
-    fake_staged_config = fake_stage_dir / const.JUJU_CONFIG_FILENAME
-    fake_staged_config.touch()
-    package_service._project.parts["reactive"] = {"source": "."}
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    stage_dir = dirs.stage_dir
+    stage_dir.mkdir(exist_ok=True)
+    fake_staged_metadata = stage_dir / const.JUJU_CONFIG_FILENAME
+    fake_staged_metadata.touch()
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
 
-    package_service.write_metadata(fake_prime_dir)
+    package_service.write_metadata(dirs.prime_dir)
 
     emitter.assert_debug("'config.yaml' generated by charm. Skipping generation.")
 
@@ -212,16 +237,16 @@ def test_do_not_overwrite_config_yaml(
         (
             [{"name": "ubuntu", "channel": "20.04"}],
             BuildInfo(
-                platform=util.get_host_architecture(),
-                build_for=util.get_host_architecture(),
-                build_on=util.get_host_architecture(),
-                base=BaseName("ubuntu", "20.04"),
+                platform=craft_platforms.DebianArchitecture.from_host(),
+                build_for=craft_platforms.DebianArchitecture.from_host(),
+                build_on=craft_platforms.DebianArchitecture.from_host(),
+                build_base=DistroBase("ubuntu", "20.04"),
             ),
             [
                 {
                     "name": "ubuntu",
                     "channel": "20.04",
-                    "architectures": [util.get_host_architecture()],
+                    "architectures": [craft_platforms.DebianArchitecture.from_host()],
                 }
             ],
         ),
@@ -246,33 +271,16 @@ def test_do_not_overwrite_config_yaml(
             ],
             BuildInfo(
                 platform="riscv64",
-                build_for="riscv64",
-                build_on="riscv64",
-                base=BaseName("ubuntu", "22.04"),
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
+                build_on=craft_platforms.DebianArchitecture.RISCV64,
+                build_base=DistroBase("ubuntu", "22.04"),
             ),
             [
                 {"name": "ubuntu", "channel": "22.04", "architectures": ["all"]},
             ],
         ),
-        (
-            [{"name": "centos", "channel": "7"}],
-            BuildInfo(
-                platform=util.get_host_architecture(),
-                build_on=util.get_host_architecture(),
-                build_for=util.get_host_architecture(),
-                base=BaseName("centos", "7"),
-            ),
-            [
-                {
-                    "name": "centos",
-                    "channel": "7",
-                    "architectures": [util.get_host_architecture()],
-                }
-            ],
-        ),
         pytest.param(
             [
-                {"name": "centos", "channel": "7"},
                 {
                     "build-on": [{"name": "ubuntu", "channel": "20.04"}],
                     "run-on": [
@@ -298,9 +306,9 @@ def test_do_not_overwrite_config_yaml(
             ],
             BuildInfo(
                 platform="amd64",
-                build_on="amd64",
-                build_for="arm64",
-                base=BaseName("ubuntu", "22.04"),
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.ARM64,
+                build_base=DistroBase("ubuntu", "22.04"),
             ),
             [{"name": "ubuntu", "channel": "22.04", "architectures": ["arm64"]}],
             id="cross-compile",
@@ -308,12 +316,34 @@ def test_do_not_overwrite_config_yaml(
     ],
 )
 def test_get_manifest_bases_from_bases(
+    monkeypatch: pytest.MonkeyPatch,
     fake_path: pathlib.Path,
-    package_service: services.PackageService,
+    project_path: pathlib.Path,
     bases: list[dict[str, Any]],
     build_item: BuildInfo,
     expected: list[dict[str, Any]],
 ):
+    with (project_path / "charmcraft.yaml").open("w") as f:
+        util.dump_yaml(
+            {
+                "name": "my-charm",
+                "description": "",
+                "summary": "",
+                "type": "charm",
+                "bases": bases,
+                "parts": {"my-part": {"plugin": "nil"}},
+            },
+            stream=f,
+        )
+
+    services.register_services()
+    service_factory = craft_application.ServiceFactory(app=APP_METADATA)
+    service_factory.update_kwargs(
+        "project",
+        project_dir=project_path,
+    )
+    package_service = cast("PackageService", service_factory.get("package"))
+
     charm = models.BasesCharm.model_validate(
         {
             "name": "my-charm",
@@ -323,8 +353,8 @@ def test_get_manifest_bases_from_bases(
             "bases": bases,
         }
     )
-    package_service._project = charm
-    package_service._build_plan = [build_item]
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: charm)
+    monkeypatch.setattr(service_factory.get("build_plan"), "plan", lambda: [build_item])
 
     assert package_service.get_manifest_bases() == [
         models.Base.model_validate(b) for b in expected
@@ -340,9 +370,9 @@ def test_get_manifest_bases_from_bases(
             {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
-                base=BaseName("not-to-be-used", "100"),
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
+                build_base=DistroBase("not-to-be-used", "100"),
             ),
             models.Base(
                 # uses the project base
@@ -358,10 +388,10 @@ def test_get_manifest_bases_from_bases(
             {"test-platform": {"build-on": ["amd64"], "build-for": ["riscv64"]}},
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
                 # the BuildInfo will use the build-base, which shouldn't go in the manifest
-                base=BaseName("ubuntu", "devel"),
+                build_base=DistroBase("ubuntu", "devel"),
             ),
             models.Base(
                 name="ubuntu",
@@ -376,9 +406,9 @@ def test_get_manifest_bases_from_bases(
             {"ubuntu@24.04:amd64": None},
             BuildInfo(
                 platform="ubuntu@24.04:amd64",
-                build_on="amd64",
-                build_for="amd64",
-                base=BaseName("ubuntu", "24.04"),
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.AMD64,
+                build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
                 name="ubuntu",
@@ -398,9 +428,9 @@ def test_get_manifest_bases_from_bases(
             },
             BuildInfo(
                 platform="test-platform",
-                build_on="amd64",
-                build_for="riscv64",
-                base=BaseName("ubuntu", "24.04"),
+                build_on=craft_platforms.DebianArchitecture.AMD64,
+                build_for=craft_platforms.DebianArchitecture.RISCV64,
+                build_base=DistroBase("ubuntu", "24.04"),
             ),
             models.Base(
                 name="ubuntu",
@@ -412,23 +442,36 @@ def test_get_manifest_bases_from_bases(
     ],
 )
 def test_get_manifest_bases_from_platforms(
-    package_service, base, build_base, platforms, build_item, expected
+    monkeypatch: pytest.MonkeyPatch,
+    project_path: pathlib.Path,
+    base,
+    build_base,
+    platforms,
+    build_item,
+    expected,
 ):
-    charm = models.PlatformCharm.model_validate(
-        {
-            "name": "my-charm",
-            "description": "",
-            "summary": "",
-            "type": "charm",
-            "base": base,
-            "build-base": build_base,
-            "platforms": platforms,
-            "parts": {"my-part": {"plugin": "nil"}},
-        }
+    with (project_path / "charmcraft.yaml").open("w") as f:
+        util.dump_yaml(
+            {
+                "name": "my-charm",
+                "description": "",
+                "summary": "",
+                "type": "charm",
+                "base": base,
+                "build-base": build_base,
+                "platforms": platforms,
+                "parts": {"my-part": {"plugin": "nil"}},
+            },
+            stream=f,
+        )
+    services.register_services()
+    service_factory = craft_application.ServiceFactory(app=APP_METADATA)
+    service_factory.update_kwargs(
+        "project",
+        project_dir=project_path,
     )
-    package_service._project = charm
-    package_service._build_plan = [build_item]
-
+    package_service = cast("PackageService", service_factory.get("package"))
+    service_factory.get("project").configure(platform=None, build_for=None)
     bases = package_service.get_manifest_bases()
 
     pytest_check.equal(len(bases), 1)
@@ -436,31 +479,30 @@ def test_get_manifest_bases_from_platforms(
     pytest_check.equal(expected, actual_base)
 
 
-def test_get_manifest_bases_from_platforms_invalid(package_service):
-    charm = models.PlatformCharm.model_validate(
-        {
-            "name": "my-charm",
-            "description": "",
-            "summary": "",
-            "type": "charm",
-            "base": None,
-            "build-base": None,
-            "platforms": {"amd64": None},
-            "parts": {"my-part": {"plugin": "nil"}},
-        }
-    )
-    package_service._project = charm
-    package_service._build_plan = [
-        BuildInfo(
-            platform="test-platform",
-            build_on="amd64",
-            build_for="riscv64",
-            base=BaseName("ubuntu", "24.04"),
+def test_get_manifest_bases_from_platforms_invalid(
+    project_path, package_service, service_factory
+):
+    with (project_path / "charmcraft.yaml").open("w") as f:
+        util.dump_yaml(
+            {
+                "name": "my-charm",
+                "description": "",
+                "summary": "",
+                "type": "charm",
+                "base": None,
+                "build-base": None,
+                "platforms": {"amd64": None},
+                "parts": {"my-part": {"plugin": "nil"}},
+            },
+            stream=f,
         )
-    ]
+    service_factory._services = {}
+    service_factory.get("project").configure(platform=None, build_for=None)
 
-    # this shouldn't happen, but make sure the error is friendly
-    with pytest.raises(TypeError, match=r"Unknown charm type .*, cannot get bases\."):
+    with pytest.raises(
+        craft_platforms.RequiresBaseError,
+        match=r"No base or build-base is declared and no base is declared in the platforms section\.",
+    ):
         package_service.get_manifest_bases()
 
 
@@ -479,15 +521,14 @@ def test_pack_charm_simple(fake_path, package_service):
     testfile2 = subdir / "baz.txt"
     testfile2.write_bytes(b"mo\xc3\xb1o")
 
-    package_service.pack_charm(build_dir, fake_path)
+    charm_path = package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
+    zf = zipfile.ZipFile(charm_path)
     assert sorted(x.filename for x in zf.infolist()) == ["bar/baz.txt", "foo.txt"]
     assert zf.read("foo.txt") == b"123\x00456"
     assert zf.read("bar/baz.txt") == b"mo\xc3\xb1o"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_simple(fake_path, package_service):
     """Symlinks are supported."""
     build_dir = fake_path / "somedir"
@@ -498,15 +539,14 @@ def test_zipbuild_symlink_simple(fake_path, package_service):
     testfile2 = build_dir / "link.txt"
     testfile2.symlink_to(testfile1)
 
-    package_service.pack_charm(build_dir, fake_path)
+    charm_path = package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
+    zf = zipfile.ZipFile(charm_path)
     assert sorted(x.filename for x in zf.infolist()) == ["link.txt", "real.txt"]
     assert zf.read("real.txt") == b"123\x00456"
     assert zf.read("link.txt") == b"123\x00456"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported")
 def test_zipbuild_symlink_outside(fake_path, package_service):
     """No matter where the symlink points to."""
     # outside the build dir
@@ -519,9 +559,9 @@ def test_zipbuild_symlink_outside(fake_path, package_service):
     testfile2 = build_dir / "link.txt"
     testfile2.symlink_to(testfile1)
 
-    package_service.pack_charm(build_dir, fake_path)
+    charm_path = package_service.pack_charm(build_dir, fake_path)
 
-    zf = zipfile.ZipFile(fake_path / "charmy-mccharmface_distro-1-test64.charm")
+    zf = zipfile.ZipFile(charm_path)
     assert sorted(x.filename for x in zf.infolist()) == ["link.txt"]
     assert zf.read("link.txt") == b"123\x00456"
 

@@ -29,7 +29,6 @@ In the context of Charmcraft, a *file* refers to any file in a project that can 
 initialized or packed. The files are documented in the following pages:
 
 * :ref:`actions-yaml-file`
-* :ref:`bundle-yaml-file`
 * :ref:`charmcraft-yaml-file`
 * :ref:`config-yaml-file`
 * :ref:`contributing-md-file`
@@ -42,13 +41,13 @@ initialized or packed. The files are documented in the following pages:
 * :ref:`metadata-yaml-file`
 * :ref:`pyproject-toml-file`
 * :ref:`readme-md-file`
-* :ref:`requirements-dev-txt-file`
 * :ref:`requirements-txt-file`
 * :ref:`src-charm-py-file`
 * :ref:`src-workload-py-file`
 * :ref:`tests-integration-test-charm-py-file`
 * :ref:`tests-unit-test-charm-py-file`
 * :ref:`tox-ini-file`
+* :ref:`uv-lock-file`
 
 
 Plugins and extensions
@@ -73,5 +72,4 @@ applications.
     parts/index
     platforms
     profile
-    models/index
     changelog

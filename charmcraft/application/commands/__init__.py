@@ -37,7 +37,6 @@ from charmcraft.application.commands.store import (
     WhoamiCommand,
     # name handling
     RegisterCharmNameCommand,
-    RegisterBundleNameCommand,
     UnregisterNameCommand,
     ListNamesCommand,
     # pushing files and checking revisions
@@ -47,7 +46,6 @@ from charmcraft.application.commands.store import (
     CreateTrack,
     ReleaseCommand,
     PromoteCommand,
-    PromoteBundleCommand,
     StatusCommand,
     CloseCommand,
     # libraries support
@@ -61,14 +59,14 @@ from charmcraft.application.commands.store import (
     SetResourceArchitecturesCommand,
     UploadResourceCommand,
 )
-from charmcraft.application.commands.test import TestCommand
 from charmcraft.application.commands.version import Version
 
 
 def fill_command_groups(app: craft_application.Application) -> None:
     """Fill in all the command groups for Charmcraft."""
-    app.add_command_group("Basic", [InitCommand])
-    app.add_command_group("Lifecycle", [*get_lifecycle_commands(), RemoteBuild])
+    app.add_command_group(
+        "Lifecycle", [*get_lifecycle_commands(), RemoteBuild], ordered=True
+    )
     app.add_command_group(
         "Store (account)",
         [
@@ -78,13 +76,12 @@ def fill_command_groups(app: craft_application.Application) -> None:
             WhoamiCommand,
             # name handling
             RegisterCharmNameCommand,
-            RegisterBundleNameCommand,
             UnregisterNameCommand,
             ListNamesCommand,
         ],
     )
     app.add_command_group(
-        "Store (charm or bundle)",
+        "Store (charm)",
         [
             # pushing files and checking revisions
             UploadCommand,
@@ -93,7 +90,6 @@ def fill_command_groups(app: craft_application.Application) -> None:
             CreateTrack,
             ReleaseCommand,
             PromoteCommand,
-            PromoteBundleCommand,
             StatusCommand,
             CloseCommand,
             # resources support
@@ -122,7 +118,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
         [
             Analyse,
             Analyze,
-            TestCommand,
+            InitCommand,
             Version,
         ],
     )
@@ -141,14 +137,12 @@ __all__ = [
     "LogoutCommand",
     "WhoamiCommand",
     "RegisterCharmNameCommand",
-    "RegisterBundleNameCommand",
     "UnregisterNameCommand",
     "ListNamesCommand",
     "UploadCommand",
     "ListRevisionsCommand",
     "CreateTrack",
     "ReleaseCommand",
-    "PromoteBundleCommand",
     "StatusCommand",
     "CloseCommand",
     "CreateLibCommand",

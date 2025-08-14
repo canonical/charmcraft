@@ -34,15 +34,18 @@ except ImportError:
 
 # the available profiles and in which directory the template can be found
 PROFILES = {
-    "simple": "init-simple",
     "kubernetes": "init-kubernetes",
     "machine": "init-machine",
     "flask-framework": "init-flask-framework",
     "django-framework": "init-django-framework",
     "go-framework": "init-go-framework",
     "fastapi-framework": "init-fastapi-framework",
+    "expressjs-framework": "init-expressjs-framework",
+    "spring-boot-framework": "init-spring-boot-framework",
+    "test-kubernetes": "test-kubernetes",
+    "test-machine": "test-machine",
 }
-DEFAULT_PROFILE = "simple"
+DEFAULT_PROFILE = "kubernetes"
 
 
 _overview = """
@@ -52,10 +55,6 @@ This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 
 Available profiles are:
-    simple:
-        A basic kubernetes charm with lot of texts helping the developer
-        to navigate their first charm by following the instructions.
-
     kubernetes:
         A basic Kubernetes charm with example container.
 
@@ -75,6 +74,9 @@ Available profiles are:
     go-framework:
         A basic Kubernetes charm for a 12-factor Go app.
 
+    spring-boot-framework:
+        A basic Kubernetes charm for a 12-factor Spring Boot app.
+
 Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories::
 
@@ -84,9 +86,11 @@ files and directories::
     │                                your charm
     ├── LICENSE                    - Your charm license, we recommend Apache 2
     ├── pyproject.toml             - Configuration for testing, formatting and
-    │                                linting tools
+    │                                linting tools. Specifies Python dependencies for
+    │                                your charm if profile is 'kubernetes' or 'machine'
     ├── README.md                  - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt           - PyPI dependencies for your charm, with `ops`
+    ├── requirements.txt           - Python dependencies for your charm, with Ops,
+    │                                created for 12-factor app profiles only
     ├── src
     │   ├── charm.py               - Python code that operates your charm's workload
     │   └── <workload>.py          - Standalone module for workload-specific logic,
@@ -96,12 +100,14 @@ files and directories::
     │   │   └── test_charm.py      - Integration tests
     │   └── unit
     │       └── test_charm.py      - Unit tests
-    └── tox.ini                    - Configuration for tox, the tool to run all tests
+    ├── tox.ini                    - Configuration for tox, the tool to run all tests
+    ├── uv.lock                    - Specifies exact versions of Python dependencies,
+    │                                created if profile is 'kubernetes' or 'machine'
 
 You will need to edit at least charmcraft.yaml and README.md.
 
 Your minimal operator code is in src/charm.py, which uses the 'ops' Python framework.
-See https://ops.readthedocs.io/en/latest/. There are also some sample unit and
+See https://documentation.ubuntu.com/ops/latest/. There are also some sample unit and
 integration tests, which you can run using 'tox -e unit' and 'tox -e integration'.
 """
 
@@ -229,7 +235,12 @@ class InitCommand(base.CharmcraftCommand):
         template_directory = PROFILES[parsed_args.profile]
         env = get_templates_environment(template_directory)
 
-        executables = ["run_tests", "src/charm.py", "tests/spread/lib/tools/retry"]
+        executables = [
+            "run_tests",
+            "src/charm.py",
+            "tests/spread/lib/tools/retry",
+            "spread/.extension",
+        ]
         src_files = ["src/charm.py"]
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):

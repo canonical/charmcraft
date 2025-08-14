@@ -17,15 +17,19 @@
 
 import argparse
 import pathlib
+from typing import TYPE_CHECKING, cast
 from unittest import mock
 
-import craft_cli
 import pytest
 from craft_cli.pytest_plugin import RecordingEmitter
 
 from charmcraft import application, models, services, utils
 from charmcraft.application.commands import lifecycle
 from charmcraft.store.models import Library
+
+if TYPE_CHECKING:
+    from charmcraft.models.project import CharmcraftProject
+    from charmcraft.services.charmlibs import CharmLibsService
 
 
 def get_namespace(
@@ -69,84 +73,31 @@ def pack(service_factory: services.ServiceFactory) -> lifecycle.PackCommand:
     )
 
 
-@pytest.mark.parametrize(
-    ("platform", "expected"),
-    [
-        ("linux", False),
-        ("macos", True),
-        ("win32", True),
-    ],
-)
-def test_pack_run_managed_bundle_by_os(monkeypatch, new_path, platform, expected):
-    """When packing a bundle, run_managed should return False if and only if we're on posix."""
-    monkeypatch.setattr("sys.platform", platform)
-    (new_path / "charmcraft.yaml").write_text("type: bundle")
-
-    pack = lifecycle.PackCommand(None)
-
-    result = pack.run_managed(argparse.Namespace(destructive_mode=False))
-
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    ("command_args", "message_start", "project_type"),
-    [
-        pytest.param(
-            get_namespace(include_all_charms=True),
-            "--include-all-charms can only be used when packing a bundle. Currently trying ",
-            "charm",
-            id="include_all_charms_on_charm",
-        ),
-        pytest.param(
-            get_namespace(include_charm=[pathlib.Path("a")]),
-            "--include-charm can only be used when packing a bundle. Currently trying to pack: ",
-            "charm",
-            id="include_charm_on_charm",
-        ),
-        pytest.param(
-            get_namespace(output_bundle=pathlib.Path("output.yaml")),
-            "--output-bundle can only be used when packing a bundle. Currently trying to pack: ",
-            "charm",
-            id="output_bundle_on_charm",
-        ),
-    ],
-)
-def test_pack_invalid_arguments(
-    monkeypatch,
-    pack: lifecycle.PackCommand,
-    command_args: argparse.Namespace,
-    message_start: str,
-    project_type,
-) -> None:
-    monkeypatch.setattr("craft_parts.utils.os_utils.OsRelease.id", lambda: "ubuntu")
-
-    with pytest.raises(craft_cli.ArgumentParsingError) as exc_info:
-        pack.run(command_args)
-
-    assert exc_info.value.args[0].startswith(message_start)
-
-
 def test_pack_update_charm_libs_empty(
-    fake_project_dir: pathlib.Path,
+    project_path: pathlib.Path,
     pack: lifecycle.PackCommand,
-    simple_charm,
     emitter: RecordingEmitter,
     service_factory: services.ServiceFactory,
     mock_store_anonymous_client: mock.Mock,
     check,
 ):
-    simple_charm.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
+    project = cast("CharmcraftProject", service_factory.get("project").get())
+    project.charm_libs = [models.CharmLib(lib="my_charm.my_lib", version="0.1")]
     store_lib = Library("lib_id", "my_lib", "my_charm", 0, 1, "Lib contents", "hash")
     mock_store_anonymous_client.fetch_libraries_metadata.return_value = [store_lib]
     mock_store_anonymous_client.get_library.return_value = store_lib
 
+    libs_service = cast("CharmLibsService", service_factory.get("charm_libs"))
+    libs_service.write = mock.Mock(wraps=libs_service.write)
+
     pack._update_charm_libs()
+
+    libs_service.write.assert_called_once_with(store_lib)
 
     with check():
         emitter.assert_debug(repr(store_lib))
 
-    path = fake_project_dir / utils.get_lib_path("my_charm", "my_lib", 0)
+    path = project_path / utils.get_lib_path("my_charm", "my_lib", 0)
     assert path.read_text() == "Lib contents"
 
 

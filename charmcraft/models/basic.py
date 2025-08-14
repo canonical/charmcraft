@@ -24,7 +24,7 @@ import pydantic
 
 def _validate_attribute_name(value: str) -> str:
     """Validate attribute name."""
-    from charmcraft import linters  # noqa: PLC0415 (circular imports)
+    from charmcraft import linters  # noqa: PLC0415  prevent circular imports
 
     valid_names = [
         checker.name
@@ -38,7 +38,7 @@ def _validate_attribute_name(value: str) -> str:
 
 def _validate_linter_name(value: str) -> str:
     """Validate linter name."""
-    from charmcraft import linters  # noqa: PLC0415 (circular imports)
+    from charmcraft import linters  # noqa: PLC0415  prevent circular imports
 
     valid_names = [
         checker.name

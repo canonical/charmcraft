@@ -20,7 +20,7 @@
 
 import json
 
-from charmcraft.models.project import PlatformCharm, BasesCharm, Bundle
+from charmcraft.models.project import PlatformCharm, BasesCharm
 from typing import Annotated, Any
 import pydantic
 
@@ -35,7 +35,5 @@ Charm = Annotated[
     pydantic.Discriminator(_charm_type_discriminator)
 ]
 
-Project = Annotated[Charm | Bundle, pydantic.Field(discriminator="type")]
-
 if __name__ == "__main__":
-    print(json.dumps(pydantic.TypeAdapter(Project).json_schema(), indent="	"))
+    print(json.dumps(pydantic.TypeAdapter(Charm).json_schema(), indent="	"))

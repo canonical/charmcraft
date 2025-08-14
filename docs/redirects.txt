@@ -13,3 +13,17 @@
 "tutorial/write-your-first-kubernetes-charm-for-a-go-app.rst" "tutorial/kubernetes-charm-go.rst"
 "howto/manage-12-factor-app-charms.rst" "howto/manage-web-app-charms/index.rst"
 "howto/flask-async.rst" "howto/manage-web-app-charms/configure-web-app-charm.rst"
+"howto/manage-web-app-charms/init-web-app-charm.rst" "howto/manage-web-app-charms/index.rst"
+
+# Bundle removal
+"howto/manage-bundles.rst" "index.rst"
+"reference/files/bundle-yaml-file.rst" "index.rst"
+"reference/commands/promote-bundle.rst" "index.rst"
+"reference/commands/register-bundle.rst" "index.rst"
+
+# requirements-dev.txt removal (docs only)
+"reference/files/requirements-dev-txt-file.rst" "reference/files/requirements-txt-file.rst"
+
+# Charmcraft.yaml file reference modernisation
+"reference/models/bases-charm.rst" "reference/files/charmcraft-yaml-file.rst"
+"reference/models/index.rst" "reference/files/charmcraft-yaml-file.rst"

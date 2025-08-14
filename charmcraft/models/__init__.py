@@ -20,16 +20,13 @@ from . import actions, config, metadata
 from .charmcraft import Base
 from .lint import CheckResult, CheckType, LintResult, ResultLevel
 from .manifest import Attribute, Manifest
-from .metadata import BundleMetadata, CharmMetadata, CharmMetadataLegacy
+from .metadata import CharmMetadata, CharmMetadataLegacy
 from .project import (
-    CharmBuildInfo,
-    CharmcraftBuildPlanner,
     CharmLib,
     CharmcraftProject,
     BasesCharm,
     PlatformCharm,
     Charm,
-    Bundle,
 )
 
 __all__ = [
@@ -43,15 +40,11 @@ __all__ = [
     "ResultLevel",
     "Attribute",
     "Manifest",
-    "Bundle",
     "BasesCharm",
     "PlatformCharm",
     "Charm",
-    "CharmBuildInfo",
-    "CharmcraftBuildPlanner",
     "CharmcraftProject",
     "CharmLib",
-    "BundleMetadata",
     "CharmMetadata",
     "CharmMetadataLegacy",
 ]

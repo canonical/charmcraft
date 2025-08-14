@@ -57,7 +57,7 @@ def fake_extensions(stub_extensions):
 
 def test_expand_extensions_simple(fake_extensions, emitter):
     """List extensions"""
-    cmd = ListExtensionsCommand(None)
+    cmd = ListExtensionsCommand({"app": None, "services": None})
     cmd.run(argparse.Namespace(format=None))
     emitter.assert_message(
         dedent(

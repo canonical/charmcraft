@@ -19,14 +19,11 @@ from __future__ import annotations
 
 import craft_application.commands
 
-from charmcraft import services
-
 
 class CharmcraftCommand(craft_application.commands.AppCommand):
     """Base command for Charmcraft commands."""
 
     format_option: bool = False
-    _services: services.CharmcraftServiceFactory
 
     def fill_parser(self, parser) -> None:
         """Fill the argument parser for this command."""

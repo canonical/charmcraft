@@ -11,53 +11,15 @@ Python ``pyproject.toml`` file.
     pyproject.toml
     <https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/>`_
 
-This file is generated automatically by ``charmcraft init`` with the
-contents below:
+When a charm is initialized with the Kubernetes or machine profile, Charmcraft creates
+this file with the following contents:
 
-.. code-block:: yaml
+- Dependencies of the charm code, pre-populated with :external+ops:doc:`Ops <index>`
+- Dependencies of tests and linters
+- Configuration of tests and linters
 
-    # Testing tools configuration
-    [tool.coverage.run]
-    branch = true
+If you manually modify the dependencies, you'll need to update the :ref:`uv-lock-file`.
 
-    [tool.coverage.report]
-    show_missing = true
-
-    [tool.pytest.ini_options]
-    minversion = "6.0"
-    log_cli_level = "INFO"
-
-    # Formatting tools configuration
-    [tool.black]
-    line-length = 99
-    target-version = ["py38"]
-
-    # Linting tools configuration
-    [tool.ruff]
-    line-length = 99
-    select = ["E", "W", "F", "C", "N", "D", "I001"]
-    extend-ignore = [
-        "D203",
-        "D204",
-        "D213",
-        "D215",
-        "D400",
-        "D404",
-        "D406",
-        "D407",
-        "D408",
-        "D409",
-        "D413",
-    ]
-    ignore = ["E501", "D107"]
-    extend-exclude = ["__pycache__", "*.egg_info"]
-    per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
-
-    [tool.ruff.mccabe]
-    max-complexity = 10
-
-    [tool.codespell]
-    skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
-
-    [tool.pyright]
-    include = ["src/**.py"]
+When a charm is initialized with a 12-factor app profile, ``pyproject.toml`` contains
+the configuration for tests and linters. Dependencies are specified in the
+:ref:`requirements-txt-file`, and there's no ``uv.lock`` file.

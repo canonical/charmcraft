@@ -7,37 +7,12 @@ environment:
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 
 prepare: |
-  snap install charm --classic --channel=$CHARM_SNAP_CHANNEL
-  charm create reactivecharm
   cd reactivecharm
 
-  cat <<- EOF > metadata.yaml
-  name: reactive-test
-  summary: test
-  maintainer: maintainer <maintainer@maintenance.com>
-  description: Longer description that summary
-  EOF
-
-  cat <<- EOF >> charmcraft.yaml
-  type: "charm"
-  bases:
-    - build-on:
-        - name: "ubuntu"
-          channel: "22.04"
-      run-on:
-        - name: "ubuntu"
-          channel: "22.04"
-  parts:
-    charm:
-      source: .
-      plugin: reactive
-      build-snaps:
-        - charm/CHARM_SNAP_CHANNEL
-      build-packages: [python3-dev]
-  EOF
-
   sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
+
   git init
+  git config --global --add safe.directory $PWD
   git add .
   git config --global user.email "you@example.com"
   git config --global user.name "Your Name"

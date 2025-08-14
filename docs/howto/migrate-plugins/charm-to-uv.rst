@@ -51,8 +51,11 @@ Make sure that the project directory has a :ref:`pyproject-toml-file`. Use the
         "ops>=3,<4",
     ]
 
-If you use ``uv add`` to include dependencies, uv updates the ``dependencies`` key in
-``pyproject.toml``.
+You can also add dependencies to your project's ``pyproject.toml`` file by running:
+
+.. code-block:: bash
+
+    uv add <dependency>
 
 Include charm library dependencies
 ----------------------------------

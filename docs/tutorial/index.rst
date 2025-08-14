@@ -15,6 +15,7 @@ with just a few modifications to the YAML template content. To familiarize yours
 with one of these workflows, start with its tutorial:
 
 * :ref:`write-your-first-kubernetes-charm-for-a-django-app`
+* :ref:`write-your-first-kubernetes-charm-for-a-expressjs-app`
 * :ref:`write-your-first-kubernetes-charm-for-a-fastapi-app`
 * :ref:`write-your-first-kubernetes-charm-for-a-flask-app`
 * :ref:`write-your-first-kubernetes-charm-for-a-go-app`

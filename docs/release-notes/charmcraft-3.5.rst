@@ -157,6 +157,13 @@ The following bugs have been resolved in Charmcraft 3.5.2:
 - `#2077 <https://github.com/canonical/charmcraft/issues/2077>`_ Internal error when
   uploading OCI image resources.
 
+The following bugs have been resolved in Charmcraft 3.5.3:
+
+- Incorrect container name when running ``charmcraft init`` with the default profile.
+- Some rust dependencies no longer build correctly for Python 3.8. The ``charm`` plugin
+  now adds `constraints <https://github.com/canonical/charmcraft/commit/5fb3f0a>`_
+  for these dependencies.
+
 Contributors
 ------------
 

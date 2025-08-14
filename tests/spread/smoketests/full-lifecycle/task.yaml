@@ -1,5 +1,10 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
+# Limited to Ubuntu 22.04 and 24.04 because the init profiles no longer work with Python 3.8
+systems:
+  - ubuntu-22.04-64
+  - ubuntu-24.04-64
+
 environment:
   PROFILE/machine: machine
   PROFILE/kubernetes: kubernetes

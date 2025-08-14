@@ -499,33 +499,42 @@ created adjacent to the charm (as a sidecar, in the same pod).
 **Structure:** This key consists of a list of containers along with their
 specification. Each container can be specified in terms of ``resource``, ``bases``,
 ``uid``, ``gid`` and ``mounts``, where one of either the ``resource`` or the
-``bases`` subkeys must be defined, and ``mounts`` is optional. ``resource`` stands
-for the OCI image resource used to create the container; to use it, specify  an OCI
-image resource name (that you will then define further in the `resources`_ block).
-``bases`` is a list of bases to be used for resolving a container image, in descending
-order of preference; to use it, specify a base name (for example, ``ubuntu``,
-``almalinux``), a
-`channel <https://snapcraft.io/docs/channels>`_, and an architecture. ``mounts`` is a
-list of mounted storages for this container; to use it, specify the name of the
-storage to mount from the charm storage and, optionally, the location where to mount
-the storage. Starting with Juju 3.5.0, ``uid`` and ``gid`` are the UID and,
-respectively, GID to run the Pebble entry process for this container as; they can
-be any value from 0-999 or any value from 10,000 (values from 1000-9999 are reserved
-for users) and the default is 0 (root).
+``bases`` subkeys must be defined, and ``mounts`` is optional.
+
+The location attribute must be specified when mounting a storage into a workload
+container. It dictates the mount point for the specific container.
+
+Optionally, you can specify the location attribute on the `storage`_ itself,
+which also sets the mount point in the charm container.
 
 .. code-block:: yaml
 
     containers:
       <container name>:
+        # The OCI image resource used to create the container.
+        # Specify an OCI image resource name (that you will then define further
+        # in the `resources` block.
         resource: <resource name>
+        # A list of bases to be used for resolving a container image, in
+        # descending order of preference. Specify a base name (for example,
+        # `ubuntu`, `centos`, `osx`, `opensuse`), a channel
+        # (https://snapcraft.io/docs/channels), and an architecture.
         bases:
           - name: <base name>
             channel: <track[/risk][/branch]>
             architectures:
               - <architecture>
+        # (Optional) A list of mounted storages for this container. Specify the
+        # name of the storage to mount from the charm storage, and, optionally,
+        # the location where to mount the storage.
         mounts:
           - storage: <storage name>
             location: <path>
+        # (Optional) The UID and GID to run the Pebble entry process for this
+        # container as. These can be any value from 0-999 or any value above
+        # 10,000 (values 1000-9999 are reserved for users). The default is 0
+        # (root).
+        # Available in Juju 3.5.0 and above.
         uid: <unix UID>
         gid: <unix GID>
 

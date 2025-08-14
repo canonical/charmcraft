@@ -7,7 +7,7 @@ environment:
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 
 prepare: |
-  snap install charm --classic
+  snap install charm --classic --channel=$CHARM_SNAP_CHANNEL
   charm create reactivecharm
   cd reactivecharm
 
@@ -37,6 +37,11 @@ prepare: |
   EOF
 
   sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
+  git init
+  git add .
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+  git commit -m 'initial commit'
 
 restore: |
   pushd reactivecharm
@@ -47,5 +52,5 @@ restore: |
 
 execute: |
   cd reactivecharm
-  charmcraft pack --verbose
+  charmcraft pack
   test -f reactive-test*.charm

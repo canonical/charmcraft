@@ -34,8 +34,8 @@ can be created as follows:
 Include charm dependencies
 --------------------------
 
-Make sure that the project directory has a :ref:`pyproject-toml-file`. Use the
-``dependencies`` key to list the dependencies of the charm code.
+If the project directory doesn't already contain a :ref:`pyproject-toml-file`, create
+one. Next, list the charm's dependencies in the file's ``dependencies`` key.
 
 .. code-block:: toml
     :caption: pyproject.toml

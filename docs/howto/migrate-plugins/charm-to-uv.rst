@@ -31,8 +31,8 @@ can be created as follows:
         build-snaps:
           - astral-uv
 
-Include charm dependencies
---------------------------
+List the charm's dependencies
+-----------------------------
 
 If the project directory doesn't already contain a :ref:`pyproject-toml-file`, create
 one. Next, list the charm's dependencies in the file's ``dependencies`` key.
@@ -57,8 +57,8 @@ You can also add dependencies to your project's ``pyproject.toml`` file by runni
 
     uv add <dependency>
 
-Include charm library dependencies
-----------------------------------
+List charm library dependencies
+-------------------------------
 
 Unlike the Charm plugin, the uv plugin does not install the dependencies for
 included charmlibs. If any of the charm libraries used have ``PYDEPS``, these will

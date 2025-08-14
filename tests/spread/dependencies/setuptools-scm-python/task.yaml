@@ -1,5 +1,9 @@
 summary: Test workaround for setuptools-scm circular dependencies
 
+systems:
+  # Only noble or later works with the current templates. This is fine this test.
+  - ubuntu-24.04-64
+
 environment:
   PLUGIN/charm: charm
   PLUGIN/poetry: poetry

@@ -99,7 +99,7 @@ Alternatively, you could list the library dependencies in a
         "cryptography",
     ]
 
-To add a dependency to the ``charmlibs`` dependency groups using ``uv add``, run:
+To add a dependency to the ``charmlibs`` dependency group using ``uv add``, run:
 
 .. code-block:: bash
 

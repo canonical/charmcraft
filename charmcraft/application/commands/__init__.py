@@ -59,14 +59,14 @@ from charmcraft.application.commands.store import (
     SetResourceArchitecturesCommand,
     UploadResourceCommand,
 )
-from charmcraft.application.commands.test import TestCommand
 from charmcraft.application.commands.version import Version
 
 
 def fill_command_groups(app: craft_application.Application) -> None:
     """Fill in all the command groups for Charmcraft."""
-    app.add_command_group("Basic", [InitCommand])
-    app.add_command_group("Lifecycle", [*get_lifecycle_commands(), RemoteBuild])
+    app.add_command_group(
+        "Lifecycle", [*get_lifecycle_commands(), RemoteBuild], ordered=True
+    )
     app.add_command_group(
         "Store (account)",
         [
@@ -118,7 +118,7 @@ def fill_command_groups(app: craft_application.Application) -> None:
         [
             Analyse,
             Analyze,
-            TestCommand,
+            InitCommand,
             Version,
         ],
     )

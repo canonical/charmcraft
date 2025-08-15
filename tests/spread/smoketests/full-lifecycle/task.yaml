@@ -1,5 +1,10 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
+# Limited to Ubuntu 22.04 and 24.04 because the init profiles no longer work with Python 3.8
+systems:
+  - ubuntu-22.04-64
+  - ubuntu-24.04-64
+
 environment:
   PROFILE/machine: machine
   PROFILE/kubernetes: kubernetes
@@ -10,8 +15,8 @@ include:
 kill-timeout: 30m
 
 prepare: |
-  tests.pkgs install pipx python3-venv
-  pipx install --force tox
+  snap install --classic --no-wait astral-uv
+  tests.pkgs install python3-venv
   rm -rf charm
   charmcraft init --project-dir=charm --profile=${PROFILE}
 
@@ -20,6 +25,10 @@ prepare: |
   cd charm
   echo "ignore me" > secrets.txt
   touch extra_file.txt
+
+  # Our templates use tox's uv runner, so we install both.
+  snap watch --last=install
+  uv tool install --force --with tox-uv tox
 
 restore: |
   pushd charm

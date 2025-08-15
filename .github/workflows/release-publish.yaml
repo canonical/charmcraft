@@ -14,7 +14,7 @@ jobs:
     runs-on: [self-hosted, jammy]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Fetch tag annotations
         run: |
           # Note: we fetch the tags here instead of using actions/checkout's "fetch-tags"
@@ -44,7 +44,7 @@ jobs:
       id-token: write
     steps:
       - name: Get packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: pypi-packages
           path: dist/
@@ -58,7 +58,7 @@ jobs:
     runs-on: [self-hosted, jammy]
     steps:
       - name: Get pypi artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: pypi-packages
       - name: Release

@@ -11,6 +11,7 @@ Charmcraft
     howto/index
     explanation/index
     reference/index
+    contribute-to-this-documentation
     release-notes/index
 
 Charmcraft is the command-line tool for initializing, packaging, and publishing

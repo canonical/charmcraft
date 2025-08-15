@@ -4,7 +4,7 @@
 [tox]
 no_package = True
 skip_missing_interpreters = True
-env_list = format, lint, static, unit
+env_list = format, lint, unit
 min_version = 4.0.0
 
 [vars]
@@ -32,10 +32,12 @@ commands =
     ruff check --fix {[vars]all_path}
 
 [testenv:lint]
-description = Check code against coding style standards
-deps =
-    ruff
-    codespell
+description = Check code against coding style standards, and static checks
+runner = uv-venv-lock-runner
+dependency_groups =
+    lint
+    unit
+    integration
 commands =
     # if this charm owns a lib, uncomment "lib_path" variable
     # and uncomment the following line
@@ -43,15 +45,6 @@ commands =
     codespell {tox_root}
     ruff check {[vars]all_path}
     ruff format --check --diff {[vars]all_path}
-
-[testenv:static]
-description = Run static type checks
-runner = uv-venv-lock-runner
-dependency_groups =
-    static
-    unit
-    integration
-commands =
     pyright {posargs}
 
 [testenv:unit]

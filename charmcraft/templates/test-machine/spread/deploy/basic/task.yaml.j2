@@ -1,0 +1,19 @@
+summary: Test '{{ name }}' deployment
+
+environment:
+  MODEL: "$(HOST: uuidgen)"
+
+prepare: |
+  juju add-model "${MODEL}"
+
+execute: |
+  juju deploy --model "${MODEL}" "${CRAFT_ARTIFACT}"
+
+  # Wait for all apps on the model to become active.
+  juju wait-for application '{{ name }}' --timeout=10m
+
+  # Ensure the app removes successfully
+  juju remove-application --model="${MODEL}" --destroy-storage --force --no-prompt '{{ name }}'
+
+restore: |
+  juju destroy-model --no-prompt --force --destroy-storage --no-wait --timeout=60s "${MODEL}"

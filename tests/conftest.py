@@ -17,27 +17,65 @@
 import contextlib
 import importlib
 import json
-import os
 import pathlib
+import platform
 import tempfile
 import types
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, cast
 from unittest import mock
 
+import craft_application
 import craft_parts
+import craft_platforms
 import craft_store
+import distro
 import pytest
-import responses as responses_module
 import yaml
-from craft_application import models, util
+from craft_application import util
 from craft_parts import callbacks, plugins
-from craft_providers import bases
 
 import charmcraft.parts
 from charmcraft import const, env, instrum, parts, services, store
 from charmcraft.application.main import APP_METADATA
+from charmcraft.extensions import registry
 from charmcraft.models import project
+from charmcraft.services.store import StoreService
+
+FAKE_BASES_CHARM_TEMPLATE = """\
+name: example-charm
+summary: An example charm with bases
+description: |
+  A description for an example charm with bases.
+type: charm
+bases:
+  - name: ubuntu
+    channel: "{series}"
+
+parts:
+  charm:
+    plugin: charm
+
+"""
+
+FAKE_PLATFORMS_CHARM_TEMPLATE = """\
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+type: charm
+base: {base}
+build-base: {build_base}
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+  s390x:
+
+parts:
+  charm:
+    plugin: charm
+"""
 
 
 @pytest.fixture
@@ -88,6 +126,40 @@ def mock_store_client():
     return client
 
 
+@pytest.fixture(scope="session", params=["bases", "platforms"])
+def fake_project_yaml(request: pytest.FixtureRequest) -> Iterator[str]:
+    current_base = craft_platforms.DistroBase.from_linux_distribution(
+        distro.LinuxDistribution(
+            include_lsb=True, include_uname=False, include_oslevel=False
+        )
+    )
+    if platform.system() != "Linux":
+        base_str = "ubuntu@24.04"
+        series = "24.04"
+    else:
+        base_str = str(current_base)
+        series = current_base.series
+
+    if request.param == "bases":
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            # Add the current system to legacy bases so we can test legacy bases.
+            monkeypatch.setattr(const, "LEGACY_BASES", (*const.LEGACY_BASES, base_str))
+            yield FAKE_BASES_CHARM_TEMPLATE.format(series=series)
+        return
+    yield FAKE_PLATFORMS_CHARM_TEMPLATE.format(
+        base=base_str,
+        build_base="ubuntu@devel",
+    )
+
+
+@pytest.fixture
+def fake_project_file(project_path, fake_project_yaml):
+    project_file = project_path / "charmcraft.yaml"
+    project_file.write_text(fake_project_yaml)
+
+    return project_file
+
+
 @pytest.fixture
 def mock_store_anonymous_client() -> mock.Mock:
     return mock.Mock(spec_set=store.AnonymousClient)
@@ -100,56 +172,58 @@ def mock_publisher_gateway() -> mock.Mock:
 
 @pytest.fixture
 def service_factory(
+    fake_project_yaml,  # Needs the real filesystem.
     fs,
-    fake_project_dir,
+    fake_project_file,
     fake_prime_dir,
     simple_charm,
     mock_store_client,
     mock_store_anonymous_client,
     mock_publisher_gateway,
-    default_build_plan,
-) -> services.CharmcraftServiceFactory:
-    factory = services.CharmcraftServiceFactory(app=APP_METADATA)
+    project_path,
+) -> craft_application.ServiceFactory:
+    services.register_services()
+    factory = craft_application.ServiceFactory(app=APP_METADATA)
 
-    factory.set_kwargs(
-        "package",
-        project_dir=fake_project_dir,
-        build_plan=default_build_plan,
+    factory.update_kwargs(
+        "project",
+        project_dir=project_path,
     )
-    factory.set_kwargs(
+    factory.update_kwargs(
         "lifecycle",
-        work_dir=pathlib.Path("/project"),
+        work_dir=project_path,
         cache_dir=pathlib.Path("/cache"),
-        build_plan=default_build_plan,
     )
     factory.update_kwargs(
         "charm_libs",
-        project_dir=fake_project_dir,
+        project_dir=project_path,
     )
 
-    factory.project = simple_charm
+    factory.get("project").configure(
+        platform=None,
+        build_for=None,
+    )
+    factory.get("state").set(
+        "charmcraft", "started_at", value="2020-03-14T00:00:00+00:00"
+    )
 
-    factory.store.client = mock_store_client
-    factory.store.anonymous_client = mock_store_anonymous_client
-    factory.store._publisher = mock_publisher_gateway
+    store_svc = cast(StoreService, factory.get("store"))
+    store_svc.client = mock_store_client
+    store_svc.anonymous_client = mock_store_anonymous_client
+    store_svc._publisher = mock_publisher_gateway
 
     return factory
 
 
 @pytest.fixture
-def default_build_info() -> models.BuildInfo:
+def default_build_info() -> craft_platforms.BuildInfo:
     arch = util.get_host_architecture()
-    return models.BuildInfo(
-        base=bases.BaseName("ubuntu", "22.04"),
+    return craft_platforms.BuildInfo(
+        build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
         build_on=arch,
         build_for="arm64",
         platform="distro-1-test64",
     )
-
-
-@pytest.fixture
-def default_build_plan(default_build_info: models.BuildInfo):
-    return [default_build_info]
 
 
 @pytest.fixture
@@ -171,11 +245,6 @@ def fake_path(fs) -> Iterator[pathlib.Path]:
     """Like tmp_path, but with a fake filesystem."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield pathlib.Path(tmp_dir)
-
-
-@pytest.fixture
-def global_debug():
-    os.environ["CRAFT_DEBUG"] = "1"
 
 
 @pytest.fixture
@@ -226,13 +295,6 @@ def intertests_cleanups():
 
 
 @pytest.fixture
-def responses():
-    """Simple helper to use responses module as a fixture, for easier integration in tests."""
-    with responses_module.RequestsMock() as rsps:
-        yield rsps
-
-
-@pytest.fixture
 def prepare_charmcraft_yaml(tmp_path: pathlib.Path):
     """Helper to create a charmcraft.yaml file in disk.
 
@@ -276,24 +338,6 @@ def prepare_metadata_yaml(tmp_path: pathlib.Path):
     If content is not given, remove metadata.yaml if exists.
     """
     return prepare_file(tmp_path, const.METADATA_FILENAME)
-
-
-@pytest.fixture
-def prepare_actions_yaml(tmp_path: pathlib.Path):
-    """Helper to create a actions.yaml file in disk.
-
-    If content is not given, remove actions.yaml if exists.
-    """
-    return prepare_file(tmp_path, const.JUJU_ACTIONS_FILENAME)
-
-
-@pytest.fixture
-def prepare_config_yaml(tmp_path: pathlib.Path):
-    """Helper to create a config.yaml file in disk.
-
-    If content is not given, remove config.yaml if exists.
-    """
-    return prepare_file(tmp_path, const.JUJU_CONFIG_FILENAME)
 
 
 @pytest.fixture
@@ -359,8 +403,6 @@ def build_charm_directory():
 
 @pytest.fixture
 def stub_extensions(monkeypatch):
-    from charmcraft.extensions import registry
-
     extensions_dict = {}
     monkeypatch.setattr(registry, "_EXTENSIONS", extensions_dict)
 

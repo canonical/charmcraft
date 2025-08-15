@@ -53,7 +53,9 @@ from charmcraft.utils import cli
 if TYPE_CHECKING:
     from argparse import ArgumentParser
 
+    from charmcraft.models import CharmcraftProject
     from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.image import ImageService
 
 
 # some types
@@ -261,8 +263,9 @@ class WhoamiCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        store = cast("StoreService", self._services.get("store"))
         try:
-            macaroon_info = self._services.store.client.whoami()
+            macaroon_info = store.client.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -563,10 +566,7 @@ class UploadCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> int:
         """Run the command."""
-        if parsed_args.name:
-            name = parsed_args.name
-        else:
-            name = get_name_from_zip(parsed_args.filepath)
+        name = parsed_args.name or get_name_from_zip(parsed_args.filepath)
         store = Store(env.get_store_config())
         result = store.upload(name, parsed_args.filepath)
 
@@ -583,7 +583,7 @@ class UploadCommand(CharmcraftCommand):
                     emit.message(f"- {error.code}: {error.message}")
             return 1
 
-        if self._services.project:
+        if project := self._services.get("project").get():
             libs_service = cast("CharmLibsService", self._services.get("charm_libs"))
             unpublished_libs = libs_service.get_unpublished_libs()
             if unpublished_libs:
@@ -593,7 +593,7 @@ class UploadCommand(CharmcraftCommand):
                 )
                 display_libs = [
                     {
-                        "name": f"{self._services.project.name}.{lib.lib_name}",
+                        "name": f"{project.name}.{lib.lib_name}",
                         "local": "-"
                         if not lib.local_version
                         else ".".join(str(i) for i in lib.local_version),
@@ -875,9 +875,7 @@ class PromoteCommand(CharmcraftCommand):
             permanent=True,
         )
         store = cast(StoreService, self._services.get("store"))
-
-        name = parsed_args.name or self._services.project.name
-
+        name = parsed_args.name or self._services.get("project").get().name
         from_channel = charmcraft.store.models.ChannelData.from_str(
             parsed_args.from_channel
         )
@@ -1276,7 +1274,9 @@ class CreateLibCommand(CharmcraftCommand):
                 "characters and underscore, starting with alpha."
             )
 
-        charm_name = self._services.project.name or utils.get_name_from_yaml()
+        charm_name = (
+            self._services.get("project").get().name or utils.get_name_from_yaml()
+        )
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1355,7 +1355,9 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
-        charm_name = self._services.project.name or utils.get_name_from_yaml()
+        charm_name = (
+            self._services.get("project").get().name or utils.get_name_from_yaml()
+        )
         if charm_name is None:
             raise CraftError(
                 "Cannot find a valid charm name in charm definition. "
@@ -1528,8 +1530,9 @@ class FetchLibCommand(CharmcraftCommand):
 
         # get tips from the Store
         store = Store(env.get_store_config(), needs_auth=False)
+        store_svc = cast("StoreService", self._services.get("store"))
         try:
-            libs_tips = self._services.store.get_libraries_metadata(
+            libs_tips = store_svc.get_libraries_metadata(
                 [
                     project.CharmLib(
                         lib=f"{lib.charm_name}.{lib.lib_name}", version=str(lib.api)
@@ -1669,8 +1672,9 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
-        store = self._services.store
-        charm_libs = self._services.project.charm_libs
+        store = cast("StoreService", self._services.get("store"))
+        project = cast("CharmcraftProject", self._services.get("project").get())
+        charm_libs = project.charm_libs
         if not charm_libs:
             raise errors.LibraryError(
                 message="No dependent libraries declared in charmcraft.yaml.",
@@ -1971,7 +1975,7 @@ class UploadResourceCommand(CharmcraftCommand):
         elif parsed_args.image:
             emit.progress("Getting image")
             emit.debug("Trying to get image from Docker")
-            image_service = self._services.image
+            image_service = cast("ImageService", self._services.get("image"))
             # Check Docker first for backwards compatibility - prefer to get from
             # Docker than from a local path if Docker contains the image.
             if digest := image_service.get_maybe_id_from_docker(parsed_args.image):
@@ -2137,7 +2141,7 @@ class SetResourceArchitecturesCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
-        store = self._services.store
+        store = cast("StoreService", self._services.get("store"))
 
         updates = store.set_resource_revisions_architectures(
             name=parsed_args.charm_name,
@@ -2303,11 +2307,13 @@ class CreateTrack(CharmcraftCommand):
         """Add own parameters to the general parser."""
         super().fill_parser(parser=parser)
         parser.add_argument(
-            "name",
+            "--name",
+            required=True,
             help="The store name onto which to create the track",
         )
         parser.add_argument(
-            "track",
+            "--track",
+            required=True,
             nargs="+",
             help="The track name to create",
         )
@@ -2326,7 +2332,8 @@ class CreateTrack(CharmcraftCommand):
             {"name": track, "automatic-phasing-percentage": pct}
             for track in parsed_args.track
         ]
-        output_tracks = self._services.store.create_tracks(
+        store = cast("StoreService", self._services.get("store"))
+        output_tracks = store.create_tracks(
             parsed_args.name,
             *tracks,
         )

@@ -29,6 +29,16 @@ can be run multiple times) and that it can be run on multiple units simultaneous
 without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
 
+Using ``migrate.sh`` isn't mandatory. You can use programmatic approaches instead. Some
+popular libraries for programmatic database migration are:
+
+- `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__ for Flask and FastAPI.
+- `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or `goose
+  <https://github.com/pressly/goose/>`__ for Go.
+- `prisma <https://www.npmjs.com/package/prisma/>`__ and `knex
+  <https://www.npmjs.com/package/knex/>`__ for Express.
+
+
 Troubleshoot the charm
 ----------------------
 
@@ -78,6 +88,12 @@ To view the Pebble logs for a deployed web app, run:
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
 .. seealso::
 
@@ -120,6 +136,13 @@ To view more details about the web app itself, run:
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 pebble plan
+
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
@@ -173,6 +196,13 @@ Juju container:
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
 
+    .. group-tab:: Spring Boot
+
+        .. code-block:: bash
+
+            juju ssh <spring-boot-app-name>/0 \
+              PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
+              /charm/bin/pebble  exec --context=spring-boot -- bash
 
 .. important::
 
@@ -243,6 +273,12 @@ name of the web app with the ``-c`` option.
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. group-tab:: Go
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+    .. group-tab:: Spring Boot
 
         .. code-block:: bash
 
@@ -347,3 +383,51 @@ The Pebble logs are available via Grafana or Loki and can be viewed in
 the **WebApp Operator** dashboard for Flask and Django.
 For other frameworks, you may access the logs by picking ``loki`` in the
 ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore`` page.
+
+
+Configure TLS for a web app charm
+---------------------------------
+
+You can configure TLS if your ingress provider charm supports integration with
+a certificate provider charm. To configure TLS locally, you can use the
+`Self Signed Certificates <https://charmhub.io/self-signed-certificates>`_
+charm as a certificate provider.
+
+First, :ref:`integrate your web app with ingress
+<integrate-web-app-charm-integrate-ingress>`.
+
+Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
+charm as an ingress provider, set the hostname with:
+
+.. code-block:: bash
+
+    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
+
+Deploy the `Self Signed X.509 Certificates
+<https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
+
+.. code-block:: bash
+
+    juju deploy self-signed-certificates
+    juju integrate self-signed-certificates nginx-ingress-integrator
+
+Your 12-factor app is now accessible over HTTPS. If you access the external URL of your
+app using HTTP, it returns an HTTP ``308 Permanent Redirect`` status and a redirect to
+the HTTPS URL. You can access the HTTPS URL of your app with a command like:
+
+.. code-block:: bash
+
+   curl -v --insecure https://<yourdomain.example.com> \
+     --resolve <yourdomain.example.com>:443:<ingress-ip>
+
+.. note::
+
+    The ``--insecure`` option is needed because the certificate authority in the
+    ``self-signed-certificate`` charm is not trusted.
+    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option is a way of
+    resolving the hostname of the request without
+    setting a DNS record.
+
+To obtain a TLS certificate signed by a trusted certificate authority (CA)
+using the ACME protocol, use the `LEGO <https://charmhub.io/lego>`_
+charm instead.

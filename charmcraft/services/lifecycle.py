@@ -30,16 +30,17 @@ from charmcraft import dispatch
 class LifecycleService(services.LifecycleService):
     """Business logic for lifecycle builds."""
 
+    @override
     def setup(self) -> None:
-        """Do Charmcraft-specific setup work."""
-        self._manager_kwargs.setdefault("project_name", self._project.name)
+        self._manager_kwargs["project_name"] = self._services.get("project").get().name
         super().setup()
 
     @override
     def _get_build_for(self) -> str:
         build_for = super()._get_build_for()
         if "-" not in build_for:
-            if self._build_plan and self._build_plan[0].build_for == "all":
+            build_plan = self._services.get("build_plan").plan()
+            if build_plan and build_plan[0].build_for == "all":
                 emit.progress(
                     "WARNING: Charmcraft does not validate that charms with "
                     "architecture 'all' are fully architecture agnostic.",

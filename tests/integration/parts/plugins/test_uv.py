@@ -14,44 +14,34 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import pathlib
 import platform
 import subprocess
 import sys
-from pathlib import Path
-from typing import Any
 
-import distro
+import craft_application
 import pytest
-from craft_application import util as app_util
-
-from charmcraft import services
-from charmcraft.models import project
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")
 ]
 
 
-@pytest.fixture
-def charm_project(basic_charm_dict: dict[str, Any], project_path: Path, request):
-    return project.PlatformCharm.unmarshal(
-        basic_charm_dict
-        | {
-            "base": f"{distro.id()}@{distro.version()}",
-            "platforms": {app_util.get_host_architecture(): None},
-            "parts": {
-                "my-charm": {
-                    "plugin": "uv",
-                    "source": str(project_path),
-                    "source-type": "local",
-                }
-            },
+@pytest.fixture(autouse=True)
+def add_part(
+    service_factory: craft_application.ServiceFactory, project_path: pathlib.Path
+):
+    service_factory.get("project").get().parts = {
+        "my-charm": {
+            "plugin": "uv",
+            "source": str(project_path),
+            "source-type": "local",
         }
-    )
+    }
 
 
 @pytest.fixture
-def uv_project(project_path: Path, monkeypatch) -> None:
+def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
     subprocess.run(
         [
             "uv",
@@ -82,11 +72,10 @@ def uv_project(project_path: Path, monkeypatch) -> None:
 @pytest.mark.slow
 @pytest.mark.usefixtures("uv_project")
 def test_uv_plugin(
-    build_plan, service_factory: services.CharmcraftServiceFactory, tmp_path: Path
+    service_factory: craft_application.ServiceFactory, tmp_path: pathlib.Path
 ):
     install_path = tmp_path / "parts" / "my-charm" / "install"
     stage_path = tmp_path / "stage"
-    service_factory.lifecycle._build_plan = build_plan
 
     service_factory.lifecycle.run("stage")
 

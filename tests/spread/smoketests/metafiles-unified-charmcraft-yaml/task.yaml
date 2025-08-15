@@ -1,6 +1,6 @@
 summary: create a charm that use charmcraft.yaml only
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -87,7 +87,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

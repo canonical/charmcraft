@@ -27,11 +27,6 @@ backends:
       - ubuntu-22.04-64:
           workers: 4
           storage: 40G
-      # Fedora is disabled until it runs kernel 6.0.7 due to squashfs bug
-      # (https://forum.snapcraft.io/t/unsupported-version-0-of-verneed-record-linux-6-0/32160/14)
-      #- fedora-35-64:
-      #    workers: 2
-      #    storage: 40G
 
   multipass:
     type: adhoc
@@ -208,4 +203,3 @@ suites:
       # in staging Charmhub authenticating with the configured credentials
       CHARM_DEFAULT_NAME: "$(HOST: echo ${CHARM_DEFAULT_NAME:-$USER-test-charm})"
       BUNDLE_DEFAULT_NAME: "$(HOST: echo ${BUNDLE_DEFAULT_NAME:-$USER-test-bundle})"
-

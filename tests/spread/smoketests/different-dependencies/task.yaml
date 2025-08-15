@@ -1,6 +1,6 @@
 summary: pack a charm with different dependencies specified
 
-include: 
+include:
   - tests/
 
 prepare: |
@@ -21,7 +21,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

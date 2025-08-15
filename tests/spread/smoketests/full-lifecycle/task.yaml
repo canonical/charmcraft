@@ -1,6 +1,6 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-include: 
+include:
   - tests/
 
 kill-timeout: 30m
@@ -31,7 +31,7 @@ restore: |
   pushd charm
   charmcraft clean
   popd
-  
+
   rm -rf charm
 
 execute: |

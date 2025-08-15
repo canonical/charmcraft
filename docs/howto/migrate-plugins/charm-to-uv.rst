@@ -117,6 +117,9 @@ After defining the project's dependencies, make sure that the project directory 
 
     uv lock
 
+Make sure you add this file to version control, so that your charm can be built after a
+checkout by running ``charmcraft pack``.
+
 Add dependency groups
 ---------------------
 

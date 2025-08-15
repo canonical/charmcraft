@@ -556,7 +556,7 @@ class UploadCommand(CharmcraftCommand):
         parser.add_argument(
             "--resource",
             action="append",
-            type=utils.ResourceOption(),
+            type=utils.ResourceOption,
             default=[],
             help=(
                 "The resource(s) to attach to the release, in the <name>:<revision> format "
@@ -788,7 +788,7 @@ class ReleaseCommand(CharmcraftCommand):
         parser.add_argument(
             "--resource",
             action="append",
-            type=utils.ResourceOption(),
+            type=utils.ResourceOption,
             default=[],
             help=(
                 "The resource(s) to attach to the release, in the <name>:<revision> format "

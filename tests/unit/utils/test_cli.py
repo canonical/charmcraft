@@ -85,7 +85,7 @@ def test_singleoptionensurer_too_many():
 
 def test_resourceoption_convert_ok():
     """Convert as expected."""
-    r = ResourceOption()("foo:13")
+    r = ResourceOption("foo:13")
     assert r.name == "foo"
     assert r.revision == 13
 
@@ -105,7 +105,7 @@ def test_resourceoption_convert_ok():
 def test_resourceoption_convert_error(value):
     """Error while converting."""
     with pytest.raises(ValueError) as cm:
-        ResourceOption()(value)
+        ResourceOption(value)
     assert str(cm.value) == (
         "the resource format must be <name>:<revision> (revision being a non-negative integer)"
     )

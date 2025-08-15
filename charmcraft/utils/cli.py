@@ -54,7 +54,6 @@ class SingleOptionEnsurer:
         return self.converter(value)
 
 
-@dataclass(frozen=True)
 class ResourceOption:
     """Argparse helper to validate and convert a 'resource' option.
 
@@ -62,13 +61,13 @@ class ResourceOption:
 
     Example of use:
 
-        parser.add_argument('--resource',  type=ResourceOption())
+        parser.add_argument('--resource',  type=ResourceOption)
     """
 
     name: str | None = None
     revision: int | None = None
 
-    def __call__(self, value):
+    def __init__(self, value):
         """Run by argparse to validate and convert the given argument."""
         parts = [x.strip() for x in value.split(":")]
         parts = [p for p in parts if p]
@@ -80,7 +79,9 @@ class ResourceOption:
                 pass
             else:
                 if revision >= 0:
-                    return ResourceOption(name, revision)
+                    self.name = name
+                    self.revision = revision
+                    return
         msg = "the resource format must be <name>:<revision> (revision being a non-negative integer)"
         raise ValueError(msg)
 

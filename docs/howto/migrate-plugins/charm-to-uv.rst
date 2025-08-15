@@ -99,6 +99,12 @@ Alternatively, you could list the library dependencies in a
         "cryptography",
     ]
 
+To add a dependency to the ``charmlibs`` dependency groups using ``uv add``, run:
+
+.. code-block:: bash
+
+    uv add --group charmlibs <dependency>
+
 Library dependencies are runtime dependencies, and dependency groups are generally
 intended for development dependencies. However, if the charm uses a lot of library
 files, you might find a dependency group helpful for distinguishing the dependencies.

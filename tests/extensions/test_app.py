@@ -56,6 +56,19 @@ def flask_input_yaml_fixture():
     return make_flask_input_yaml()
 
 
+def make_spring_boot_input_yaml():
+    return {
+        "type": "charm",
+        "name": "test-springboot",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {"amd64": None},
+        "extensions": ["spring-boot-framework"],
+        "config": copy.deepcopy(NON_OPTIONAL_OPTIONS),
+    }
+
+
 @pytest.mark.parametrize(
     ("input_yaml", "experimental", "expected"),
     [
@@ -84,6 +97,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -167,6 +181,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -240,6 +255,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -313,6 +329,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -386,6 +403,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -421,18 +439,7 @@ def flask_input_yaml_fixture():
             },
         ),
         (
-            {
-                "type": "charm",
-                "name": "test-springboot",
-                "summary": "test summary",
-                "description": "test description",
-                "base": "ubuntu@24.04",
-                "platforms": {
-                    "amd64": None,
-                },
-                "extensions": ["spring-boot-framework"],
-                "config": NON_OPTIONAL_OPTIONS,
-            },
+            make_spring_boot_input_yaml(),
             True,
             {
                 "actions": SpringBootFramework.actions,
@@ -459,6 +466,7 @@ def flask_input_yaml_fixture():
                     {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
+                    {"lib": "hydra.oauth", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -630,4 +638,95 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
         "source": ".",
         "build-snaps": ["rustup"],
         "override-build": "rustup default stable\ncraftctl default",
+    }
+
+
+@pytest.mark.parametrize(
+    ("input_yaml", "requires", "expected_options"),
+    [
+        pytest.param(
+            make_flask_input_yaml(),
+            {"oidc-foobar": {"interface": "oauth"}},
+            {
+                **FlaskFramework.options,
+                **NON_OPTIONAL_OPTIONS["options"],
+                "oidc-foobar-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "oidc-foobar-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+            },
+            id="one-oauth-relation-flask",
+        ),
+        pytest.param(
+            make_spring_boot_input_yaml(),
+            {"oidc-foobar": {"interface": "oauth"}},
+            {
+                **SpringBootFramework.options,
+                **NON_OPTIONAL_OPTIONS["options"],
+                "oidc-foobar-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "oidc-foobar-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+                "oidc-foobar-user-name-attribute": {
+                    "default": "sub",
+                    "description": "The name of the attribute returned in the UserInfo Response that "
+                    "references the Name or Identifier of the end-user.",
+                    "type": "string",
+                },
+            },
+            id="one-oauth-relation-spring-boot",
+        ),
+        pytest.param(
+            make_flask_input_yaml(),
+            {
+                "oidc-foobar": {"interface": "oauth"},
+                "other-oidc": {"interface": "oauth"},
+            },
+            {
+                **FlaskFramework.options,
+                **NON_OPTIONAL_OPTIONS["options"],
+                "oidc-foobar-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "oidc-foobar-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+                "other-oidc-redirect-path": {
+                    "type": "string",
+                    "description": "The path that the user will be redirected upon completing login.",
+                    "default": "/callback",
+                },
+                "other-oidc-scopes": {
+                    "type": "string",
+                    "description": "A list of scopes with spaces in between.",
+                    "default": "openid profile email",
+                },
+            },
+            id="two-oauth-relations",
+        ),
+    ],
+)
+def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
+    input_yaml["requires"] = requires
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+    assert applied["config"] == {
+        "options": {
+            **expected_options,
+        }
     }

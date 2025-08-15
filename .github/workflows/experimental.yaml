@@ -1,0 +1,41 @@
+name: Experimental workflows
+on:
+  pull_request:
+
+jobs:
+  typecheck-with-ty:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ty
+        id: snap-install
+        run: |
+          echo -n jobs="$(sudo snap install --no-wait --edge astral-ty)" >> $GITHUB_OUTPUT
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up uv with caching
+        id: setup-uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Set up linters
+        run: |
+          for job in ${{ steps.snap-install.outputs.jobs }}; do
+            sudo snap watch $job
+          done
+          sudo snap alias astral-ty.ty ty
+          uv sync --frozen
+      - name: Run ty and report as a comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ty check 2>&1 > ${{ runner.temp }}/ty.log; then
+            echo '# Type checking with `ty` succeeded! 🎉🎉🎉' > ${{ runner.temp }}/comment.txt
+          else
+            echo 'Type checking with `ty` failed. This is a notification only and does not require action.' > ${{ runner.temp }}/comment.txt
+          fi
+          echo "<details><summary>Command output</summary>" >> ${{ runner.temp }}/comment.txt
+          echo -e '\n```' >> ${{ runner.temp }}/comment.txt
+          cat ${{ runner.temp }}/ty.log >> ${{ runner.temp }}/comment.txt
+          echo '```' >> ${{ runner.temp }}/comment.txt
+          echo "</details>" >> ${{ runner.temp }}/comment.txt
+          gh pr comment ${{ github.event.number }} --body-file ${{ runner.temp }}/comment.txt

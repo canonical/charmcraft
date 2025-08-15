@@ -31,6 +31,11 @@ class LifecycleService(services.LifecycleService):
     """Business logic for lifecycle builds."""
 
     @override
+    def setup(self) -> None:
+        self._manager_kwargs["project_name"] = self._services.get("project").get().name
+        super().setup()
+
+    @override
     def _get_build_for(self) -> str:
         build_for = super()._get_build_for()
         if "-" not in build_for:

@@ -44,7 +44,7 @@ APP_METADATA = craft_application.AppMetadata(
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
     source_ignore_patterns=["*.charm", "charmcraft.yaml"],
-    docs_url="https://canonical-charmcraft.readthedocs-hosted.com/en/{version}",
+    docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
 )
 
@@ -128,13 +128,29 @@ class Charmcraft(craft_application.Application):
         return parts.get_app_plugins()
 
     @override
+    def _run_inner(self) -> int:
+        if not util.is_managed_mode():
+            dispatcher = self._get_dispatcher()
+            dispatcher.load_command(self.app_config)
+            parsed_args = dispatcher.parsed_args()
+            if project_dir := getattr(parsed_args, "project_dir", None):
+                self.project_dir = project_dir.expanduser().resolve()
+                self.services.update_kwargs(
+                    "project",
+                    project_dir=self.project_dir,
+                )
+            else:
+                self.project_dir = pathlib.Path().expanduser().resolve()
+        return super()._run_inner()
+
+    @override
     def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
         """Override to get project_dir early."""
-        super()._pre_run(dispatcher)
         if not self.is_managed() and not getattr(
             dispatcher.parsed_args(), "project_dir", None
         ):
             self.project_dir = pathlib.Path().expanduser().resolve()
+        super()._pre_run(dispatcher)
 
 
 def create_app() -> Charmcraft:

@@ -107,7 +107,7 @@ files and directories::
 You will need to edit at least charmcraft.yaml and README.md.
 
 Your minimal operator code is in src/charm.py, which uses the 'ops' Python framework.
-See https://ops.readthedocs.io/en/latest/. There are also some sample unit and
+See https://documentation.ubuntu.com/ops/latest/. There are also some sample unit and
 integration tests, which you can run using 'tox -e unit' and 'tox -e integration'.
 """
 

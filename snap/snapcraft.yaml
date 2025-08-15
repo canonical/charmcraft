@@ -98,6 +98,9 @@ parts:
     build-snaps:
       - astral-uv
     override-build: |
+      # We need newer versions of cargo and rustc than the cargo
+      # and rustc packages provide, but they don't set the `cargo`
+      # and `rustc` commands needed by maturin.
       mkdir -p "${CRAFT_PART_INSTALL}/bin"
       ln -s $(which cargo-1.82) "${CRAFT_PART_INSTALL}/bin/cargo"
       ln -s $(which rustc-1.82) "${CRAFT_PART_INSTALL}/bin/rustc"
@@ -133,9 +136,6 @@ parts:
     build-attributes:
       - enable-patchelf
     override-build: |
-      # uv venv --relocatable $CRAFT_PART_INSTALL
-      # uv sync --no-dev --no-editable --no-binary
-
       /snap/snapcraft/current/libexec/snapcraft/craftctl default
 
       # Install python3-apt

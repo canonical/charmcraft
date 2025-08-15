@@ -11,3 +11,5 @@ parts:
   my-charm:
     source: .
     plugin: uv
+    build-snaps:
+      - astral-uv

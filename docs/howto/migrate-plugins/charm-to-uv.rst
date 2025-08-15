@@ -60,9 +60,13 @@ You can also add dependencies to your project's ``pyproject.toml`` file by runni
 List charm library dependencies
 -------------------------------
 
-Unlike the Charm plugin, the uv plugin does not install the dependencies for
-included charmlibs. If any of the charm libraries used have ``PYDEPS``, these will
-need to be added to the charm's dependencies.
+Charm libraries are distributed either as regular Python packages under the
+`charmlibs <https://documentation.ubuntu.com/charmlibs>`_ namespace, or hosted on
+Charmhub. Python packages should be listed in the charm's dependencies.
+
+Unlike the Charm plugin, the uv plugin does not install transitive dependencies for
+Charmhub-hosted libraries. If any of these charm libraries have ``PYDEPS``, these need
+to be added to the charm's dependencies.
 
 To find library dependencies, check each loaded library file for its ``PYDEPS`` by
 running the following command at the root of the charm project:
@@ -109,9 +113,9 @@ Library dependencies are runtime dependencies, and dependency groups are general
 intended for development dependencies. However, if the charm uses a lot of library
 files, you might find a dependency group helpful for distinguishing the dependencies.
 
-If the charm uses libraries that are distributed as Python packages, list the libraries
-in ``dependencies``, along with other dependencies of the charm code. You don't need to
-inspect Python packages to find their dependencies.
+This advice doesn't apply to libraries that are distributed as Python packages. You
+should list Python packages in ``dependencies``. You don't need to do anything further
+for their transitive dependencies to be properly installed.
 
 Lock the dependencies
 ---------------------

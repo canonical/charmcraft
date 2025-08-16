@@ -16,7 +16,7 @@ craft-store==2.5.0
 cryptography==43.0.3
 deprecated==1.2.18
 distlib==0.3.9
-distro==1.8.0
+distro==1.9.0
 filelock==3.13.4
 flake8==7.0.0
 humanize==4.8.0

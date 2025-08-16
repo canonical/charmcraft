@@ -1,6 +1,6 @@
 attrs==23.1.0
 black==23.12.1
-cachetools==5.3.3
+cachetools==5.5.2
 certifi==2023.7.22
 cffi==1.16.0
 chardet==5.2.0

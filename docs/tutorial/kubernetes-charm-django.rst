@@ -875,8 +875,8 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft <django-framework-reference>`,
-        :ref:`Django framework extension <django-framework-extension>`,
+      - :external+rockcraft:ref:`Rockcraft profile <django-framework-reference>`,
+        :ref:`Charmcraft profile <django-framework-extension>`,
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
       - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`

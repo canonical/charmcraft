@@ -164,6 +164,13 @@ From the ``~/fastapi-hello-world`` directory, initialize the rock:
 The ``rockcraft.yaml`` file will be automatically created, with the name being
 set based on your working directory.
 
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
 Check out the contents of ``rockcraft.yaml``:
 
 .. code-block:: bash
@@ -196,13 +203,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``fastapi-hello-world``.
 
-The ``platforms`` key must match the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
+The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:

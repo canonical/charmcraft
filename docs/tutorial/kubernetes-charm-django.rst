@@ -193,6 +193,13 @@ back into the ``~/django-hello-world`` directory and initialize the rock:
 The ``rockcraft.yaml`` file will automatically be created and set the
 name based on your working directory, ``~/django-hello-world``.
 
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
 Check out the contents of ``rockcraft.yaml``:
 
 .. code-block:: bash
@@ -225,13 +232,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``django-hello-world``.
 
-The ``platforms`` key must match the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
+The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Django apps require a database. Django will use a sqlite

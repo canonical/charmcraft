@@ -442,9 +442,13 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Use ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should return the
-``Hello, world!`` greeting.
+Send a request via the ingress:
+
+.. code-block:: bash
+
+    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+
+The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
@@ -547,8 +551,11 @@ has been added:
 
     juju config go-hello-world | grep -A 6 greeting:
 
-Using ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
-shows that the response is still ``Hello, world!`` as expected.
+Check that the response is still ``Hello, world!`` using:
+
+.. code-block:: bash
+
+    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -558,10 +565,13 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
-should now return the updated ``Hi!`` greeting.
+After we wait for a moment for the app to be restarted, check the response:
 
+.. code-block:: bash
+
+    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+
+The response should now return the updated ``Hi!`` greeting.
 
 Integrate with a database
 -------------------------
@@ -717,12 +727,21 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the Go app will not
 start until the database is ready.
 
-Running ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
-should still return the ``Hi!`` greeting.
+Send a request to the endpoint:
 
-To check the local visitors, use
-``curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1``,
-which should return ``Number of visitors 1`` after the
+.. code-block:: bash
+
+    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+
+It should still return the ``Hi!`` greeting.
+
+Check the local visitors:
+
+.. code-block:: bash
+
+    curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
+
+This request should return ``Number of visitors 1`` after the
 previous request to the root endpoint.
 This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:

@@ -695,10 +695,13 @@ Now that we have the greeting app, we can disable debug mode:
 
 Use ``juju status --watch 2s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
-you can use
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-inside the Multipass VM. Either way, the Django app should respond
-with ``Hello, world!``.
+inside the Multipass VM run:
+
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+Either way, the Django app should respond with ``Hello, world!``.
 
 
 Provide a configuration
@@ -785,11 +788,15 @@ refresh``:
     :dedent: 2
 
 After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Sending a request to the root
-endpoint using
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-or visiting http://django-hello-world in a web browser should result in the
-Django app responding with ``Hello, world!`` again.
+should go back to ``active`` again. Visit http://django-hello-world in a
+web browser or send a request to the root endpoint using:
+
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+Either action should result in the Django app responding with
+``Hello, world!`` again.
 
 Now let's change the greeting:
 
@@ -799,9 +806,14 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-or visiting http://django-hello-world should now respond with ``Hi!``.
+After we wait for a moment for the app to be restarted, visit
+http://django-hello-world or use:
+
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+The web app should now respond with ``Hi!``.
 
 Tear things down
 ----------------

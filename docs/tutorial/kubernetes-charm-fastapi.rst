@@ -451,10 +451,13 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Test the deployment using
-``curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should return the
-``{"message":"Hello, world!"}`` greeting.
+Test the deployment by sending a request via the ingress:
+
+.. code-block:: bash
+
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+
+It should return the ``{"message":"Hello, world!"}`` greeting.
 
 .. note::
 
@@ -559,8 +562,11 @@ new configuration has been added:
 
     juju config fastapi-hello-world | grep -A 6 greeting:
 
-Using ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
-shows that the response is still ``{"message":"Hello, world!"}`` as expected.
+Check that the response is still ``{"message":"Hello, world!"}`` using:
+
+.. code-block:: bash
+
+    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -570,10 +576,13 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
-should now return the updated ``{"message":"Hi!"}`` greeting.
+After we wait for a moment for the app to be restarted, check the response:
 
+.. code-block:: bash
+
+    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+
+The response should now return the updated ``{"message":"Hi!"}`` greeting.
 
 Integrate with a database
 -------------------------
@@ -702,13 +711,21 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the FastAPI app will not
 start until the database is ready.
 
-Running
-``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
-should still return the ``{"message":"Hi!"}`` greeting.
+Send a request to the endpoint:
 
-To check the local visitors, use
-``curl http://fastapi-hello-world/visitors
---resolve fastapi-hello-world:80:127.0.0.1``, which should return
+.. code-block:: bash
+
+    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+
+It should still return the ``{"message":"Hi!"}`` greeting.
+
+Check the local visitors:
+
+.. code-block:: bash
+
+    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+
+This request should return
 ``{"count":1}`` after the previous request to the root endpoint. This should
 be incremented each time the root endpoint is requested. If we repeat
 this process, the output should be as follows:

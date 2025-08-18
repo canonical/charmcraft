@@ -503,7 +503,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -672,7 +672,7 @@ following command:
     :end-before: [docs:check-go-app-end]
     :dedent: 2
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash

@@ -493,7 +493,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
     ...
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -683,7 +683,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
     ...
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash

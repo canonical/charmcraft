@@ -514,7 +514,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -656,7 +656,7 @@ following code:
   .. literalinclude:: code/fastapi/visitors_app.py
       :language: python
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

@@ -662,7 +662,8 @@ the ``rockcraft.yaml`` file should look similar to the following:
         # ppc64el:
         # s390x:
 
-Now let's pack and upload the rock using similar commands as before:
+Now let's pack and upload the new version of the rock using similar commands
+as before:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -745,7 +746,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

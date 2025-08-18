@@ -90,24 +90,24 @@ Next, in ``pyproject.toml``, list them in the ``dependencies`` key.
     ]
 
 Alternatively, you could list the library dependencies in a
-`dependency group <dependency groups_>`_ called ``charmlibs``.
+`dependency group <dependency groups_>`_ called ``charmlibs-pydeps``.
 
 .. code-block:: toml
     :caption: pyproject.toml
 
     [dependency-groups]
     # PYDEPS from libraries that the charm uses.
-    charmlibs = [
+    charmlibs-pydeps = [
         "cosl",
         "pydantic",
         "cryptography",
     ]
 
-To add a dependency to the ``charmlibs`` dependency group using ``uv add``, run:
+To add a dependency to the ``charmlibs-pydeps`` dependency group using ``uv add``, run:
 
 .. code-block:: bash
 
-    uv add --group charmlibs <dependency>
+    uv add --group charmlibs-pydeps <dependency>
 
 Library dependencies are runtime dependencies, and dependency groups are generally
 intended for development dependencies. However, if the charm uses a lot of library
@@ -148,7 +148,7 @@ environment, such as one for charm libraries, the
         build-snaps:
           - astral-uv
         uv-groups:
-          - charmlibs
+          - charmlibs-pydeps
 
 Likewise, optional dependencies under the ``pyproject.toml`` key
 ``project.optional-dependencies`` can be added with the ``uv-extras`` key.
@@ -172,7 +172,7 @@ from the main directory, they can be included again using the
         build-snaps:
           - astral-uv
         uv-groups:
-          - charmlibs
+          - charmlibs-pydeps
       version-file:
         plugin: dump
         source: .

@@ -738,7 +738,7 @@ start until the database is ready.
 
 Once the Express app is ``active``, send a request to the endpoint:
 
-.. code-block:: bash 
+.. code-block:: bash
 
     curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
@@ -822,8 +822,8 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft | expressjs-framework <expressjs-framework-reference>`,
+      - :external+rockcraft:ref:`Rockcraft <expressjs-framework-reference>`,
         :ref:`Express framework extension <expressjs-framework-extension>`,
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support in Charmcraft and Rockcraft <explanation>`
+      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`

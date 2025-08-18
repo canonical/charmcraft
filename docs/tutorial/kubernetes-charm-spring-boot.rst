@@ -820,8 +820,8 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft | spring-boot-framework <spring-boot-framework-reference>`,
+      - :external+rockcraft:ref:`Rockcraft <spring-boot-framework-reference>`,
         :ref:`Spring Boot framework extension <spring-boot-framework-extension>`,
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support in Charmcraft and Rockcraft <explanation>`
+      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`

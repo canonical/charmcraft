@@ -813,8 +813,8 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft | go-framework <go-framework-reference>`,
+      - :external+rockcraft:ref:`Rockcraft <go-framework-reference>`,
         :ref:`Go framework extension <go-framework-extension>`,
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support in Charmcraft and Rockcraft <explanation>`
+      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`

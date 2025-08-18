@@ -797,8 +797,8 @@ in a number of typical ways, but there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft <fastapi-framework-reference>`,
-        :ref:`FastAPI framework extension <fastapi-framework-extension>`,
+      - :external+rockcraft:ref:`Rockcraft profile <fastapi-framework-reference>`,
+        :ref:`Charmcraft profile <fastapi-framework-extension>`,
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
       - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`

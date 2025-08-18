@@ -544,9 +544,11 @@ We can now pack and deploy the new version of the Spring Boot app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that the new configuration
-has been added using
-``juju config spring-boot-hello-world | grep -A 6 greeting:``,
-which should show the configuration option.
+has been added:
+
+.. code-block:: bash
+
+    juju config spring-boot-hello-world | grep -A 6 greeting:
 
 Using
 ``curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1``

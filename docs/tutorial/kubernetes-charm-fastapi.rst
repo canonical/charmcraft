@@ -553,9 +553,11 @@ We can now pack and deploy the new version of the FastAPI app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that the
-new configuration has been added using
-``juju config fastapi-hello-world | grep -A 6 greeting:`` which should show
-the configuration option.
+new configuration has been added:
+
+.. code-block:: bash
+
+    juju config fastapi-hello-world | grep -A 6 greeting:
 
 Using ``curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1``
 shows that the response is still ``{"message":"Hello, world!"}`` as expected.

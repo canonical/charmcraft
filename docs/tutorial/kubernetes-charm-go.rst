@@ -541,9 +541,11 @@ We can now pack and deploy the new version of the Go app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that the new configuration
-has been added using
-``juju config go-hello-world | grep -A 6 greeting:``,
-which should show the configuration option.
+has been added:
+
+.. code-block:: bash
+
+    juju config go-hello-world | grep -A 6 greeting:
 
 Using ``curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1``
 shows that the response is still ``Hello, world!`` as expected.

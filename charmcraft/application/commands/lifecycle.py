@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import craft_cli
 from craft_application.commands import lifecycle
+from craft_application.util import is_managed_mode
 from craft_cli import CraftError
 from typing_extensions import override
 
@@ -163,4 +164,19 @@ class PackCommand(lifecycle.PackCommand):
         if project.charm_libs:
             self._update_charm_libs()
 
-        return super()._run(parsed_args, step_name, **kwargs)
+        result = super()._run(parsed_args, step_name, **kwargs)
+
+        # Move artifacts in the outer instance.
+        if not is_managed_mode():
+            state_service = self._services.get("state")
+            artifacts = cast(dict[str, pathlib.Path], state_service.get("artifact"))
+            project_dir = parsed_args.project_dir or pathlib.Path.cwd()
+            output_dir = parsed_args.output or pathlib.Path.cwd()
+
+            for artifact in artifacts.values():
+                old_path = project_dir / artifact
+                new_path = output_dir / artifact
+                if old_path != new_path:
+                    old_path.rename(new_path)
+
+        return result

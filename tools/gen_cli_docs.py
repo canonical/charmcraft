@@ -97,7 +97,7 @@ def main(docs_dir):
         for cmd_class in group.commands:
             if cmd_class.hidden:
                 continue
-            cmd = cmd_class({"app": {}, "services": {}})
+            cmd = cmd_class({"app": app.app, "services": app.services})
             p = _CustomArgumentParser(help_builder)
             cmd.fill_parser(p)
 

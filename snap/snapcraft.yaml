@@ -226,6 +226,13 @@ parts:
     organize:
       bin/spread: libexec/charmcraft/craft.spread
 
+  addons:
+    source: ./snap/local
+    plugin: dump
+    organize:
+      # Put sitecustomize in site-packages
+      sitecustomize.py: lib/python3.12/site-packages/sitecustomize.py
+
 hooks:
   configure:
     environment:

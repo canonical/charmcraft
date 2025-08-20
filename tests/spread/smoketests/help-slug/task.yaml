@@ -6,8 +6,9 @@ systems:
 prepare: |
   charmcraft init --project-dir=charm
 
-  # change requirements.txt to be invalid
-  sed -e 's/ops /oppss-invalid /' -i charm/requirements.txt
+  # change requirements to be invalid
+  sed -e 's/"ops/"this-is-not-a-valid-replacement-for-ops/' -i charm/pyproject.toml
+  rm charm/uv.lock
 
 restore: |
   pushd charm
@@ -21,4 +22,4 @@ execute: |
 
   cd charm
 
-  charmcraft build |& MATCH 'For more information, check out: https://documentation.ubuntu.com/charmcraft/latest/reference/plugins.html'
+  charmcraft build |& MATCH 'For more information, check out: https://documentation.ubuntu.com/charmcraft/latest/reference/plugins'

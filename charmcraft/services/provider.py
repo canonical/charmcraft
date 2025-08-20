@@ -23,15 +23,16 @@ import fcntl
 import io
 import os
 import pathlib
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import cast
 
 import craft_application
+import craft_platforms
 import craft_providers
 from craft_application import services
 from craft_cli import emit
-from craft_platforms import BuildInfo
 from craft_providers import bases
+from typing_extensions import override
 
 from charmcraft import env
 
@@ -98,13 +99,18 @@ class ProviderService(services.ProviderService):
             **kwargs,  # type: ignore[arg-type]
         )
 
+    @override
     @contextlib.contextmanager
     def instance(
         self,
-        build_info: BuildInfo,
+        build_info: craft_platforms.BuildInfo,
         *,
         work_dir: pathlib.Path,
         allow_unstable: bool = True,
+        clean_existing: bool = False,
+        use_base_instance: bool = True,
+        project_name: str | None = None,
+        prepare_instance: Callable[[craft_providers.Executor], None] | None = None,
         **kwargs: bool | str | None,
     ) -> Generator[craft_providers.Executor, None, None]:
         """Instance override for Charmcraft."""
@@ -112,6 +118,9 @@ class ProviderService(services.ProviderService):
             build_info,
             work_dir=work_dir,
             allow_unstable=allow_unstable,
+            clean_existing=clean_existing,
+            prepare_instance=prepare_instance,
+            project_name=project_name,
             **kwargs,  # type: ignore[arg-type]
         ) as instance:
             try:

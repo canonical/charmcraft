@@ -808,7 +808,8 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I...?"
       - :ref:`How to manage a 12-factor app charm <manage-12-factor-app-charms>`
     * - "How do I debug?"
-      - :ref:`Troubleshoot a 12-factor app charm <troubleshoot-12-factor-charms>`,
+      - :ref:`Troubleshoot a 12-factor app charm <use-12-factor-charms-troubleshoot>`
+
         :external+juju:ref:`Juju | Debug a charm <debug-a-charm>`
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
@@ -822,4 +823,4 @@ in a number of typical ways. But there is a lot more to explore:
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
       - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
-         and Rockcraft <explanation>`
+        and Rockcraft <explanation>`

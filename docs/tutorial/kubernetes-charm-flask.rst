@@ -159,6 +159,13 @@ From the ``~/flask-hello-world`` directory, initialize the rock:
 The ``rockcraft.yaml`` file will automatically be created and set the name
 based on your working directory.
 
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
 Check out the contents of ``rockcraft.yaml``:
 
 .. code-block:: bash
@@ -191,14 +198,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``flask-hello-world``.
 
-The ``platforms`` key must match the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
-
+The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
@@ -397,10 +397,13 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Test the deployment using
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should return the
-``Hello, world!`` greeting.
+Test the deployment by sending a request via the ingress:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
@@ -448,7 +451,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -483,12 +486,17 @@ We can now pack and deploy the new version of the Flask app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that
-the new configuration has been added using
-``juju config flask-hello-world | grep -A 6 greeting:`` which should show
-the configuration option.
+the new configuration has been added:
 
-Using ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-shows that the response is still ``Hello, world!`` as expected.
+.. code-block:: bash
+
+    juju config flask-hello-world | grep -A 6 greeting:
+
+Check that the response is still ``Hello, world!`` using:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -498,10 +506,13 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-should now return the updated ``Hi!`` greeting.
+After we wait for a moment for the app to be restarted, check the response:
 
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+The response should now return the updated ``Hi!`` greeting.
 
 Integrate with a database
 -------------------------
@@ -583,7 +594,7 @@ following code:
   .. literalinclude:: code/flask/visitors_app.py
       :language: python
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -623,12 +634,21 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the Flask app will not
 start until the database is ready.
 
-Running ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-should still return the ``Hi!`` greeting.
+Send a request to the endpoint:
 
-To check the total visitors, use
-``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
-which should return ``1`` after the previous request to the root endpoint,
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+It should still return the ``Hi!`` greeting.
+
+Check the total visitors:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+
+This request should return ``1`` after the previous request to the root endpoint.
 This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
@@ -692,16 +712,21 @@ in a number of typical ways. But there is a lot more to explore:
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - :ref:`How-to guides <how-to-guides>`,
-        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+      - :ref:`How to manage a 12-factor app charm <manage-12-factor-app-charms>`
     * - "How do I debug?"
-      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+      - :ref:`Troubleshoot a 12-factor app charm <use-12-factor-charms-troubleshoot>`
+
+        :external+juju:ref:`Juju | Debug a charm <debug-a-charm>`
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :ref:`reference`,
-        :external+ops:ref:`Ops | Reference <reference>`,
+      - :external+rockcraft:ref:`flask-framework extension in Rockcraft
+        <flask-framework-reference>`
+
+        :ref:`flask-framework extension in Charmcraft
+        <flask-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+ops:ref:`Ops | Explanation <explanation>`,
-        :external+juju:ref:`Juju | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+        and Rockcraft <explanation>`

@@ -150,6 +150,13 @@ From the ``~/expressjs-hello-world`` directory, initialize the rock:
 The ``rockcraft.yaml`` file will automatically be created and set the name
 based on your working directory.
 
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
+
 Check out the contents of ``rockcraft.yaml``:
 
 .. code-block:: bash
@@ -185,14 +192,7 @@ The top of the file should look similar to the following snippet:
 
 Verfiy that the ``name`` is ``expressjs-hello-world``.
 
-Ensure that ``platforms`` includes the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
-
+Ensure that ``platforms`` includes the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Let's pack the rock:
@@ -427,10 +427,13 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Use
-``curl -I http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should show the
-``HTTP/1.1 200 OK`` status message.
+Send a request via the ingress:
+
+.. code-block:: bash
+
+    curl -I http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+
+It should show the ``HTTP/1.1 200 OK`` status message.
 
 .. note::
 
@@ -493,7 +496,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
     ...
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -533,13 +536,17 @@ We can now pack and deploy the new version of the Express app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that the new configuration
-has been added using
-``juju config expressjs-hello-world | grep -A 6 greeting:``,
-which should show the configuration option.
+has been added:
 
-Using ``curl http://expressjs-hello-world  --resolve
-expressjs-hello-world:80:127.0.0.1``
-shows that the response is ``Hello, world!`` as expected.
+.. code-block:: bash
+
+    juju config expressjs-hello-world | grep -A 6 greeting:
+
+Check that the response is still ``Hello, world!`` using:
+
+.. code-block:: bash
+
+    curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -549,10 +556,13 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1``
-should now return the updated ``Hi!`` greeting.
+After we wait for a moment for the app to be restarted, check the response:
 
+.. code-block:: bash
+
+    curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+
+The response should now return the updated ``Hi!`` greeting.
 
 Integrate with a database
 -------------------------
@@ -683,7 +693,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
     ...
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -726,22 +736,30 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the Express app will not
 start until the database is ready.
 
-Once the Express app is ``active``, running ``curl http://expressjs-hello-world
---resolve expressjs-hello-world:80:127.0.0.1``
-should still return the ``Hi!`` greeting.
+Once the Express app is ``active``, send a request to the endpoint:
 
-To check the local visitors, use
-``curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1``,
-which should return ``Number of visitors 1`` after the
+.. code-block:: bash
+
+    curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+
+It should still return the ``Hi!`` greeting.
+
+Check the local visitors:
+
+.. code-block:: bash
+
+    curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
+
+This request should return ``Number of visitors 1`` after the
 previous request to the root endpoint.
 This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://expressjs-hello-world  --resolve expressjs-hello-world:80:127.0.0.1
+    :input: curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://expressjs-hello-world/visitors  --resolve expressjs-hello-world:80:127.0.0.1
+    :input: curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
     Number of visitors 2
 
 Tear things down
@@ -797,16 +815,21 @@ in a number of typical ways. But there is a lot more to explore:
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - :ref:`How-to guides <how-to-guides>`,
-        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+      - :ref:`How to manage a 12-factor app charm <manage-12-factor-app-charms>`
     * - "How do I debug?"
-      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+      - :ref:`Troubleshoot a 12-factor app charm <use-12-factor-charms-troubleshoot>`
+
+        :external+juju:ref:`Juju | Debug a charm <debug-a-charm>`
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :ref:`reference`,
-        :external+ops:ref:`Ops | Reference <reference>`,
+      - :external+rockcraft:ref:`express-framework extension in Rockcraft
+        <expressjs-framework-reference>`
+
+        :ref:`express-framework extension in Charmcraft
+        <expressjs-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+ops:ref:`Ops | Explanation <explanation>`,
-        :external+juju:ref:`Juju | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+        and Rockcraft <explanation>`

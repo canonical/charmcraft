@@ -38,6 +38,7 @@ popular libraries for programmatic database migration are:
 - `prisma <https://www.npmjs.com/package/prisma/>`__ and `knex
   <https://www.npmjs.com/package/knex/>`__ for Express.
 
+.. _use-12-factor-charms-troubleshoot:
 
 Troubleshoot the charm
 ----------------------

@@ -446,7 +446,7 @@ Send a request via the ingress:
 
 .. code-block:: bash
 
-    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
 The request should return the ``Hello, world!`` greeting.
 
@@ -555,7 +555,7 @@ Check that the response is still ``Hello, world!`` using:
 
 .. code-block:: bash
 
-    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -569,7 +569,7 @@ After we wait for a moment for the app to be restarted, check the response:
 
 .. code-block:: bash
 
-    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
 The response should now return the updated ``Hi!`` greeting.
 
@@ -731,7 +731,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
 It should still return the ``Hi!`` greeting.
 
@@ -739,7 +739,7 @@ Check the local visitors:
 
 .. code-block:: bash
 
-    curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
+    curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
 
 This request should return ``Number of visitors 1`` after the
 previous request to the root endpoint.
@@ -747,10 +747,10 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://go-hello-world  --resolve go-hello-world:80:127.0.0.1
+    :input: curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://go-hello-world/visitors  --resolve go-hello-world:80:127.0.0.1
+    :input: curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
     Number of visitors 2
 
 Tear things down
@@ -813,8 +813,13 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft profile <go-framework-reference>`,
-        :ref:`Charmcraft profile <go-framework-extension>`,
+      - :external+rockcraft:ref:`go-framework extension in Rockcraft
+        <go-framework-reference>`
+
+        :ref:`go-framework extension in Charmcraft
+        <go-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+         and Rockcraft <explanation>`

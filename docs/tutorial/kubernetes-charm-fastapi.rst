@@ -566,7 +566,7 @@ Check that the response is still ``{"message":"Hello, world!"}`` using:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -580,7 +580,7 @@ After we wait for a moment for the app to be restarted, check the response:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
 The response should now return the updated ``{"message":"Hi!"}`` greeting.
 
@@ -715,7 +715,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
 It should still return the ``{"message":"Hi!"}`` greeting.
 
@@ -731,10 +731,10 @@ be incremented each time the root endpoint is requested. If we repeat
 this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://fastapi-hello-world  --resolve fastapi-hello-world:80:127.0.0.1
+    :input: curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
     {"message":"Hi!"}
-    :input: curl http://fastapi-hello-world/visitors  --resolve fastapi-hello-world:80:127.0.0.1
+    :input: curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
     {"count":2}
 
 Tear things down
@@ -797,8 +797,13 @@ in a number of typical ways, but there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft profile <fastapi-framework-reference>`,
-        :ref:`Charmcraft profile <fastapi-framework-extension>`,
+      - :external+rockcraft:ref:`fastapi-framework extension in Rockcraft
+        <fastapi-framework-reference>`
+
+        :ref:`fastapi-framework extension in Charmcraft
+        <fastapi-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+         and Rockcraft <explanation>`

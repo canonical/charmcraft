@@ -719,8 +719,13 @@ in a number of typical ways. But there is a lot more to explore:
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :external+rockcraft:ref:`Rockcraft profile <flask-framework-reference>`,
-        :ref:`Charmcraft profile <flask-framework-extension>`,
+      - :external+rockcraft:ref:`flask-framework extension in Rockcraft
+        <flask-framework-reference>`
+
+        :ref:`flask-framework extension in Charmcraft
+        <flask-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+12-factor:ref:`12-Factor app support | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+         and Rockcraft <explanation>`

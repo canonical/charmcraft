@@ -19,9 +19,9 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
     juju.wait(jubilant.all_active)
 
 
-# If you implement {{ workload_module }}.get_version,
-# remove the @pytest.mark.skip line to enable the test.
-# Alternatively, remove the test if you don't need it.
+# If you implement {{ workload_module }}.get_version in the charm source,
+# remove the @pytest.mark.skip line to enable this test.
+# Alternatively, remove this test if you don't need it.
 @pytest.mark.skip(reason="{{ workload_module }}.get_version is not implemented")
 def test_workload_version_is_set(juju: jubilant.Juju):
     """Check that the correct version of the workload is running."""

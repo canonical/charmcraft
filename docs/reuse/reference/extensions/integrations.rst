@@ -143,7 +143,7 @@ the following charms:
               optional: True
               limit: 1
 
-      The integration will create two configuration options,
+      The relation will create two configuration options,
       ``{endpoint_name}-redirect-path`` and ``{endoint_name}-scopes``.
       ``{endpoint_name}-scopes`` is a space separated list of scopes, and the scope
       ``openid`` is manadatory.

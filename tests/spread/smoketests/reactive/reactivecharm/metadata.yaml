@@ -1,4 +1,4 @@
-name: my-charm
+name: reactive-test
 summary: Testing reactive charms
 maintainer: root <root@root.root>
 description: |

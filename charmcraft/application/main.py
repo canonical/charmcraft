@@ -18,7 +18,6 @@
 from __future__ import annotations
 
 import datetime
-import pathlib
 from typing import Any
 
 import craft_application
@@ -96,14 +95,14 @@ class Charmcraft(craft_application.Application):
             craft_cli.emit.progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
 
     def _configure_services(self, provider_name: str | None) -> None:
-        self.services.update_kwargs(
-            "project",
-            project_dir=self.project_dir,
-        )
         super()._configure_services(provider_name)
         self.services.update_kwargs(
             "charm_libs",
             project_dir=self.project_dir,
+        )
+        self.services.update_kwargs(
+            "provider",
+            work_dir=self.project_dir,
         )
 
     def configure(self, global_args: dict[str, Any]) -> None:
@@ -129,28 +128,22 @@ class Charmcraft(craft_application.Application):
 
     @override
     def _run_inner(self) -> int:
+        # We need to overwrite the lookup directory if the user has provided a different project
+        # path.
         if not util.is_managed_mode():
             dispatcher = self._get_dispatcher()
             dispatcher.load_command(self.app_config)
             parsed_args = dispatcher.parsed_args()
-            if project_dir := getattr(parsed_args, "project_dir", None):
-                self.project_dir = project_dir.expanduser().resolve()
-                self.services.update_kwargs(
-                    "project",
-                    project_dir=self.project_dir,
-                )
-            else:
-                self.project_dir = pathlib.Path().expanduser().resolve()
+            self.project_dir = (
+                getattr(parsed_args, "project_dir", self.project_dir)
+                .expanduser()
+                .resolve()
+            )
+            self.services.update_kwargs(
+                "project",
+                project_dir=self.project_dir,
+            )
         return super()._run_inner()
-
-    @override
-    def _pre_run(self, dispatcher: craft_cli.Dispatcher) -> None:
-        """Override to get project_dir early."""
-        if not self.is_managed() and not getattr(
-            dispatcher.parsed_args(), "project_dir", None
-        ):
-            self.project_dir = pathlib.Path().expanduser().resolve()
-        super()._pre_run(dispatcher)
 
 
 def create_app() -> Charmcraft:

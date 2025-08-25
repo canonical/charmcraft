@@ -36,6 +36,7 @@ def test_load_charm(in_project_path, charm_dir):
     shutil.copytree(charm_dir, in_project_path, dirs_exist_ok=True)
 
     app = create_app()
+    app._configure_early_services()
     app._configure_services(None)
     app.configure({})
 

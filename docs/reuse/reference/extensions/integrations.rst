@@ -130,6 +130,25 @@ the following charms:
               optional: True
               limit: 1
 
+  * - `Hydra <https://charmhub.io/hydra>`__ charm
+    - The ``oauth`` interface is a conduit for the OpenID Connect authentication
+      protocol. Each configuration option for this endpoint is prefixed with the
+      endpoint name.
+
+      .. code-block:: yaml
+
+          requires:
+            oauth-endpoint-name:
+              interface: oauth
+              optional: True
+              limit: 1
+
+      The relation will create two configuration options,
+      ``{endpoint_name}-redirect-path`` and ``{endoint_name}-scopes``.
+      ``{endpoint_name}-scopes`` is a space separated list of scopes, and the scope
+      ``openid`` is manadatory.
+
+
 
 .. note::
 

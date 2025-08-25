@@ -131,9 +131,9 @@ the following charms:
               limit: 1
 
   * - `Hydra <https://charmhub.io/hydra>`__ charm
-    - The ``oauth`` interface is used to provide the OpenID Connect authentication
-      protocol. The endpoint name will be used as the prefix to the configuration
-      options related to this endpoint.
+    - The ``oauth`` interface is a conduit for the OpenID Connect authentication
+      protocol. Each configuration option for this endpoint is prefixed with the
+      endpoint name.
 
       .. code-block:: yaml
 

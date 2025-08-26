@@ -126,11 +126,12 @@ Ingress relation.
         - ``FGA_HTTP_API_URL``
   * - OpenID Connect
     -
-        - |framework_prefix|\ ``{endpoint_name}_CLIENT_ID``
-        - |framework_prefix|\ ``{endpoint_name}_CLIENT_SECRET``
-        - |framework_prefix|\ ``{endpoint_name}_ACCESS_TOKEN_URL``
-        - |framework_prefix|\ ``{endpoint_name}_AUTHORIZE_URL``
-        - |framework_prefix|\ ``{endpoint_name}_USERINFO_URL``
-        - |framework_prefix|\ ``{endpoint_name}_JWKS_URL``
-        - |framework_prefix|\ ``{endpoint_name}_API_BASE_URL``
-        - |framework_prefix|\ ``{endpoint_name}_CLIENT_KWARGS``
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_SECRET`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_ACCESS_TOKEN_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_AUTHORIZE_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_USERINFO_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_JWKS_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_API_BASE_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_KWARGS`

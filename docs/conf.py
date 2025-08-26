@@ -72,6 +72,7 @@ extensions = [
     "canonical_sphinx",
     "pydantic_kitbash",
     "sphinx_sitemap",
+    "sphinx_substitution_extensions",
 ]
 
 # Copy extra files to the _static dir during build

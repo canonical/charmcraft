@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest):
+    """Create a temporary Juju model for running tests."""
     with jubilant.temp_model() as juju:
         yield juju
 
@@ -26,6 +27,7 @@ def juju(request: pytest.FixtureRequest):
 
 @pytest.fixture(scope="session")
 def charm():
+    """Pack the charm under test."""
     subprocess.check_call(["charmcraft", "pack"])
     # Modify below if you're building for multiple bases or architectures.
     return next(pathlib.Path(".").glob("*.charm"))

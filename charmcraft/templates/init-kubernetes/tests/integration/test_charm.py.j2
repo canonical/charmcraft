@@ -17,7 +17,7 @@ METADATA = yaml.safe_load(pathlib.Path("./charmcraft.yaml").read_text())
 
 
 def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
-    """Deploy the charm-under-test and wait for active status."""
+    """Deploy the charm under test."""
     resources = {
         "some-container-image": METADATA["resources"]["some-container-image"]["upstream-source"]
     }

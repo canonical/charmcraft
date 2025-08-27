@@ -14,7 +14,7 @@ this file with the following contents:
 - A placeholder test that checks the version of your charm's workload
 
 The tests use the Jubilant library.
-You can write more tests as you implement your charm.
+You should write more tests as you implement your charm.
 
     See more:
     :external+ops:ref:`Ops | How to write integration tests for a charm

@@ -124,4 +124,14 @@ Ingress relation.
         - ``FGA_TOKEN``
         - ``FGA_GRPC_API_URL``
         - ``FGA_HTTP_API_URL``
-
+  * - OpenID Connect
+    -
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_SECRET`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_ACCESS_TOKEN_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_AUTHORIZE_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_USERINFO_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_JWKS_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_API_BASE_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_KWARGS`

@@ -49,6 +49,7 @@ BASIC_INIT_FILES = frozenset(
         "src/charm.py",
         "tests",
         "tests/integration",
+        "tests/integration/conftest.py",
         "tests/integration/test_charm.py",
         "tests/unit",
         "tests/unit/test_charm.py",

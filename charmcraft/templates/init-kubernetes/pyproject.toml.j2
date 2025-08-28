@@ -1,3 +1,6 @@
+# Copyright {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+
 [project]
 name = "{{ name }}"
 version = "0.0.1"
@@ -25,9 +28,9 @@ unit = [
 ]
 # Dependencies of integration tests
 integration = [
-    "juju",
+    "jubilant",
     "pytest",
-    "pytest-operator",
+    "PyYAML",
 ]
 
 # Testing tools configuration
@@ -70,7 +73,4 @@ max-complexity = 10
 skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
 
 [tool.pyright]
-include = [
-    "src/**/*.py",
-    "tests/**/*.py",
-]
+include = ["src", "tests"]

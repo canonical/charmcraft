@@ -4,8 +4,8 @@
 ``tests/integration/conftest.py`` file
 ======================================
 
-The ``tests/integration/conftest.py`` file contains reusable fixtures for integration
-testing.
+The ``tests/integration/conftest.py`` file contains reusable test fixtures for
+integration testing.
 
 When a charm is initialized with the Kubernetes or machine profile, Charmcraft creates
 this file with the following contents:

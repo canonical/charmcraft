@@ -65,6 +65,24 @@ CharmcraftSummaryStr = Annotated[
 ]
 
 
+def _validate_field_name(name: str) -> str:
+    """Check that a Juju field name matches Juju's requirements for said field name.
+
+    See the code at:
+    https://github.com/juju/juju/blob/60c6895e8ffb9b9952d7971cbdd6df810a572410/mongo/utils/validfield.go#L13-L26
+    """
+    if not name:
+        raise ValueError("A field name cannot be empty.")
+    if name.startswith("$"):
+        raise ValueError("A field name cannot start with '$'.")
+    if "." in name:
+        raise ValueError("A field name annot contain '.'.")
+    return name
+
+
+FieldName = Annotated[str, _validate_field_name]
+
+
 def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
     """Get the "platform" section of a charm file name from an iterable of bases."""
     base_strings = []
@@ -539,7 +557,7 @@ class CharmProject(CharmcraftProject):
         default=None,
         description="A key-only mapping representing extra bindings needed.",
     )
-    peers: dict[str, Any] | None = pydantic.Field(
+    peers: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\
@@ -568,7 +586,7 @@ class CharmProject(CharmcraftProject):
             }
         ],
     )
-    provides: dict[str, Any] | None = pydantic.Field(
+    provides: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\
@@ -588,7 +606,7 @@ class CharmProject(CharmcraftProject):
         ),
         examples=[{"self": {"interface": "identity"}}],
     )
-    requires: dict[str, Any] | None = pydantic.Field(
+    requires: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\

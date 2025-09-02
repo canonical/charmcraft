@@ -653,12 +653,6 @@ class ListRevisionsCommand(CharmcraftCommand):
         """
         Show version, date and status for each revision in Charmhub.
 
-        For example:
-
-           $ charmcraft revisions mycharm
-           Revision    Version    Created at              Status
-           1           1          2020-11-15T11:13:15Z    released
-
         Listing revisions will take you through login if needed.
     """
     )

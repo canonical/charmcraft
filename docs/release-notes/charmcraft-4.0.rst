@@ -74,7 +74,11 @@ for this purpose.
 
 The ``simple`` profile of ``charmcraft init`` has been removed from Charmcraft 4.
 The default profile is now ``kubernetes``, which is a minimal profile with scaffolding
-for a Kubernetes charm.
+for a Kubernetes charm. We have transferred the ``simple`` profile to an
+`example charm <https://github.com/canonical/operator/tree/main/examples/httpbin-demo>`_
+in the Ops repository.
+
+
 Known issues
 ------------
 

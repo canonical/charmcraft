@@ -1187,8 +1187,8 @@ def test_release_multiple_channels(client_mock, charmhub_config):
 def test_release_with_resources(client_mock, charmhub_config):
     """Releasing with resources attached."""
     store = Store(charmhub_config)
-    r1 = ResourceOption(name="foo", revision=3)
-    r2 = ResourceOption(name="bar", revision=17)
+    r1 = ResourceOption("foo:3")
+    r2 = ResourceOption("bar:17")
     store.release("testname", 123, ["channel1", "channel2"], [r1, r2])
 
     expected_body = [

@@ -61,7 +61,7 @@ dev = [
 docs = [
     "canonical-sphinx[full]~=0.2",
     "pyspelling",
-    "sphinx-autobuild~=2024.2",
+    "sphinx-autobuild~=2025.8",
     "sphinx-sitemap>=2.6.0",
     "sphinx-substitution-extensions",
     "sphinx-toolbox~=4.0",

@@ -76,7 +76,7 @@ def _validate_field_name(name: str) -> str:
     if name.startswith("$"):
         raise ValueError("A field name cannot start with '$'.")
     if "." in name:
-        raise ValueError("A field name annot contain '.'.")
+        raise ValueError("A field name cannot contain '.'.")
     return name
 
 

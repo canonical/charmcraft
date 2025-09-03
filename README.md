@@ -54,12 +54,12 @@ sudo snap install charmcraft --classic
 ```
 
 For information on installing Charmcraft on other platforms, refer to our [installation
-guide](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/set-up-charmcraft).
+guide](https://documentation.ubuntu.com/charmcraft/stable/howto/set-up-charmcraft).
 
 ## Documentation
 
 The [Charmcraft
-documentation](https://canonical-charmcraft.readthedocs-hosted.com/en/stable/) provides
+documentation](https://documentation.ubuntu.com/charmcraft/stable/) provides
 guidance and learning materials for every step of the charming process. Whether you're
 new to charming or a seasoned expert, this is the best place to deepen your knowledge.
 
@@ -82,7 +82,7 @@ Conduct](https://ubuntu.com/community/ethos/code-of-conduct).
 Charmcraft is open source and part of the Canonical family. We would love your help.
 
 If you're interested, start with the [contribution guide](CONTRIBUTING.md).
-https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push
+
 We welcome any suggestions and help with the docs. The [Canonical Open Documentation
 Academy](https://github.com/canonical/open-documentation-academy) is the hub for doc
 development, including Charmcraft docs. No prior coding experience is required.
@@ -96,7 +96,7 @@ Charmcraft is released under the [Apache-2.0 license](LICENSE)
 [charmcraft-badge]: https://snapcraft.io/charmcraft/badge.svg
 [charmcraft-site]: https://snapcraft.io/charmcraft
 [rtd-badge]: https://readthedocs.com/projects/canonical-charmcraft/badge/?version=latest
-[rtd-latest]: https://canonical-charmcraft.readthedocs-hosted.com/en/latest/?badge=latest
+[rtd-latest]: https://documentation.ubuntu.com/charmcraft/latest/?badge=latest
 [tests-badge]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push
 [tests-results]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml
 [spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push

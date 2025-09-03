@@ -22,10 +22,6 @@ import pytest
 
 from charmcraft import const, errors, preprocess
 
-BASIC_BUNDLE = {
-    "type": "bundle",
-    "parts": {"bundle": {"plugin": "bundle", "source": "."}},
-}
 BASIC_CHARM = {"type": "charm", "parts": {"charm": {"plugin": "charm", "source": "."}}}
 BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.04"}]}
 
@@ -34,8 +30,6 @@ BASIC_BASES_CHARM = {**BASIC_CHARM, "bases": [{"name": "ubuntu", "channel": "22.
     ("yaml_data", "expected"),
     [
         pytest.param({}, {}, id="no-type"),
-        pytest.param({"type": "bundle"}, BASIC_BUNDLE, id="empty-bundle"),
-        pytest.param(BASIC_BUNDLE.copy(), BASIC_BUNDLE, id="prefilled-bundle"),
         pytest.param(
             {"type": "charm", "bases": []},
             {
@@ -129,50 +123,6 @@ def test_extra_yaml_transform_failure(fs, yaml_data, metadata_yaml, message):
         preprocess.add_metadata(pathlib.Path("/"), yaml_data)
 
     assert exc_info.value.args[0] == message
-
-
-@pytest.mark.parametrize(
-    ("yaml_data", "bundle_yaml", "expected"),
-    [
-        pytest.param({}, "", {}, id="non-bundle"),
-        pytest.param(
-            {"type": "bundle"},
-            "{}",
-            {"type": "bundle", "bundle": {}},
-            id="empty-bundle",
-        ),
-    ],
-)
-def test_add_bundle_snippet_success(fs, yaml_data, bundle_yaml, expected):
-    project_dir = pathlib.Path("project")
-    fs.create_file(project_dir / const.BUNDLE_FILENAME, contents=bundle_yaml)
-
-    preprocess.add_bundle_snippet(project_dir, yaml_data)
-
-    assert yaml_data == expected
-
-
-def test_add_bundle_snippet_no_file(fs):
-    fs.create_dir("project")
-
-    with pytest.raises(
-        errors.CraftError, match="^Missing 'bundle.yaml' file: '.*bundle.yaml'"
-    ) as exc_info:
-        preprocess.add_bundle_snippet(pathlib.Path("/project"), {"type": "bundle"})
-
-    assert exc_info.value.retcode == 66
-
-
-@pytest.mark.parametrize("contents", ["", "A string", "0", "[]"])
-def test_add_bundle_snippet_invalid_file(fs, contents):
-    fs.create_file("project/bundle.yaml", contents=contents)
-
-    with pytest.raises(
-        errors.CraftError, match="Incorrectly formatted 'bundle.yaml' file"
-    ) as exc_info:
-        preprocess.add_bundle_snippet(pathlib.Path("project"), {"type": "bundle"})
-
-    assert exc_info.value.retcode == 65
 
 
 @pytest.mark.parametrize(

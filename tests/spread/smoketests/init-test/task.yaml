@@ -1,0 +1,28 @@
+summary: Check a full init and test run.
+systems:
+  - ubuntu-24.04-64 # Only run this on the default base for our templates.
+
+manual: true # This is very flaky and mostly breaks in Google runners.
+
+environment:
+  CI: "1"
+  PROFILE/machine: machine
+  # This does not currently work as we don't have a valid rock for it.
+  # PROFILE/kubernetes: kubernetes
+
+execute: |
+  mkdir charm-$PROFILE
+  cd charm-$PROFILE
+
+  charmcraft init --profile=$PROFILE
+  charmcraft init --profile=test-$PROFILE --force
+
+  # Yo dawg, I heard you like spread tests. So I put a spread test in your spread
+  # test so you can run spread tests while you run spread tests.
+  charmcraft test
+
+restore: |
+  pushd charm-$PROFILE
+  charmcraft clean
+  popd
+  rm -rf charm-$PROFILE

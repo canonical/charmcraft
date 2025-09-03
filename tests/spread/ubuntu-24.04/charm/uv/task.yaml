@@ -1,0 +1,9 @@
+summary: pack a charm with uv
+
+restore: |
+  rm -rf ./*.charm
+
+execute: |
+  charmcraft pack 2>&1
+  CHARM_OUTPUT=$(find . -type f -name "*.charm")
+  charmcraft analyse $CHARM_OUTPUT

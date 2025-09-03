@@ -50,12 +50,29 @@ help: ## Show this help.
 	}' | uniq
 
 .PHONY: setup
-setup: install-uv setup-precommit install-build-deps ## Set up a development environment
+setup: install-uv _setup-docs _setup-lint _setup-tests setup-precommit install-build-deps  ## Set up a development environment
 	uv sync $(UV_TEST_GROUPS) $(UV_LINT_GROUPS) $(UV_DOCS_GROUPS)
 
+.PHONY: setup-docs
+setup-docs: _setup-docs  ##- Set up a documentation-only environment
+	uv sync --no-dev $(UV_DOCS_GROUPS)
+
+.PHONY: _setup-docs
+_setup-docs: install-uv
+
+.PHONY: setup-lint
+setup-lint: _setup-lint  ##- Set up a linting-only environment
+	uv sync $(UV_LINT_GROUPS)
+
+.PHONY: _setup-lint
+_setup-lint: install-uv install-shellcheck install-pyright install-lint-build-deps
+
 .PHONY: setup-tests
-setup-tests: install-uv install-build-deps ##- Set up a testing environment without linters
+setup-tests: _setup-tests ##- Set up a testing environment without linters
 	uv sync $(UV_TEST_GROUPS)
+
+.PHONY: _setup-tests
+_setup-tests: install-uv install-build-deps
 
 .PHONY: setup-tics
 setup-tics: install-uv install-build-deps ##- Set up a testing environment for Tiobe TICS
@@ -64,14 +81,6 @@ setup-tics: install-uv install-build-deps ##- Set up a testing environment for T
 ifneq ($(CI),)
 	echo $(PWD)/.venv/bin >> $(GITHUB_PATH)
 endif
-
-.PHONY: setup-lint
-setup-lint: install-uv install-shellcheck install-pyright install-lint-build-deps  ##- Set up a linting-only environment
-	uv sync $(UV_LINT_GROUPS)
-
-.PHONY: setup-docs
-setup-docs: install-uv  ##- Set up a documentation-only environment
-	uv sync --no-dev $(UV_DOCS_GROUPS)
 
 .PHONY: setup-precommit
 setup-precommit: install-uv  ##- Set up pre-commit hooks in this repository.
@@ -221,11 +230,11 @@ test-find-slow:  ##- Identify slow tests. Set cutoff time in seconds with SLOW_C
 
 .PHONY: docs
 docs:  ## Build documentation
-	uv run $(UV_DOCS_GROUPS) sphinx-build -b html -W $(DOCS) $(DOCS)/_build
+	uv run $(UV_DOCS_GROUPS) sphinx-build -b dirhtml -W $(DOCS) $(DOCS)/_build
 
 .PHONY: docs-auto
 docs-auto:  ## Build and host docs with sphinx-autobuild
-	uv run --group docs sphinx-autobuild -b html --open-browser --port=8080 --watch $(PROJECT) -W $(DOCS) $(DOCS)/_build
+	uv run --group docs sphinx-autobuild -b dirhtml --open-browser --port=8080 --watch $(PROJECT) -W $(DOCS) $(DOCS)/_build
 
 .PHONY: pack-pip
 pack-pip:  ##- Build packages for pip (sdist, wheel)

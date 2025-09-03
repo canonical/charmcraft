@@ -20,7 +20,6 @@ import pathlib
 import re
 import shlex
 import sys
-from contextlib import suppress
 from typing import Literal, cast
 
 import overrides
@@ -28,7 +27,6 @@ import pydantic
 from craft_parts import Step, callbacks, plugins
 from craft_parts.errors import OsReleaseIdError, OsReleaseVersionIdError
 from craft_parts.packages import platform
-from craft_parts.utils import os_utils
 from typing_extensions import Self
 
 from charmcraft import charm_builder, env, instrum
@@ -197,29 +195,6 @@ class CharmPlugin(plugins.Plugin):
                 "libyaml-dev",
             }
         elif platform.is_yum_based():
-            try:
-                os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (
-                    ("centos", "7"),
-                    ("rhel", "7"),
-                ):
-                    # CentOS 7 Python 3.8 from SCL repo
-                    return {
-                        "autoconf",
-                        "automake",
-                        "gcc",
-                        "gcc-c++",
-                        "git",
-                        "make",
-                        "patch",
-                        "rh-python38-python-devel",
-                        "rh-python38-python-pip",
-                        "rh-python38-python-setuptools",
-                        "rh-python38-python-wheel",
-                    }
-            except (OsReleaseIdError, OsReleaseVersionIdError):
-                pass
-
             return {
                 "autoconf",
                 "automake",
@@ -344,15 +319,6 @@ class CharmPlugin(plugins.Plugin):
                     if pkg in base_tools:
                         base_tools.remove(pkg)
 
-                os_release = os_utils.OsRelease()
-                if (os_release.id(), os_release.version_id()) in (
-                    ("centos", "7"),
-                    ("rhel", "7"),
-                ):
-                    # CentOS 7 compatibility, bootstrap base tools use binary packages
-                    for pkg in base_tools:
-                        parameters.extend(["-b", pkg])
-
                 # build base tools from source
                 for pkg in base_tools:
                     parameters.extend(["-p", pkg])
@@ -376,13 +342,4 @@ class CharmPlugin(plugins.Plugin):
 
     def _get_os_special_priority_paths(self) -> str | None:
         """Return a str of PATH for special OS."""
-        with suppress(OsReleaseIdError, OsReleaseVersionIdError):
-            os_release = os_utils.OsRelease()
-            if (os_release.id(), os_release.version_id()) in (
-                ("centos", "7"),
-                ("rhel", "7"),
-            ):
-                # CentOS 7 Python 3.8 from SCL repo
-                return "/opt/rh/rh-python38/root/usr/bin"
-
         return None

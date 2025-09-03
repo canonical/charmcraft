@@ -1,0 +1,22 @@
+summary: Pack a basic charm in various forms.
+
+environment:
+  CHARM_DIR/platforms: platforms
+  CHARM_DIR/uv: uv
+
+restore: |
+  pushd "${CHARM_DIR}"
+  CRAFT_VERBOSITY_LEVEL=quiet charmcraft clean
+  rm -f *.charm
+  popd
+
+execute: |
+  pushd "${CHARM_DIR}"
+  rm -f *.charm
+
+  charmcraft pack --destructive-mode
+
+  test -f *.charm
+  cat expected_files.txt | while read filepath; do
+    unzip -qql *.charm "${filepath}"
+  done

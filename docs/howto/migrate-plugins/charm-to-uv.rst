@@ -28,35 +28,107 @@ can be created as follows:
       my-charm:  # This can be named anything you want
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
 
-Include charm library dependencies
-----------------------------------
+List the charm's dependencies
+-----------------------------
 
-Unlike the Charm plugin, the uv plugin does not install the dependencies for
-included charmlibs. If any of the charm libraries used have ``PYDEPS``, these will
-need to be added to the charm's dependencies, potentially as their own
-`dependency group <dependency groups_>`_.
+If the project directory doesn't already contain a :ref:`pyproject-toml-file`, create
+one. Next, list the charm's dependencies in the file's ``dependencies`` key.
 
-To find these dependencies, check each loaded library file for its ``PYDEPS`` by running
-the following command at the root of the charm project:
+.. code-block:: toml
+    :caption: pyproject.toml
+    :emphasize-lines: 6-9
+
+    [project]
+    name = "my-charm"
+    version = "0.0.1"
+    requires-python = ">=3.10"
+
+    # Dependencies of the charm code.
+    dependencies = [
+        "ops>=3,<4",
+    ]
+
+You can also add dependencies to your project's ``pyproject.toml`` file by running:
+
+.. code-block:: bash
+
+    uv add <dependency>
+
+List charm library dependencies
+-------------------------------
+
+Charm libraries are distributed either as regular Python packages under the
+`charmlibs <https://documentation.ubuntu.com/charmlibs>`_ namespace, or hosted on
+Charmhub. Python packages should be listed in the charm's dependencies.
+
+Unlike the Charm plugin, the uv plugin does not install transitive dependencies for
+Charmhub-hosted libraries. If any of these charm libraries have ``PYDEPS``, these need
+to be added to the charm's dependencies.
+
+To find library dependencies, check each loaded library file for its ``PYDEPS`` by
+running the following command at the root of the charm project:
 
 .. code-block:: bash
 
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
-Next, in ``pyproject.toml``, list them in a ``charmlibs`` dependency group.
+Next, in ``pyproject.toml``, list them in the ``dependencies`` key.
+
+.. code-block:: toml
+    :caption: pyproject.toml
+    :emphasize-lines: 4-6
+
+    # Dependencies of the charm code and PYDEPS from libraries.
+    dependencies = [
+        "ops>=3,<4",
+        "cosl",
+        "pydantic",
+        "cryptography",
+    ]
+
+Alternatively, you could list the library dependencies in a
+`dependency group <dependency groups_>`_ called ``charmlibs-pydeps``.
 
 .. code-block:: toml
     :caption: pyproject.toml
 
     [dependency-groups]
-    # Dependencies brought from libraries the charm uses.
-    charmlibs = [
+    # PYDEPS from libraries that the charm uses.
+    charmlibs-pydeps = [
         "cosl",
         "pydantic",
         "cryptography",
-        "ops>=2.0.0",
     ]
+
+To add a dependency to the ``charmlibs-pydeps`` dependency group using ``uv add``, run:
+
+.. code-block:: bash
+
+    uv add --group charmlibs-pydeps <dependency>
+
+Library dependencies are runtime dependencies, and dependency groups are generally
+intended for development dependencies. However, if the charm uses a lot of library
+files, you might find a dependency group helpful for distinguishing the dependencies.
+
+This advice doesn't apply to libraries that are distributed as Python packages. You
+should list Python packages in ``dependencies``. You don't need to do anything further
+for their transitive dependencies to be properly installed.
+
+Lock the dependencies
+---------------------
+
+After defining the project's dependencies, make sure that the project directory has a
+:ref:`uv-lock-file` by running:
+
+.. code-block:: bash
+
+    uv lock
+
+Make sure you add this file to version control, so that your charm can be built after a
+checkout by running ``charmcraft pack``.
 
 Add dependency groups
 ---------------------
@@ -67,14 +139,16 @@ environment, such as one for charm libraries, the
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 5-6
+    :emphasize-lines: 7-8
 
     parts:
       my-charm:
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
         uv-groups:
-          - charmlibs
+          - charmlibs-pydeps
 
 Likewise, optional dependencies under the ``pyproject.toml`` key
 ``project.optional-dependencies`` can be added with the ``uv-extras`` key.
@@ -89,14 +163,16 @@ from the main directory, they can be included again using the
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 7-11
+    :emphasize-lines: 9-13
 
     parts:
       my-charm:
         plugin: uv
         source: .
+        build-snaps:
+          - astral-uv
         uv-groups:
-          - charmlibs
+          - charmlibs-pydeps
       version-file:
         plugin: dump
         source: .

@@ -36,7 +36,6 @@ MANAGED_MODE_ENV_VAR = "CHARMCRAFT_MANAGED_MODE"
 # endregion
 # region Project files and directories
 CHARMCRAFT_FILENAME = "charmcraft.yaml"
-BUNDLE_FILENAME = "bundle.yaml"
 MANIFEST_FILENAME = "manifest.yaml"
 JUJU_CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.yaml"
@@ -55,6 +54,13 @@ HOOKS_DIRNAME = "hooks"
 # The minimum set of hooks to be provided for compatibility with old Juju
 MANDATORY_HOOK_NAMES = frozenset(("install", "start", "upgrade-charm"))
 
+LEGACY_BASES = (  # Legacy bases that can use the "bases" syntax.
+    "ubuntu@18.04",
+    "ubuntu@20.04",
+    "ubuntu@22.04",
+    "almalinux@9",
+)
+
 CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@18.04",
     "ubuntu@20.04",
@@ -62,13 +68,17 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@24.04",
     "ubuntu@24.10",
     "ubuntu@25.04",
-    "centos@7",
+    "ubuntu@25.10",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
 BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
-DEVEL_BASE_STRINGS = ()  # Bases that require a specified build base.
+DEVEL_BASE_STRINGS = (
+    "ubuntu@24.10",
+    "ubuntu@25.04",
+    "ubuntu@25.10",
+)  # Bases that require a specified build base.
 
 SUPPORTED_BASES = frozenset(
     (
@@ -76,8 +86,8 @@ SUPPORTED_BASES = frozenset(
         BaseName("ubuntu", "20.04"),
         BaseName("ubuntu", "22.04"),
         BaseName("ubuntu", "24.04"),
+        BaseName("ubuntu", "25.10"),
         BaseName("ubuntu", "devel"),
-        BaseName("centos", "7"),
         BaseName("almalinux", "9"),
     )
 )

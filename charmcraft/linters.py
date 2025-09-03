@@ -586,7 +586,7 @@ class OpsMainCall(Linter):
         rv = {}
 
         class ImportVisitor(ast.NodeVisitor):
-            def visit_Import(self, node: ast.Import):  # noqa: N802
+            def visit_Import(self, node: ast.Import):
                 for alias in node.names:
                     # Detect statements like `import ops`
                     if alias.name == "ops":
@@ -596,7 +596,7 @@ class OpsMainCall(Linter):
                     elif alias.name.startswith("ops.") and not alias.asname:
                         rv["ops"] = "ops"
 
-            def visit_ImportFrom(self, node: ast.ImportFrom):  # noqa: N802
+            def visit_ImportFrom(self, node: ast.ImportFrom):
                 for alias in node.names:
                     # Detect statements like `from ops import main [as ops_main]`
                     if node.module in ("ops", "ops.main") and alias.name == "main":
@@ -609,7 +609,7 @@ class OpsMainCall(Linter):
         main_call_sites = []
 
         class OpsMainFinder(ast.NodeVisitor):
-            def visit_Call(self, node: ast.Call):  # noqa: N802
+            def visit_Call(self, node: ast.Call):
                 match node.func:
                     # Matches statements like `ops.main.main(...)`
                     case ast.Attribute(
@@ -654,7 +654,7 @@ class AdditionalFiles(Linter):
     IGNORE_FILES: set[pathlib.Path] = {
         pathlib.Path(f)
         for f in (
-            {const.BUNDLE_FILENAME, const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
+            {const.CHARMCRAFT_FILENAME, const.MANIFEST_FILENAME}
             | const.CHARM_MANDATORY_FILES
             | const.CHARM_OPTIONAL_FILES
         )
@@ -714,9 +714,6 @@ class PipCheck(Linter):
         if not (venv_dir / "lib").is_dir():
             self.text = "Python venv is not valid."
             return self.Result.NONAPPLICABLE
-        if sys.platform == "win32":
-            self.text = "Linter does not work on Windows."
-            return self.Result.NONAPPLICABLE
         python_exe = venv_dir / "bin" / "python"
         delete_parent = False
         if not python_exe.parent.exists():
@@ -760,7 +757,7 @@ class PyDeps(Linter):
 
     name = "pydeps"
     text = "All charmlibs dependencies are included"
-    url = "https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/manage-libraries/"
+    url = "https://documentation.ubuntu.com/charmcraft/stable/howto/manage-libraries/"
 
     @staticmethod
     def convert_to_fs(name: str) -> str:

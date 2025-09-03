@@ -115,6 +115,9 @@ run the Flask app to verify that it works:
 
     flask run -p 8000
 
+Verify the app
+~~~~~~~~~~~~~~
+
 Test the Flask app by using ``curl`` to send a request to the root
 endpoint. You will need a new terminal for this; use
 ``multipass shell charm-dev`` to open a new terminal in Multipass:
@@ -126,6 +129,9 @@ endpoint. You will need a new terminal for this; use
     :dedent: 2
 
 The Flask app should respond with ``Hello, world!``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Flask app looks good, so we can stop it for now from the
 original terminal using :kbd:`Ctrl` + :kbd:`C`.
@@ -152,6 +158,13 @@ From the ``~/flask-hello-world`` directory, initialize the rock:
 
 The ``rockcraft.yaml`` file will automatically be created and set the name
 based on your working directory.
+
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
 
 Check out the contents of ``rockcraft.yaml``:
 
@@ -185,14 +198,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``flask-hello-world``.
 
-The ``platforms`` key must match the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
-
+The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Now let's pack the rock:
@@ -302,6 +308,10 @@ pack, subsequent charm packings are faster.
 Deploy the Flask app
 --------------------
 
+So far, we've packed our Flask app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Flask app with Juju.
+
 A Juju model is needed to handle Kubernetes resources while deploying
 the Flask app. The Juju model holds the app along with any supporting
 components. In this tutorial, our model will hold the Flask app, ingress,
@@ -387,10 +397,13 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Test the deployment using
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-to send a request via the ingress. It should return the
-``Hello, world!`` greeting.
+Test the deployment by sending a request via the ingress:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
@@ -438,7 +451,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -454,6 +467,7 @@ environment variables to the Flask app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/flask/greeting_charmcraft.yaml
+    :caption: ~/flask-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -472,12 +486,17 @@ We can now pack and deploy the new version of the Flask app:
 
 After we wait for a bit monitoring ``juju status`` the app
 should go back to ``active`` again. Verify that
-the new configuration has been added using
-``juju config flask-hello-world | grep -A 6 greeting:`` which should show
-the configuration option.
+the new configuration has been added:
 
-Using ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-shows that the response is still ``Hello, world!`` as expected.
+.. code-block:: bash
+
+    juju config flask-hello-world | grep -A 6 greeting:
+
+Check that the response is still ``Hello, world!`` using:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
 Now let's change the greeting:
 
@@ -487,10 +506,13 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-should now return the updated ``Hi!`` greeting.
+After we wait for a moment for the app to be restarted, check the response:
 
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+The response should now return the updated ``Hi!`` greeting.
 
 Integrate with a database
 -------------------------
@@ -525,6 +547,17 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
     PostgreSQL has been integrated with the charm.
 
+.. tip::
+
+    In production you can also use the ``migrate.sh`` file
+    and run CLI tools for database migration.
+
+    See more:
+    :ref:`Flask framework extension | Regarding the migrate.sh file <flask-migrate-sh>`.
+
+    You could also use different tooling for migration, for example
+    `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__.
+
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
@@ -556,12 +589,12 @@ and to include a new endpoint to retrieve the number of visitors to the
 app. Open ``app.py`` in a text editor and replace its contents with the
 following code:
 
-.. collapse:: app.py
+.. dropdown:: ~/flask-hello-world/app.py
 
   .. literalinclude:: code/flask/visitors_app.py
       :language: python
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -576,6 +609,7 @@ The Flask app now requires a database which needs to be declared in the
 add the following section to the end of the file:
 
 .. literalinclude:: code/flask/visitors_charmcraft.yaml
+    :caption: ~/flask-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 We can now pack and deploy the new version of the Flask app:
@@ -600,12 +634,21 @@ waits to become integrated with the PostgreSQL database. Due to the
 ``optional: false`` key in the endpoint definition, the Flask app will not
 start until the database is ready.
 
-Running ``curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1``
-should still return the ``Hi!`` greeting.
+Send a request to the endpoint:
 
-To check the total visitors, use
-``curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1``
-which should return ``1`` after the previous request to the root endpoint,
+.. code-block:: bash
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+It should still return the ``Hi!`` greeting.
+
+Check the total visitors:
+
+.. code-block:: bash
+
+    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+
+This request should return ``1`` after the previous request to the root endpoint.
 This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
@@ -616,21 +659,8 @@ repeat this process, the output should be as follows:
     :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
     2
 
-
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Flask app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Exposing the app using an ingress
-- Configuring the app
-- Integrating the app with a database
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -657,10 +687,22 @@ following in the rock directory ``~/flask-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Flask app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Exposing the app using an ingress
+- Configuring the app
+- Integrating the app with a database
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::
@@ -670,16 +712,21 @@ in a number of typical ways. But there is a lot more to explore:
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - :ref:`How-to guides <how-to-guides>`,
-        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+      - :ref:`How to manage a 12-factor app charm <manage-12-factor-app-charms>`
     * - "How do I debug?"
-      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+      - :ref:`Troubleshoot a 12-factor app charm <use-12-factor-charms-troubleshoot>`
+
+        :external+juju:ref:`Juju | Debug a charm <debug-a-charm>`
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :ref:`reference`,
-        :external+ops:ref:`Ops | Reference <reference>`,
+      - :external+rockcraft:ref:`flask-framework extension in Rockcraft
+        <flask-framework-reference>`
+
+        :ref:`flask-framework extension in Charmcraft
+        <flask-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+ops:ref:`Ops | Explanation <explanation>`,
-        :external+juju:ref:`Juju | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+        and Rockcraft <explanation>`

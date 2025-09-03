@@ -38,27 +38,54 @@ if ".post" in release:
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # region Configuration for canonical-sphinx
-ogp_site_url = "https://canonical-charmcraft.readthedocs-hosted.com/"
+ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
 ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
+slug = "charmcraft"
+
 html_context = {
     "product_page": "juju.is",
-    "product_tag": "_static/juju-logo-no-text.png",
+    "product_tag": "_static/assets/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
     "matrix": "https://matrix.to/#/#charmhub-charmcraft:ubuntu.com",
 }
 
+# Target repository for the edit button on pages
+html_theme_options = {
+    "source_edit_link": "https://github.com/canonical/charmcraft",
+}
+
+# Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
+html_baseurl = "https://documentation.ubuntu.com/charmcraft/"
+
+if "READTHEDOCS_VERSION" in os.environ:
+    version = os.environ["READTHEDOCS_VERSION"]
+    sitemap_url_scheme = "{version}{link}"
+else:
+    sitemap_url_scheme = "latest/{link}"
+
 # Template and asset locations
 extensions = [
     "canonical_sphinx",
+    "pydantic_kitbash",
+    "sphinx_sitemap",
+    "sphinx_substitution_extensions",
 ]
 
 # Copy extra files to the _static dir during build
-html_static_path = [
-    "_static/assets"
+html_static_path = ["_static"]
+templates_path = ["_templates"]
+
+# Files for the cookie banner
+html_css_files = [
+    'css/cookie-banner.css'
+]
+
+html_js_files = [
+    'js/bundle.js',
 ]
 
 # endregion
@@ -73,13 +100,11 @@ extensions.extend(
         "sphinx.ext.viewcode",
         "sphinx.ext.coverage",
         "sphinx.ext.doctest",
-        "sphinx-pydantic",
         "sphinx_toolbox",
         "sphinx_toolbox.more_autodoc",
         "sphinx.ext.autodoc",  # Must be loaded after more_autodoc
         "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-        "sphinxcontrib.autodoc_pydantic",
         "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
@@ -90,6 +115,9 @@ extensions.extend(
 # endregion
 
 exclude_patterns = [
+    # Workaround for https://github.com/canonical/pydantic-kitbash/issues/49
+    "common/craft-parts/reference/part_properties.rst",
+
     "_build",
     "Thumbs.db",
     ".DS_Store",
@@ -105,9 +133,11 @@ exclude_patterns = [
     "common/craft-parts/explanation/parts.rst",
     "common/craft-parts/explanation/how_parts_are_built.rst",
     "common/craft-parts/explanation/dump_plugin.rst",
+    "common/craft-parts/explanation/file-migration.rst",
     "common/craft-parts/explanation/gradle_plugin.rst",
     "common/craft-parts/explanation/overlay_step.rst",
     "common/craft-parts/how-to/craftctl.rst",
+    "common/craft-parts/how-to/customise-the-build-with-craftctl.rst",
     "common/craft-parts/how-to/include_files.rst",
     "common/craft-parts/how-to/use_parts.rst",
     "common/craft-parts/how-to/override_build.rst",
@@ -118,6 +148,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_plugin.rst",
+    "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
     "common/craft-parts/reference/plugins/gradle_plugin.rst",
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
@@ -135,6 +166,8 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Extra non-craft-parts exclusions can be added after this comment
     "reuse/reference/extensions/integrations.rst",
+    "reuse/reference/extensions/environment_variables.rst",
+    "reuse/reference/extensions/environment_variables_spring_boot.rst",
     "reuse/tutorial/*"
 ]
 
@@ -156,9 +189,10 @@ autodoc_default_options = {"exclude-members": "model_post_init"}
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
-    "juju": ("https://canonical-juju.readthedocs-hosted.com/3.6/", None),
-    "ops": ("https://ops.readthedocs.io/en/latest/", None),
-    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/en/stable/", None),
+    "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
+    "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
+    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
+    "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
 }
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
@@ -191,7 +225,7 @@ rediraffe_redirects = "redirects.txt"
 
 
 def generate_cli_docs(nil):
-    gen_cli_docs_path = (project_dir / "tools" / "gen_cli_docs.py").resolve()
+    gen_cli_docs_path = (project_dir / "tools/gen_cli_docs.py").resolve()
     subprocess.run([sys.executable, gen_cli_docs_path, project_dir / "docs"], check=True)
 
 

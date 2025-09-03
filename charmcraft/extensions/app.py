@@ -16,12 +16,58 @@
 
 """Gunicorn based extensions."""
 
+import copy
 from typing import Any
 
 from overrides import override
 
 from ..errors import ExtensionError
 from .extension import Extension
+
+APP_PORT_OPTION = {
+    "app-port": {
+        "type": "int",
+        "default": 8080,
+        "description": "Default port where the application will listen on.",
+    }
+}
+METRICS_OPTIONS = {
+    "metrics-port": {
+        "type": "int",
+        "default": 8080,
+        "description": "Port where the prometheus metrics will be scraped.",
+    },
+    "metrics-path": {
+        "type": "string",
+        "default": "/metrics",
+        "description": "Path where the prometheus metrics will be scraped.",
+    },
+}
+SECRET_OPTIONS = {
+    "app-secret-key": {
+        "type": "string",
+        "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
+    },
+    "app-secret-key-id": {
+        "type": "secret",
+        "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
+        'The secret should contain a single key, "value", which maps to the actual application secret key. '
+        "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key my-app`, "
+        "and use the output secret ID to configure this option.",
+    },
+}
+OAUTH_DYNAMIC_OPTIONS = {
+    "redirect-path": {
+        "type": "string",
+        "description": "The path that the user will be redirected upon completing login.",
+        "default": "/callback",
+    },
+    "scopes": {
+        "type": "string",
+        "description": "A list of scopes with spaces in between.",
+        "default": "openid profile email",
+    },
+}
 
 
 class _AppBase(Extension):
@@ -40,6 +86,7 @@ class _AppBase(Extension):
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
         {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
+        {"lib": "hydra.oauth", "version": "0"},
     ]
 
     @staticmethod
@@ -62,6 +109,10 @@ class _AppBase(Extension):
     }
 
     options: dict
+
+    endpoint_dynamic_options: dict[str, dict[str, Any]] = {
+        "oauth": OAUTH_DYNAMIC_OPTIONS
+    }
 
     def _get_nested(self, obj: dict, path: str) -> dict:
         """Get a nested object using a path (a dot-separated list of keys)."""
@@ -166,7 +217,7 @@ class _AppBase(Extension):
                 "metrics-endpoint": {"interface": "prometheus_scrape"},
                 "grafana-dashboard": {"interface": "grafana_dashboard"},
             },
-            "config": {"options": self.options},
+            "config": {"options": copy.deepcopy(self.options)},
             "parts": {
                 "charm": {
                     "plugin": "charm",
@@ -181,7 +232,42 @@ class _AppBase(Extension):
     def get_root_snippet(self) -> dict[str, Any]:
         """Fill in some required root components."""
         self._check_input()
-        return self._get_root_snippet()
+        root_snippet = self._get_root_snippet()
+        for interface_name, config_options in self.endpoint_dynamic_options.items():
+            dynamic_config_options = self._get_dynamic_config_options(
+                root_snippet, interface_name, config_options
+            )
+            root_snippet["config"]["options"].update(dynamic_config_options)
+        return root_snippet
+
+    def _get_dynamic_config_options(
+        self,
+        root_snippet: dict[str, Any],
+        interface_name: str,
+        config_options: dict[str, Any],
+    ) -> dict[str, Any]:
+        oauth_endpoint_names = []
+        requires = self._get_nested(self.yaml_data, "requires")
+        for endpoint_name, require in requires.items():
+            current_interface_name = require.get("interface")
+            if current_interface_name == interface_name:
+                oauth_endpoint_names.append(endpoint_name)
+
+        dynamic_config_options = {}
+        for oauth_endpoint_name in oauth_endpoint_names:
+            oidc_config_options = self._get_oidc_config_options(
+                oauth_endpoint_name, config_options
+            )
+            dynamic_config_options.update(oidc_config_options)
+        return dynamic_config_options
+
+    def _get_oidc_config_options(
+        self, endpoint_name: str, config_options: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
+            f"{endpoint_name}-{config}": value
+            for config, value in config_options.items()
+        }
 
     @override
     def get_part_snippet(self) -> dict[str, Any]:
@@ -325,32 +411,9 @@ class GoFramework(_AppBase):
 
     framework = "go"
     options = {
-        "app-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Default port where the application will listen on.",
-        },
-        "metrics-port": {
-            "type": "int",
-            "default": 8080,
-            "description": "Port where the prometheus metrics will be scraped.",
-        },
-        "metrics-path": {
-            "type": "string",
-            "default": "/metrics",
-            "description": "Path where the prometheus metrics will be scraped.",
-        },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key go-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **APP_PORT_OPTION,
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
     }
 
     @staticmethod
@@ -390,6 +453,60 @@ class FastAPIFramework(_AppBase):
             "default": "info",
             "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
         },
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"
+
+
+class ExpressJSFramework(_AppBase):
+    """Extension for 12-factor ExpressJS applications."""
+
+    framework = "expressjs"
+    options = {
+        **APP_PORT_OPTION,
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
+    }
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "24.04")]
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"
+
+
+class SpringBootFramework(_AppBase):
+    """Extension for 12-factor Spring Boot applications."""
+
+    framework = "spring-boot"
+    options = {
+        **APP_PORT_OPTION,
         "metrics-port": {
             "type": "int",
             "default": 8080,
@@ -397,20 +514,21 @@ class FastAPIFramework(_AppBase):
         },
         "metrics-path": {
             "type": "string",
-            "default": "/metrics",
+            "default": "/actuator/prometheus",
             "description": "Path where the prometheus metrics will be scraped.",
         },
-        "app-secret-key": {
-            "type": "string",
-            "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units",
-        },
-        "app-secret-key-id": {
-            "type": "secret",
-            "description": "This configuration is similar to `app-secret-key`, but instead accepts a Juju user secret ID. "
-            'The secret should contain a single key, "value", which maps to the actual application secret key. '
-            "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key fastapi-app`, "
-            "and use the output secret ID to configure this option.",
-        },
+        **SECRET_OPTIONS,
+    }
+    endpoint_dynamic_options: dict[str, dict[str, Any]] = {
+        "oauth": {
+            **OAUTH_DYNAMIC_OPTIONS,
+            "user-name-attribute": {
+                "type": "string",
+                "description": "The name of the attribute returned in the UserInfo Response "
+                "that references the Name or Identifier of the end-user.",
+                "default": "sub",
+            },
+        }
     }
 
     @staticmethod

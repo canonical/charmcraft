@@ -19,38 +19,26 @@ import pathlib
 import platform
 import subprocess
 import sys
-from typing import Any
 
-import distro
+import craft_application
 import pytest
-from craft_application import util
-
-from charmcraft import services
-from charmcraft.models import project
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="craft-parts is linux-only")
 ]
 
 
-@pytest.fixture
-def charm_project(
-    basic_charm_dict: dict[str, Any], project_path: pathlib.Path, request
+@pytest.fixture(autouse=True)
+def add_part(
+    service_factory: craft_application.ServiceFactory, project_path: pathlib.Path
 ):
-    return project.PlatformCharm.unmarshal(
-        basic_charm_dict
-        | {
-            "base": f"{distro.id()}@{distro.version()}",
-            "platforms": {util.get_host_architecture(): None},
-            "parts": {
-                "my-charm": {
-                    "plugin": "poetry",
-                    "source": str(project_path),
-                    "source-type": "local",
-                }
-            },
-        },
-    )
+    service_factory.get("project").get().parts = {
+        "my-charm": {
+            "plugin": "poetry",
+            "source": str(project_path),
+            "source-type": "local",
+        }
+    }
 
 
 @pytest.fixture
@@ -76,13 +64,11 @@ def poetry_project(project_path: pathlib.Path) -> None:
 @pytest.mark.slow
 @pytest.mark.usefixtures("poetry_project")
 def test_poetry_plugin(
-    build_plan,
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     tmp_path: pathlib.Path,
 ):
     install_path = tmp_path / "parts" / "my-charm" / "install"
     stage_path = tmp_path / "stage"
-    service_factory.lifecycle._build_plan = build_plan
 
     service_factory.lifecycle.run("stage")
 

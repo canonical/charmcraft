@@ -6,7 +6,6 @@ priority: -10
 prepare: |
   charmcraft init --project-dir=charm
   cd charm
-  sed -i "s/22.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
 
   # The charm itself doesn't matter, so replace the dependencies with something
   # simple and small so we don't have to build pyyaml.

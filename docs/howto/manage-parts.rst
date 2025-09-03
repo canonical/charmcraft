@@ -40,8 +40,8 @@ TBA
 
    See more: :ref:`ref_commands_prime`
 
-Build the charm or bundle
--------------------------
+Build the charm
+---------------
 
 TBA
 

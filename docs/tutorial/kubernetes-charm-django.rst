@@ -127,6 +127,7 @@ Open the settings file of the app located at
 to allow all traffic:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
 
     ALLOWED_HOSTS = ['*']
 
@@ -142,6 +143,10 @@ Now, run the Django app to verify that it works:
 
     Specifying ``0.0.0.0:8000`` allows for traffic outside of the Multipass VM.
 
+    When you run the command for the first time, you'll see a warning about
+    unapplied migrations. We can ignore this warning for now, as we aren't
+    currently performing any database operations. We'll set up the database later.
+
 Now we need the private IP address of the Multipass VM. Outside of the
 Multipass VM, run:
 
@@ -149,6 +154,8 @@ Multipass VM, run:
 
     multipass info charm-dev | grep IP
 
+Verify the app
+~~~~~~~~~~~~~~
 
 With the Multipass IP address, we can visit the Django app in a web
 browser. Open a new tab and visit
@@ -157,6 +164,9 @@ browser. Open a new tab and visit
 
 The Django app should respond in the browser with
 ``The install worked successfully! Congratulations!``.
+
+Close the app
+~~~~~~~~~~~~~
 
 The Django app looks good, so we can stop it for now from the
 original terminal of the Multipass VM using :kbd:`Ctrl` + :kbd:`C`.
@@ -182,6 +192,13 @@ back into the ``~/django-hello-world`` directory and initialize the rock:
 
 The ``rockcraft.yaml`` file will automatically be created and set the
 name based on your working directory, ``~/django-hello-world``.
+
+Let's verify that the project file is compatible with your host machine.
+Check the architecture of your system:
+
+.. code-block:: bash
+
+    dpkg --print-architecture
 
 Check out the contents of ``rockcraft.yaml``:
 
@@ -215,13 +232,7 @@ The top of the file should look similar to the following snippet:
 
 Verify that the ``name`` is ``django-hello-world``.
 
-The ``platforms`` key must match the architecture of your host. Check
-the architecture of your system:
-
-.. code-block:: bash
-
-    dpkg --print-architecture
-
+The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
 Django apps require a database. Django will use a sqlite
@@ -236,6 +247,7 @@ imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 15,16,17
 
     """
@@ -261,6 +273,7 @@ Near the top of the ``settings.py`` file, change the ``SECRET_KEY``,
 ``DEBUG`` and ``ALLOWED_HOSTS`` variables to:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 2,5,7
 
     # SECURITY WARNING: keep the secret key used in production secret!
@@ -276,6 +289,7 @@ We will also use PostgreSQL as the database for our Django app. In
 ``DATABASES`` variable to:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/settings.py
     :emphasize-lines: 3-8
 
     DATABASES = {
@@ -292,6 +306,18 @@ We will also use PostgreSQL as the database for our Django app. In
 Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
+
+.. tip::
+
+    You can use the ``migrate.sh`` file to run cli tools for database migration.
+    This script runs before the app is initialized.
+
+    See more:
+    :ref:`Django framework extension | Regarding the migrate.sh file <django-migrate-sh>`.
+
+    See more:
+    `Django database migration tooling
+    <https://docs.djangoproject.com/en/5.2/topics/migrations/>`__
 
 Now let's pack the rock:
 
@@ -405,6 +431,10 @@ pack, subsequent charm packings are faster.
 
 Deploy the Django app
 ---------------------
+
+So far, we've packed our Django app into a rock and used that rock to
+create our corresponding charm. Now we have all the materials necessary
+to deploy the Django app with Juju.
 
 A Juju model is needed to handle Kubernetes resources while deploying
 the Django app. The Juju model holds the app along with any supporting
@@ -576,17 +606,20 @@ is. Let's add a new Django app:
 Open the ``greeting/views.py`` file and replace the content with:
 
 .. literalinclude:: code/django/views_greeting.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
     :language: python
 
 Create the ``greeting/urls.py`` file with the following contents:
 
 .. literalinclude:: code/django/urls_greeting.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/urls.py
     :language: python
 
 Open the ``django_hello_world/urls.py`` file and edit the imports for
 ``django.urls`` and the value of ``urlpatterns`` like in the following example:
 
 .. code-block:: python
+    :caption: ~/django-hello-world/django_hello_world/urls.py
     :emphasize-lines: 2,5
 
     from django.contrib import admin
@@ -629,7 +662,8 @@ the ``rockcraft.yaml`` file should look similar to the following:
         # ppc64el:
         # s390x:
 
-Now let's pack and upload the rock using similar commands as before:
+Now let's pack and upload the new version of the rock using similar commands
+as before:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -661,10 +695,13 @@ Now that we have the greeting app, we can disable debug mode:
 
 Use ``juju status --watch 2s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
-you can use
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-inside the Multipass VM. Either way, the Django app should respond
-with ``Hello, world!``.
+inside the Multipass VM run:
+
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+Either way, the Django app should respond with ``Hello, world!``.
 
 
 Provide a configuration
@@ -679,6 +716,7 @@ directory ``~/django-hello-world`` using ``cd ..``. From there, open the
 with:
 
 .. literalinclude:: code/django/views_greeting_configuration.py
+    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
     :language: python
 
 
@@ -711,7 +749,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
         # ppc64el:
         # s390x:
 
-Let's pack and upload the rock:
+Let's pack and upload the new version of the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -731,6 +769,7 @@ environment variables to the Django app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/django/greeting_charmcraft.yaml
+    :caption: ~/django-hello-world/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -749,11 +788,15 @@ refresh``:
     :dedent: 2
 
 After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Sending a request to the root
-endpoint using
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-or visiting http://django-hello-world in a web browser should result in the
-Django app responding with ``Hello, world!`` again.
+should go back to ``active`` again. Visit http://django-hello-world in a
+web browser or send a request to the root endpoint using:
+
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+Either action should result in the Django app responding with
+``Hello, world!`` again.
 
 Now let's change the greeting:
 
@@ -763,25 +806,17 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, using
-``curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1``
-or visiting http://django-hello-world should now respond with ``Hi!``.
+After we wait for a moment for the app to be restarted, visit
+http://django-hello-world or use:
 
+.. code-block:: bash
+
+    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+
+The web app should now respond with ``Hi!``.
 
 Tear things down
 ----------------
-
-We've reached the end of this tutorial. We went through the entire
-development process, including:
-
-- Creating a Django app
-- Deploying the app locally
-- Packaging the app using Rockcraft
-- Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
-- Integrating the app with PostgreSQL to be production ready
-- Exposing the app using an ingress
-- Adding an initial app and configuring the app
 
 If you'd like to quickly tear things down, start by exiting the Multipass VM:
 
@@ -808,10 +843,22 @@ following in the rock directory ``~/django-hello-world`` for the tutorial:
 You can also clean up your Multipass instance by exiting and deleting it
 using the same commands as above.
 
-Next steps
-----------
+Conclusion and next steps
+-------------------------
 
-By the end of this tutorial you will have built a charm and evolved it
+You've reached the end of this tutorial. You made it through the entire
+development process, including:
+
+- Creating a Django app
+- Deploying the app locally
+- Packaging the app using Rockcraft
+- Building the app with Ops code using Charmcraft
+- Deplyoing the app using Juju
+- Integrating the app with PostgreSQL to be production ready
+- Exposing the app using an ingress
+- Adding an initial app and configuring the app
+
+By the end of this tutorial you built a charm and evolved it
 in a number of typical ways. But there is a lot more to explore:
 
 .. list-table::
@@ -821,16 +868,20 @@ in a number of typical ways. But there is a lot more to explore:
     * - If you are wondering...
       - Visit...
     * - "How do I...?"
-      - :ref:`How-to guides <how-to-guides>`,
-        :external+ops:ref:`Ops | How-to guides <how-to-guides>`
+      - :ref:`manage-12-factor-app-charms`
     * - "How do I debug?"
-      - `Charm debugging tools <https://juju.is/docs/sdk/debug-a-charm>`_
+      - :ref:`Troubleshoot a 12-factor app charm <use-12-factor-charms-troubleshoot>`
+
+        :external+juju:ref:`Juju | Debug a charm <debug-a-charm>`
     * - "How do I get in touch?"
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
-      - :ref:`reference`,
-        :external+ops:ref:`Ops | Reference <reference>`,
+      - :external+rockcraft:ref:`django-framework extension in Rockcraft
+        <django-framework-reference>`
+
+        :ref:`django-framework extension in Charmcraft <django-framework-extension>`
+
         :external+juju:ref:`Juju | Reference <reference>`
     * - "Why...?", "So what?"
-      - :external+ops:ref:`Ops | Explanation <explanation>`,
-        :external+juju:ref:`Juju | Explanation <explanation>`
+      - :external+12-factor:ref:`12-Factor app principles and support in Charmcraft
+        and Rockcraft <explanation>`

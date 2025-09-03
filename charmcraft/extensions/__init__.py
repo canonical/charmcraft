@@ -22,6 +22,8 @@ from charmcraft.extensions.app import (
     FastAPIFramework,
     FlaskFramework,
     GoFramework,
+    ExpressJSFramework,
+    SpringBootFramework,
 )
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.registry import (
@@ -48,3 +50,5 @@ register("flask-framework", FlaskFramework)
 register("django-framework", DjangoFramework)
 register("go-framework", GoFramework)
 register("fastapi-framework", FastAPIFramework)
+register("expressjs-framework", ExpressJSFramework)
+register("spring-boot-framework", SpringBootFramework)

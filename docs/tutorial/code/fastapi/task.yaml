@@ -7,28 +7,25 @@
 ###########################################
 summary: Getting started with FastAPI tutorial
 
-kill-timeout: 180m
+kill-timeout: 50m
+
+restore: |
+  rm -rf $HOME/fastapi
+  juju destroy-model fastapi-hello-world \
+  --destroy-storage --no-prompt --force || true
 
 environment:
 
 execute: |
   # Move everything to $HOME so that Juju deployment works
-  mv *.yaml *.py *.txt $HOME
-  cd $HOME
+  mkdir $HOME/fastapi
+  mv *.yaml *.py *.txt $HOME/fastapi
+  cd $HOME/fastapi
 
   # Don't use the staging store for this test
   unset CHARMCRAFT_STORE_API_URL
   unset CHARMCRAFT_UPLOAD_URL
   unset CHARMCRAFT_REGISTRY_URL
-
-  # MicroK8s config setup
-  microk8s status --wait-ready
-  microk8s enable hostpath-storage
-  microk8s enable registry
-  microk8s enable ingress
-
-  # Bootstrap controller
-  juju bootstrap microk8s dev-controller
 
   # [docs:create-venv]
   sudo apt update && sudo apt install python3-venv -y
@@ -41,7 +38,7 @@ execute: |
   # [docs:install-requirements-end]
 
   fastapi dev app.py --port 8080 &
-  retry -n 5 --wait 2 curl --fail localhost:8080
+  retry -n 5 --wait 5 curl --fail localhost:8080
 
   # [docs:curl-fastapi]
   curl localhost:8080
@@ -114,6 +111,9 @@ execute: |
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
+  # wait until the endpoint works
+  retry -n 5 --wait 5 curl --fail http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+
   # [docs:curl-init-deployment]
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
   # [docs:curl-init-deployment-end]
@@ -143,18 +143,17 @@ execute: |
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hello
+  retry -n 5 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hello"
 
   # [docs:change-config]
   juju config fastapi-hello-world greeting='Hi!'
   # [docs:change-config-end]
 
   # make sure that the application updates
-  juju wait-for application fastapi-hello-world --query='status=="maintenance"' --timeout 10m
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
+  retry -n 5 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi"
 
   cd ..
   cat visitors_migrate.py >> migrate.py
@@ -178,8 +177,12 @@ execute: |
     --resource app-image=localhost:32000/fastapi-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
+  # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+
   # [docs:deploy-postgres]
   juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 20m
   juju integrate fastapi-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 
@@ -189,7 +192,9 @@ execute: |
   juju wait-for application fastapi-hello-world --query='life=="alive" && status=="active"' --timeout 20m | juju status --relations
 
   juju status --relations
-  sleep 30s
+
+  # wait until the endpoint works
+  retry -n 5 --wait 5 curl --fail http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
 
   curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1

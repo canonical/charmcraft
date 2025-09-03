@@ -3,14 +3,13 @@ kill-timeout: 30m # These sometimes take a while to download bases.
 priority: 50 # Because these can take a while, run them early.
 
 environment:
-  BASE_CHANNEL/focal_bases: 20.04
   BASE_CHANNEL/jammy_bases,jammy_platforms: 22.04
   BASE_CHANNEL/noble_platforms,noble_platforms_python: 24.04
-  CHARM_TYPE/focal_bases,jammy_bases: bases
+  CHARM_TYPE/jammy_bases: bases
   CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_python: platforms
   BASE_CHANNEL/jammy_bases,jammy_bases_all,jammy_platforms: 22.04
   BASE_CHANNEL/noble_platforms,noble_platforms_all,noble_platforms_python: 24.04
-  CHARM_TYPE/focal_bases,jammy_bases,jammy_bases_all: bases
+  CHARM_TYPE/jammy_bases,jammy_bases_all: bases
   CHARM_TYPE/jammy_platforms,noble_platforms,noble_platforms_all,noble_platforms_python: platforms
   EXTRA/jammy_bases_all,noble_platforms_all: "-all"
   EXTRA/noble_platforms_python: "-python"
@@ -23,6 +22,10 @@ include:
 
 prepare: |
   charmcraft init --project-dir=charm
+  pushd charm
+    # Generate a requirements file from our default uv file to test the charm plugin.
+    uv export --no-hashes -o requirements.txt
+  popd
   cp charmcraft-$CHARM_TYPE-$BASE_CHANNEL${EXTRA:+}.yaml charm/charmcraft.yaml
 
 restore: |

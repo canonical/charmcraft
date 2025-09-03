@@ -1,0 +1,16 @@
+type: charm
+name: charm
+title: Charm Template
+summary: A very short one-line summary of the charm.
+description: Checking pinned dependencies
+
+base: ubuntu@24.04
+
+platforms:
+  amd64:
+  arm64:
+
+parts:
+  charm:
+    plugin: charm
+    source: .

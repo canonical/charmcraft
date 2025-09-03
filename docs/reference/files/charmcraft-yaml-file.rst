@@ -8,8 +8,6 @@
     The full list of keys is defined in the Charmcraft project (but this implies upstream keys from craft-application):
     https://github.com/canonical/charmcraft/blob/3.2.0/charmcraft/models/project.py#L381-L1070
 
-    Technically, the only key required upfront is type. But then, depending on what you choose, other keys become required as well. (The required keys are the ones that are set to a value, unless that value is a pydantic.Field that doesn't have either a default or a default_factory parameter)
-
     The parts key connects to an external library. The plugin properties are defined here: https://canonical-craft-parts.readthedocs-hosted.com/en/latest/reference/part_properties.html
 
     This test file shows the full spec at once: https://github.com/canonical/charmcraft/blob/main/tests/unit/models/valid_charms_yaml/full.yaml
@@ -25,13 +23,6 @@
 
 ``charmcraft.yaml`` is a file in your charm project that contains keys that allow you
 to declare information about the project in a form that can be used by Charmcraft.
-
-.. note::
-
-    If you're starting from an empty file, the only required key is the ``type`` key.
-    However, depending on what value you set it to (``charm`` or ``bundle``), other
-    keys become required as well.
-
 
 .. collapse:: Expand to view a full charm with sample content all at once
 
@@ -224,7 +215,7 @@ block must be satisfied.
                 build-for: <list-of-arch> | <arch>
 
 **Status:** Deprecated. Conflicts with the `base`_, `build-base`_, and platforms
-keys. Not allowed if `type`_ is ``bundle``.
+keys.
 
 **Purpose:** Specifies a list of environments (OS version and architecture)
 where the charm must be built on and run on.
@@ -508,33 +499,42 @@ created adjacent to the charm (as a sidecar, in the same pod).
 **Structure:** This key consists of a list of containers along with their
 specification. Each container can be specified in terms of ``resource``, ``bases``,
 ``uid``, ``gid`` and ``mounts``, where one of either the ``resource`` or the
-``bases`` subkeys must be defined, and ``mounts`` is optional. ``resource`` stands
-for the OCI image resource used to create the container; to use it, specify  an OCI
-image resource name (that you will then define further in the `resources`_ block).
-``bases`` is a list of bases to be used for resolving a container image, in descending
-order of preference; to use it, specify a base name (for example, ``ubuntu``,
-``centos``, ``windows``, ``osx``, ``opensuse``), a
-`channel <https://snapcraft.io/docs/channels>`_, and an architecture. ``mounts`` is a
-list of mounted storages for this container; to use it, specify the name of the
-storage to mount from the charm storage and, optionally, the location where to mount
-the storage. Starting with Juju 3.5.0, ``uid`` and ``gid`` are the UID and,
-respectively, GID to run the Pebble entry process for this container as; they can
-be any value from 0-999 or any value from 10,000 (values from 1000-9999 are reserved
-for users) and the default is 0 (root).
+``bases`` subkeys must be defined, and ``mounts`` is optional.
+
+The location attribute must be specified when mounting a storage into a workload
+container. It dictates the mount point for the specific container.
+
+Optionally, you can specify the location attribute on the `storage`_ itself,
+which also sets the mount point in the charm container.
 
 .. code-block:: yaml
 
     containers:
       <container name>:
+        # The OCI image resource used to create the container.
+        # Specify an OCI image resource name (that you will then define further
+        # in the `resources` block.
         resource: <resource name>
+        # A list of bases to be used for resolving a container image, in
+        # descending order of preference. Specify a base name (for example,
+        # `ubuntu`, `centos`, `osx`, `opensuse`), a channel
+        # (https://snapcraft.io/docs/channels), and an architecture.
         bases:
           - name: <base name>
             channel: <track[/risk][/branch]>
             architectures:
               - <architecture>
+        # (Optional) A list of mounted storages for this container. Specify the
+        # name of the storage to mount from the charm storage, and, optionally,
+        # the location where to mount the storage.
         mounts:
           - storage: <storage name>
             location: <path>
+        # (Optional) The UID and GID to run the Pebble entry process for this
+        # container as. These can be any value from 0-999 or any value above
+        # 10,000 (values 1000-9999 are reserved for users). The default is 0
+        # (root).
+        # Available in Juju 3.5.0 and above.
         uid: <unix UID>
         gid: <unix GID>
 
@@ -697,7 +697,8 @@ data from different sources that end up being a part of the final charm.
 **Structure:** Mapping. Keys are user-defined part names. The value of each key
 is a map where keys are part properties.
 
-    See more: :ref:`part_properties`
+..     https://github.com/canonical/charmcraft/issues/2378
+..     See more: :ref:`part_properties`
 
 .. collapse:: Example
 
@@ -734,19 +735,6 @@ is a map where keys are part properties.
     - ``charm-requirements``: A list of requirements files specifying Python dependencies. It is optional; if not defined, defaults to a list with one ``requirements.txt`` entry if that file is present in the project directory.
     - ``charm-python-packages``: A list of Python packages to install before installing requirements. These packages will be installed from sources and built locally at packing time. It is optional, defaults to empty.
     - ``charm-binary-python-packages``: A list of python packages to install before installing requirements and regular Python packages. Binary packages are allowed, but they may also be installed from sources if a package is only available in source form. It is optional, defaults to empty.
-
-
-    **The** ``bundle`` **plugin**
-
-    Used to pack a :external+juju:ref:`charm bundle <bundle>`, a collection of charms which have been carefully combined and configured in order to automate a multi-charm solution.
-
-    Supports the following configuration:
-
-    .. code-block:: yaml
-
-        parts:
-          my-bundle:
-            plugin: bundle
 
     **The** ``reactive`` **plugin**
 
@@ -1123,13 +1111,13 @@ to a principal charm.
 
 **Status:** Required.
 
-**Purpose:** Indicates whether charmcraft will pack a charm or a bundle.
+**Purpose:** Indicates the type of package charmcraft will pack.
 
 **Structure:**
 
 **Type:** String.
 
-**Value:** ``charm`` or ``bundle``.
+**Value:** ``charm``.
 
 .. collapse:: Example
 

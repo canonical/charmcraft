@@ -19,16 +19,21 @@ application. This document describes all the keys that a user may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``go-framework`` are: - **app-port**: Port
-in which the application should listen. The ingress will be configured using this port.
-The environment variable passed to the app is ``APP_PORT``. Default value is 8080. -
-**app-secret-key**: Long secret you can use for sessions, csrf or any other thing where
-you need a random secret shared by all units. The environment variable passed to the app
-is ``APP_METRICS_PORT``. The default value is random. - **metrics-port**: Port where the
-prometheus metrics will be scraped. The environment variable passed to the app is
-``APP_PORT``. Default value is 8080. - **metrics-path**: Path where the prometheus
-metrics will be scraped. The environment variable passed to the app is
-``APP_METRICS_PATH``. Default value is ``/metrics``.
+The predefined configuration options for the ``go-framework`` are:
+
+* **app-port**: Port in which the application should listen. The ingress will be
+  configured using this port. The environment variable passed to the app is
+  ``APP_PORT``. Default value is 8080.
+
+* **app-secret-key**: Long secret you can use for sessions, csrf or any other thing
+  where you need a random secret shared by all units. The environment variable passed
+  to the app is ``APP_METRICS_PORT``. The default value is random.
+
+* **metrics-port**: Port where the prometheus metrics will be scraped. The environment
+  variable passed to the app is ``APP_PORT``. Default value is 8080.
+
+* **metrics-path**: Path where the prometheus metrics will be scraped. The environment
+  variable passed to the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
@@ -53,8 +58,10 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |base_url| replace:: ``APP_BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <go charm> postgresql``
 .. |framework| replace:: Go
+.. |framework_prefix| replace:: APP
 
 .. include:: /reuse/reference/extensions/integrations.rst
+.. include:: /reuse/reference/extensions/environment_variables.rst
 
 
 HTTP Proxy
@@ -113,6 +120,27 @@ and configure the OpenTelemetry SDK to use them.
 See the `OpenTelemetry documentation
 <https://opentelemetry-python.readthedocs.io/en/latest/>`__
 for further information about tracing.
+
+
+.. _go-migrate-sh:
+
+Regarding the ``migrate.sh`` file
+---------------------------------
+
+If your app depends on a database it is common to run a database migration script before
+app startup which, for example, creates or modifies tables. This can be done by
+including the ``migrate.sh`` script in the root of your project. It will be executed
+with the same environment variables and context as the Go app.
+
+If the migration script fails, the app won't be started and the app charm will go into
+blocked state. The migration script will be run on every unit and it is assumed that it
+is idempotent (can be run multiple times) and that it can be run on multiple units at
+the same time without causing issues. This can be achieved by, for example, locking any
+tables during the migration.
+
+If you prefer you can also use different tooling for migration, for example
+`golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
+`goose <https://github.com/pressly/goose/>`__ .
 
 
 Secrets

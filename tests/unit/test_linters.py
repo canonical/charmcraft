@@ -104,7 +104,6 @@ def test_pip_invalid_venv(fake_path: pathlib.Path):
     assert lint.text == "Python venv is not valid."
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_success(valid_venv_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
@@ -117,7 +116,6 @@ def test_pip_check_success(valid_venv_path: pathlib.Path, fp):
     assert lint.text == linters.PipCheck.text
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_warning(valid_venv_path: pathlib.Path, fp):
     fp.register(
         [sys.executable, "-m", "pip", "--python", fp.any(), "check"],
@@ -130,7 +128,6 @@ def test_pip_check_warning(valid_venv_path: pathlib.Path, fp):
     assert lint.text == "This error was sponsored by Raytheon Knife Missiles™"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_exception(valid_venv_path: pathlib.Path, monkeypatch):
     def _raises_eperm(*args, **kwargs) -> None:
         raise PermissionError(13, "Permission denied")
@@ -145,7 +142,6 @@ def test_pip_check_exception(valid_venv_path: pathlib.Path, monkeypatch):
     )
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_no_bin(valid_venv_path: pathlib.Path, fp):
     """Check that the bin directory is deleted if it was missing before"""
     fp.register(
@@ -161,7 +157,6 @@ def test_pip_check_repair_no_bin(valid_venv_path: pathlib.Path, fp):
     assert not (valid_venv_path / "venv" / "bin").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_no_py(valid_venv_path: pathlib.Path, fp):
     """Check that the python symlink is deleted if it was missing before"""
     fp.register(
@@ -179,7 +174,6 @@ def test_pip_check_repair_no_py(valid_venv_path: pathlib.Path, fp):
     assert not (valid_venv_path / "venv" / "bin" / "python").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows not [yet] supported.")
 def test_pip_check_repair_all(valid_venv_path: pathlib.Path, fp):
     """Check that nothing is changed if all components are present"""
     fp.register(

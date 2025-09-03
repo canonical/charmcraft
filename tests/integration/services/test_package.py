@@ -23,31 +23,41 @@ import pytest
 import pytest_check
 
 import charmcraft
-from charmcraft import const, models, services
+from charmcraft import const
 from charmcraft.application.main import APP_METADATA
+from charmcraft.services.package import PackageService
+
+
+@pytest.fixture(
+    params=[
+        pytest.param(path, id=path.name)
+        for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
+    ]
+)
+def project_path(request: pytest.FixtureRequest) -> pathlib.Path:
+    return request.param / "project"
 
 
 @pytest.fixture
-def package_service(new_path: pathlib.Path, service_factory, default_build_plan):
-    fake_project_dir = new_path
-    svc = services.PackageService(
+def fake_project_yaml(project_path: pathlib.Path) -> str:
+    return (project_path / "charmcraft.yaml").read_text()
+
+
+@pytest.fixture
+def package_service(
+    project_path: pathlib.Path,
+    service_factory,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.chdir(project_path)
+    svc = PackageService(
         app=APP_METADATA,
-        project=service_factory.project,
         services=service_factory,
-        project_dir=fake_project_dir,
-        build_plan=default_build_plan,
     )
     service_factory.package = svc
     return svc
 
 
-@pytest.mark.parametrize(
-    "project_path",
-    [
-        pytest.param(path, id=path.name)
-        for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
-    ],
-)
 @freezegun.freeze_time(
     datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
 )
@@ -55,13 +65,7 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     test_prime_dir = new_path / "prime"
     test_prime_dir.mkdir()
-    expected_prime_dir = project_path / "prime"
-
-    project = models.CharmcraftProject.from_yaml_file(
-        project_path / "project" / "charmcraft.yaml"
-    )
-    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    package_service._project = project
+    expected_prime_dir = project_path.parent / "prime"
 
     package_service.write_metadata(test_prime_dir)
 
@@ -69,13 +73,6 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
         pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
 
 
-@pytest.mark.parametrize(
-    "project_path",
-    [
-        pytest.param(path, id=path.name)
-        for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
-    ],
-)
 @freezegun.freeze_time(
     datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
 )
@@ -87,13 +84,7 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
     test_prime_dir = new_path / "prime"
     test_prime_dir.mkdir()
-    expected_prime_dir = project_path / "prime"
-
-    project = models.CharmcraftProject.from_yaml_file(
-        project_path / "project" / "charmcraft.yaml"
-    )
-    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    package_service._project = project
+    expected_prime_dir = project_path.parent / "prime"
 
     (test_prime_dir / const.METADATA_FILENAME).write_text("INVALID!!")
 
@@ -103,6 +94,10 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
         pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
 
 
+@pytest.mark.parametrize(
+    "project_path",
+    [pathlib.Path(__file__).parent / "sample_projects" / "basic-reactive" / "project"],
+)
 @freezegun.freeze_time(
     datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
 )
@@ -112,18 +107,11 @@ def test_no_overwrite_reactive_metadata(monkeypatch, new_path, package_service):
     Regression test for https://github.com/canonical/charmcraft/issues/1654
     """
     monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    project_path = pathlib.Path(__file__).parent / "sample_projects" / "basic-reactive"
     test_prime_dir = new_path / "prime"
     test_prime_dir.mkdir()
     test_stage_dir = new_path / "stage"
     test_stage_dir.mkdir()
     (test_stage_dir / const.METADATA_FILENAME).write_text("INVALID!!")
-
-    project = models.CharmcraftProject.from_yaml_file(
-        project_path / "project" / "charmcraft.yaml"
-    )
-    project._started_at = datetime.datetime.now(tz=datetime.timezone.utc)
-    package_service._project = project
 
     package_service.write_metadata(test_prime_dir)
 

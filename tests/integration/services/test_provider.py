@@ -20,22 +20,21 @@ import shutil
 import subprocess
 import sys
 
+import craft_application
 import pytest
-from craft_application.models import BuildInfo
 from craft_cli.pytest_plugin import RecordingEmitter
+from craft_platforms import BuildInfo
 
-from charmcraft import services
 from charmcraft.services.provider import _maybe_lock_cache
 
 pytestmark = [pytest.mark.slow]
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
 def test_lock_cache(
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     tmp_path: pathlib.Path,
     default_build_info: BuildInfo,
     emitter: RecordingEmitter,
@@ -67,12 +66,11 @@ def test_lock_cache(
         subprocess.run(bash_lock_cmd, check=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
 def test_locked_cache_no_cache(
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     tmp_path: pathlib.Path,
     default_build_info: BuildInfo,
     emitter: RecordingEmitter,
@@ -116,12 +114,11 @@ def test_locked_cache_no_cache(
         assert not (tmp_path / "cache_cached").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="no cache on windows")
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="multipass sometimes fails weirdly for this test"
 )
 def test_cache_symlink(
-    service_factory: services.CharmcraftServiceFactory,
+    service_factory: craft_application.ServiceFactory,
     tmp_path: pathlib.Path,
     default_build_info: BuildInfo,
     emitter: RecordingEmitter,

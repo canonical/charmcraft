@@ -15,16 +15,15 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the Image service."""
 
-import sys
-
 import pytest
 
-from charmcraft import application, services
+from charmcraft import application
+from charmcraft.services.image import ImageService
 
 
 @pytest.fixture
-def image_service() -> services.ImageService:
-    service = services.ImageService(
+def image_service() -> ImageService:
+    service = ImageService(
         app=application.APP_METADATA,
         services=None,  # pyright: ignore[reportArgumentType]
     )
@@ -42,8 +41,5 @@ def image_service() -> services.ImageService:
         "docker://quay.io/prometheus/blackbox-exporter:v0.24.0@sha256:3af31f8bd1ad2907b4b0f7c485fde3de0a8ee0b498d42fc971f0698885c03acb",
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
-def test_get_maybe_id_from_docker_no_exceptions(
-    image_service: services.ImageService, url
-):
+def test_get_maybe_id_from_docker_no_exceptions(image_service: ImageService, url):
     image_service.get_maybe_id_from_docker(url)

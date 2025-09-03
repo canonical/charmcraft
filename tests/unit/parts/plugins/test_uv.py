@@ -14,17 +14,12 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
-import sys
 from pathlib import Path
 
 import pytest
 import pytest_check
 
 from charmcraft.parts import plugins
-
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="Windows not supported")
-]
 
 
 def test_get_build_environment(uv_plugin: plugins.UvPlugin):

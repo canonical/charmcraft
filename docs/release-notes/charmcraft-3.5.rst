@@ -137,7 +137,32 @@ See individual issue links for any mitigations.
 Fixed bugs and issues
 ---------------------
 
-The following bugs have been resolved in Charmcraft 3.5.0:
+The following bugs have been resolved in Charmcraft 3.5.1:
+
+- `#2310 <https://github.com/canonical/charmcraft/issues/2310>`_ Can't build
+  Charmcraft snap.
+- `#2311 <https://github.com/canonical/charmcraft/issues/2311>`_ Not all 12-factor
+  profiles are listed in ``charmcraft help init``.
+- `#2309 <https://github.com/canonical/charmcraft/issues/2309>`_ Default unit tests
+  in the Kubernetes profile are inconsistent.
+- `#2327 <https://github.com/canonical/charmcraft/issues/2327>`_ Some documentation
+  links are broken.
+- `#2322 <https://github.com/canonical/charmcraft/issues/2322>`_ Documentation is
+  missing a **Contribute to this page** button.
+- `#2323 <https://github.com/canonical/charmcraft/issues/2323>`_ Documentation is
+  missing a sitemap.
+
+The following bugs have been resolved in Charmcraft 3.5.2:
+
+- `#2077 <https://github.com/canonical/charmcraft/issues/2077>`_ Internal error when
+  uploading OCI image resources.
+
+The following bugs have been resolved in Charmcraft 3.5.3:
+
+- Incorrect container name when running ``charmcraft init`` with the default profile.
+- Some rust dependencies no longer build correctly for Python 3.8. The ``charm`` plugin
+  now adds `constraints <https://github.com/canonical/charmcraft/commit/5fb3f0a>`_
+  for these dependencies.
 
 Contributors
 ------------

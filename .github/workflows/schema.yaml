@@ -6,16 +6,18 @@ env:
 
 jobs:
   diff-schema:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup project
-        run: make setup
+        run: |
+          sudo apt-get update
+          make setup
 
       - name: Run generator script
         run: |
@@ -32,14 +34,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install ajv cli
         run: npm install -g ajv-cli

@@ -1,0 +1,14 @@
+summary: An example spread test.
+
+prepare: |
+  echo Preparing the test
+  sudo apt-get install unzip
+
+execute: |
+  echo Running the test
+  env
+  test -f "$CRAFT_ARTIFACT"
+  unzip -l "${CRAFT_ARTIFACT}" | MATCH metadata.yaml
+
+restore: |
+  echo Restoring the test

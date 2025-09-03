@@ -1,10 +1,43 @@
 name: Spread
 on:
   pull_request:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   merge_group:
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   push:
     branches:
       - main
+    paths-ignore:
+      - .github/**
+      - "!.github/workflows/spread.yaml" # Run on this file getting changed
+      - docs/**
+      - schema/**
+      - tests/** # Don't run if only tests changed, unless a spread test changed.
+      - "!tests/spread/**"
+      - .editorconfig
+      - .pre-commit-config.yaml
+      - .readthedocs.yaml
+      - "*.md" # Only top-level Markdown files
   schedule:
     - cron: "0 0 */2 * *"
 
@@ -13,7 +46,7 @@ jobs:
     runs-on: [self-hosted, amd64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Build snap
@@ -50,13 +83,13 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: snap
 
@@ -79,14 +112,14 @@ jobs:
     steps:
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: true
 
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: snap
 
@@ -96,6 +129,5 @@ jobs:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
           CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
-          BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/

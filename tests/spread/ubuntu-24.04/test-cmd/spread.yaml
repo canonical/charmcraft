@@ -1,0 +1,21 @@
+project: test-cmd
+
+backends:
+  craft:
+    type: craft
+    allocate: "false"
+    systems:
+      - ubuntu-24.04:
+
+  other:  # Ensure that charmcraft test only runs the craft backend.
+    type: adhoc
+    allocate: "false"
+    systems:
+      - ubuntu-24.04:
+
+prepare: |
+  true
+
+suites:
+  tests/spread/my-suite/:
+    summary: A basic suite of spread tests.

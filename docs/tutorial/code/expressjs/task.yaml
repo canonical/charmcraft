@@ -1,0 +1,258 @@
+###########################################
+# IMPORTANT
+# Comments matter!
+# The docs use the wrapping comments as
+# markers for including said instructions
+# as snippets in the docs.
+###########################################
+summary: Getting started with ExpressJS tutorial
+
+kill-timeout: 50m
+
+restore: |
+  rm -rf $HOME/tmp $HOME/expressjs-hello-world
+  juju destroy-model expressjs-hello-world \
+  --destroy-storage --no-prompt --force || true
+
+environment:
+
+execute: |
+  # Move everything to $HOME so that Juju deployment works
+  mkdir $HOME/tmp
+  mv *.yaml *.js *.sh $HOME/tmp
+  cd $HOME
+
+  # Don't use the staging store for this test
+  unset CHARMCRAFT_STORE_API_URL
+  unset CHARMCRAFT_UPLOAD_URL
+  unset CHARMCRAFT_REGISTRY_URL
+
+  # [docs:create-working-dir]
+  mkdir expressjs-hello-world
+  cd expressjs-hello-world
+  # [docs:create-working-dir-end]
+
+  # [docs:export-experimental-env-vars]
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  # [docs:export-experimental-env-vars-end]
+
+  cd $HOME/tmp
+  mv *.yaml *.js *.sh $HOME/expressjs-hello-world
+  cd  $HOME/expressjs-hello-world
+
+  # [docs:install-init-expressjs]
+  sudo apt update -y && sudo apt install npm -y
+  sudo npm install -g express-generator@4
+  express app
+  cd app
+  # [docs:install-init-expressjs-end]
+
+  # [docs:build-expressjs]
+  npm install
+  # [docs:build-expressjs-end]
+
+  npm start >npmoutput.txt 2>&1  </dev/null &
+
+  retry -n 5 --wait 2 curl --fail localhost:3000
+
+  # [docs:curl-expressjs]
+  curl -I localhost:3000
+  # [docs:curl-expressjs-end]
+
+  kill $!
+  pkill --signal SIGINT node
+
+  # [docs:create-rockcraft-yaml]
+  cd ..
+  rockcraft init --profile expressjs-framework
+  # [docs:create-rockcraft-yaml-end]
+
+  sed -i "s/name: .*/name: expressjs-hello-world/g" rockcraft.yaml
+  sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
+
+  # [docs:pack]
+  rockcraft pack
+  # [docs:pack-end]
+
+  # [docs:skopeo-copy]
+  rockcraft.skopeo copy \
+    --insecure-policy \
+    --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.1_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/expressjs-hello-world:0.1
+  # [docs:skopeo-copy-end]
+
+  # [docs:create-charm-dir]
+  mkdir charm
+  cd charm
+  # [docs:create-charm-dir-end]
+
+  # [docs:charm-init]
+  charmcraft init --profile expressjs-framework --name expressjs-hello-world
+  # [docs:charm-init-end]
+
+  # update platforms in charmcraft.yaml file
+  sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
+
+  # [docs:charm-pack]
+  charmcraft pack
+  # [docs:charm-pack-end]
+
+  # [docs:add-juju-model]
+  juju add-model expressjs-hello-world
+  # [docs:add-juju-model-end]
+
+  #[docs:add-model-constraints]
+  juju set-model-constraints -m expressjs-hello-world \
+    arch=$(dpkg --print-architecture)
+  #[docs:add-model-constraints-end]
+
+  # [docs:deploy-expressjs-app]
+  juju deploy \
+    ./expressjs-hello-world_$(dpkg --print-architecture).charm \
+    expressjs-hello-world \
+    --resource app-image=localhost:32000/expressjs-hello-world:0.1
+  # [docs:deploy-expressjs-app-end]
+
+  # [docs:deploy-nginx]
+  juju deploy nginx-ingress-integrator --channel=latest/stable --trust
+  juju integrate nginx-ingress-integrator expressjs-hello-world
+  # [docs:deploy-nginx-end]
+
+  # [docs:config-nginx]
+  juju config nginx-ingress-integrator \
+    service-hostname=expressjs-hello-world path-routes=/
+  # [docs:config-nginx-end]
+
+  # give Juju some time to deploy the apps
+  juju wait-for application expressjs-hello-world \
+  --query='status=="active"' --timeout 10m
+  juju wait-for application nginx-ingress-integrator \
+  --query='status=="active"' --timeout 10m
+
+  # [docs:curl-init-deployment]
+  curl -I http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+  # [docs:curl-init-deployment-end]
+
+  cd ..
+  cat greeting_index.js > app/routes/index.js
+  sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
+
+  # [docs:docker-update]
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.2_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/expressjs-hello-world:0.2
+  # [docs:docker-update-end]
+
+  cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cd charm
+
+  # [docs:refresh-deployment]
+  charmcraft pack
+  juju refresh expressjs-hello-world \
+    --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
+    --resource app-image=localhost:32000/expressjs-hello-world:0.2
+  # [docs:refresh-deployment-end]
+
+  # give Juju some time to refresh the app
+  juju wait-for application expressjs-hello-world \
+  --query='status=="active"' --timeout 10m
+
+  # curl and check that the response is Hello
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hello"
+
+  # [docs:change-config]
+  juju config expressjs-hello-world greeting='Hi!'
+  # [docs:change-config-end]
+
+  # make sure that the application updates
+  juju wait-for application expressjs-hello-world \
+  --query='status=="active"' --timeout 10m
+
+  # curl and check that the response is now Hi
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi"
+
+  cd ..
+  cat visitors_migrate.sh >> app/migrate.sh
+
+  # [docs:change-migrate-permissions]
+  chmod u+x app/migrate.sh
+  # [docs:change-migrate-permissions-end]
+
+  cat visitors_rockcraft.yaml >> rockcraft.yaml
+  sed -i "s/version: .*/version: 0.3/g" rockcraft.yaml
+
+  cat visitors.js > app/routes/visitors.js
+  cat visitors_index.js > app/routes/index.js
+  cat visitors_app.js > app/app.js
+
+  pushd app
+  # [docs:check-expressjs-app]
+  npm install pg-promise
+  # [docs:check-expressjs-app-end]
+  popd
+
+  # [docs:docker-2nd-update]
+  rockcraft pack
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.3_$(dpkg --print-architecture).rock \
+    docker://localhost:32000/expressjs-hello-world:0.3
+  # [docs:docker-2nd-update-end]
+
+  cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
+  cd charm
+
+  # [docs:refresh-2nd-deployment]
+  charmcraft pack
+  juju refresh expressjs-hello-world \
+    --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
+    --resource app-image=localhost:32000/expressjs-hello-world:0.3
+  # [docs:refresh-2nd-deployment-end]
+
+  # In the relation with postgresql-k8s test we may hit the issue
+  # https://github.com/canonical/postgresql-k8s-operator/issues/1011
+  # so we have to wait before integrating.
+
+  # [docs:deploy-postgres]
+  juju deploy postgresql-k8s --trust
+  juju wait-for application postgresql-k8s --timeout 20m
+  juju integrate expressjs-hello-world postgresql-k8s
+  # [docs:deploy-postgres-end]
+
+  # give Juju some time to deploy and refresh the apps
+  juju wait-for application postgresql-k8s \
+  --query='status=="active"' --timeout 20m
+  juju wait-for application expressjs-hello-world \
+  --query='status=="active"' --timeout 20m
+  juju status --relations
+
+  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi "
+  curl http://expressjs-hello-world/visitors \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep 1
+  curl http://expressjs-hello-world \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  curl http://expressjs-hello-world/visitors \
+  --resolve expressjs-hello-world:80:127.0.0.1 | grep 2
+
+  # [docs:clean-environment]
+  charmcraft clean
+  # Back out to main directory for cleanup
+  cd ..
+  rockcraft clean
+  # exit and delete the charm dir
+  rm -rf charm
+  # delete app directory
+  rm -rf app
+  # delete all the files created during the tutorial
+  rm expressjs-hello-world_0.1_$(dpkg --print-architecture).rock \
+    expressjs-hello-world_0.2_$(dpkg --print-architecture).rock \
+    expressjs-hello-world_0.3_$(dpkg --print-architecture).rock \
+    rockcraft.yaml
+  # Remove the juju model
+  juju destroy-model expressjs-hello-world --destroy-storage --no-prompt --force
+  # [docs:clean-environment-end]

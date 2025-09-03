@@ -20,8 +20,8 @@ import pathlib
 import pytest
 import pytest_mock
 
-from charmcraft import services, utils
-from charmcraft.services.charmlibs import CharmLibDelta
+from charmcraft import utils
+from charmcraft.services.charmlibs import CharmLibDelta, CharmLibsService
 from charmcraft.store.models import Library
 
 
@@ -52,7 +52,7 @@ def patch(request) -> int | None:
 
 def test_is_downloaded_no_file(
     fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     api: int,
@@ -65,14 +65,14 @@ def test_is_downloaded_no_file(
 
 @pytest.mark.parametrize(("patch", "expected"), [(None, True), (1, True), (2, False)])
 def test_is_downloaded_with_file(
-    fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    project_path: pathlib.Path,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     patch: int | None,
     expected: bool,
 ):
-    lib_path = fake_project_dir / utils.get_lib_path(charm_name, lib_name, 0)
+    lib_path = project_path / utils.get_lib_path(charm_name, lib_name, 0)
     lib_path.parent.mkdir(parents=True)
     lib_path.write_text("LIBID='abc'\nLIBAPI=0\nLIBPATCH=1\n")
 
@@ -112,19 +112,17 @@ def test_is_downloaded_with_file(
     ],
 )
 def test_get_local_version(
-    fake_project_dir: pathlib.Path,
-    service: services.CharmLibsService,
+    project_path: pathlib.Path,
+    service: CharmLibsService,
     charm_name: str,
     lib_name: str,
     lib_contents: str | None,
     expected: tuple[int, int] | None,
 ):
     if expected is not None:
-        lib_path = fake_project_dir / utils.get_lib_path(
-            charm_name, lib_name, expected[0]
-        )
-        (fake_project_dir / lib_path).parent.mkdir(parents=True)
-        (fake_project_dir / lib_path).write_text(str(lib_contents))
+        lib_path = project_path / utils.get_lib_path(charm_name, lib_name, expected[0])
+        (project_path / lib_path).parent.mkdir(parents=True)
+        (project_path / lib_path).write_text(str(lib_contents))
 
     assert (
         service.get_local_version(charm_name=charm_name, lib_name=lib_name) == expected
@@ -138,12 +136,12 @@ def test_get_local_version(
     ],
 )
 def test_write_success(
-    fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
+    project_path: pathlib.Path, service: CharmLibsService, lib: Library
 ):
     service.write(lib)
 
     actual = (
-        fake_project_dir / utils.get_lib_path(lib.charm_name, lib.lib_name, lib.api)
+        project_path / utils.get_lib_path(lib.charm_name, lib.lib_name, lib.api)
     ).read_text()
 
     assert actual == lib.content
@@ -156,7 +154,7 @@ def test_write_success(
     ],
 )
 def test_write_error(
-    fake_project_dir: pathlib.Path, service: services.CharmLibsService, lib: Library
+    fake_project_dir: pathlib.Path, service: CharmLibsService, lib: Library
 ):
     with pytest.raises(ValueError, match="Library has no content"):
         service.write(lib)
@@ -203,14 +201,13 @@ def test_write_error(
 def test_get_unpublished_libs(
     fake_project_dir: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
-    service: services.CharmLibsService,
+    service: CharmLibsService,
     mocker: pytest_mock.MockerFixture,
     store_libs: dict[str, Library],
     expected: list[CharmLibDelta],
 ):
     service._project_dir = fake_project_dir
-    service._project.name = "charmcraft-test-charm"
-    local_lib_dir = fake_project_dir / "lib/charms/charmcraft_test_charm/v0"
+    local_lib_dir = fake_project_dir / "lib/charms/example_charm/v0"
     local_lib_dir.mkdir(parents=True)
     local_lib_file = local_lib_dir / "test_lib.py"
     local_lib_file.write_text("LIBID='abc'\nLIBAPI=0\nLIBPATCH=1000")

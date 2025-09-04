@@ -26,7 +26,7 @@ def juju(request: pytest.FixtureRequest):
             logger.info("Collecting Juju logs...")
             time.sleep(0.5)  # Wait for Juju to process logs.
             log = juju.debug_log(limit=1000)
-            print(log, end='', file=sys.stderr)
+            print(log, end="", file=sys.stderr)
 
 
 @pytest.fixture(scope="session")

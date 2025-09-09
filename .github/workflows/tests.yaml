@@ -151,12 +151,14 @@ jobs:
         run: uv sync --no-dev
       - name: Init and check kubernetes
         run: |
+          source .venv/bin/activate
           mkdir test-charm-kubernetes
           cd test-charm-kubernetes
           charmcraft init --profile=kubernetes
           tox -e lint,unit
       - name: Init and check machine
         run: |
+          source .venv/bin/activate
           mkdir test-charm-machine
           cd test-charm-machine
           charmcraft init --profile=machine

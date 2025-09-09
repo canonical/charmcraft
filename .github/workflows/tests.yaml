@@ -152,14 +152,14 @@ jobs:
       - name: Init and check kubernetes
         run: |
           source .venv/bin/activate
-          mkdir test-charm-kubernetes
-          cd test-charm-kubernetes
+          mkdir init-charm-kubernetes
+          cd init-charm-kubernetes
           charmcraft init --profile=kubernetes --author=CI
           tox -e lint,unit
       - name: Init and check machine
         run: |
           source .venv/bin/activate
-          mkdir test-charm-machine
-          cd test-charm-machine
+          mkdir init-charm-machine
+          cd init-charm-machine
           charmcraft init --profile=machine --author=CI
           tox -e lint,unit

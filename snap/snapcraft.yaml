@@ -117,6 +117,7 @@ parts:
       - python3-pkg-resources
       - python3.12-minimal
       - libgit2-1.7
+      - libxslt1.1 # Used by craft-parts's maven plugin.
     build-attributes:
       - enable-patchelf
   charmcraft:

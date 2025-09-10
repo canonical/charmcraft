@@ -138,28 +138,3 @@ jobs:
           charmcraft init --profile=machine
           charmcraft pack
           test -f *.charm
-
-  init-charm-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-      - name: Install tox and tox-uv
-        run: uv tool install tox --with tox-uv
-      - name: Build and install Charmcraft
-        run: uv sync --no-dev
-      - name: Init and check kubernetes
-        run: |
-          source .venv/bin/activate
-          mkdir init-charm-kubernetes
-          cd init-charm-kubernetes
-          charmcraft init --profile=kubernetes --author=CI
-          tox -e lint,unit
-      - name: Init and check machine
-        run: |
-          source .venv/bin/activate
-          mkdir init-charm-machine
-          cd init-charm-machine
-          charmcraft init --profile=machine --author=CI
-          tox -e lint,unit

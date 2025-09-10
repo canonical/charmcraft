@@ -45,6 +45,7 @@ APP_METADATA = craft_application.AppMetadata(
     source_ignore_patterns=["*.charm", "charmcraft.yaml"],
     docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
+    mandatory_adoptable_fields=[],  # Version field is not mandatory.
 )
 
 PRIME_BEHAVIOUR_CHANGE_MESSAGE = (
@@ -73,10 +74,6 @@ class Charmcraft(craft_application.Application):
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
         return self._command_groups
-
-    def _project_vars(self, yaml_data: dict[str, Any]) -> dict[str, str]:
-        """Return a dict with project-specific variables, for a craft_part.ProjectInfo."""
-        return {"version": "unversioned"}
 
     def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
         """Check for deprecated fields in the yaml_data."""

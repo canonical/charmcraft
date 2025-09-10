@@ -412,8 +412,15 @@ The request should return the ``Hello, world!`` greeting.
     setting a DNS record.
 
 
-Configure the Flask app
------------------------
+The development cycle
+---------------------
+
+So far, we have worked through the entire cycle, from creating an app to deploying it.
+But now – as in every real-world case – we will go through the experience of
+ iterating to develop the app, and deploy each iteration.
+
+Provide a configuration
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate how to provide a configuration to the Flask app,
 we will make the greeting configurable. We will expect this
@@ -424,6 +431,9 @@ keyword ``GREETING``. Change back to the ``~/flask-hello-world`` directory using
 .. literalinclude:: code/flask/greeting_app.py
     :caption: ~/flask-hello-world/app.py
     :language: python
+
+Update the rock
+~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.2`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -458,6 +468,9 @@ Let's pack and upload the new version of the rock:
     :start-after: [docs:docker-update]
     :end-before: [docs:docker-update-end]
     :dedent: 2
+
+Update the charm
+~~~~~~~~~~~~~~~~
 
 Change back into the charm directory using ``cd charm``.
 
@@ -522,7 +535,7 @@ This will require integration with a database to keep the visitor count.
 This will require a few changes:
 
 * We will need to create a database migration that creates the ``visitors`` table.
-* We will need to keep track how many times the root endpoint has been called
+* We will need to keep track of how many times the root endpoint has been called
   in the database.
 * We will need to add a new endpoint to retrieve the number of visitors from the
   database.
@@ -543,7 +556,7 @@ and paste the following code into it:
 
 .. note::
 
-    The charm will pass the Database connection string in the
+    The charm will pass the database connection string in the
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once
     PostgreSQL has been integrated with the charm.
 
@@ -557,6 +570,9 @@ and paste the following code into it:
 
     You could also use different tooling for migration, for example
     `Alembic <https://alembic.sqlalchemy.org/en/latest/>`__.
+
+Update the rock again
+~~~~~~~~~~~~~~~~~~~~~
 
 Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
@@ -602,6 +618,9 @@ Let's pack and upload the new version of the rock:
     :end-before: [docs:docker-2nd-update-end]
     :dedent: 2
 
+Update the charm again
+~~~~~~~~~~~~~~~~~~~~~~
+
 Change back into the charm directory using ``cd charm``.
 
 The Flask app now requires a database which needs to be declared in the
@@ -642,7 +661,7 @@ Send a request to the endpoint:
 
 It should still return the ``Hi!`` greeting.
 
-Check the total visitors:
+Check the total number of visitors:
 
 .. code-block:: bash
 
@@ -697,7 +716,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

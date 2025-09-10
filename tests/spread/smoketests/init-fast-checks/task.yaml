@@ -2,7 +2,6 @@ summary: Check that the templates pass their own linting and unit tests.
 
 # Limited to Ubuntu 22.04 and 24.04 because the templates require Python >= 3.10.
 systems:
-  - ubuntu-22.04-64
   - ubuntu-24.04-64
 
 environment:

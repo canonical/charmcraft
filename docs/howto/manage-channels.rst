@@ -91,7 +91,7 @@ Close a channel with:
 .. code-block:: bash
 
   charmcraft close <my-charm> <track>/<risk>/<branch>
-  
+
 When you close a channel, e.g.,
 latest/candidate, that means that any deployment requests that go there will be
 forwarded to the next most stable risk, e.g., for beta, latest/stable. If you close

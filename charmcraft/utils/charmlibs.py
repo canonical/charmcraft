@@ -21,7 +21,7 @@ import hashlib
 import os
 import pathlib
 from dataclasses import dataclass
-from typing import overload
+from typing import Any, overload
 
 from craft_cli import CraftError
 from typing_extensions import Self
@@ -134,7 +134,7 @@ def get_lib_internals(lib_path: pathlib.Path) -> LibInternals:
     pydeps_error = _msg_prefix + "PYDEPS must be a constant list of non-empty strings"
 
     # walk the AST "first layer", find assignments to the key fields and validate them
-    metadata = {}
+    metadata: dict[str, Any] = {}
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.Assign):
             for target in (n for n in node.targets if isinstance(n, ast.Name)):

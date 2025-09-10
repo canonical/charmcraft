@@ -85,12 +85,6 @@
 					"default": null,
 					"title": "Title"
 				},
-				"version": {
-					"const": "unversioned",
-					"default": "unversioned",
-					"title": "Version",
-					"type": "string"
-				},
 				"summary": {
 					"description": "A brief (one-line) summary of your charm.",
 					"maxLength": 200,
@@ -118,26 +112,6 @@
 					],
 					"default": null,
 					"title": "Build-Base"
-				},
-				"contact": {
-					"default": null,
-					"title": "Contact",
-					"type": "null"
-				},
-				"issues": {
-					"default": null,
-					"title": "Issues",
-					"type": "null"
-				},
-				"source-code": {
-					"default": null,
-					"title": "Source-Code",
-					"type": "null"
-				},
-				"license": {
-					"default": null,
-					"title": "License",
-					"type": "null"
 				},
 				"adopt-info": {
 					"anyOf": [
@@ -907,12 +881,6 @@
 					"default": null,
 					"title": "Title"
 				},
-				"version": {
-					"const": "unversioned",
-					"default": "unversioned",
-					"title": "Version",
-					"type": "string"
-				},
 				"summary": {
 					"description": "A brief (one-line) summary of your charm.",
 					"maxLength": 200,
@@ -1023,26 +991,6 @@
 					},
 					"title": "Platforms",
 					"type": "object"
-				},
-				"contact": {
-					"default": null,
-					"title": "Contact",
-					"type": "null"
-				},
-				"issues": {
-					"default": null,
-					"title": "Issues",
-					"type": "null"
-				},
-				"source-code": {
-					"default": null,
-					"title": "Source-Code",
-					"type": "null"
-				},
-				"license": {
-					"default": null,
-					"title": "License",
-					"type": "null"
 				},
 				"adopt-info": {
 					"anyOf": [

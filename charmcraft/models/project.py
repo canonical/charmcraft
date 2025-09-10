@@ -212,11 +212,12 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
     version: SkipJsonSchema[VersionStr | None] = None
-    license: None = None
+    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
     # These are inside the "links" child model.
-    contact: None = None
-    issues: None = None
-    source_code: None = None
+    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
     )

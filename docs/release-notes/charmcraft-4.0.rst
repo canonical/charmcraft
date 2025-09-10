@@ -1,7 +1,7 @@
 Charmcraft 4.0 release notes
 ============================
 
-23 June 2025
+23 September 2025
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.0.
 
@@ -32,7 +32,40 @@ Non-snap installations of Charmcraft have the following dependencies:
 What's new
 ----------
 
-Charmcraft 4.0 brings no new features, only removing deprecated features.
+Charmcraft 4.0 brings only a few new features.
+
+OpenID Connect integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The App charm extensions now include OpenID Connect integration for app charms.
+This applies automatically to any charm using the
+:ref:`Django <django-framework-extension>`,
+:ref:`Express <expressjs-framework-extension>`,
+:ref:`FastAPI <fastapi-framework-extension>`,
+:ref:`Flask <flask-framework-extension>`, and
+:ref:`Go <go-framework-extension>` framework extensions when packing a charm with
+Charmcraft 4.
+
+``init`` profile changes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The profiles for use with the :ref:`ref_commands_init` command have been modernised.
+The ``static`` and ``lint`` tox environments are no longer separate.
+
+Test profiles
+^^^^^^^^^^^^^
+
+Two new init profiles are also available for better integration with the
+:ref:`ref_commands_test` command. These profiles are experimental, but are provided
+for early adopters who want to try the experimental test command.
+
+Spring Boot framework extension
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Apps that use the Spring Boot framework can now use the
+:ref:`spring-boot-framework-extension` for charming the app. A new
+:ref:`tutorial <write-your-first-kubernetes-charm-for-a-spring-boot-app>` is also
+included to walk a first-time charmer through charming their Spring Boot app.
 
 Feature removals
 ----------------
@@ -78,7 +111,6 @@ for a Kubernetes charm. We have transferred the ``simple`` profile to an
 `example charm <https://github.com/canonical/operator/tree/main/examples/httpbin-demo>`_
 in the Ops repository.
 
-
 Known issues
 ------------
 
@@ -96,7 +128,11 @@ See individual issue links for any mitigations.
 Fixed bugs and issues
 ---------------------
 
-The following bugs have been resolved in Charmcraft 4.0.0:
+Charmcraft 4.0.0
+~~~~~~~~~~~~~~~~
+
+- `#2431 <https://github.com/canonical/charmcraft/issues/2431>`_ — Charmcraft now
+  errors if a relation name is invalid.
 
 Contributors
 ------------

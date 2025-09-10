@@ -136,6 +136,11 @@ constraint-dependencies = [
     # typing-extensions 4.14.0 interferes with pydantic-core builds
     # https://github.com/python/typing_extensions/issues/615
     "typing-extensions!=4.14.0",
+
+    # Ubuntu Noble only has rust 1.82 in the repositories. rpds-py 0.25.0 updated to a
+    # version of rpds that uses Rust 2024 edition. For now, just constrain us until
+    # we can get a newer version of rust.
+    "rpds-py<0.25;python_version<'3.13' and platform_system=='Linux'",
 ]
 conflicts = [
     [

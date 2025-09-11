@@ -7,46 +7,19 @@
 The ``tests/integration/test_charm.py`` file is the companion to
 ``src/charm.py`` for integration testing.
 
-Profiles other than the one for 12-factor apps automatically create
-``charmcraft init``. It is pre-populated with standard constructs used by
-``pytest-operator``, similar to the below:
+When a charm is initialized with the Kubernetes or machine profile, Charmcraft creates
+this file with the following contents:
 
-.. code-block:: python
+- A test that deploys your charm to a temporary Juju model
+- A placeholder test that checks the version of your charm's workload
 
-    #!/usr/bin/env python3
-    # Copyright 2023 Ubuntu
-    # See LICENSE file for licensing details.
+The tests use the Jubilant library.
+You should write more tests as you implement your charm.
 
-    import asyncio
-    import logging
-    from pathlib import Path
+    See more:
+    :external+ops:ref:`Ops | How to write integration tests for a charm
+    <write-integration-tests-for-a-charm>`,
+    `Jubilant documentation <https://documentation.ubuntu.com/jubilant/>`_
 
-    import pytest
-    import yaml
-    from pytest_operator.plugin import OpsTest
-
-    logger = logging.getLogger(__name__)
-
-    METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-    APP_NAME = METADATA["name"]
-
-
-    @pytest.mark.abort_on_fail
-    async def test_build_and_deploy(ops_test: OpsTest):
-        """Build the charm-under-test and deploy it together with related charms.
-
-        Assert on the unit status before any relations/configurations take place.
-        """
-        # Build and deploy charm from local source folder
-        charm = await ops_test.build_charm(".")
-        resources = {
-            "some-container-image": METADATA["resources"]["some-container-image"]["upstream-source"]
-        }
-
-        # Deploy the charm and wait for active/idle status
-        await asyncio.gather(
-            ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME),
-            ops_test.model.wait_for_idle(
-                apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=1000
-            ),
-        )
+The code for creating the temporary Juju model and packing your charm is in the
+:ref:`tests-integration-conftest-py-file`.

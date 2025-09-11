@@ -90,7 +90,7 @@ Close a channel with:
 
 .. code-block:: bash
 
-  charmcraft close <my-charm> <track>/<risk>[/<branch>]
+  charmcraft close <charm> <track>/<risk>[/<branch>]
 
 When you close a channel, e.g.,
 latest/candidate, that means that any deployment requests that go there will be

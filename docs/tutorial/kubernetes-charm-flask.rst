@@ -416,8 +416,8 @@ The development cycle
 ---------------------
 
 So far, we have worked through the entire cycle, from creating an app to deploying it.
-But now – as in every real-world case – we will go through the experience of
- iterating to develop the app, and deploy each iteration.
+But now – as in every real-world case -- we will go through the experience of
+iterating to develop the app, and deploy each iteration.
 
 Provide a configuration
 ~~~~~~~~~~~~~~~~~~~~~~~

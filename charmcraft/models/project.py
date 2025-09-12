@@ -32,7 +32,7 @@ from typing import (
 import pydantic
 import pydantic.v1
 from craft_application import errors, models
-from craft_application.models import PlatformsDict
+from craft_application.models import PlatformsDict, VersionStr
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
 from pydantic.json_schema import SkipJsonSchema
@@ -209,12 +209,15 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
-    license: None = None
+
+    # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
+    version: SkipJsonSchema[VersionStr | None] = None
+    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
     # These are inside the "links" child model.
-    contact: None = None
-    issues: None = None
-    source_code: None = None
+    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
     )

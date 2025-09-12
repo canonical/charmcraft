@@ -154,6 +154,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
+    "common/craft-parts/reference/plugins/maven_use_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
     "common/craft-parts/reference/plugins/npm_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",

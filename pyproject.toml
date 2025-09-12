@@ -7,10 +7,9 @@ dependencies = [
     "craft-application~=5.7",
     "craft-cli>=2.15.0",
     "craft-grammar>=2.0.0",
-    "craft-parts>=2.2.1",
-    "craft-providers>=2.1.0",
+    "craft-parts~=2.20",
+    "craft-providers~=3.1",
     "craft-platforms~=0.10",
-    "craft-providers>=2.0.0",
     "craft-store~=3.2",
     "distro>=1.7.0",
     "docker>=7.0.0",
@@ -69,7 +68,7 @@ docs = [
     "sphinxcontrib-details-directive",
     "sphinxext-rediraffe==0.2.7",
     "matplotlib",
-    "pydantic-kitbash==0.0.7",
+    "pydantic-kitbash==0.0.8",
 ]
 lint = [
     "codespell[toml]",
@@ -137,6 +136,11 @@ constraint-dependencies = [
     # typing-extensions 4.14.0 interferes with pydantic-core builds
     # https://github.com/python/typing_extensions/issues/615
     "typing-extensions!=4.14.0",
+
+    # Ubuntu Noble only has rust 1.82 in the repositories. rpds-py 0.25.0 updated to a
+    # version of rpds that uses Rust 2024 edition. For now, just constrain us until
+    # we can get a newer version of rust.
+    "rpds-py<0.25;python_version<'3.13' and platform_system=='Linux'",
 ]
 conflicts = [
     [

@@ -1,0 +1,25 @@
+summary: Check that the templates pass their own linting and unit tests.
+
+# Limited to Ubuntu 22.04 and 24.04 because the templates require Python >= 3.10.
+systems:
+  - ubuntu-24.04-64
+
+environment:
+  PROFILE/machine: machine
+  PROFILE/kubernetes: kubernetes
+
+prepare: |
+  snap install --classic --no-wait astral-uv
+  rm -rf my-application
+  charmcraft init --project-dir=my-application --profile=${PROFILE}
+
+  # The templates use tox's uv runner, so install tox with the tox-uv plugin.
+  snap watch --last=install
+  uv tool install --force --with tox-uv tox
+
+execute: |
+  cd my-application
+  ~/.local/bin/tox -e lint,unit
+
+restore: |
+  rm -rf my-application

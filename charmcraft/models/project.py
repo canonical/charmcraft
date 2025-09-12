@@ -32,7 +32,7 @@ from typing import (
 import pydantic
 import pydantic.v1
 from craft_application import errors, models
-from craft_application.models import PlatformsDict
+from craft_application.models import PlatformsDict, VersionStr
 from craft_application.util import safe_yaml_load
 from craft_cli import CraftError, emit
 from pydantic.json_schema import SkipJsonSchema
@@ -63,6 +63,24 @@ CharmcraftSummaryStr = Annotated[
     # never happen entirely. Reductions will only occur on major releases.
     # https://github.com/canonical/charmcraft/issues/1598
 ]
+
+
+def _validate_field_name(name: str) -> str:
+    """Check that a Juju field name matches Juju's requirements for said field name.
+
+    See the code at:
+    https://github.com/juju/juju/blob/60c6895e8ffb9b9952d7971cbdd6df810a572410/mongo/utils/validfield.go#L13-L26
+    """
+    if not name:
+        raise ValueError("A field name cannot be empty.")
+    if name.startswith("$"):
+        raise ValueError("A field name cannot start with '$'.")
+    if "." in name:
+        raise ValueError("A field name cannot contain '.'.")
+    return name
+
+
+FieldName = Annotated[str, _validate_field_name]
 
 
 def get_charm_file_platform_str(bases: Iterable[charmcraft.Base]) -> str:
@@ -191,12 +209,15 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     # Default project properties that Charmcraft currently does not use. Types are set
     # to be Optional[None], preventing them from being used, but allow them to be used
     # by the application.
-    version: Literal["unversioned"] = "unversioned"  # type: ignore[assignment]
-    license: None = None
+
+    # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
+    version: SkipJsonSchema[VersionStr | None] = None
+    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
     # These are inside the "links" child model.
-    contact: None = None
-    issues: None = None
-    source_code: None = None
+    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
     )
@@ -539,7 +560,7 @@ class CharmProject(CharmcraftProject):
         default=None,
         description="A key-only mapping representing extra bindings needed.",
     )
-    peers: dict[str, Any] | None = pydantic.Field(
+    peers: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\
@@ -568,7 +589,7 @@ class CharmProject(CharmcraftProject):
             }
         ],
     )
-    provides: dict[str, Any] | None = pydantic.Field(
+    provides: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\
@@ -588,7 +609,7 @@ class CharmProject(CharmcraftProject):
         ),
         examples=[{"self": {"interface": "identity"}}],
     )
-    requires: dict[str, Any] | None = pydantic.Field(
+    requires: dict[FieldName, Any] | None = pydantic.Field(
         default=None,
         description=textwrap.dedent(
             """\

@@ -58,6 +58,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |base_url| replace:: ``APP_BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <go charm> postgresql``
 .. |framework| replace:: Go
+.. |framework_prefix| replace:: APP
 
 .. include:: /reuse/reference/extensions/integrations.rst
 .. include:: /reuse/reference/extensions/environment_variables.rst

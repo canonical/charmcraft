@@ -79,14 +79,20 @@ You can request a track guardrail and create a track.
 Open a channel
 --------------
 
-A channel is opened implicitly when you release a revision to it.
+A channel is opened when you release a revision to it. Before that, the
+channel is created but not opened.
 
 
 Close a channel
 ---------------
 
-A channel is opened when you release a revision to that channel. Before that, the
-channel is created but not opened. When you're closing a channel, e.g.,
+Close a channel with:
+
+.. code-block:: bash
+
+  charmcraft close <charm> <track>/<risk>[/<branch>]
+
+When you close a channel, e.g.,
 latest/candidate, that means that any deployment requests that go there will be
 forwarded to the next most stable risk, e.g., for beta, latest/stable. If you close
 stable, you can no longer deploy or update from that, unless you release again to that

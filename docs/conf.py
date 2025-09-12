@@ -72,6 +72,7 @@ extensions = [
     "canonical_sphinx",
     "pydantic_kitbash",
     "sphinx_sitemap",
+    "sphinx_substitution_extensions",
 ]
 
 # Copy extra files to the _static dir during build
@@ -153,6 +154,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
+    "common/craft-parts/reference/plugins/maven_use_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
     "common/craft-parts/reference/plugins/npm_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",
@@ -191,6 +193,7 @@ intersphinx_mapping = {
     "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
     "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
+    "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
 }
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes

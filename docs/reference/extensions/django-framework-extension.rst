@@ -66,6 +66,7 @@ will be set automatically.
 .. |base_url| replace:: ``DJANGO_BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <django charm> postgresql``
 .. |framework| replace:: Django
+.. |framework_prefix| replace:: DJANGO
 
 .. include:: /reuse/reference/extensions/integrations.rst
 .. include:: /reuse/reference/extensions/environment_variables.rst

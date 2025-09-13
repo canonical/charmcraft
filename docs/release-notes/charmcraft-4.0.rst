@@ -32,19 +32,18 @@ Non-snap installations of Charmcraft have the following dependencies:
 What's new
 ----------
 
-Charmcraft 4.0 brings only a few new features.
+Charmcraft 4.0 brings the following new features.
 
 OpenID Connect integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The App charm extensions now include OpenID Connect integration for app charms.
-This applies automatically to any charm using the
+OpenID Connect is now available in all 12-factor app charm extensions.
+It's available in any charm using the
 :ref:`Django <django-framework-extension>`,
 :ref:`Express <expressjs-framework-extension>`,
 :ref:`FastAPI <fastapi-framework-extension>`,
 :ref:`Flask <flask-framework-extension>`, and
-:ref:`Go <go-framework-extension>` framework extensions when packing a charm with
-Charmcraft 4.
+:ref:`Go <go-framework-extension>` extensions and packed with Charmcraft 4.
 
 ``init`` profile changes
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,14 +69,15 @@ included to walk a first-time charmer through charming their Spring Boot app.
 Feature removals
 ----------------
 
-The following features are removed in Charmcraft 4.0. Anyone needing these features
-can continue to use
+The following features are removed in Charmcraft 4.0. If you need these features, they 
+are still available in Charmcraft 3.
 
 Windows support
 ~~~~~~~~~~~~~~~
 
-Charmcraft 4.0 is no longer tested at all on Windows. Windows users use
-`Windows Subsystem for Linux <https://ubuntu.com/desktop/wsl>`_ to run Charmcraft.
+Charmcraft 4.0 has ceased support for Windows. To continue on the platform, we 
+encourage Windows users to run Charmcraft in `Windows Subsystem for Linux
+<https://ubuntu.com/desktop/wsl>`_.
 
 
 CentOS 7 support
@@ -85,7 +85,7 @@ CentOS 7 support
 
 CentOS 7 reached its `end of life
 <https://www.redhat.com/en/topics/linux/centos-linux-eol>`_ on 30 June 2024, and
-support has been removed from Charmcraft 4.0.
+support for it has ended with Charmcraft 4.0.
 
 
 Bundle management commands
@@ -105,7 +105,7 @@ for this purpose.
 ``simple`` profile
 ~~~~~~~~~~~~~~~~~~
 
-The ``simple`` profile of ``charmcraft init`` has been removed from Charmcraft 4.
+The ``simple`` init profile is removed from Charmcraft 4.0.
 The default profile is now ``kubernetes``, which is a minimal profile with scaffolding
 for a Kubernetes charm. We have transferred the ``simple`` profile to an
 `example charm <https://github.com/canonical/operator/tree/main/examples/httpbin-demo>`_
@@ -151,6 +151,6 @@ this release:
 :literalref:`@lengau<https://launchpad.net/~lengau>`,
 :literalref:`@m7mdisk<https://github.com/m7mdisk>`,
 :literalref:`@marcusboden<https://github.com/marcusboden>`,
-:literalref:`@mr-cal<https://github.com/mr-cal>`,
-:literalref:`@medubelko<https://github.com/medubelko>`, and
+:literalref:`@medubelko<https://github.com/medubelko>`,
+:literalref:`@mr-cal<https://github.com/mr-cal>`, and
 :literalref:`@tonyandrewmeyer<https://github.com/tonyandrewmeyer>`

@@ -28,8 +28,8 @@ def get_python_filepaths() -> list[str]:
     """Helper to retrieve paths of Python files."""
     # list of directories to scan
     source_dirs = ["charmcraft", "tests"]
-    # list of source files - always return setup.py to be safe
-    source_files = ["setup.py"]
+    # list of source files
+    source_files = []
 
     # Parse the globs into their matching files
     cwd = Path.cwd()

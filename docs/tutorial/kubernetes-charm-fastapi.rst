@@ -545,9 +545,13 @@ following to the end of the ``charmcraft.yaml`` file:
 
 .. note::
 
-    Configuration options are automatically capitalized and ``-`` are replaced
+    When configuration options are converted to environment variables,
+    their names are automatically capitalized and ``-`` are replaced
     by ``_``. An ``APP_`` prefix will also be added as a namespace
     for app configurations.
+
+    In this tutorial, the new ``greeting`` configuration results in an
+    environment variable named ``APP_GREETING``.
 
 We can now pack and deploy the new version of the FastAPI app:
 

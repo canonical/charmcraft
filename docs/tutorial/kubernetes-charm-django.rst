@@ -777,9 +777,13 @@ the end of the ``charmcraft.yaml`` file:
 
 .. note::
 
-    Configuration options are automatically capitalized and ``-`` are
+    When configuration options are converted to environment variables,
+    their names are automatically capitalized and ``-`` are
     replaced by ``_``. A ``DJANGO_`` prefix will also be added as a
     namespace for app configurations.
+
+    In this tutorial, the new ``greeting`` configuration results in an
+    environment variable named ``DJANGO_GREETING``.
 
 We can now pack a new version of the charm, and then deploy it once more with ``juju
 refresh``:

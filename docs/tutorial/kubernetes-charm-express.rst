@@ -537,8 +537,8 @@ We can now pack and deploy the new version of the Express app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Verify that the new configuration
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Verify that the new configuration
 has been added:
 
 .. code-block:: bash
@@ -559,7 +559,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, check the response:
+Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 

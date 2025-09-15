@@ -713,8 +713,8 @@ Provide a configuration
 To demonstrate how to provide a configuration to the Django app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
-keyword ``DJANGO_GREETING``. Go back out to the rock
-directory ``~/django-hello-world`` using ``cd ..``. From there, open the
+keyword ``DJANGO_GREETING``. Return to the rock
+directory ``~/django-hello-world``. From there, open the
 ``./django_hello_world/greeting/views.py`` file and replace the content
 with:
 
@@ -790,8 +790,8 @@ refresh``:
     :end-before: [docs:repack-refresh-2nd-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Visit http://django-hello-world in a
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Visit http://django-hello-world in a
 web browser or send a request to the root endpoint using:
 
 .. code-block:: bash
@@ -809,8 +809,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, visit
-http://django-hello-world or use:
+Wait for the app to restart, and then visit http://django-hello-world or use:
 
 .. code-block:: bash
 

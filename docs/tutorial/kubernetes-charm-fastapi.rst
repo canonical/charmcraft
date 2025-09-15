@@ -557,8 +557,8 @@ We can now pack and deploy the new version of the FastAPI app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Verify that the
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Verify that the
 new configuration has been added:
 
 .. code-block:: bash
@@ -579,7 +579,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, check the response:
+Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
@@ -606,7 +606,7 @@ The charm created by the ``fastapi-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``~/fastapi-hello-world`` directory using ``cd ..``,
+Return to the ``~/fastapi-hello-world`` directory,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 

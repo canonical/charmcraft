@@ -548,8 +548,8 @@ We can now pack and deploy the new version of the Spring Boot app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Verify that the new configuration
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Verify that the new configuration
 has been added:
 
 .. code-block:: bash
@@ -570,7 +570,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, check the response:
+Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
@@ -595,7 +595,7 @@ Let's start with the database migration to create the required tables.
 We will use the auto DDL generation from JPA using the
 property ``spring.jpa.generate-ddl``.
 
-Go back out to the ``~/spring-boot-hello-world`` directory using ``cd ..``.
+Return to the ``~/spring-boot-hello-world`` directory.
 Add the following line to the ``src/main/resources/application.properties``
 file:
 

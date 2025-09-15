@@ -87,7 +87,7 @@ Then, copy the following text into it, and save:
 .. note::
 
     The ``psycopg2-binary`` package is needed so the Flask app can
-    connect to PostgreSQL.
+    connect to PostgreSQL, which we will do at the end of this tutorial.
 
 Install the packages:
 

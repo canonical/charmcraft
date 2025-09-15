@@ -380,7 +380,7 @@ following output:
     Unit                  Workload  Agent  Address      Ports  Message
     flask-hello-world/0*  active    idle   10.1.87.213
 
-Let's expose the app using ingress so that we can access the app. Deploy the
+Let's expose the app using ingress so that we can access it. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Flask app:
 
 .. literalinclude:: code/flask/task.yaml

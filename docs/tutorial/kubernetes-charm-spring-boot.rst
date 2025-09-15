@@ -419,7 +419,7 @@ following output:
     Unit                        Workload  Agent  Address       Ports  Message
     spring-boot-hello-world/0*  active    idle   10.1.223.117
 
-Let's expose the app using ingress so that we can access the app. Deploy the
+Let's expose the app using ingress so that we can access it. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Spring Boot app:
 
 .. literalinclude:: code/spring-boot/task.yaml

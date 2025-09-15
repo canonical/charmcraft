@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec "$SNAP"/bin/python "$SNAP"/bin/craftctl "$@"

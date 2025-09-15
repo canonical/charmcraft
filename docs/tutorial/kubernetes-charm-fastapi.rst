@@ -434,7 +434,7 @@ output:
     Unit                    Workload  Agent  Address      Ports  Message
     fastapi-hello-world/0*  active    idle   10.1.157.75
 
-Let's expose the app using ingress. Deploy the
+Let's expose the app using ingress so that we can access the app. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the FastAPI app:
 
 .. literalinclude:: code/fastapi/task.yaml

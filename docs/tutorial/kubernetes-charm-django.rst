@@ -545,7 +545,7 @@ Set the configuration:
     Turning on debug mode shouldn't be done in production. We will do this in
     the tutorial for now and later disable debug mode.
 
-Let's expose the app using ingress. Deploy the
+Let's expose the app using ingress so that we can access the app. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Django app:
 
 .. literalinclude:: code/django/task.yaml

@@ -57,12 +57,12 @@ SECRET_OPTIONS = {
     },
 }
 OAUTH_DYNAMIC_OPTIONS = {
-    "redirect-path": {
+    "{endpoint_name}-redirect-path": {
         "type": "string",
         "description": "The path that the user will be redirected upon completing login.",
         "default": "/callback",
     },
-    "scopes": {
+    "{endpoint_name}-scopes": {
         "type": "string",
         "description": "A list of scopes with spaces in between.",
         "default": "openid profile email",
@@ -246,28 +246,35 @@ class _AppBase(Extension):
         interface_name: str,
         config_options: dict[str, Any],
     ) -> dict[str, Any]:
-        oauth_endpoint_names = []
+        dynamic_endpoint_names = []
         requires = self._get_nested(self.yaml_data, "requires")
         for endpoint_name, require in requires.items():
             current_interface_name = require.get("interface")
             if current_interface_name == interface_name:
-                oauth_endpoint_names.append(endpoint_name)
+                dynamic_endpoint_names.append(endpoint_name)
 
         dynamic_config_options = {}
-        for oauth_endpoint_name in oauth_endpoint_names:
-            oidc_config_options = self._get_oidc_config_options(
-                oauth_endpoint_name, config_options
+        for endpoint_name in dynamic_endpoint_names:
+            updated_config_options = self._get_updated_dynamic_config_options(
+                endpoint_name, config_options
             )
-            dynamic_config_options.update(oidc_config_options)
+            dynamic_config_options.update(updated_config_options)
         return dynamic_config_options
 
-    def _get_oidc_config_options(
-        self, endpoint_name: str, config_options: dict[str, Any]
-    ) -> dict[str, Any]:
-        return {
-            f"{endpoint_name}-{config}": value
-            for config, value in config_options.items()
-        }
+    def _get_updated_dynamic_config_options(
+        self, endpoint_name: str, config_options: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        updated_config_options = {}
+        for option, value in config_options.items():
+            updated_option = option.format(endpoint_name=endpoint_name)
+            updated_value = copy.deepcopy(value)
+            for value_key, value_item in value.items():
+                if isinstance(value_item, str):
+                    updated_value[value_key] = value_item.format(
+                        endpoint_name=endpoint_name
+                    )
+            updated_config_options[updated_option] = updated_value
+        return updated_config_options
 
     @override
     def get_part_snippet(self) -> dict[str, Any]:
@@ -522,7 +529,12 @@ class SpringBootFramework(_AppBase):
     endpoint_dynamic_options: dict[str, dict[str, Any]] = {
         "oauth": {
             **OAUTH_DYNAMIC_OPTIONS,
-            "user-name-attribute": {
+            "{endpoint_name}-redirect-path": {
+                "default": "/login/oauth2/code/{endpoint_name}",
+                "description": "The path that the user will be redirected upon completing login.",
+                "type": "string",
+            },
+            "{endpoint_name}-user-name-attribute": {
                 "type": "string",
                 "description": "The name of the attribute returned in the UserInfo Response "
                 "that references the Name or Identifier of the end-user.",

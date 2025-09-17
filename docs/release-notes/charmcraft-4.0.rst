@@ -34,6 +34,20 @@ What's new
 
 Charmcraft 4.0 brings the following new features.
 
+New Documentation Domain
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charmcraft is an important member of the Canonical community and ecosystem, and all its
+site names should demonstrate that. With this release, we gave the docs a new home at
+the Ubuntu domain. You can now reach it at:
+
+`documentation.ubuntu.com/charmcraft <https://documentation.ubuntu.com/charmcraft>`_
+
+We put redirects in place to handle links to the old ReadTheDocs domain.
+
+With this change, we also removed the language subdirectory (/en) in the URL, to
+shave a few characters off all links.
+
 OpenID Connect integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -48,15 +62,19 @@ It's available in any charm using the
 ``init`` profile changes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The profiles for use with the :ref:`ref_commands_init` command have been modernised.
-The ``static`` and ``lint`` tox environments are no longer separate.
+Charmcraft 4.0 has much more modern :ref:`ref_commands_init` ``machine`` and
+``kubernetes`` profiles. Changes include:
+
+- The ``static`` and ``lint`` tox environments are now united.
+- The charm is packed with the :ref:`craft_parts_uv_plugin`.
+- Dependencies are now managed with `uv <https://docs.astral.sh/uv>`_.
 
 Test profiles
 ^^^^^^^^^^^^^
 
-Two new init profiles are also available for better integration with the
-:ref:`ref_commands_test` command. These profiles are experimental, but are provided
-for early adopters who want to try the experimental test command.
+We introduced two new init profiles, ``test-machine`` and ``test-kubernetes``. They
+provide a framework for using the :ref:`charmcraft test <ref_commands_test>` command.
+These profiles are experimental, so we can't guarantee their stability.
 
 Spring Boot framework extension
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,13 +87,13 @@ included to walk a first-time charmer through charming their Spring Boot app.
 Feature removals
 ----------------
 
-The following features are removed in Charmcraft 4.0. If you need these features, they 
+The following features are removed in Charmcraft 4.0. If you need these features, they
 are still available in Charmcraft 3.
 
 Windows support
 ~~~~~~~~~~~~~~~
 
-Charmcraft 4.0 has ceased support for Windows. To continue on the platform, we 
+Charmcraft 4.0 has ceased support for Windows. To continue on the platform, we
 encourage Windows users to run Charmcraft in `Windows Subsystem for Linux
 <https://ubuntu.com/desktop/wsl>`_.
 
@@ -88,18 +106,13 @@ CentOS 7 reached its `end of life
 support for it has ended with Charmcraft 4.0.
 
 
-Bundle management commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Bundle removal
+~~~~~~~~~~~~~~
 
-Bundle management commands are being removed from Charmcraft 4.0. Charmcraft 3 will
-continue to support bundles for those who still need them.
-
-
-``bundle`` plugin
-~~~~~~~~~~~~~~~~~
-
-Charmcraft 4 does not pack bundles. Users who need to pack bundles can use Charmcraft 3
-for this purpose.
+Aligning with the `discontinuation of bundle registrations
+<https://discourse.charmhub.io/t/15344>`_, Charmcraft 4.0 removes all bundle-related
+functionality. Charmcraft 3 will remain supported for packing bundles as well as the
+bundle commands (``register-bundle`` and ``promote-bundle``).
 
 
 ``simple`` profile
@@ -140,17 +153,17 @@ Contributors
 We would like to express a big thank you to all the people who contributed to
 this release:
 
-:literalref:`@ade555<https://github.com/ade555>`,
-:literalref:`@alithethird<https://github.com/alithethird>`,
-:literalref:`@bepri<https://github.com/bepri>`,
-:literalref:`@dimaqq<https://github.com/dimaqq>`,
-:literalref:`@dwilding<https://github.com/dwilding>`,
-:literalref:`@erinecon<https://github.com/erinecon>`,
-:literalref:`@jahn-junior<https://github.com/jahn-junior>`,
-:literalref:`@javierdelapuente<https://github.com/javierdelapuente>`,
-:literalref:`@lengau<https://launchpad.net/~lengau>`,
-:literalref:`@m7mdisk<https://github.com/m7mdisk>`,
-:literalref:`@marcusboden<https://github.com/marcusboden>`,
-:literalref:`@medubelko<https://github.com/medubelko>`,
-:literalref:`@mr-cal<https://github.com/mr-cal>`, and
-:literalref:`@tonyandrewmeyer<https://github.com/tonyandrewmeyer>`
+:literalref:`@ade555 <https://github.com/ade555>`,
+:literalref:`@alithethird <https://github.com/alithethird>`,
+:literalref:`@bepri <https://github.com/bepri>`,
+:literalref:`@dimaqq <https://github.com/dimaqq>`,
+:literalref:`@dwilding <https://github.com/dwilding>`,
+:literalref:`@erinecon <https://github.com/erinecon>`,
+:literalref:`@jahn-junio r<https://github.com/jahn-junior>`,
+:literalref:`@javierdelapuente <https://github.com/javierdelapuente>`,
+:literalref:`@lengau <https://launchpad.net/~lengau>`,
+:literalref:`@m7mdisk <https://github.com/m7mdisk>`,
+:literalref:`@marcusboden <https://github.com/marcusboden>`,
+:literalref:`@medubelko <https://github.com/medubelko>`,
+:literalref:`@mr-cal <https://github.com/mr-cal>` and
+:literalref:`@tonyandrewmeyer <https://github.com/tonyandrewmeyer>`

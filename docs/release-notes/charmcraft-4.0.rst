@@ -75,7 +75,7 @@ Test profiles
 ^^^^^^^^^^^^^
 
 We introduced two new init profiles, ``test-machine`` and ``test-kubernetes``. They
-provide a framework for using the :literalref:`charmcraft test <ref_commands_test>` 
+provide a framework for using the :literalref:`charmcraft test <ref_commands_test>`
 command.
 These profiles are experimental, so we can't guarantee their stability.
 

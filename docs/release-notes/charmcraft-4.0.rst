@@ -75,7 +75,8 @@ Test profiles
 ^^^^^^^^^^^^^
 
 We introduced two new init profiles, ``test-machine`` and ``test-kubernetes``. They
-provide a framework for using the :ref:`charmcraft test <ref_commands_test>` command.
+provide a framework for using the :literalref:`charmcraft test <ref_commands_test>` 
+command.
 These profiles are experimental, so we can't guarantee their stability.
 
 Spring Boot framework extension
@@ -111,10 +112,10 @@ support for it has ended with Charmcraft 4.0.
 Bundle removal
 ~~~~~~~~~~~~~~
 
-Aligning with the `discontinuation of bundle registrations
-<https://discourse.charmhub.io/t/15344>`_, Charmcraft 4.0 removes all bundle-related
-functionality. Charmcraft 3 will remain supported for packing bundles as well as the
-bundle commands (``register-bundle`` and ``promote-bundle``).
+As scheduled, all charm bundle features are removed with Charmcraft 4.0. Charmcraft 3
+will continue support for packing bundles and the ``register-bundle`` and
+``promote-bundle`` commands. This follows the `discontinuation of new bundle
+registrations <https://discourse.charmhub.io/t/15344>`_ in Nov 2024.
 
 
 ``simple`` profile
@@ -146,7 +147,7 @@ Fixed bugs and issues
 Charmcraft 4.0.0
 ~~~~~~~~~~~~~~~~
 
-- `#2431 <https://github.com/canonical/charmcraft/issues/2431>`_ — Charmcraft now
+- `#2431 <https://github.com/canonical/charmcraft/issues/2431>`_ Charmcraft now
   errors if a relation name is invalid.
 
 Contributors

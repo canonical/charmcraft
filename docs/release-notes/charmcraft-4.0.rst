@@ -68,6 +68,8 @@ Charmcraft 4.0 has much more modern :ref:`ref_commands_init` ``machine`` and
 - The ``static`` and ``lint`` tox environments are now united.
 - The charm is packed with the :ref:`craft_parts_uv_plugin`.
 - Dependencies are now managed with `uv <https://docs.astral.sh/uv>`_.
+- The reusable integration tests now use `Jubilant
+  <https://documentation.ubuntu.com/jubilant/>`_.
 
 Test profiles
 ^^^^^^^^^^^^^

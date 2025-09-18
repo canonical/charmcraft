@@ -62,8 +62,8 @@ It's available in any charm using the
 ``init`` profile changes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charmcraft 4.0 has much more modern :ref:`ref_commands_init` ``machine`` and
-``kubernetes`` profiles. Changes include:
+Charmcraft 4.0 has much more modern ``machine`` and ``kubernetes``
+:ref:`ref_commands_init` profiles. Changes include:
 
 - The ``static`` and ``lint`` tox environments are now united.
 - The charm is packed with the :ref:`craft_parts_uv_plugin`.

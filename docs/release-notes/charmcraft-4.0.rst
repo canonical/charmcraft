@@ -19,7 +19,7 @@ All versions of Charmcraft require the following software:
 - Either `LXD`_ or `Multipass`_
 
 We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It
-comes comes bundled with all its dependencies.
+comes bundled with all its dependencies.
 
 Non-snap installations of Charmcraft have the following dependencies:
 

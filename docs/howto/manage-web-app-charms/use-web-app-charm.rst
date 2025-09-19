@@ -438,7 +438,7 @@ Run a worker or scheduler process in your workloads
 ---------------------------------------------------
 
 You can run extra processes in the workload charm that receive the same environment
-variables as the main application. These services must be added to the
+variables as the main app. These services must be added to the
 ```rockcraft.yaml`` file under the ``services`` section. If the service name
 ends with ``-worker`` it will run in all units of the app,
 while if the name ends with ``-scheduler`` it will run in only one unit.
@@ -449,7 +449,7 @@ as a scheduler to kick off tasks at regular intervals, together with
 Celery beat should run in only one unit, while Celery worker servers
 will run in all units.
 
-For a Flask application that has the Celery app in the module
+For a Flask app that has the Celery app in the module
 ``webapp.app.celery_app``, you can add a snippet like the following
 into ``rockcraft.yaml``:
 

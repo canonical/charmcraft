@@ -19,7 +19,7 @@ All versions of Charmcraft require the following software:
 - Either `LXD`_ or `Multipass`_
 
 We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It
-comes comes bundled with all its dependencies.
+comes bundled with all its dependencies.
 
 Non-snap installations of Charmcraft have the following dependencies:
 
@@ -137,7 +137,8 @@ See individual issue links for any mitigations.
 Fixed bugs and issues
 ---------------------
 
-The following bugs have been resolved in Charmcraft 3.5.1:
+Charmcraft 3.5.1
+~~~~~~~~~~~~~~~~
 
 - `#2310 <https://github.com/canonical/charmcraft/issues/2310>`_ Can't build
   Charmcraft snap.
@@ -152,12 +153,14 @@ The following bugs have been resolved in Charmcraft 3.5.1:
 - `#2323 <https://github.com/canonical/charmcraft/issues/2323>`_ Documentation is
   missing a sitemap.
 
-The following bugs have been resolved in Charmcraft 3.5.2:
+Charmcraft 3.5.2
+~~~~~~~~~~~~~~~~
 
 - `#2077 <https://github.com/canonical/charmcraft/issues/2077>`_ Internal error when
   uploading OCI image resources.
 
-The following bugs have been resolved in Charmcraft 3.5.3:
+Charmcraft 3.5.3
+~~~~~~~~~~~~~~~~
 
 - Incorrect container name when running ``charmcraft init`` with the default profile.
 - Some rust dependencies no longer build correctly for Python 3.8. The ``charm`` plugin

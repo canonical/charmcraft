@@ -443,13 +443,15 @@ variables as the main application.
 A common use case is running `Celery beat`_
 as a scheduler to kick off tasks at regular intervals, together with
 `Celery worker servers`_ to execute those tasks.
-Celery beat should run in only one unit, while multiple Celery worker
-servers can be used.
+Celery beat should run in only one unit, while Celery worker servers
+will run in all units.
 
 For a Flask application that has the Celery app in the module
-``webapp.app.celery_app``, you can add a snippet like the following:
+``webapp.app.celery_app``, you can add a snippet like the following
+into ``rockcraft.yaml``:
 
 .. code-block:: yaml
+    :caption: rockcraft.yaml
 
     services:
       celery-worker:
@@ -466,7 +468,7 @@ For a Flask application that has the Celery app in the module
         working-dir: /flask/app
 
 
-The service name suffixed with ``-worker`` will run in all units of the application,
+The service name suffixed with ``-worker`` will run in all units of the app,
 while the service name suffixed with ``-scheduler`` will run in only one unit.
 
 .. _`Celery beat`: https://docs.celeryq.dev/en/latest/userguide/periodic-tasks.html

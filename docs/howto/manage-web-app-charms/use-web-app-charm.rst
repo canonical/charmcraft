@@ -432,3 +432,46 @@ the HTTPS URL. You can access the HTTPS URL of your app with a command like:
 To obtain a TLS certificate signed by a trusted certificate authority (CA)
 using the ACME protocol, use the `LEGO <https://charmhub.io/lego>`_
 charm instead.
+
+
+Run a worker or scheduler process in your workloads
+---------------------------------------------------
+
+You can run extra processes in the workload charm that receive the same environment
+variables as the main app. These services must be added to the
+project file as entries of the ``services`` key. If the service name
+ends with ``-worker`` it will run in all units of the app,
+while if the name ends with ``-scheduler`` it will run in only one unit.
+
+A common use case is running `Celery beat`_
+as a scheduler to kick off tasks at regular intervals, together with
+`Celery worker servers`_ to execute those tasks.
+Celery beat should run in only one unit, while Celery worker servers
+will run in all units.
+
+For a Flask app that has the Celery app in the module
+``webapp.app.celery_app``, you can declare them as services like this:
+
+.. code-block:: yaml
+    :caption: rockcraft.yaml
+
+    services:
+      celery-worker:
+        override: replace
+        command: celery -A webapp.app.celery_app worker --loglevel=INFO
+        startup: enabled
+        user: _daemon_
+        working-dir: /flask/app
+      celery-beat-scheduler:
+        override: replace
+        command: celery -A webapp.app.celery_app beat -s /tmp/celerybeat-schedule
+        startup: enabled
+        user: _daemon_
+        working-dir: /flask/app
+
+
+The service named ``celery-worker`` will run in all units of the app,
+while the service named ``celery-beat-scheduler`` will run in only one unit.
+
+.. _`Celery beat`: https://docs.celeryq.dev/en/latest/userguide/periodic-tasks.html
+.. _`Celery worker servers`: https://docs.celeryq.dev/en/latest/getting-started/first-steps-with-celery.html

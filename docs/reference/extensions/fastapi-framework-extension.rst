@@ -65,8 +65,8 @@ service.
     keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
 
 
-Background Tasks
-----------------
+Worker and Scheduler Services
+-----------------------------
 
 Extra services defined in the file
 :external+rockcraft:ref:`rockcraft.yaml <rockcraft.yaml_reference>`

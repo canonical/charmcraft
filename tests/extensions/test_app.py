@@ -672,7 +672,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
                 "oidc-foobar-redirect-path": {
                     "type": "string",
                     "description": "The path that the user will be redirected upon completing login.",
-                    "default": "/callback",
+                    "default": "/login/oauth2/code/oidc-foobar",
                 },
                 "oidc-foobar-scopes": {
                     "type": "string",

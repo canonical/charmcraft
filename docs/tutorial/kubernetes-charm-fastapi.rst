@@ -37,6 +37,9 @@ What you'll need
   4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
+The RAM and disk space are necessary to set up all the required software and
+to facilitate the creation of the rock and charm. If your local system has less
+than the sufficient resources, the tutorial will take longer to complete.
 
 What you'll do
 ~~~~~~~~~~~~~~
@@ -92,7 +95,7 @@ Then, copy the following text into it, and save:
 .. note::
 
     The ``psycopg2-binary`` package is needed so the FastAPI app can
-    connect to PostgreSQL.
+    connect to PostgreSQL, which we will do at the end of this tutorial.
 
 Install the packages:
 
@@ -431,7 +434,7 @@ output:
     Unit                    Workload  Agent  Address      Ports  Message
     fastapi-hello-world/0*  active    idle   10.1.157.75
 
-Let's expose the app using ingress. Deploy the
+Let's expose the app using ingress so that we can access it. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the FastAPI app:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -542,9 +545,13 @@ following to the end of the ``charmcraft.yaml`` file:
 
 .. note::
 
-    Configuration options are automatically capitalized and ``-`` are replaced
+    When configuration options are converted to environment variables,
+    their names are automatically capitalized and ``-`` are replaced
     by ``_``. An ``APP_`` prefix will also be added as a namespace
     for app configurations.
+
+    In this tutorial, the new ``greeting`` configuration results in an
+    environment variable named ``APP_GREETING``.
 
 We can now pack and deploy the new version of the FastAPI app:
 
@@ -554,8 +561,8 @@ We can now pack and deploy the new version of the FastAPI app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Verify that the
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Verify that the
 new configuration has been added:
 
 .. code-block:: bash
@@ -576,7 +583,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, check the response:
+Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
@@ -603,7 +610,7 @@ The charm created by the ``fastapi-framework`` extension will execute the
 database is initialized and ready to be used by the app. We will
 create a ``migrate.py`` file containing this logic.
 
-Go back out to the ``~/fastapi-hello-world`` directory using ``cd ..``,
+Return to the ``~/fastapi-hello-world`` directory,
 create the ``migrate.py`` file, open the file using a text editor
 and paste the following code into it:
 

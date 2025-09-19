@@ -31,6 +31,9 @@ What you'll need
   4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
+The RAM and disk space are necessary to set up all the required software and
+to facilitate the creation of the rock and charm. If your local system has less
+than the sufficient resources, the tutorial will take longer to complete.
 
 What you'll do
 --------------
@@ -401,7 +404,7 @@ following output:
     Unit                      Workload  Agent  Address      Ports  Message
     expressjs-hello-world/0*  active    idle   10.1.157.75
 
-Let's expose the app using ingress. Deploy the
+Let's expose the app using ingress so that we can access it. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Express app:
 
 .. literalinclude:: code/expressjs/task.yaml
@@ -522,9 +525,13 @@ the Express app. Add the following to the end of the
 
 .. note::
 
-    Configuration options are automatically capitalized and ``-`` are replaced
+    When configuration options are converted to environment variables,
+    their names are automatically capitalized and ``-`` are replaced
     by ``_``. An ``APP_`` prefix will also be added as a namespace
     for app configurations.
+
+    In this tutorial, the new ``greeting`` configuration results in an
+    environment variable named ``APP_GREETING``.
 
 We can now pack and deploy the new version of the Express app:
 
@@ -534,8 +541,8 @@ We can now pack and deploy the new version of the Express app:
     :end-before: [docs:refresh-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Verify that the new configuration
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Verify that the new configuration
 has been added:
 
 .. code-block:: bash
@@ -556,7 +563,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, check the response:
+Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 

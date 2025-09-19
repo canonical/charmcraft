@@ -36,6 +36,9 @@ What you'll need
   CPUs, 4 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
+The RAM and disk space are necessary to set up all the required software and
+to facilitate the creation of the rock and charm. If your local system has less
+than the sufficient resources, the tutorial will take longer to complete.
 
 What you'll do
 ~~~~~~~~~~~~~~
@@ -542,7 +545,7 @@ Set the configuration:
     Turning on debug mode shouldn't be done in production. We will do this in
     the tutorial for now and later disable debug mode.
 
-Let's expose the app using ingress. Deploy the
+Let's expose the app using ingress so that we can access it. Deploy the
 ``nginx-ingress-integrator`` charm and integrate it with the Django app:
 
 .. literalinclude:: code/django/task.yaml
@@ -710,8 +713,8 @@ Provide a configuration
 To demonstrate how to provide a configuration to the Django app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
-keyword ``DJANGO_GREETING``. Go back out to the rock
-directory ``~/django-hello-world`` using ``cd ..``. From there, open the
+keyword ``DJANGO_GREETING``. Return to the rock
+directory ``~/django-hello-world``. From there, open the
 ``./django_hello_world/greeting/views.py`` file and replace the content
 with:
 
@@ -774,9 +777,13 @@ the end of the ``charmcraft.yaml`` file:
 
 .. note::
 
-    Configuration options are automatically capitalized and ``-`` are
+    When configuration options are converted to environment variables,
+    their names are automatically capitalized and ``-`` are
     replaced by ``_``. A ``DJANGO_`` prefix will also be added as a
     namespace for app configurations.
+
+    In this tutorial, the new ``greeting`` configuration results in an
+    environment variable named ``DJANGO_GREETING``.
 
 We can now pack a new version of the charm, and then deploy it once more with ``juju
 refresh``:
@@ -787,8 +794,8 @@ refresh``:
     :end-before: [docs:repack-refresh-2nd-deployment-end]
     :dedent: 2
 
-After we wait for a bit monitoring ``juju status`` the app
-should go back to ``active`` again. Visit http://django-hello-world in a
+Monitor ``juju status`` until the app goes
+back to ``active`` again. Visit http://django-hello-world in a
 web browser or send a request to the root endpoint using:
 
 .. code-block:: bash
@@ -806,8 +813,7 @@ Now let's change the greeting:
     :end-before: [docs:change-config-end]
     :dedent: 2
 
-After we wait for a moment for the app to be restarted, visit
-http://django-hello-world or use:
+Wait for the app to restart, and then visit http://django-hello-world or use:
 
 .. code-block:: bash
 

@@ -118,8 +118,7 @@ execute: |
   # [docs:deploy-django-app-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
-  juju wait-for application postgresql-k8s --timeout 20m
+  juju deploy postgresql-k8s --trust --channel 14/edge
   # [docs:deploy-postgres-end]
 
   # [docs:integrate-postgres]

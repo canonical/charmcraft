@@ -218,8 +218,7 @@ execute: |
   # so we have to wait before integrating.
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
-  juju wait-for application postgresql-k8s --timeout 20m
+  juju deploy postgresql-k8s --trust --channel 14/edge
   juju integrate expressjs-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

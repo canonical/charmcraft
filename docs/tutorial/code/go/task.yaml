@@ -112,7 +112,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=go-hello-world path-routes=/
+    service-hostname=go-hello-world path-routes=/ rewrite-enabled=false
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps

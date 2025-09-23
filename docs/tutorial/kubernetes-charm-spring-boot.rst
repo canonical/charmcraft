@@ -538,11 +538,10 @@ the Spring Boot app. Add the following to the end of the
 
     When configuration options are converted to environment variables,
     their names are automatically capitalized and ``-`` are replaced
-    by ``_``. An ``APP_`` prefix will also be added as a namespace
-    for app configurations.
+    by ``_``.
 
     In this tutorial, the new ``greeting`` configuration results in an
-    environment variable named ``APP_GREETING``.
+    environment variable named ``GREETING``.
 
 We can now pack and deploy the new version of the Spring Boot app:
 

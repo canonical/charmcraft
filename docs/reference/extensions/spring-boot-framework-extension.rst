@@ -24,33 +24,33 @@ The predefined configuration options for the ``spring-boot-framework`` are:
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
-  ``APP_PORT``. Default value is 8080.
+  ``PORT``. Default value is 8080.
 
 * **app-secret-key-id**: A secret you can use for sessions, protection against
   cross-site request forgery, or any other thing where you need a random secret shared
-  by all units. The environment variable passed to the app is ``APP_SECRET_KEY``.
+  by all units. The environment variable passed to the app is ``SECRET_KEY``.
   The secret should contain a single key, ``value``, which maps to the actual
   application secret key. To create the secret, run the following command:
   ``juju add-secret my-app-secret-key value=<secret-string>``, grant the application
   access to the secret and use the output secret ID to configure
   this option. If this configuration option is not set, the environment variable
-  ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
+  ``SECRET_KEY`` is a 64 byte Base64 encoded random string.
 
 * **metrics-port**: Port where the prometheus metrics will be scraped. The environment
-  variable passed to the app is ``APP_PORT``. Default value is 8080.
+  variable passed to the app is ``PORT``. Default value is 8080.
 
 * **metrics-path**:
   Path where the prometheus metrics will be scraped. The environment variable passed to
-  the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
+  the app is ``METRICS_PATH``. Default value is ``/metrics``.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
-generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where the option name
+generate an environment variable named ``CONFIG_OPTION_NAME`` where the option name
 is converted to upper case and dashes are converted to underscores.
 
 In either case, you will be able to set it in the usual way by running ``juju config
 <application> <option>=<value>``. For example, if you define an option called ``token``,
-as below, this will generate a ``APP_TOKEN`` environment variable, and a user of your
+as below, this will generate a ``TOKEN`` environment variable, and a user of your
 charm can set it by running ``juju config <application> token=<token>``.
 
 .. code-block:: yaml
@@ -63,7 +63,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 
 .. include:: /reuse/reference/extensions/non_optional_config.rst
 
-.. |base_url| replace:: ``APP_BASE_URL``
+.. |base_url| replace:: ``BASE_URL``
 .. |juju_integrate_postgresql| replace:: ``juju integrate <Spring Boot charm> postgresql``
 .. |framework| replace:: Spring Boot
 
@@ -141,7 +141,7 @@ The environment variable name passed to the application will be:
 
 .. code-block:: bash
 
-    APP_<config option name>_<key inside the secret>
+    <config option name>_<key inside the secret>
 
 The ``<config option name>`` and ``<key inside the secret>`` keywords in the environment
 variable name will have the hyphens replaced by underscores and all the letters

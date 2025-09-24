@@ -259,16 +259,12 @@ A bigger charm, that needs multi-page documentation, can have either
 a brief description with a link to an external documentation set, or
 a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description** tab.
 
-.. admonition:: Tip
-
-    Smaller charm documentation examples:
+.. admonition:: Examples of good documentation in small charms
 
     * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
     * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
-.. admonition:: Tip
-
-    Bigger charm documentation examples:
+.. admonition:: Examples of good documentation in big charms
 
     * `OpenSearch <https://charmhub.io/opensearch>`_ charm
     * `Wordpress-k8s <https://charmhub.io/wordpress-k8s>`_ charm

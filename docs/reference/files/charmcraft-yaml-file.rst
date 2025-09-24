@@ -57,7 +57,7 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric names, and use hyphens (-) to separate words. For
+    Prefer lowercase alphanumeric action names, and use hyphens (-) to separate words. For
     charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some action names be dashed and some be underscored.
@@ -470,7 +470,7 @@ secret URI.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    Prefer lowercase alphanumeric option names, separated with dashes if required. For
     charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some config names be dashed and some be underscored.
@@ -670,7 +670,7 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 .. admonition:: Best practice
     :class: hint
 
-    The name should be slug-oriented (ASCII lowercase letters, numbers, and
+    The charm name should be slug-oriented (ASCII lowercase letters, numbers, and
     hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
     For example, ``argo-server-k8s``.
 
@@ -895,7 +895,7 @@ endpoint.
 .. admonition:: Best practice
     :class: hint
 
-    Always include the ``optional`` key, rather than relying on the default
+    Include the ``optional`` key in all endpoint definitions, rather than relying on the default
     value to indicate that the relation is required. Although this field is
     not enforced by Juju, including it makes it clear to users (and other tools)
     whether the relation is required.

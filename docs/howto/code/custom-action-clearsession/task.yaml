@@ -98,8 +98,8 @@ execute: |
   # Deploy, integrate, configure nginx
   juju deploy nginx-ingress-integrator --channel=latest/stable --trust
   juju integrate nginx-ingress-integrator django-hello-world
-  juju config nginx-ingress-integrator \
-    service-hostname=django-hello-world path-routes=/ rewrite-enabled=false
+  juju config nginx-ingress-integrator service-hostname=django-hello-world \
+    path-routes=/ rewrite-enabled=false rewrite-target=/
 
   # give Juju some time to deploy the apps
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m

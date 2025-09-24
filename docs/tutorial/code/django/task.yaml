@@ -140,7 +140,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=django-hello-world path-routes=/ rewrite-enabled=false
+    service-hostname=django-hello-world path-routes=/ rewrite-enabled=false rewrite-target=/
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps

@@ -777,7 +777,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/go-hello-world`` for the tutorial:
+following in the project directory ``~/go-hello-world`` for the tutorial:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash

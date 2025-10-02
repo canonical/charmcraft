@@ -702,7 +702,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/flask-hello-world`` for the tutorial:
+following in the project directory ``~/flask-hello-world`` for the tutorial:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash

@@ -761,7 +761,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
+following in the project directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash

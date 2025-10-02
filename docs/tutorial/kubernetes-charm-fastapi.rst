@@ -484,7 +484,7 @@ To demonstrate how to provide a configuration to the FastAPI app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the FastAPI app configuration under the
 keyword ``APP_GREETING``. Change back to the ``~/fastapi-hello-world`` directory
-using ``cd ..`` and copy the following code into ``app.py``:
+and copy the following code into ``app.py``:
 
 .. literalinclude:: code/fastapi/greeting_app.py
     :caption: ~/fastapi-hello-world/app.py
@@ -532,7 +532,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``fastapi-framework`` Charmcraft extension supports adding
 configurations to ``charmcraft.yaml`` which will be passed as
@@ -686,7 +686,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The FastAPI app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and

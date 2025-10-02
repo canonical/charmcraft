@@ -119,12 +119,7 @@ Run the Django app locally
 We will test the Django app by visiting the app in a web
 browser.
 
-Change into the ``~/django_hello_world`` directory:
-
-.. code-block:: bash
-
-    cd django_hello_world
-
+Change into the ``~/django_hello_world`` directory.
 Open the settings file of the app located at
 ``~/django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
@@ -764,7 +759,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``django-framework`` Charmcraft extension supports adding
 configurations in ``charmcraft.yaml`` which will be passed as

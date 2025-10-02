@@ -473,8 +473,8 @@ Provide a configuration
 To demonstrate how to provide a configuration to the Go app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Go app configuration under the
-keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory using
-``cd ..`` and replace the code into ``main.go`` with the following:
+keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory
+and replace the code into ``main.go`` with the following:
 
 .. literalinclude:: code/go/greeting_main.txt
     :caption: ~/go-hello-world/main.go
@@ -521,7 +521,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``go-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
@@ -702,7 +702,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The Go app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and

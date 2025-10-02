@@ -473,8 +473,8 @@ Configure the Spring Boot app
 To demonstrate how to provide a configuration to the Spring Boot app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Spring Boot app configuration under the
-keyword ``GREETING``. Change back to the ``~/spring-boot-hello-world`` directory using
-``cd ..`` and replace the code into
+keyword ``GREETING``. Change back to the ``~/spring-boot-hello-world`` directory
+and replace the code into
 ``src/main/java/com/example/demo/HelloController.java`` with the following:
 
 .. literalinclude:: code/spring-boot/HelloController.java.greeting.txt
@@ -523,7 +523,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``spring-boot-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
@@ -708,7 +708,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The Spring Boot app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and

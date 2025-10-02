@@ -512,7 +512,7 @@ Redeploy the charm
 
 We’ll redeploy the new version with ``juju refresh``.
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``expressjs-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
@@ -711,7 +711,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The Express app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and

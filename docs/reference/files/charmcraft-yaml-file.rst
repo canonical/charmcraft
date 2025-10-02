@@ -895,9 +895,9 @@ endpoint.
 .. admonition:: Best practice
     :class: hint
 
-    Include the ``optional`` key in all endpoint definitions, rather than relying on the default
-    value to indicate that the relation is required. Although this field is
-    not enforced by Juju, including it makes it clear to users (and other tools)
+    Include the ``optional`` key in all endpoint definitions, rather than relying on
+    the default value to indicate that the relation is required. Although this field
+    is not enforced by Juju, including it makes it clear to users (and other tools)
     whether the relation is required.
 
 

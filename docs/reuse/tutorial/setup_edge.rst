@@ -54,15 +54,17 @@ user to the group, and activate the changes:
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
 
-Several MicroK8s add-ons are required for deployment:
+Several MicroK8s addons are required for deployment. We need
+``hostpath-storage`` so Juju can provide storage volumes,
+``registry`` to host the OCI image for our app, and ``ingress``
+so that we can expose and access the app.
+
+Enable the necessary MicroK8s addons:
 
 .. code-block:: bash
 
-    # Required for Juju to provide storage volumes
     sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the application
     sudo microk8s enable registry
-    # Required to expose the application
     sudo microk8s enable ingress
 
 Check the status of MicroK8s:

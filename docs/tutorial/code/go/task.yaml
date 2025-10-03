@@ -112,7 +112,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=go-hello-world path-routes=/
+    service-hostname=go-hello-world path-routes=/ rewrite-enabled=false rewrite-target=/
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
@@ -200,8 +200,7 @@ execute: |
   # https://github.com/canonical/postgresql-k8s-operator/issues/1011
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust
-  juju wait-for application postgresql-k8s --timeout 20m
+  juju deploy postgresql-k8s --trust --channel 14/edge
   juju integrate go-hello-world postgresql-k8s
   # [docs:deploy-postgres-end]
 

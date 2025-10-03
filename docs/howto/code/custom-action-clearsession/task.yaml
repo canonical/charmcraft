@@ -85,8 +85,7 @@ execute: |
     django-app-image=localhost:32000/django-hello-world:0.1
 
   # Deploy + integrate with postgres
-  juju deploy postgresql-k8s --trust
-  juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m
+  juju deploy postgresql-k8s --trust --channel 14/edge
   juju integrate django-hello-world postgresql-k8s
 
   # Check that django-hello-world and postgres are active idle
@@ -99,8 +98,8 @@ execute: |
   # Deploy, integrate, configure nginx
   juju deploy nginx-ingress-integrator --channel=latest/stable --trust
   juju integrate nginx-ingress-integrator django-hello-world
-  juju config nginx-ingress-integrator \
-    service-hostname=django-hello-world path-routes=/
+  juju config nginx-ingress-integrator service-hostname=django-hello-world \
+    path-routes=/ rewrite-enabled=false rewrite-target=/
 
   # give Juju some time to deploy the apps
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m

@@ -171,3 +171,38 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+Grafana dashboard graphs
+------------------------
+
+If the Express app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **ExpressJS Operator** displays the following
+default graphs:
+
+* Node.js Process
+* Rate of CPU Time Spent
+* Process Memory: Heap and virtual memory usage.
+* Event Loop Latency: 99th percentile an d50th percentile and last event loop latency.
+* Active Handlers/Requests: Total Nodejs active handlers and requests.
+* Rate of Garbage Collection Duration
+* Garbage Collection Duration
+* Garbage Collection count
+* Heap Memory Usage: Total, used, resident and external heap memory usage.
+* Heap Space Used
+* Apdex Score: Sum of http request duration
+* Requests Per Seconds
+* Request Count
+* Request Count by Status Code
+* Response Latency: Total and 95th percentile response latency.
+* Response Size: Total response size per route.
+* Top 5 Request Duration: Top 5 request durations per route.
+* Top 5 Success Duration: Top 5 succeeded request durations per route.
+* Top 5 Error Duration: Top 5 failed request durations per route.
+* Top 5 Request Count: Top 5 request counts per route.
+* Top 5 Success Count: Top 5 succeeded request counts per route.
+* Top 5 Error Count: Top 5 failed request counts per route.
+* Number of bytes obtained from system
+* Average of GC call time
+* Rate of GC calls
+* Number of expressjs processes that currently exist

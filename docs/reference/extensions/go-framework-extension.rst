@@ -162,3 +162,17 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+Grafana dashboard graphs
+------------------------
+
+If the Go app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **Go Operator** displays the following
+default graphs:
+
+* Go version: Running Go version.
+* Number of bytes obtained from system
+* Average of GC call time
+* Rate of GC calls
+* Number of goroutines that currently exist

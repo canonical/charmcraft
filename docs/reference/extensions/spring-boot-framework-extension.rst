@@ -148,3 +148,35 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+Grafana dashboard graphs
+------------------------
+
+If the Flask app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **Flask Operator** displays the following
+default graphs:
+
+* Java Version
+* Status code count: Number of requests broken by responses status code.
+* Requests average duration: Number of requests per second over time.
+* 2XX Rate: Portion of responses that were successful (in the 200 range).
+* 3XX Rate: Portion of responses that were redirects (in the 300 range).
+* 4XX Rate: Portion of responses that were client errors (in the 400 range).
+* 5XX Rate: Portion of responses that were server errors (in the 500 range).
+* Request duration percentile: The 50th, 90th, and 99th percentile of all the
+  request duration lengths after sorting them from slowest to fastest. For
+  example, the 50th percentile represents the length of time (or less) that
+  50\% of the requests lasted.
+* Total HTTP Requests
+* HTTP Requests Per Second
+* Average of GC call time
+* JVM Memory Used
+* Number of live threads
+* Rate of GC calls
+* Tomcat Active Current Sessions
+* Tomcat Active Max Sessions
+* Tomcat Sessions Alive Max Seconds
+* Tomcat Created Sessions Total
+* Tomcat Expired Sessions Total
+* Tomcat Rejected Sessions Total

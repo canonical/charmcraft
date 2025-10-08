@@ -26,7 +26,7 @@ The predefined configuration options for the ``spring-boot-framework`` are:
   configured using this port. The environment variable passed to the app is
   ``APP_PORT``. Default value is 8080.
 
-* **app-profiles**: Comma-separated list of Spring Boot active profiles. The environment
+* **app-profiles**: Comma-separated list of active Spring Boot profiles. The environment
   variable passed to the app is ``spring.profiles.active``.
 
 * **app-secret-key-id**: A secret you can use for sessions, protection against

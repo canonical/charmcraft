@@ -175,6 +175,6 @@ default graphs:
 
 * Go version: Running Go version.
 * Number of bytes obtained from system
-* Average of GC call time
-* Rate of GC calls
+* Average of GC call time: Average time spent in garbage collection
+* Rate of GC calls: Number of garbage collections per second
 * Number of goroutines that currently exist

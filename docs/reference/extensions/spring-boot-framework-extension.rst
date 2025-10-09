@@ -159,7 +159,7 @@ If the Flask app is connected to the `Canonical Observability Stack
 the Grafana dashboard **Flask Operator** displays the following
 default graphs:
 
-* Java Version
+* Java version: The version of Java that is running.
 * Status code count: Number of requests broken by responses status code.
 * Requests average duration: Number of requests per second over time.
 * 2XX Rate: Portion of responses that were successful (in the 200 range).
@@ -170,15 +170,16 @@ default graphs:
   request duration lengths after sorting them from slowest to fastest. For
   example, the 50th percentile represents the length of time (or less) that
   50\% of the requests lasted.
-* Total HTTP Requests
-* HTTP Requests Per Second
-* Average of GC call time
-* JVM Memory Used
-* Number of live threads
-* Rate of GC calls
-* Tomcat Active Current Sessions
-* Tomcat Active Max Sessions
-* Tomcat Sessions Alive Max Seconds
-* Tomcat Created Sessions Total
-* Tomcat Expired Sessions Total
-* Tomcat Rejected Sessions Total
+* Total HTTP requests: Total number of HTTP requests.
+* HTTP requests per second: Number of HTTP requests per second.
+* Application logs: Application logs collected by Loki.
+* Average of GC call time: Average time spent in garbage collection.
+* JVM memory used: Amount of used memory in the JVM.
+* Number of live threads: Number of live threads in the JVM.
+* Rate of GC calls: Rate of garbage collection calls.
+* Tomcat active current sessions: Current number of active sessions
+* Tomcat active max sessions: Maximum number of active sessions
+* Tomcat sessions alive max seconds: Maximum time a session was alive
+* Tomcat created sessions total: Total number of sessions created
+* Tomcat expired sessions total: Total number of sessions expired
+* Tomcat rejected sessions total: Total number of sessions rejected

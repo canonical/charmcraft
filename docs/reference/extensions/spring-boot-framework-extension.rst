@@ -149,6 +149,8 @@ capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
 
+.. _spring-boot-grafana-graphs:
+
 Grafana dashboard graphs
 ------------------------
 

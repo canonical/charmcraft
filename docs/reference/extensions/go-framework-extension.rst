@@ -163,6 +163,8 @@ capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
 
+.. _go-grafana-graphs:
+
 Grafana dashboard graphs
 ------------------------
 

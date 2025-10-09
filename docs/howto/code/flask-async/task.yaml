@@ -105,7 +105,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=flask-async-app path-routes=/
+    service-hostname=flask-async-app path-routes=/ rewrite-enabled=false rewrite-target=/
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps

@@ -154,9 +154,9 @@ capitalised.
 Grafana dashboard graphs
 ------------------------
 
-If the Flask app is connected to the `Canonical Observability Stack
+If the Spring Boot app is connected to the `Canonical Observability Stack
 (COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
-the Grafana dashboard **Flask Operator** displays the following
+the Grafana dashboard **Spring Boot Operator** displays the following
 default graphs:
 
 * Java version: The version of Java that is running.

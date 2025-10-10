@@ -704,8 +704,8 @@ Publish a charm on Charmhub
     Releasing a charm on Charmhub gives it a public URL. However, the charm will not
     appear in the Charmhub search results until it has passed formal review. To request
     formal review, reach out to the community to announce your charm and ask for a
-    review by an experienced community member. See more: `Discourse | review requests
-    <https://discourse.charmhub.io/c/charmhub-requests/46>`_.
+    review by an experienced community member. See more:
+    :external+ops:ref:`Ops | Make your charm discoverable <make-your-charm-discoverable>`.
 
     Also, the point of publishing and having a charm publicly listed on Charmhub is so
     others can reuse it and potentially contribute to it as well. To publicise your

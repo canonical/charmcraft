@@ -125,17 +125,21 @@ project file.
 Integrate with HTTP proxy
 -------------------------
 
-If you wish to integrate your 12-factor web app with 
-`Squid Forward Proxy https://charmhub.io/squid-forward-proxy`_, ensure the following prerequisites 
-are met:
-- Your web application needs to support basic proxy authentication within the proxy URI (i.e., it 
-must support the format ``scheme://username:password@proxy_value``)
-- The Squid Forward Proxy charm requires information about the proxy domains and authentication 
-modes supported by your web app. However, the 12 factor framework currently does not 
-provide a native way to set these values directly.  To supply them, your app should integrate with  
-the `HTTP proxy configurator https://github.com/canonical/http-proxy-operators/tree/main/http-proxy-configurator-operator `_ 
+If you wish to integrate your 12-factor web app with
+`Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_, ensure the
+following prerequisites are met:
+- Your web application needs to support basic proxy authentication within
+the proxy URI (i.e., it must support the format
+``scheme://username:password@proxy_value``)
+- The Squid Forward Proxy charm requires information about the proxy domains
+and authentication modes supported by your web app. However, the 12 factor
+framework currently does not provide a native way to set these values directly.
+.. sphinx-lint: disable=line-too-long
+To supply them, your app should integrate with the `HTTP proxy configurator
+<https://github.com/canonical/http-proxy-operators/tree
+/main/http-proxy-configurator-operator>`_
 charm which relays this information to the Squid Forward Proxy charm.
-
+.. sphinx-lint: enable=line-too-long
 Add the following endpoint definition to your project file:
 .. code-block:: yaml
 

@@ -148,3 +148,38 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. _spring-boot-grafana-graphs:
+
+Grafana dashboard graphs
+------------------------
+
+If the Spring Boot app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **Spring Boot Operator** displays the following
+default graphs:
+
+* Java version: The version of Java that is running.
+* Status code count: Number of requests broken by responses status code.
+* Requests average duration: Number of requests per second over time.
+* 2XX Rate: Portion of responses that were successful (in the 200 range).
+* 3XX Rate: Portion of responses that were redirects (in the 300 range).
+* 4XX Rate: Portion of responses that were client errors (in the 400 range).
+* 5XX Rate: Portion of responses that were server errors (in the 500 range).
+* Request duration percentile: The 50th, 90th, and 99th percentile of all the
+  request duration lengths after sorting them from slowest to fastest. For
+  example, the 50th percentile represents the length of time (or less) that
+  50\% of the requests lasted.
+* Total HTTP requests: Total number of HTTP requests.
+* HTTP requests per second: Number of HTTP requests per second.
+* Application logs: Application logs collected by Loki.
+* Average of GC call time: Average time spent in garbage collection.
+* JVM memory used: Amount of used memory in the JVM.
+* Number of live threads: Number of live threads in the JVM.
+* Rate of GC calls: Rate of garbage collection calls.
+* Tomcat active current sessions: Current number of active sessions
+* Tomcat active max sessions: Maximum number of active sessions
+* Tomcat sessions alive max seconds: Maximum time a session was alive
+* Tomcat created sessions total: Total number of sessions created
+* Tomcat expired sessions total: Total number of sessions expired
+* Tomcat rejected sessions total: Total number of sessions rejected

@@ -152,3 +152,40 @@ the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. _fastapi-grafana-graphs:
+
+Grafana dashboard graphs
+------------------------
+
+If the FastAPI app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **FastAPI Operator** displays the following
+default graphs:
+
+* Requests: Number of requests over time.
+* Status code count: Number of requests broken by responses status code.
+* Requests per second: Number of requests per second over time.
+* 2XX Rate: Portion of responses that were successful (in the 200 range).
+* 3XX Rate: Portion of responses that were redirects (in the 300 range).
+* 4XX Rate: Portion of responses that were client errors (in the 400 range).
+* 5XX Rate: Portion of responses that were server errors (in the 500 range).
+* Request duration percentile: The 50th, 90th, and 99th percentile of all the
+  request duration lengths after sorting them from slowest to fastest. For
+  example, the 50th percentile represents the length of time (or less) that
+  50\% of the requests lasted.
+
+.. note::
+
+  The default Grafana dashboard makes use of the ``prometheus_fastapi_instrumentator``
+  package. To enable the metrics, you need to install the package and add the
+  following lines to your FastAPI application code:
+
+  .. code-block:: python
+    :caption: app.py
+
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    app = FastAPI()
+
+    Instrumentator().instrument(app).expose(app)

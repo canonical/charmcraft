@@ -135,3 +135,7 @@ Ingress relation.
         - :substitution-code:`|framework_prefix|_{endpoint_name}_JWKS_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_API_BASE_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_KWARGS`
+  * - HTTP Proxy
+    -
+        - ``HTTP_PROXY``
+        - ``HTTPS_PROXY``

@@ -72,19 +72,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 
 .. include:: /reuse/reference/extensions/integrations.rst
 .. include:: /reuse/reference/extensions/environment_variables_spring_boot.rst
-
-
-HTTP Proxy
-----------
-
-Proxy settings should be set as model configurations. Charms generated using the
-``spring-boot-framework`` extension will make the Juju proxy settings available as the
-``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environment variables. For example, the
-``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the Spring
-Boot service.
-
-    See more: `List of model configuration
-    keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
+.. include:: /reuse/reference/extensions/http_proxy.rst
 
 
 Worker and Scheduler Services

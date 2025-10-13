@@ -515,6 +515,10 @@ class SpringBootFramework(_AppBase):
     framework = "spring-boot"
     options = {
         **APP_PORT_OPTION,
+        "app-profiles": {
+            "type": "string",
+            "description": "Comma-separated list of Spring Boot active profiles.",
+        },
         "metrics-port": {
             "type": "int",
             "default": 8080,

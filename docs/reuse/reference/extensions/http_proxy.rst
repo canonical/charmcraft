@@ -16,4 +16,4 @@ the |framework| service.
     See more:
     `Juju | List of model configuration
     keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_,
-    `How to integrate with HTTP Proxy <integrate_web_app_cos>`_
+    :ref:`How to integrate with HTTP Proxy <integrate_web_app_http_proxy>`

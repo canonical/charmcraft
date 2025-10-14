@@ -18,6 +18,8 @@ Once the VM is up, open a shell into it:
 
     multipass shell charm-dev
 
+Unless stated otherwise, we will work entirely within the VM from now on.
+
 Install Rockcraft and Charmcraft
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

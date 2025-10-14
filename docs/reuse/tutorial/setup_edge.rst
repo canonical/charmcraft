@@ -21,6 +21,11 @@ Once the VM is up, open a shell into it:
 Install Rockcraft and Charmcraft
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. admonition:: This extension is under active development
+
+    To follow this tutorial, you must install ``latest/edge``
+    of Rockcraft and Charmcraft.
+
 In order to create the rock, you need to install Rockcraft with
 classic confinement, which grants it access to the whole file system:
 

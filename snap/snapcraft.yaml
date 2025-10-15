@@ -137,6 +137,9 @@ parts:
     build-attributes:
       - enable-patchelf
     override-build: |
+      # Workaround for https://github.com/canonical/snapcraft/issues/5831
+      git checkout spread.yaml spread/.extension
+
       /snap/snapcraft/current/libexec/snapcraft/craftctl default
 
       # Install python3-apt

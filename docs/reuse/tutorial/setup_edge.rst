@@ -25,8 +25,8 @@ Install Rockcraft and Charmcraft
 
 .. admonition:: This extension is under active development
 
-    To follow this tutorial, you must install ``latest/edge``
-    of Rockcraft and Charmcraft.
+    This tutorial requires the edge releases of Rockcraft and Charmcraft, which are 
+    riskier than the stable releases.
 
 In order to create the rock, you need to install Rockcraft with
 classic confinement, which grants it access to the whole file system:

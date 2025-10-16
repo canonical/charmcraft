@@ -129,7 +129,7 @@ If you wish to integrate your 12-factor web app with
 `Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_, ensure the
 following prerequisites are met:
 
-1. Your web application needs to support basic proxy authentication within
+1. Your web app needs to support basic proxy authentication within
 the proxy URI (i.e., it must support the format
 ``scheme://username:password@proxy_value``).
 
@@ -157,7 +157,7 @@ Provide the integration to your deployed 12-factor app with:
     juju integrate <app charm> http-proxy-configurator
 
 This integration creates the following environment variables you may use to
-configure your 12-factor application.
+configure your 12-factor app.
 
 - ``HTTP_PROXY``
 - ``HTTPS_PROXY``

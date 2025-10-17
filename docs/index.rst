@@ -9,8 +9,8 @@ Charmcraft
 
     tutorial/index
     howto/index
-    explanation/index
     reference/index
+    explanation/index
     contribute-to-this-documentation
     release-notes/index
 

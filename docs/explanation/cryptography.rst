@@ -1,4 +1,4 @@
-.. _explanation_cryptographic-technology:
+.. _explanation-cryptographic-technology:
 
 Cryptographic technology in Charmcraft
 ======================================
@@ -29,7 +29,7 @@ during development. Skopeo is additionally used internally as part of the charm 
 process. Charmcraft only uses the internal, pre-packaged copy of skopeo for this
 purpose.
 
-.. _Craft Application: https://canonical-craft-application.readthedocs-hosted.com/en/latest/
-.. _Cryptographic technology in Craft Application: https://canonical-craft-application.readthedocs-hosted.com/en/latest/explanation/cryptography.html
+.. _Craft Application: https://canonical-craft-application.readthedocs-hosted.com/latest/
+.. _Cryptographic technology in Craft Application: https://canonical-craft-application.readthedocs-hosted.com/en/latest/explanation/cryptography
 .. _Docker SDK for Python: https://docker-py.readthedocs.io/en/stable/
 .. _umoci: https://umo.ci/

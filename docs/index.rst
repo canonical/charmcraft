@@ -1,4 +1,4 @@
-:relatedlinks: [Charmlibs](https://canonical-charmlibs.readthedocs-hosted.com/), [Concierge](https://github.com/canonical/concierge), [Craft&#32;Parts](https://canonical-craft-parts.readthedocs-hosted.com/latest/), [Jubilant](https://documentation.ubuntu.com/jubilant/), [Juju](https://documentation.ubuntu.com/juju/), [Ops](https://documentation.ubuntu.com/ops/), [Pebble](https://documentation.ubuntu.com/pebble/)
+:relatedlinks: [Juju](https://documentation.ubuntu.com/juju/), [Ops](https://documentation.ubuntu.com/ops/), [Charmlibs](https://canonical-charmlibs.readthedocs-hosted.com/), [Jubilant](https://documentation.ubuntu.com/jubilant/), [Concierge](https://github.com/canonical/concierge), [Pebble](https://documentation.ubuntu.com/pebble/)
 
 .. Charmcraft documentation root file
 

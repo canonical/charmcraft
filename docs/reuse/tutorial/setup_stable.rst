@@ -18,6 +18,11 @@ Once the VM is up, open a shell into it:
 
     multipass shell charm-dev
 
+Unless stated otherwise, we will work entirely within the VM from now on.
+
+Install Rockcraft and Charmcraft
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 In order to create the rock, you need to install Rockcraft with
 classic confinement, which grants it access to the whole file system:
 
@@ -25,21 +30,29 @@ classic confinement, which grants it access to the whole file system:
 
     sudo snap install rockcraft --classic
 
-LXD will be required for building the rock.
-Make sure it is installed and initialized:
-
-.. code-block:: bash
-
-    lxd --version
-    lxd init --auto
-
-If ``LXD`` is not installed, install it with ``sudo snap install lxd``.
-
 In order to create the charm, you'll need to install Charmcraft:
 
 .. code-block:: bash
 
     sudo snap install charmcraft --channel latest/stable --classic
+
+Install LXD, MicroK8s, and Juju
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LXD will be required for building the rock.
+Make sure it is installed:
+
+.. code-block:: bash
+
+    lxd --version
+
+If LXD is not installed, install it with ``sudo snap install lxd``.
+
+Initialize LXD:
+
+.. code-block:: bash
+
+    lxd init --auto
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track, add the current

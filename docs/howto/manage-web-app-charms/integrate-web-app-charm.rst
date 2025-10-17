@@ -119,3 +119,32 @@ Deploy and integrate observability to the 12-factor app with:
 
 You don't need to add endpoint definitions to your charm's
 project file.
+
+.. _integrate-web-app-charm-integrate-s3:
+
+
+Integrate with S3
+-----------------
+
+If you wish to integrate your 12-factor web app with S3,
+for instance using the
+`S3 Integrator <https://charmhub.io/s3-integrator>`_,
+add the following endpoint definition to your project file:
+
+.. code-block:: yaml
+
+    requires:
+      s3:
+        interface: s3
+        optional: True
+        limit: 1
+
+Provide the integration to your deployed 12-factor app with:
+
+.. code-block:: bash
+
+    juju integrate <app charm> s3-integrator
+
+See the :ref:`framework specific reference <extensions>` for details
+on the specific exposed environment variables depending on the
+framework used.

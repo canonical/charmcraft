@@ -120,8 +120,49 @@ Deploy and integrate observability to the 12-factor app with:
 You don't need to add endpoint definitions to your charm's
 project file.
 
-.. _integrate-web-app-charm-integrate-s3:
+.. _integrate_web_app_http_proxy:
 
+Integrate with HTTP proxy
+-------------------------
+
+If you wish to integrate your 12-factor web app with
+`Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_, ensure the
+following prerequisites are met:
+
+1. Your web app needs to support basic proxy authentication within
+the proxy URI (i.e., it must support the format
+``scheme://username:password@proxy_value``).
+
+2. The Squid Forward Proxy charm requires information about the proxy domains
+and authentication modes supported by your web app. However, the 12 factor
+framework currently does not provide a native way to set these values directly.
+
+To supply them, your app should integrate with the `HTTP proxy configurator
+<https://github.com/canonical/http-proxy-operators/tree
+/main/http-proxy-configurator-operator>`_
+charm which relays this information to the Squid Forward Proxy charm.
+Add the following endpoint definition to your project file:
+
+.. code-block:: yaml
+
+    requires:
+      http-proxy:
+        interface: http_proxy
+        optional: True
+
+Provide the integration to your deployed 12-factor app with:
+
+.. code-block:: bash
+
+    juju integrate <app charm> http-proxy-configurator
+
+This integration creates the following environment variables you may use to
+configure your 12-factor app.
+
+- ``HTTP_PROXY``
+- ``HTTPS_PROXY``
+
+.. _integrate-web-app-charm-integrate-s3:
 
 Integrate with S3
 -----------------
@@ -139,8 +180,6 @@ add the following endpoint definition to your project file:
         interface: s3
         optional: True
         limit: 1
-
-Provide the integration to your deployed 12-factor app with:
 
 .. code-block:: bash
 

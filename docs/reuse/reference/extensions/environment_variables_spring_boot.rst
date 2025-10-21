@@ -121,3 +121,7 @@ Ingress relation.
         - ``spring.security.oauth2.client.provider.{endpoint_name}.token-uri``
         - ``spring.security.oauth2.client.provider.{endpoint_name}.user-info-uri``
         - ``spring.security.oauth2.client.provider.{endpoint_name}.user-name-attribute``
+  * - HTTP Proxy
+    -
+        - ``HTTP_PROXY``
+        - ``HTTPS_PROXY``

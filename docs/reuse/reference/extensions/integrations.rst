@@ -147,6 +147,14 @@ the following charms:
       ``{endpoint_name}-redirect-path`` and ``{endoint_name}-scopes``.
       ``{endpoint_name}-scopes`` is a space separated list of scopes, and the scope
       ``openid`` is manadatory.
+  * - `Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`__ charm
+    - .. code-block:: yaml
+
+          requires:
+            http-proxy:
+              interface: http_proxy
+              optional: True
+              limit: 1
 
 
 

@@ -181,6 +181,8 @@ add the following endpoint definition to your project file:
         optional: True
         limit: 1
 
+Provide the integration to your deployed 12-factor app with:
+
 .. code-block:: bash
 
     juju integrate <app charm> s3-integrator

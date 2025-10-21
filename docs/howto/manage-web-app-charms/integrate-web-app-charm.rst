@@ -132,6 +132,7 @@ for instance using the
 add the following endpoint definition to your project file:
 
 .. code-block:: yaml
+    :caption: charmcraft.yaml
 
     requires:
       s3:

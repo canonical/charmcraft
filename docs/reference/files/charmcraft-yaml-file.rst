@@ -329,9 +329,14 @@ to the machine architecture.
 
 **Status:** Optional.
 
-**Purpose:** Declares charm libraries for Charmcraft to include in the charm
+**Purpose:** Declares Charmhub-hosted libraries for Charmcraft to include in the charm
 project. For each lib, include both the lib name (in ``<charm>.<library>`` format)
 and the lib version (in ``"<api version>[.<patch version>]"`` string format).
+
+.. note::
+
+   This key is only for Charmhub-hosted libraries.
+   Regular Python packages should instead be listed in your charm's Python dependencies.
 
 **Structure:**
 

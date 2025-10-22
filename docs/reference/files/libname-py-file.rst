@@ -3,8 +3,8 @@
 ``<libname>.py`` file
 =====================
 
-File ``<libname>.py`` is a Python file in your charm project that holds a charm
-library -- that is, code that enables charm developers to easily share and reuse
+File ``<libname>.py`` is a Python file in your charm project that holds a Charmhub-hosted
+charm library -- that is, code that enables charm developers to easily share and reuse
 auxiliary logic related to  charms -- for example, logic related to the relations
 between charms.
 
@@ -13,6 +13,11 @@ a reference to the origin charm. This does not prevent reuse, modification or sh
 
 The publishing tools around libraries are deliberately kept simple.
 Libraries are however versioned and uniquely identified.
+
+> Read more:
+> - :external+charmlibs:ref:`Charmlibs | Charm libraries <charm-libs>` to learn more about the different kinds of charm libraries.
+> - :external+charmlibs:ref:`Charmlibs | Manage libraries <manage-libraries>` for how to manage Python package charm libraries.
+> - :ref:`Manage libraries <manage-libraries>` for how to manage Charmhub-hosted charm libraries.
 
 
 Location

@@ -6,6 +6,7 @@ Manage libraries
 This guide covers the key steps for managing Charmhub-hosted libraries.
 
     Read more:
+
     - :external+charmlibs:ref:`Charmlibs | Charm libraries <charm-libs>` to learn more about the different kinds of charm libraries.
     - :external+charmlibs:ref:`Charmlibs | Manage libraries <manage-libraries>` for how to manage Python package charm libraries.
 

@@ -248,7 +248,7 @@ Create the charm
 ----------------
 
 From the ``~/expressjs-hello-world`` directory, let's create a new directory
-for the charm and change inside it:
+for the charm and go inside it:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -457,7 +457,7 @@ Configure the Express app
 To demonstrate how to provide a configuration to the Express app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Express app configuration under the
-keyword ``GREETING``. Change to the ``~/expressjs-hello-world/app/routes``
+keyword ``GREETING``. Go to the ``~/expressjs-hello-world/app/routes``
 directory and replace the code in ``index.js`` with
 the following:
 
@@ -512,7 +512,7 @@ Redeploy the charm
 
 We’ll redeploy the new version with ``juju refresh``.
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The ``expressjs-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
@@ -641,7 +641,7 @@ visitors:
     :caption: ~/expressjs-hello-world/app/routes/index.js
     :language: javascript
 
-Change back to the ``~/expressjs-hello-world/app`` directory,
+Return to the ``~/expressjs-hello-world/app`` directory,
 open ``app.js`` in a text editor and replace its content with the following
 code to add the new route:
 
@@ -711,7 +711,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The Express app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
@@ -786,7 +786,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/expressjs-hello-world`` for the tutorial:
+following in the project directory ``~/expressjs-hello-world`` for the tutorial:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash

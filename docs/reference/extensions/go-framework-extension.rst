@@ -62,19 +62,7 @@ charm can set it by running ``juju config <application> token=<token>``.
 
 .. include:: /reuse/reference/extensions/integrations.rst
 .. include:: /reuse/reference/extensions/environment_variables.rst
-
-
-HTTP Proxy
-----------
-
-Proxy settings should be set as model configurations. Charms generated using the
-``go-framework`` extension will make the Juju proxy settings available as the
-``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environment variables. For example, the
-``juju-http-proxy`` environment variable will be exposed as ``HTTP_PROXY`` to the Go
-service.
-
-    See more: `List of model configuration
-    keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
+.. include:: /reuse/reference/extensions/http_proxy.rst
 
 
 Worker and Scheduler Services
@@ -162,3 +150,19 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. _go-grafana-graphs:
+
+Grafana dashboard graphs
+------------------------
+
+If the Go app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **Go Operator** displays the following
+default graphs:
+
+* Go version: Running Go version.
+* Number of bytes obtained from system
+* Average of GC call time: Average time spent in garbage collection
+* Rate of GC calls: Number of garbage collections per second
+* Number of goroutines that currently exist

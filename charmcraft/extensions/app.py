@@ -87,6 +87,7 @@ class _AppBase(Extension):
         {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
         {"lib": "hydra.oauth", "version": "0"},
+        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
     ]
 
     @staticmethod
@@ -514,6 +515,10 @@ class SpringBootFramework(_AppBase):
     framework = "spring-boot"
     options = {
         **APP_PORT_OPTION,
+        "app-profiles": {
+            "type": "string",
+            "description": "Comma-separated list of Spring Boot active profiles.",
+        },
         "metrics-port": {
             "type": "int",
             "default": 8080,

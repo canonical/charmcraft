@@ -3,9 +3,8 @@
 How-to guides
 =============
 
-Charmcraft's how-to guides provide comprehensive, step-by-step instructions for the most
-common charm development tasks -- from initializing a project to publishing it on
-Charmhub.
+These pages provide directions for completing tasks and solving problems with
+Charmcraft.
 
 
 Install Charmcraft

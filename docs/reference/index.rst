@@ -3,8 +3,8 @@
 Reference
 =========
 
-The reference material in this section describes Charmcraft's key components and
-processes. It includes commands, extensions, charm project files, and more.
+References describe the structure and function of the individual components in
+Charmcraft.
 
 
 Command-line reference

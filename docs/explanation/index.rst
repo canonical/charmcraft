@@ -3,21 +3,21 @@
 Explanation
 ===========
 
-The explanation material in this section expounds on Charmcraft's high-level concepts,
-helping you understand how everything fits together. It speaks to the rationale behind
-Charmcraft's design, features, and implementation.
+Explanations provide a wider perspective of Charmcraft. They aid in understanding the
+concepts and relationships of Charmcraft as a complete system.
 
 
 Cryptography
 ------------
 
 Charmcraft and its external libraries use cryptographic tools for fetching files,
-communicating with local processes, and storing user credentials. These tools are
-detailed in :ref:`explanation-cryptographic-technology`.
+communicating with local processes, and storing user credentials.
+
+:ref:`explanation-cryptographic-technology`.
 
 
 .. toctree::
-   :maxdepth: 1
-   :hidden:
+    :maxdepth: 1
+    :hidden:
 
-   Cryptographic technology <cryptography>
+    Cryptographic technology <cryptography>

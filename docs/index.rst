@@ -1,3 +1,5 @@
+:relatedlinks: [Juju](https://documentation.ubuntu.com/juju/), [Ops](https://documentation.ubuntu.com/ops/), [Charmlibs](https://canonical-charmlibs.readthedocs-hosted.com/), [Jubilant](https://documentation.ubuntu.com/jubilant/), [Concierge](https://github.com/canonical/concierge), [Pebble](https://documentation.ubuntu.com/pebble/)
+
 .. Charmcraft documentation root file
 
 Charmcraft

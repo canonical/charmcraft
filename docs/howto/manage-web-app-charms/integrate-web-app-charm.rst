@@ -187,6 +187,5 @@ Provide the integration to your deployed 12-factor app with:
 
     juju integrate <app charm> s3-integrator
 
-See the :ref:`framework specific reference <extensions>` for details
-on the specific exposed environment variables depending on the
-framework used.
+See the :ref:`framework's reference <extensions>` for a list of its exposed environment
+variables.

@@ -14,7 +14,8 @@ a reference to the origin charm. This does not prevent reuse, modification or sh
 The publishing tools around libraries are deliberately kept simple.
 Libraries are however versioned and uniquely identified.
 
-    Read more:
+.. admonition:: More information about charm libraries
+    :class: hint
 
     - :external+charmlibs:ref:`Charmlibs | The different kinds of charm libraries <charm-libs>`
     - :external+charmlibs:ref:`Charmlibs | Manage Python package libraries <how-to-manage-libraries>`

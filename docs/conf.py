@@ -29,7 +29,6 @@ import charmcraft
 
 project_dir = pathlib.Path(__file__).parents[1].resolve()
 
-
 project = "Charmcraft"
 author = "Canonical"
 release = charmcraft.__version__

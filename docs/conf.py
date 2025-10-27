@@ -23,10 +23,12 @@ import subprocess
 import sys
 
 import craft_parts_docs
+import sphinx.directives.code
 
 import charmcraft
 
 project_dir = pathlib.Path(__file__).parents[1].resolve()
+
 
 project = "Charmcraft"
 author = "Canonical"
@@ -232,6 +234,11 @@ def generate_cli_docs(nil):
 
 def setup(app):
     app.connect("builder-inited", generate_cli_docs)
+    # The sphinx_toolbox extension defines a custom CodeBlock class,
+    # which renders some code blocks incorrectly.
+    # See https://github.com/sphinx-toolbox/sphinx-toolbox/issues/198
+    # We don't need the custom class, so we reregister the built-in class.
+    app.add_directive('code-block', sphinx.directives.code.CodeBlock, override=True)
 
 
 # Setup libraries documentation snippets for use in charmcraft docs.

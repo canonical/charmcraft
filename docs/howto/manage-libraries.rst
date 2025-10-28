@@ -5,12 +5,11 @@ Manage libraries
 
 This guide covers the key steps for managing Charmhub-hosted libraries.
 
-    Read more:
-
-    - :external+charmlibs:ref:`Charmlibs | The different kinds of charm libraries <charm-libs>`
-    - :external+charmlibs:ref:`Charmlibs | Manage Python package libraries <how-to-manage-libraries>`
-    - :external+charmlibs:ref:`Charmlibs | General libraries listing <general-libs-listing>`
-    - :external+charmlibs:ref:`Charmlibs | Interface libraries listing <interface-libs-listing>`
+It's essential to start with a base of understanding of charm libraries from the Charmlibs documentation.
+ 
+- :external+charmlibs:ref:`Charm libraries <charm-libs>` explains the different kinds of charm libraries and how they are distributed.
+- :external+charmlibs:ref:`How to manage charm libraries <how-to-manage-charm-libraries>` covers the usage of Python package charm libraries.
+- :external+charmlibs:ref:`General libraries listing <general-libs-listing>` and :external+charmlibs:ref:`Interface libraries listing <interface-libs-listing>` list available libraries and which are recommended for use today.
 
 
 Initialise a library

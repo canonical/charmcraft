@@ -1225,7 +1225,7 @@ class CreateLibCommand(CharmcraftCommand):
     help_msg = "Create a charm library"
     overview = textwrap.dedent(
         """
-        Create a Charmhub-hosted charm library.
+        Create a Charmhub-hosted library.
 
         Charmcraft manages charm libraries, which are published by charmers
         to help other charmers integrate their charms. This command creates

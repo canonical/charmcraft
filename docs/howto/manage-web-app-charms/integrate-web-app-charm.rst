@@ -161,3 +161,31 @@ configure your 12-factor app.
 
 - ``HTTP_PROXY``
 - ``HTTPS_PROXY``
+
+.. _integrate-web-app-charm-integrate-s3:
+
+Integrate with S3
+-----------------
+
+If you wish to integrate your 12-factor web app with S3,
+for instance using the
+`S3 Integrator <https://charmhub.io/s3-integrator>`_,
+add the following endpoint definition to your project file:
+
+.. code-block:: yaml
+    :caption: charmcraft.yaml
+
+    requires:
+      s3:
+        interface: s3
+        optional: True
+        limit: 1
+
+Then, integrate the charm in your deployed 12-factor app.
+
+.. code-block:: bash
+
+    juju integrate <app charm> s3-integrator
+
+See the :ref:`framework's reference <extensions>` for a list of its exposed environment
+variables.

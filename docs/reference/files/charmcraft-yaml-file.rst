@@ -224,7 +224,7 @@ where the charm must be built on and run on.
 and where that build can run. Each item can be expressed using two different
 internal structures, a short and a long form. The long one is more explicit:
 
-.. code-block:: yaml
+.. code:: yaml
 
     bases:
       - build-on:
@@ -258,7 +258,7 @@ to the machine architecture.
 
 .. collapse:: Example
 
-    .. code-block:: yaml
+    .. code:: yaml
 
         bases:
           - build-on:
@@ -507,7 +507,7 @@ container. It dictates the mount point for the specific container.
 Optionally, you can specify the location attribute on the `storage`_ itself,
 which also sets the mount point in the charm container.
 
-.. code-block:: yaml
+.. code:: yaml
 
     containers:
       <container name>:
@@ -570,7 +570,7 @@ which also sets the mount point in the charm container.
 
 **Structure:**
 
-.. code-block:: yaml
+.. code:: yaml
 
     devices:
         # Each key represents the name of the device
@@ -981,7 +981,7 @@ at least one ``requires`` integration with ``container`` scope.
 
 **Structure:**
 
-.. code-block:: yaml
+.. code:: yaml
 
     storage:
       # Each key represents the name of the storage

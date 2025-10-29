@@ -11,9 +11,9 @@ Install Charmcraft
 ------------------
 
 Charmcraft can be installed in just a few short steps, regardless of if you are
-installing on Linux, macOS, or an isolated environment. Specific instructions for
-installing Charmcraft and setting up your build container can be found in
-:ref:`manage-charmcraft`.
+installing on Linux, macOS, or an isolated environment.
+
+- :ref:`manage-charmcraft`.
 
 
 Craft charms

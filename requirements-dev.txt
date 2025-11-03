@@ -25,7 +25,7 @@ importlib-metadata==6.8.0
 iniconfig==2.0.0
 jaraco-classes==3.3.1
 jeepney==0.8.0
-jinja2==3.1.5
+jinja2==3.1.6
 jsonschema==4.19.2
 jsonschema-specifications==2023.7.1
 keyring==24.2.0
@@ -45,7 +45,7 @@ pluggy==1.4.0
 protobuf==3.20.3
 pycodestyle==2.11.1
 pycparser==2.22
-pydantic==1.10.21
+pydantic==1.10.24
 pydantic-yaml==0.11.2
 pydocstyle==6.3.0
 pyfakefs==5.3.5
@@ -63,9 +63,9 @@ pytest-subprocess==1.5.3
 python-dateutil==2.8.2
 pytz==2023.4
 pyxdg==0.28
-pyyaml==6.0.2
+pyyaml==6.0.3
 referencing==0.30.2
-requests==2.32.3
+requests==2.32.5
 requests-toolbelt==1.0.0
 requests-unixsocket2==0.4.2
 responses==0.24.1
@@ -80,7 +80,7 @@ tabulate==0.9.0
 tox==4.11.4
 types-deprecated==1.2.9.20240311
 types-python-dateutil==2.8.19.20240311
-types-pyyaml==6.0.12.20241230
+types-pyyaml==6.0.12.20250915
 types-requests==2.31.0.20240406
 types-setuptools==69.0.0.20240125
 types-tabulate==0.9.0.20241207

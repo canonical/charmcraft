@@ -3,18 +3,25 @@
 Manage libraries
 ================
 
+This guide covers the key steps for managing Charmhub-hosted libraries.
+
+It's essential to start with a base of understanding of charm libraries from the Charmlibs documentation.
+
+- :external+charmlibs:ref:`Charm libraries <charm-libs>` explains the different kinds of charm libraries and how they are distributed.
+- :external+charmlibs:ref:`How to manage charm libraries <how-to-manage-charm-libraries>` covers the usage of Python package charm libraries.
+- :external+charmlibs:ref:`General libraries listing <general-libs-listing>` and :external+charmlibs:ref:`Interface libraries listing <interface-libs-listing>` list available libraries and which are recommended.
+
 
 Initialise a library
 --------------------
 
    See also: :ref:`ref_commands_create-lib`
 
-In your charm's root directory, run ``charmcraft create-lib``. In this example we use
-the name ``demo``.
+In your charm's root directory, run the ``charmcraft create-lib`` command like this:
 
 .. code-block:: bash
 
-    charmcraft create-lib demo
+    charmcraft create-lib <lib-name>
 
 .. note::
 
@@ -22,7 +29,8 @@ the name ``demo``.
     See more: :ref:`publish-a-charm`.
 
 
-This will create a template file at ``$CHARMDIR/lib/charms/demo/v0/demo.py``.
+This will create a template file at
+``<charm-root-dir>/lib/charms/<charm-name>/v0/<lib-name>.py``.
 
     See more: :ref:`ref_commands_create-lib`, :ref:`libname-py-file`
 

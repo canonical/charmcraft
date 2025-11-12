@@ -194,6 +194,7 @@ intersphinx_mapping = {
     "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
     "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
+    "charmlibs": ("https://documentation.ubuntu.com/charmlibs/", None),
 }
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes

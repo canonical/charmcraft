@@ -1225,7 +1225,7 @@ class CreateLibCommand(CharmcraftCommand):
     help_msg = "Create a charm library"
     overview = textwrap.dedent(
         """
-        Create a charm library.
+        Create a Charmhub-hosted library.
 
         Charmcraft manages charm libraries, which are published by charmers
         to help other charmers integrate their charms. This command creates
@@ -1319,7 +1319,7 @@ class PublishLibCommand(CharmcraftCommand):
     help_msg = "Publish one or more charm libraries"
     overview = textwrap.dedent(
         """
-        Publish charm libraries.
+        Publish charm libraries on Charmhub.
 
         Upload and release in Charmhub the new api/patch version of the
         indicated library, or all the charm libraries if <library> is not
@@ -1483,7 +1483,7 @@ class FetchLibCommand(CharmcraftCommand):
     help_msg = "Fetch one or more charm libraries"
     overview = textwrap.dedent(
         """
-        Fetch charm libraries.
+        Fetch charm libraries from Charmhub.
 
         The first time a library is downloaded the command will create the needed
         directories to place it, subsequent fetches will just update the local copy.
@@ -1643,7 +1643,7 @@ class FetchLibs(CharmcraftCommand):
     help_msg = "Fetch one or more charm libraries"
     overview = textwrap.dedent(
         """
-        Fetch charm libraries defined in charmcraft.yaml.
+        Fetch the charm libraries listed in charmcraft.yaml from Charmhub.
 
         For each library in the top-level `charm-libs` key, fetch the latest library
         version matching those requirements.
@@ -1742,7 +1742,7 @@ class ListLibCommand(CharmcraftCommand):
     help_msg = "List all libraries from a charm"
     overview = textwrap.dedent(
         """
-        List all libraries from a charm.
+        List all libraries a charm has published on Charmhub.
 
         For each library, it will show the name and the api and patch versions
         for its tip.

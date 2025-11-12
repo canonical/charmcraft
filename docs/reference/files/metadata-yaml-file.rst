@@ -43,7 +43,7 @@ to keep track of other choices a charmer might make.
 
 .. dropdown:: ``metadata.yaml`` for a Kubernetes charm
 
-    .. code-block:: yaml
+    .. code:: yaml
 
         name: super-k8s
         summary: a really great charm
@@ -117,7 +117,7 @@ to find out more.
 
 .. dropdown:: Alternatively, expand to see the full spec at once
 
-    .. code-block:: yaml
+    .. code:: yaml
 
         # (Required) The name of the charm. Determines URL in Charmhub and the name administrators
         # will ultimately use to deploy the charm. E.g. `juju deploy <name>`
@@ -477,7 +477,7 @@ respectively, GID to run the Pebble entry process for this container as; they ca
 value from 0-999 or any value from 10,000 (values from 1000-9999 are reserved for users)
 and the default is 0 (root).
 
-.. code-block:: yaml
+.. code:: yaml
 
     containers:
       <container name>:
@@ -549,14 +549,14 @@ and the default is 0 (root).
 
 .. dropdown:: Example
 
-.. code-block:: yaml
+    .. code:: yaml
 
-    containers:
-        super-app:
-          resource: super-app-image
-          mounts:
-            - storage: logs
-              location: /logs
+        containers:
+          super-app:
+            resource: super-app-image
+            mounts:
+              - storage: logs
+                location: /logs
 
 
 ``description``

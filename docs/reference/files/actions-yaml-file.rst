@@ -64,7 +64,7 @@ The file contains a YAML map for each defined action. Each map starts with an
     features of JSON schema to define detailed options. It also makes the
     ``filename`` field mandatory:
 
-    .. code-block:: yaml
+    .. code:: yaml
 
         snapshot:
           description: Take a snapshot of the database.

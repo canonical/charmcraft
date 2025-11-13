@@ -47,6 +47,10 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+      - ubuntu-26.04-64:
+          workers: 6
+          memory: 8G
+          storage: 40G
   ci:
     type: adhoc
     systems:
@@ -111,6 +115,8 @@ backends:
       - ubuntu-24.04-64:
           workers: 4
       - ubuntu-25.10-64:
+          workers: 4
+      - ubuntu-26.04-64:
           workers: 4
 
 prepare: |
@@ -338,3 +344,8 @@ suites:
     summary: Destructive tests for Ubuntu Questing (25.10) builds
     systems:
       - ubuntu-25.10-64
+
+  tests/spread/ubuntu-26.04/:
+    summary: Destructive tests for Ubuntu Resolute (26.04 LTS) builds
+    systems:
+      - ubuntu-26.04-64

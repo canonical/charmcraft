@@ -1,0 +1,14 @@
+type: charm
+name: test-charm
+summary: An invalid charm based on Ubuntu 25.10 with the charm plugin.
+description: test-charm
+
+platforms:
+  "questing":
+    build-on: ubuntu@25.10:amd64
+    build-for: ubuntu@25.10:amd64
+
+parts:
+  my-part:
+    plugin: charm
+    source: .

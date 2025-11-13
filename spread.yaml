@@ -43,6 +43,10 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+      - ubuntu-25.10-64:
+          workers: 6
+          memory: 8G
+          storage: 40G
   ci:
     type: adhoc
     systems:
@@ -106,6 +110,9 @@ backends:
           workers: 4
       - ubuntu-24.04-64:
           workers: 4
+      - ubuntu-25.10-64:
+          workers: 4
+
 prepare: |
   set -e
 
@@ -326,3 +333,8 @@ suites:
     summary: Destructive tests for Ubuntu Noble (24.04 LTS) builds
     systems:
       - ubuntu-24.04-64
+
+  tests/spread/ubuntu-25.10/:
+    summary: Destructive tests for Ubuntu Questing (25.10) builds
+    systems:
+      - ubuntu-25.10-64

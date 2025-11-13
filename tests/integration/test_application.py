@@ -15,14 +15,27 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Integration tests for the Charmcraft class."""
 
+import json
 import pathlib
 import shutil
+from collections.abc import Iterator
 
+import craft_parts
+import pydantic
 import pytest
 from craft_application import util
 
-from charmcraft import utils
+from charmcraft import parts, utils
 from charmcraft.application.main import create_app
+
+
+@pytest.fixture(autouse=True)
+def setup_parts() -> Iterator[None]:
+    # Set us back to the default craft-parts plugins only
+    craft_parts.plugins.unregister_all()
+    yield
+    # Teardown
+    parts.setup_parts()
 
 
 @pytest.mark.parametrize(
@@ -37,6 +50,7 @@ def test_load_charm(in_project_path, charm_dir):
 
     app = create_app()
     app._configure_early_services()
+    app._initialize_craft_parts()
     app._configure_services(None)
     app.configure({})
 
@@ -49,3 +63,60 @@ def test_load_charm(in_project_path, charm_dir):
 
     assert project_dict == expected_data
     assert utils.dump_yaml(project_dict) == (charm_dir / "expected.yaml").read_text()
+
+    # Check that all the necessary plugins are registered.
+    app._initialize_craft_parts()
+    plugins = {v.get("plugin", k) for k, v in project.parts.items()}
+    for plugin in plugins:
+        craft_parts.plugins.get_plugin_class(plugin)
+
+
+@pytest.mark.parametrize(
+    "charm_dir",
+    [
+        pytest.param(path, id=path.name)
+        for path in sorted((pathlib.Path(__file__).parent / "invalid-charms").iterdir())
+    ],
+)
+def test_load_invalid_charm(in_project_path: pathlib.Path, charm_dir: pathlib.Path):
+    shutil.copytree(charm_dir, in_project_path, dirs_exist_ok=True)
+
+    app = create_app()
+    app._configure_early_services()
+    app._configure_services(None)
+    app.configure({})
+
+    app.services.get("project").configure(platform=None, build_for=None)
+    with pytest.raises(pydantic.ValidationError) as exc_info:
+        app.services.get("project").get()
+
+    error_dict = json.loads((charm_dir / "errors.json").read_text())
+
+    assert json.loads(exc_info.value.json()) == error_dict, "Errors do not match"
+
+
+@pytest.mark.parametrize(
+    "charm_dir",
+    [
+        pytest.param(path, id=path.name)
+        for path in sorted((pathlib.Path(__file__).parent / "invalid-charms").iterdir())
+        if "charm-plugin" in path.name or "reactive-plugin" in path.name
+    ],
+)
+def test_remove_charm_reactive_plugins(
+    in_project_path: pathlib.Path, charm_dir: pathlib.Path
+):
+    shutil.copytree(charm_dir, in_project_path, dirs_exist_ok=True)
+
+    app = create_app()
+    app._configure_early_services()
+    app._configure_services(None)
+    app.configure({})
+
+    # Test that we have not registered plugins that we didn't
+    app._initialize_craft_parts()
+
+    with pytest.raises(ValueError, match="plugin not registered: 'charm'"):
+        craft_parts.plugins.plugins.get_plugin_class("charm")
+    with pytest.raises(ValueError, match="plugin not registered: 'reactive'"):
+        craft_parts.plugins.plugins.get_plugin_class("reactive")

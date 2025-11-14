@@ -23,6 +23,7 @@ from typing import Any
 import craft_application
 import craft_cli
 from craft_application import util
+from craft_application.errors import ProjectFileMissingError
 from craft_parts.plugins.plugins import PluginType
 from overrides import override
 
@@ -123,9 +124,12 @@ class Charmcraft(craft_application.Application):
     def _get_app_plugins(self) -> dict[str, PluginType]:
         plugins = parts.get_app_plugins()
 
-        full_build_plan = self.services.get("build_plan").create_build_plan(
-            platforms=None, build_on=None, build_for=None
-        )
+        try:
+            full_build_plan = self.services.get("build_plan").create_build_plan(
+                platforms=None, build_on=None, build_for=None
+            )
+        except ProjectFileMissingError:
+            return plugins
         bases = {build_info.build_base for build_info in full_build_plan}
         for base in bases:
             if str(base) not in const.CHARM_OR_REACTIVE_BASES:

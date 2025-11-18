@@ -72,8 +72,8 @@ parts:
   build-deps:
     plugin: nil
     build-packages:
-      - cargo-1.82
-      - rustc-1.82
+      - cargo-1.85
+      - rustc-1.85
       # Basic Python build deps
       - pkg-config
       - python3.12-dev
@@ -102,8 +102,8 @@ parts:
       # and rustc packages provide, but they don't set the `cargo`
       # and `rustc` commands needed by maturin.
       mkdir -p "${CRAFT_PART_INSTALL}/bin"
-      ln -s $(which cargo-1.82) "${CRAFT_PART_INSTALL}/bin/cargo"
-      ln -s $(which rustc-1.82) "${CRAFT_PART_INSTALL}/bin/rustc"
+      ln -s $(which cargo-1.85) "${CRAFT_PART_INSTALL}/bin/cargo"
+      ln -s $(which rustc-1.85) "${CRAFT_PART_INSTALL}/bin/rustc"
     prime:
       - -*
   charmcraft-libs:

@@ -903,6 +903,7 @@
 								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
+								"ubuntu@26.04",
 								"almalinux@9"
 							],
 							"type": "string"
@@ -925,6 +926,7 @@
 								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
+								"ubuntu@26.04",
 								"almalinux@9"
 							],
 							"type": "string"

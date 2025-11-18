@@ -61,6 +61,15 @@ LEGACY_BASES = (  # Legacy bases that can use the "bases" syntax.
     "almalinux@9",
 )
 
+CHARM_OR_REACTIVE_BASES = frozenset(  # Bases with the 'charm' & 'reactive' plugins.
+    (
+        *LEGACY_BASES,
+        "ubuntu@24.04",
+        "ubuntu@24.10",
+        "ubuntu@25.04",
+    )
+)
+
 CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@18.04",
     "ubuntu@20.04",
@@ -69,6 +78,7 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@24.10",
     "ubuntu@25.04",
     "ubuntu@25.10",
+    "ubuntu@26.04",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
@@ -78,6 +88,7 @@ DEVEL_BASE_STRINGS = (
     "ubuntu@24.10",
     "ubuntu@25.04",
     "ubuntu@25.10",
+    "ubuntu@26.04",
 )  # Bases that require a specified build base.
 
 SUPPORTED_BASES = frozenset(
@@ -87,7 +98,6 @@ SUPPORTED_BASES = frozenset(
         BaseName("ubuntu", "22.04"),
         BaseName("ubuntu", "24.04"),
         BaseName("ubuntu", "25.10"),
-        BaseName("ubuntu", "devel"),
         BaseName("almalinux", "9"),
     )
 )

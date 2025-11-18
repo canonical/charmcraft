@@ -1,0 +1,17 @@
+type: charm
+name: test-charm
+summary: test-charm
+description: test-charm
+
+base: ubuntu@26.04
+build-base: ubuntu@devel
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+
+parts:
+  my-part:
+    plugin: uv
+    source: .
+    build-snaps: [astral-uv]

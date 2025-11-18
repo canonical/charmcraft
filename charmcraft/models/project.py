@@ -29,11 +29,12 @@ from typing import (
     cast,
 )
 
+import craft_platforms
 import pydantic
 import pydantic.v1
 from craft_application import errors, models
 from craft_application.models import PlatformsDict, VersionStr
-from craft_application.util import safe_yaml_load
+from craft_application.util import humanize_list, safe_yaml_load
 from craft_cli import CraftError, emit
 from pydantic.json_schema import SkipJsonSchema
 from typing_extensions import Self, override
@@ -916,6 +917,42 @@ class PlatformCharm(CharmProject):
 
         Modifying the platforms field can break multi-base builds."""
         return platforms
+
+    @pydantic.field_validator("parts", mode="before")
+    @classmethod
+    def _validate_removed_questing_plugins(
+        cls, value: dict[str, dict[str, Any]], info: pydantic.ValidationInfo
+    ) -> dict[str, dict[str, Any]]:
+        """Check that the charm and reactive plugins aren't used on Ubuntu 25.10+."""
+        plugins = {v.get("plugin", k) for k, v in value.items()}
+        if not plugins & {"charm", "reactive"}:
+            return value
+        if (base := info.data.get("base")) in const.CHARM_OR_REACTIVE_BASES:
+            return value
+        if base is not None:
+            raise ValueError(
+                f"Cannot use 'charm' or 'reactive' plugins with base {base!r}"
+            )
+        # Multi-base charms.
+        build_bases = {
+            str(info.build_base)
+            for info in craft_platforms.charm.get_platforms_charm_build_plan(
+                base=None,
+                platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
+                    info.data["platforms"], mode="json", by_alias=True
+                ),
+            )
+        }
+        if invalid_bases := build_bases - const.CHARM_OR_REACTIVE_BASES:
+            if len(invalid_bases) == 1:
+                raise ValueError(
+                    f"Cannot use 'charm' or 'reactive' plugins with base {invalid_bases.pop()!r}"
+                )
+            invalid_bases_str = humanize_list(sorted(invalid_bases), conjunction="or")
+            raise ValueError(
+                f"Cannot use 'charm' or 'reactive' plugins with bases {invalid_bases_str}"
+            )
+        return value
 
 
 Charm = PlatformCharm | BasesCharm

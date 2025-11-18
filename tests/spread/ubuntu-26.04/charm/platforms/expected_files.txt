@@ -1,0 +1,6 @@
+metadata.yaml
+manifest.yaml
+config.yaml
+dispatch
+src/charm.py
+venv/lib/python3.13/site-packages/ops/charm.py

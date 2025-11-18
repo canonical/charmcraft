@@ -97,13 +97,6 @@ parts:
       - libyaml-dev # Needed to build libyaml from source
     build-snaps:
       - astral-uv
-    override-build: |
-      # We need newer versions of cargo and rustc than the cargo
-      # and rustc packages provide, but they don't set the `cargo`
-      # and `rustc` commands needed by maturin.
-      mkdir -p "${CRAFT_PART_INSTALL}/bin"
-      ln -s $(which cargo-1.85) "${CRAFT_PART_INSTALL}/bin/cargo"
-      ln -s $(which rustc-1.85) "${CRAFT_PART_INSTALL}/bin/rustc"
     prime:
       - -*
   charmcraft-libs:
@@ -134,6 +127,8 @@ parts:
       - MAKEOPTS: -j$(nproc --all) # Parallel make jobs for things like python-apt
       - UV_COMPILE_BYTECODE: "true"
       - CLICOLOR_FORCE: "true"
+      - CARGO: cargo-1.85
+      - RUSTC: rustc-1.85
     build-attributes:
       - enable-patchelf
     override-build: |

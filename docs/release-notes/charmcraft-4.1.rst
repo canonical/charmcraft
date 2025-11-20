@@ -43,7 +43,7 @@ Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 bases
 As an interim base, the behaviour of Charmcraft when packing an Ubuntu 25.10 charm is
 not guaranteed to be stable, but is instead consistent with the evolving changes
 needed for Ubuntu 26.04. See our `Interim bases policy
-<https://warthogs.atlassian.net/browse/CHARMCRAFT-648>`_ for further information.
+<https://github.com/canonical/charmcraft/issues/1821>`_ for further information.
 
 12-factor app charm HTTP proxy integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

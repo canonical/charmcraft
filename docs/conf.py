@@ -169,7 +169,9 @@ exclude_patterns = [
     "reuse/reference/extensions/integrations.rst",
     "reuse/reference/extensions/environment_variables.rst",
     "reuse/reference/extensions/environment_variables_spring_boot.rst",
-    "reuse/tutorial/*"
+    "reuse/reference/extensions/http_proxy.rst",
+    "reuse/tutorial/*",
+    # "release-notes/charmcraft-4.1.rst",
 ]
 
 rst_epilog = """
@@ -189,7 +191,7 @@ autodoc_default_options = {"exclude-members": "model_post_init"}
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
+    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/latest/", None),
     "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
     "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),

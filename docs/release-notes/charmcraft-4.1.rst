@@ -82,6 +82,14 @@ Contributors
 We would like to express a big thank you to all the people who contributed to
 this release:
 
+:literalref:`@aj4ayushjain <https://github.com/aj4ayushjain>`,
+:literalref:`@alithethird <https://github.com/alithethird>`,
+:literalref:`@dwilding <https://github.com/dwilding>`,
+:literalref:`@erinecon <https://github.com/erinecon>`,
+:literalref:`@james-garner-canonical <https://github.com/james-garner-canonical>`,
+:literalref:`@jahn-junior <https://github.com/jahn-junior>`,
 :literalref:`@javierdelapuente <https://github.com/javierdelapuente>`,
-:literalref:`@lengau <https://launchpad.net/~lengau>` and
-:literalref:`@swetha1654 <https://github.com/swetha1654>`
+:literalref:`@lengau <https://launchpad.net/~lengau>`,
+:literalref:`@medubelko <https://github.com/medubelko>`,
+:literalref:`@swetha1654 <https://github.com/swetha1654>` and
+:literalref:`@tonyandrewmeyer <https://github.com/tonyandrewmeyer>`

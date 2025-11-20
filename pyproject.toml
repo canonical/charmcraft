@@ -83,22 +83,12 @@ types = [
     "types-tabulate",
     "types-urllib3",
 ]
-dev-jammy = [
-    # Stay on 2.4 for Jammy
-    "python-apt~=2.4.0;sys_platform=='linux'",
-]
-dev-noble = [
-    # 2.7 for Noble
-    "python-apt~=2.7.0;sys_platform=='linux'",
-]
-dev-plucky = [
-    # 2.9 for Oracular+
-    "python-apt~=2.9.0;sys_platform=='linux'",
-]
-dev-questing = [
-    "python-apt~=3.0.0;sys_platform=='linux'",
-]
 tics = ["flake8", "pylint"]
+dev-jammy = ["python-apt~=2.4.0;sys_platform=='linux'"]
+dev-noble = ["python-apt~=2.7.0;sys_platform=='linux'"]
+dev-plucky = ["python-apt~=2.9.0;sys_platform=='linux'"]
+dev-questing = ["python-apt~=3.0.0;sys_platform=='linux'"]
+dev-resolute = ["python-apt~=3.0.0;sys_platform=='linux'"]
 
 [tool.uv]
 constraint-dependencies = [
@@ -148,6 +138,7 @@ conflicts = [
         { group = "dev-noble" },
         { group = "dev-plucky" },
         { group = "dev-questing" },
+        { group = "dev-resolute" },
     ]
 ]
 

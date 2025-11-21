@@ -49,7 +49,7 @@ jobs:
       # speed up build times by using wheels, when available
       - name: Use wheels
         run: |
-          yq 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -yi snap/snapcraft.yaml
+          yq e 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -i snap/snapcraft.yaml
       - name: Build snap
         uses: canonical/action-build@v1
         id: snapcraft

@@ -36,6 +36,8 @@ use to configure your 12-factor application.
 
   :external+ops:doc:`Ops | How to manage relations <howto/manage-relations>`
 
+.. _integrate-web-app-charm-integrate-database:
+
 Integrate with a database
 -------------------------
 

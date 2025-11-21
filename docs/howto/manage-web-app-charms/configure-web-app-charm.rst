@@ -3,6 +3,8 @@
 Manage configurations for a 12-factor app charm
 ===============================================
 
+.. _configure-12-factor-charms-add-a-new-configuration:
+
 Add a new configuration
 -----------------------
 
@@ -110,6 +112,8 @@ The configuration can be set on the deployed charm using:
 .. code-block:: bash
 
     juju config <app name> token=<token>
+
+.. _configure-12-factor-charms-add-a-custom-action:
 
 Add a custom action
 -------------------
@@ -235,6 +239,8 @@ If successful, the terminal will output something like:
     are ephemeral, meaning that container files are not persistent in the case
     of the unit's restart or deletion.
 
+.. _configure-12-factor-charms-manage-secrets:
+
 Manage secrets
 --------------
 
@@ -331,6 +337,8 @@ Add the Juju secret ID to the application:
 
             See also: `How to manage secrets
             <https://juju.is/docs/juju/manage-secrets>`_
+
+.. _configure-12-factor-charms-async-flask:
 
 Write a Kubernetes charm for an async Flask app
 -----------------------------------------------

@@ -3,6 +3,7 @@
 Use a 12-factor app charm
 =========================
 
+.. _use-12-factor-charms-admin-user-django:
 
 Create an admin user for a Django app charm
 -------------------------------------------
@@ -13,6 +14,7 @@ Use the ``create-superuser`` action to create a new Django admin account:
 
     juju run <app name> create-superuser username=<username> email=<email>
 
+.. _use-12-factor-charms-migrate-workload-database:
 
 Migrate the workload database
 -----------------------------
@@ -318,6 +320,8 @@ If you cannot solve your issue, please reach out to us on
 debugging. When describing your issue, please include the output of the
 Juju and Pebble logs.
 
+.. _use-12-factor-charms-observability:
+
 Use observability
 -----------------
 
@@ -385,6 +389,7 @@ the **WebApp Operator** dashboard for Flask and Django.
 For other frameworks, you may access the logs by picking ``loki`` in the
 ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore`` page.
 
+.. _use-12-factor-charms-configure-tls:
 
 Configure TLS for a web app charm
 ---------------------------------
@@ -433,6 +438,7 @@ To obtain a TLS certificate signed by a trusted certificate authority (CA)
 using the ACME protocol, use the `LEGO <https://charmhub.io/lego>`_
 charm instead.
 
+.. _use-12-factor-charms-worker-scheduler-process:
 
 Run a worker or scheduler process in your workloads
 ---------------------------------------------------

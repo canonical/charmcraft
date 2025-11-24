@@ -24,7 +24,7 @@ Interim bases have shorter lifespans and contain upcoming or experimental featur
 charms, they are most suitable for preparing for compatibility with the next Ubuntu LTS
 release. As such, they have further limitations that do not apply to LTS bases:
 
-- The packing behaviour of the same :ref:`charmcraft-yaml` file may change between
-  minor releases. These changes represent changes made to how Charmcraft will work when
-  packing for the next LTS release.
-- The :literalref:`charmcraft-yaml-key-build-base` field is mandatory.
+- The packing behaviour of the same :ref:`charmcraft-yaml-file` file may change
+  between minor releases. These changes represent changes made to how Charmcraft will
+  work when packing for the next LTS release.
+- The :literalref:`build-base <charmcraft-yaml-key-build-base>` field is mandatory.

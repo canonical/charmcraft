@@ -13,6 +13,7 @@ may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _expressjs-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
@@ -69,10 +70,19 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |framework| replace:: ExpressJS
 .. |framework_prefix| replace:: APP
 
+.. _expressjs-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _expressjs-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables.rst
+
+.. _expressjs-framework-extension-http-proxy:
+
 .. include:: /reuse/reference/extensions/http_proxy.rst
 
+.. _expressjs-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
@@ -84,6 +94,7 @@ variables as the main application. If there is more than one unit in the applica
 the services with the name ending in ``-worker`` will run in all units. The services
 with name ending in ``-scheduler`` will only run in one of the units of the application.
 
+.. _expressjs-framework-extension-observability:
 
 Observability
 -------------
@@ -139,6 +150,7 @@ If you prefer you can also use different tooling for migration, for example `pri
 <https://www.npmjs.com/package/prisma/>`__ or
 `knex <https://www.npmjs.com/package/knex/>`__ .
 
+.. _expressjs-framework-extension-secrets:
 
 Secrets
 -------

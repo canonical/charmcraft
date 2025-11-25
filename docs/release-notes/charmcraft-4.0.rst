@@ -48,6 +48,8 @@ We put redirects in place to handle links to the old ReadTheDocs domain.
 With this change, we also removed the language subdirectory (/en) in the URL, to
 shave a few characters off all links.
 
+.. _release-4.0-openid-connect-integration:
+
 OpenID Connect integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -78,6 +80,8 @@ We introduced two new init profiles, ``test-machine`` and ``test-kubernetes``. T
 provide a framework for using the :literalref:`charmcraft test <ref_commands_test>`
 command.
 These profiles are experimental, so we can't guarantee their stability.
+
+.. _release-4.0-spring-boot-framework-extension:
 
 Spring Boot framework extension
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

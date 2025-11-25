@@ -18,10 +18,10 @@ jobs:
     with:
       # Limiting to amd64 is a workaround for https://github.com/canonical/charmcraft/issues/2018
       # Once that's resolved we should run fast and slow tests on ARM64 Ubuntu too.
-      fast-test-platforms: '["ubuntu-22.04", "ubuntu-24.04", "macos-13", "macos-14-large"]'
+      fast-test-platforms: '["ubuntu-22.04", "ubuntu-24.04", "macos-14-large", "macos-15-intel"]'
       fast-test-python-versions: '["3.10", "3.12"]'
       # Slow tests run on noble to avoid an issue with old skopeo versions.
-      slow-test-platforms: '["ubuntu-24.04", "macos-14-large"]'
+      slow-test-platforms: '["ubuntu-24.04", "macos-14-large", "macos-15-intel"]'
       slow-test-python-versions: '["3.10", "3.12"]'
       # Lowest tests run on noble to avoid an issue with old skopeo versions.
       lowest-python-platform: ubuntu-24.04

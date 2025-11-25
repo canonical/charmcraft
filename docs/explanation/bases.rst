@@ -5,8 +5,8 @@
 Bases
 =====
 
-Every charm runs on a *base*, which defines the baseline system that the charm runs on.
-The systems are generally Ubuntu releases.
+A charm runs on baseline software system, known as its *base*.
+The systems are most commonly Ubuntu releases.
 
 The base is declared in the project file by the
 :literalref:`base <charmcraft_yaml_base>` or ``platforms`` keys.
@@ -21,10 +21,11 @@ LTS release and has a 10-year support window. An interim base contains an interi
 release and is supported for nine months.
 
 Interim bases have shorter lifespans and contain upcoming or experimental features. For
-charms, they are most suitable for preparing for compatibility with the next Ubuntu LTS
-release. As such, they have further limitations that do not apply to LTS bases:
+charms, they are most suitable for compatibility testing for the next Ubuntu LTS
+release. As such, they have special limitations:
 
-- The packing behaviour of the same :ref:`charmcraft-yaml-file` file may change
-  between minor releases. These changes represent changes made to how Charmcraft will
-  work when packing for the next LTS release.
-- The :literalref:`build-base <charmcraft-yaml-key-build-base>` field is mandatory.
+- Between minor releases of Charmcraft, repacking a charm might produce differences in
+  the artifact because of changes to the :ref:`charmcraft.yaml <charmcraft-yaml-file>`
+  schema. These differences are an accurate preview of how Charmcraft will pack the
+  project in the next Ubuntu LTS release.
+- The :literalref:`build-base <charmcraft-yaml-key-build-base>` key is mandatory.

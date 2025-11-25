@@ -20,6 +20,12 @@ endif
 
 include common.mk
 
+ifeq ($(OS),Darwin)  # Support libgit2 on macos
+LDFLAGS += "-L/opt/homebrew/opt/libgit2@1.7/lib"
+CPPFLAGS += "-I/opt/homebrew/opt/libgit2@1.7/include"
+PKG_CONFIG_PATH += "/opt/homebrew/opt/libgit2@1.7/lib/pkgconfig"
+endif
+
 # common.mk globs too much, such as test expectations
 PRETTIER_FILES="tests/spread/**/task.yaml" "*.yaml" "*.md" "snap/snapcraft.yaml" ".github/**/*.{yml,yaml}"
 
@@ -133,7 +139,6 @@ endif
 	if [ "${CI:-nope}" != "nope" ]; then sudo rm -f /usr/local/bin/idle* /usr/local/bin/pip* /usr/local/bin/py* ; fi
 	brew install skopeo
 	brew install libgit2@1.7  # For building pygit2
-	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
 endif
 
 .PHONY: schema

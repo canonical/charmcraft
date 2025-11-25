@@ -36,24 +36,22 @@ What's new
 
 Charmcraft 4.1 brings the following new features.
 
-Ubuntu 25.10 and 26.04
-~~~~~~~~~~~~~~~~~~~~~~
+Support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases
 
-Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 bases.
-As an interim base, the behaviour of Charmcraft when packing an Ubuntu 25.10 charm is
-not guaranteed to be stable, but is instead consistent with the evolving changes
-needed for Ubuntu 26.04. See our `Interim bases policy
+Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases. As
+an interim base, the behavior of Charmcraft when packing an Ubuntu 25.10 charm isn't
+guaranteed to be stable, but is instead consistent with the evolving changes needed for
+Ubuntu 26.04 LTS. See our `Interim bases policy
 <https://github.com/canonical/charmcraft/issues/1821>`_ for further information.
 
 12-factor app charm HTTP proxy integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charms that use any of the 12-factor :ref:`extensions` can now integrate by default with
+Charms that use any of the 12-factor app :ref:`extensions` can now integrate by default with
 the `Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_ charm using the
 ``http-proxy`` relation.
 
-Spring Boot App Profiles
-~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Spring Boot profiles
 
 Charms that use the :ref:`spring-boot-framework-extension` can now configure active
 `Spring Boot profiles

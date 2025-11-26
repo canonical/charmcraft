@@ -5,7 +5,7 @@
 Bases
 =====
 
-A charm runs on baseline software system, known as its *base*.
+A charm runs on a baseline software system, known as its *base*.
 The systems are most commonly Ubuntu releases.
 
 The base is declared in the project file by the

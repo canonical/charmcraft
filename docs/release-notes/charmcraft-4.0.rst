@@ -166,7 +166,7 @@ this release:
 :literalref:`@dimaqq <https://github.com/dimaqq>`,
 :literalref:`@dwilding <https://github.com/dwilding>`,
 :literalref:`@erinecon <https://github.com/erinecon>`,
-:literalref:`@jahn-junio r<https://github.com/jahn-junior>`,
+:literalref:`@jahn-junior <https://github.com/jahn-junior>`,
 :literalref:`@javierdelapuente <https://github.com/javierdelapuente>`,
 :literalref:`@lengau <https://launchpad.net/~lengau>`,
 :literalref:`@m7mdisk <https://github.com/m7mdisk>`,

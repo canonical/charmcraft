@@ -20,4 +20,5 @@ communicating with local processes, and storing user credentials.
     :maxdepth: 1
     :hidden:
 
+    bases
     Cryptographic technology <cryptography>

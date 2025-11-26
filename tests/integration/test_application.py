@@ -90,9 +90,16 @@ def test_load_invalid_charm(in_project_path: pathlib.Path, charm_dir: pathlib.Pa
     with pytest.raises(pydantic.ValidationError) as exc_info:
         app.services.get("project").get()
 
-    error_dict = json.loads((charm_dir / "errors.json").read_text())
+    expected_exc_list = json.loads((charm_dir / "errors.json").read_text())
 
-    assert json.loads(exc_info.value.json()) == error_dict, "Errors do not match"
+    # The Pydantic errors include a URL that includes the current Pydantic version,
+    # meaning it changes in ways that aren't meaningful to test
+    # Instead, just omit the URL from the test entirely.
+    exc_list = json.loads(exc_info.value.json())
+    for e in exc_list:
+        _ = e.pop("url")
+
+    assert exc_list == expected_exc_list, "Errors do not match"
 
 
 @pytest.mark.parametrize(

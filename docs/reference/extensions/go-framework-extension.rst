@@ -12,6 +12,7 @@ application. This document describes all the keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _go-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
@@ -60,10 +61,19 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |framework| replace:: Go
 .. |framework_prefix| replace:: APP
 
+.. _go-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _go-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables.rst
+
+.. _go-framework-extension-http-proxy:
+
 .. include:: /reuse/reference/extensions/http_proxy.rst
 
+.. _go-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
@@ -75,6 +85,7 @@ variables as the main application. If there is more than one unit in the applica
 the services with the name ending in ``-worker`` will run in all units. The services
 with name ending in ``-scheduler`` will only run in one of the units of the application.
 
+.. _go-framework-extension-observability:
 
 Observability
 -------------
@@ -130,6 +141,7 @@ If you prefer you can also use different tooling for migration, for example
 `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
 `goose <https://github.com/pressly/goose/>`__ .
 
+.. _go-framework-extension-secrets:
 
 Secrets
 -------

@@ -169,6 +169,7 @@ exclude_patterns = [
     "reuse/reference/extensions/integrations.rst",
     "reuse/reference/extensions/environment_variables.rst",
     "reuse/reference/extensions/environment_variables_spring_boot.rst",
+    "reuse/reference/extensions/http_proxy.rst",
     "reuse/tutorial/*"
 ]
 

@@ -74,7 +74,8 @@ platforms:
 
 parts:
   charm:
-    plugin: charm
+    plugin: uv
+    source: .
 """
 
 

@@ -13,11 +13,12 @@ Cryptography
 Charmcraft and its external libraries use cryptographic tools for fetching files,
 communicating with local processes, and storing user credentials.
 
-:ref:`explanation-cryptographic-technology`.
+- :ref:`Cryptographic technology <explanation-cryptographic-technology>`
 
 
 .. toctree::
     :maxdepth: 1
     :hidden:
 
+    bases
     Cryptographic technology <cryptography>

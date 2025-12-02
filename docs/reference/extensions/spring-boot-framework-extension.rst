@@ -13,6 +13,7 @@ with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _spring-boot-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
@@ -70,10 +71,19 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |juju_integrate_postgresql| replace:: ``juju integrate <Spring Boot charm> postgresql``
 .. |framework| replace:: Spring Boot
 
+.. _spring-boot-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _spring-boot-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables_spring_boot.rst
+
+.. _spring-boot-framework-extension-http-proxy:
+
 .. include:: /reuse/reference/extensions/http_proxy.rst
 
+.. _spring-boot-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
@@ -85,6 +95,7 @@ variables as the main application. If there is more than one unit in the applica
 the services with the name ending in ``-worker`` will run in all units. The services
 with name ending in ``-scheduler`` will only run in one of the units of the application.
 
+.. _spring-boot-framework-extension-observability:
 
 Observability
 -------------
@@ -119,6 +130,7 @@ See the `OpenTelemetry documentation
 <https://opentelemetry-python.readthedocs.io/en/latest/>`__
 for further information about tracing.
 
+.. _spring-boot-framework-extension-secrets:
 
 Secrets
 -------

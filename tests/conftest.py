@@ -74,8 +74,9 @@ platforms:
 
 parts:
   charm:
-    plugin: uv
+    plugin: python
     source: .
+    python-requirements: [requirements.txt]
 """
 
 

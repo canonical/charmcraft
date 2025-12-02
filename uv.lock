@@ -488,7 +488,7 @@ types = [
 
 [package.metadata]
 requires-dist = [
-    { name = "craft-application", specifier = "~=5.7" },
+    { name = "craft-application", specifier = "~=6.0" },
     { name = "craft-cli", specifier = ">=2.15.0" },
     { name = "craft-grammar", specifier = ">=2.0.0" },
     { name = "craft-parts", specifier = "~=2.20" },
@@ -978,7 +978,7 @@ toml = [
 
 [[package]]
 name = "craft-application"
-version = "5.11.0"
+version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -999,9 +999,9 @@ dependencies = [
     { name = "snap-helpers" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/36/6b/ad381b017a0715432791ddea24245cc6b3a5eba0c472890a794ac7918321/craft_application-5.11.0.tar.gz", hash = "sha256:4435f5db3e4313acd3c0d03f029f13ce73f4ae2eff0e2f94e0d4301742372479", size = 534825, upload-time = "2025-10-01T20:38:22.278Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f6/f8/53b68f2b70385d31b5d6f8e147d70bedeece67076d7b06bc91d908669ac0/craft_application-6.0.1.tar.gz", hash = "sha256:291249a0f24e811c37175bbc9a23c7f4a37b3dba9db01a5dcd35d21253ce8db9", size = 580889, upload-time = "2025-11-19T19:01:26.597Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/7f/024752ae33b6140f5229c0a7129d1e0dc1dea63fe0b6fd34664bfdb4165b/craft_application-5.11.0-py3-none-any.whl", hash = "sha256:7af835f106db5e20be8d533204f837b3d69457cc6192d2b89838cb26959a0309", size = 193166, upload-time = "2025-10-01T20:38:19.194Z" },
+    { url = "https://files.pythonhosted.org/packages/98/73/788dfd1b94a11dc1c43a1a378ac76eefaa9225861dec8df3c656b1580f54/craft_application-6.0.1-py3-none-any.whl", hash = "sha256:26ae8e8c2cca1adf4f19e11b2efc2eb5bbcd32f7e7ba9fea83a5492c991a34c6", size = 193966, upload-time = "2025-11-19T19:01:24.835Z" },
 ]
 
 [[package]]
@@ -1348,7 +1348,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -4067,8 +4067,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography", marker = "python_full_version >= '3.12' or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing') or sys_platform == 'linux'" },
-    { name = "jeepney", marker = "python_full_version >= '3.12' or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.12' and extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing') or sys_platform == 'linux'" },
+    { name = "cryptography", marker = "python_full_version >= '3.13' or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing') or sys_platform == 'linux'" },
+    { name = "jeepney", marker = "python_full_version >= '3.13' or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-noble') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-jammy' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-plucky') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-noble' and extra == 'group-10-charmcraft-dev-questing') or (python_full_version < '3.13' and extra == 'group-10-charmcraft-dev-plucky' and extra == 'group-10-charmcraft-dev-questing') or sys_platform == 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [

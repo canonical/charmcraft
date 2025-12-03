@@ -3,7 +3,7 @@
 Charmcraft 4.1 release notes
 ============================
 
-*Unreleased*
+8 December 2025
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.1.
 
@@ -82,6 +82,10 @@ See individual issue links for any mitigations.
   ``charmcraft clean`` does not clean all platforms for a charm.
 - `#1990 <https://github.com/canonical/charmcraft/issues/1990>`_ Cannot stage
   packages with Charmcraft
+- `#2493 <https://github.com/canonical/charmcraft/issues/2493>`_ Packing fails when
+  using a separate metadata.yaml file and the `--project-dir` argument.
+- `#2492 <https://github.com/canonical/charmcraft/issues/2492>`_ Internal error when
+
 
 
 Fixed bugs and issues

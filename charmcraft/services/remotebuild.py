@@ -17,7 +17,8 @@
 
 import datetime
 import pathlib
-from collections.abc import Mapping
+import urllib.parse
+from collections.abc import Collection, Mapping
 from typing import Any
 
 import lazr.restfulclient.errors  # type: ignore[import-untyped]
@@ -30,6 +31,27 @@ class RemoteBuildService(remotebuild.RemoteBuildService):
     """Charmcraft remote build service."""
 
     RecipeClass = launchpad.models.CharmRecipe
+
+    @override
+    def fetch_artifacts(self, output_dir: pathlib.Path) -> Collection[pathlib.Path]:
+        """Fetch the artifacts for each build.
+
+        This override decodes URL-encoded filenames from Launchpad URLs.
+
+        :param output_dir: The directory into which to place the artifacts.
+        :returns: A collection of paths to the downloaded artifacts.
+        """
+        if not self._is_setup:
+            raise RuntimeError(
+                "RemoteBuildService must be set up using start_builds or resume_builds before fetching artifacts."
+            )
+        artifact_downloads: dict[str, pathlib.Path] = {}
+        for url in self._get_artifact_urls():
+            # Extract filename from URL and decode URL-encoded characters (e.g., %40 -> @)
+            encoded_filename = pathlib.PurePosixPath(urllib.parse.urlparse(url).path).name
+            filename = urllib.parse.unquote(encoded_filename)
+            artifact_downloads[url] = output_dir / filename
+        return self.request.download_files_with_progress(artifact_downloads).values()
 
     def fetch_logs(self, output_dir: pathlib.Path) -> Mapping[str, pathlib.Path | None]:
         """Fetch the logs for each build to the given directory.

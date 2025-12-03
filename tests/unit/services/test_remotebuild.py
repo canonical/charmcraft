@@ -15,7 +15,6 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for remote build service."""
 
-import pathlib
 from unittest.mock import Mock
 
 import pytest
@@ -28,24 +27,24 @@ def mock_build():
     """Create a mock build with URL-encoded artifact name."""
     build = Mock()
     build.arch_tag = "amd64"
-    
+
     # Mock distribution and distro_series
     build.distribution = Mock()
     build.distribution.name = "ubuntu"
     build.distro_series = Mock()
     build.distro_series.version = "20.04"
-    
+
     # Simulate a Launchpad URL with URL-encoded @ symbol
     build.get_artifact_urls.return_value = [
         "https://launchpad.net/~user/+archive/charm-builds/+files/test-charm_ubuntu%4020.04-amd64.charm"
     ]
-    
+
     return build
 
 
 class TestRemoteBuildServiceFilenames:
     """Tests for remote build service filename handling."""
-    
+
     def test_fetch_logs_filename_format(self, tmp_path):
         """Test that fetch_logs creates filenames with proper format."""
         # Create service with minimal mocking
@@ -53,7 +52,7 @@ class TestRemoteBuildServiceFilenames:
         service._is_setup = True
         service._name = "charmcraft-test-charm-abcd1234"
         service._builds = []
-        
+
         # Create a mock build
         mock_build = Mock()
         mock_build.arch_tag = "amd64"
@@ -62,14 +61,14 @@ class TestRemoteBuildServiceFilenames:
         mock_build.distro_series = Mock()
         mock_build.distro_series.version = "20.04"
         mock_build.build_log_url = "https://launchpad.net/~user/log.txt"
-        
+
         service._builds = [mock_build]
         service.request = Mock()
         service.request.download_files_with_progress = Mock(return_value={})
-        
+
         # Fetch logs
         logs = service.fetch_logs(tmp_path)
-        
+
         # Check that the filename uses underscore and dash, not @ symbol
         log_file = logs["amd64"]
         assert log_file is not None
@@ -78,10 +77,10 @@ class TestRemoteBuildServiceFilenames:
         assert "%40" not in log_file.name
         # Ensure @ is not used (it should be dash)
         assert "@" not in log_file.name.split("_ubuntu")[1].split("-amd64")[0]
-    
+
     def test_artifact_filename_url_decoding(self, tmp_path, mock_build):
         """Test that fetch_artifacts properly decodes URL-encoded filenames.
-        
+
         This test verifies that when Launchpad returns URLs with URL-encoded
         characters (e.g., %40 for @), the downloaded artifacts have properly
         decoded filenames.
@@ -90,24 +89,24 @@ class TestRemoteBuildServiceFilenames:
         service = RemoteBuildService.__new__(RemoteBuildService)
         service._is_setup = True
         service._builds = [mock_build]
-        
+
         # Mock the download to capture what filenames are used
         downloaded_files = {}
         def mock_download(file_dict):
             downloaded_files.update(file_dict)
-            return {url: path for url, path in file_dict.items()}
-        
+            return dict(file_dict.items())
+
         service.request = Mock()
         service.request.download_files_with_progress = mock_download
-        
+
         # Fetch artifacts
         artifacts = service.fetch_artifacts(tmp_path)
-        
+
         # Check that the filename is properly decoded
         # The URL contains %40 (encoded @), but the filename should have @ decoded
         artifact_paths = list(artifacts)
         assert len(artifact_paths) == 1
-        
+
         filename = artifact_paths[0].name
         # The filename should NOT contain %40
         assert "%40" not in filename, f"Filename should not contain URL encoding: {filename}"

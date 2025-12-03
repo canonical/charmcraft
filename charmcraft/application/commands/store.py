@@ -1525,20 +1525,14 @@ class FetchLibCommand(CharmcraftCommand):
         # get tips from the Store
         store = Store(env.get_store_config(), needs_auth=False)
         store_svc = cast("StoreService", self._services.get("store"))
-        try:
-            libs_tips = store_svc.get_libraries_metadata(
-                [
-                    project.CharmLib(
-                        lib=f"{lib.charm_name}.{lib.lib_name}", version=str(lib.api)
-                    )
-                    for lib in local_libs_data
-                ]
-            )
-        except errors.LibraryError:
-            raise errors.LibraryError(
-                message=f"Library {parsed_args.library} not found in Charmhub.",
-                logpath_report=False,
-            )
+        libs_tips = store_svc.get_libraries_metadata(
+            [
+                project.CharmLib(
+                    lib=f"{lib.charm_name}.{lib.lib_name}", version=str(lib.api)
+                )
+                for lib in local_libs_data
+            ]
+        )
 
         # check if something needs to be done
         analysis = []
@@ -1559,7 +1553,7 @@ class FetchLibCommand(CharmcraftCommand):
                     break
             else:
                 raise errors.LibraryError(
-                    message=f"Library {parsed_args.library} not found in Charmhub.",
+                    message=f"Library {lib_data.full_name} not found in Charmhub.",
                     logpath_report=False,
                 )
             emit.debug(f"Store tip: {tip}")

@@ -989,6 +989,19 @@
 							]
 						}
 					},
+					"propertyNames": {
+						"description": "The name of this platform. May not contain '/'",
+						"examples": [
+							"riscv64",
+							"my-special-platform"
+						],
+						"not": {
+							"enum": [
+								"*",
+								"any"
+							]
+						}
+					},
 					"title": "Platforms",
 					"type": "object"
 				},

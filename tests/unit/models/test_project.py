@@ -672,7 +672,7 @@ def test_charmhub_disallowed_with_new_bases(cls, content, invalid_base):
     """Test that charmhub is disallowed with newer bases (after ubuntu@24.04)."""
     with pytest.raises(pydantic.ValidationError) as exc_info:
         cls.model_validate(content)
-    
+
     errors = exc_info.value.errors()
     assert len(errors) == 1
     assert "charmhub" in errors[0]["msg"]

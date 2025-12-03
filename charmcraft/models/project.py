@@ -852,7 +852,7 @@ class BasesCharm(CharmProject):
         """Validate that charmhub is only used with allowed bases."""
         if not self.charmhub:
             return self
-        
+
         # Check all run-on bases across all base configurations
         invalid_bases = set()
         for base_config in self.bases:
@@ -860,7 +860,7 @@ class BasesCharm(CharmProject):
                 base_str = f"{run_base.name}@{run_base.channel}"
                 if base_str not in const.CHARMHUB_ALLOWED_BASES:
                     invalid_bases.add(base_str)
-        
+
         if invalid_bases:
             if len(invalid_bases) == 1:
                 raise ValueError(
@@ -921,7 +921,7 @@ class PlatformCharm(CharmProject):
         """Validate that charmhub is only used with allowed bases."""
         if not self.charmhub:
             return self
-        
+
         # For single base charms
         if self.base is not None:
             if self.base not in const.CHARMHUB_ALLOWED_BASES:
@@ -931,7 +931,7 @@ class PlatformCharm(CharmProject):
                     f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
                 )
             return self
-        
+
         # For multi-base charms (no explicit base, uses platforms)
         build_bases = {
             str(info.build_base)
@@ -942,7 +942,7 @@ class PlatformCharm(CharmProject):
                 ),
             )
         }
-        
+
         invalid_bases = build_bases - const.CHARMHUB_ALLOWED_BASES
         if invalid_bases:
             if len(invalid_bases) == 1:

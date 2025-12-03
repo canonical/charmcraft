@@ -61,6 +61,13 @@ LEGACY_BASES = (  # Legacy bases that can use the "bases" syntax.
     "almalinux@9",
 )
 
+CHARMHUB_ALLOWED_BASES = frozenset(  # Bases that allow the deprecated 'charmhub' field.
+    (
+        *LEGACY_BASES,
+        "ubuntu@24.04",
+    )
+)
+
 CHARM_OR_REACTIVE_BASES = frozenset(  # Bases with the 'charm' & 'reactive' plugins.
     (
         *LEGACY_BASES,

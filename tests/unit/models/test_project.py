@@ -611,17 +611,122 @@ def test_from_yaml_file_exception(
         ),
     ],
 )
-def test_warn_on_deprecated_charmhub(
-    emitter: craft_cli.pytest_plugin.RecordingEmitter, cls, content
-):
-    with pytest.warns(DeprecationWarning, match="'charmhub' field"):
+def test_charmhub_allowed_with_legacy_bases(cls, content):
+    """Test that charmhub is allowed with legacy bases (ubuntu@24.04 and below)."""
+    # Should not raise any errors
+    result = cls.model_validate(content)
+    assert result.charmhub is not None
+
+
+@pytest.mark.parametrize(
+    ("cls", "content", "invalid_base"),
+    [
+        (
+            project.PlatformCharm,
+            {
+                "type": "charm",
+                "name": "blah",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@25.04",
+                "build_base": "ubuntu@devel",
+                "platforms": {"amd64": None},
+                "parts": {"my-part": {"plugin": "nil"}},
+                "charmhub": {"api_url": "http://charmhub.io"},
+            },
+            "ubuntu@25.04",
+        ),
+        (
+            project.PlatformCharm,
+            {
+                "type": "charm",
+                "name": "blah",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.10",
+                "build_base": "ubuntu@devel",
+                "platforms": {"amd64": None},
+                "parts": {"my-part": {"plugin": "nil"}},
+                "charmhub": {"api_url": "http://charmhub.io"},
+            },
+            "ubuntu@24.10",
+        ),
+        (
+            project.PlatformCharm,
+            {
+                "type": "charm",
+                "name": "blah",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@25.10",
+                "build_base": "ubuntu@devel",
+                "platforms": {"amd64": None},
+                "parts": {"my-part": {"plugin": "nil"}},
+                "charmhub": {"api_url": "http://charmhub.io"},
+            },
+            "ubuntu@25.10",
+        ),
+    ],
+)
+def test_charmhub_disallowed_with_new_bases(cls, content, invalid_base):
+    """Test that charmhub is disallowed with newer bases (after ubuntu@24.04)."""
+    with pytest.raises(pydantic.ValidationError) as exc_info:
         cls.model_validate(content)
-    emitter.assert_progress(
-        "WARNING: The 'charmhub' field is deprecated and no longer used. It will be removed in a "
-        f"future release. Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} and "
-        f"${const.STORE_REGISTRY_ENV_VAR} environment variables instead.",
-        permanent=True,
-    )
+    
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert "charmhub" in errors[0]["msg"]
+    assert invalid_base in errors[0]["msg"]
+    assert const.STORE_API_ENV_VAR in errors[0]["msg"]
+
+
+def test_charmhub_allowed_with_almalinux():
+    """Test that charmhub is allowed with almalinux@9."""
+    content = {
+        "type": "charm",
+        "name": "blah",
+        "summary": "",
+        "description": "",
+        "bases": [{"name": "almalinux", "channel": "9"}],
+        "charmhub": {"api_url": "http://charmhub.io"},
+    }
+    result = project.BasesCharm.model_validate(content)
+    assert result.charmhub is not None
+
+
+def test_charmhub_allowed_with_multiple_legacy_bases():
+    """Test that charmhub is allowed when all bases are legacy."""
+    content = {
+        "type": "charm",
+        "name": "blah",
+        "summary": "",
+        "description": "",
+        "bases": [
+            {"name": "ubuntu", "channel": "20.04"},
+            {"name": "ubuntu", "channel": "22.04"},
+            {"name": "almalinux", "channel": "9"},
+        ],
+        "charmhub": {"api_url": "http://charmhub.io"},
+    }
+    result = project.BasesCharm.model_validate(content)
+    assert result.charmhub is not None
+
+
+def test_charmhub_without_charmhub_field():
+    """Test that validation works normally when charmhub field is not present."""
+    # PlatformCharm without charmhub
+    content = {
+        "type": "charm",
+        "name": "blah",
+        "summary": "",
+        "description": "",
+        "base": "ubuntu@25.04",
+        "build_base": "ubuntu@devel",
+        "platforms": {"amd64": None},
+        "parts": {"my-part": {"plugin": "nil"}},
+    }
+    result = project.PlatformCharm.model_validate(content)
+    assert result.charmhub is None
 
 
 # endregion

@@ -807,9 +807,9 @@ def test_from_yaml_data_with_metadata_file(
 ):
     """Test that from_yaml_data loads metadata.yaml when present.
 
-    This test reproduces the bug reported in issue where using --project-dir
-    with a separate metadata.yaml file fails because from_yaml_data doesn't
-    call the preprocessing functions.
+    This test verifies that from_yaml_data correctly calls preprocessing
+    functions to load and merge data from metadata.yaml, which is necessary
+    for --project-dir functionality to work with legacy charm projects.
     """
     # Create a minimal charmcraft.yaml without name, summary, description
     charmcraft_yaml = """\
@@ -836,8 +836,7 @@ description: A charm for testing metadata loading
     with open("/project/charmcraft.yaml") as f:
         data = util.safe_yaml_load(f)
 
-    # This should work but currently fails because from_yaml_data doesn't
-    # call the preprocessing functions that load metadata.yaml
+    # from_yaml_data should call preprocessing functions to load metadata.yaml
     filepath = pathlib.Path("/project/charmcraft.yaml")
     result = project.CharmcraftProject.from_yaml_data(data, filepath)
 

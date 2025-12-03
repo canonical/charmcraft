@@ -26,6 +26,8 @@ def test_get_build_environment(uv_plugin: plugins.UvPlugin):
     env = uv_plugin.get_build_environment()
 
     assert env["PARTS_PYTHON_VENV_ARGS"] == "--without-pip"
+    assert "UV_CACHE_DIR" in env
+
 
 
 def test_get_venv_directory(uv_plugin: plugins.UvPlugin, install_path: Path):
@@ -74,3 +76,16 @@ def test_do_not_install_project(uv_plugin: plugins.UvPlugin) -> None:
             break
     else:
         pytest.fail(reason="Charms should not be installed as projects.")
+
+
+def test_uv_cache_dir_set(uv_plugin: plugins.UvPlugin, tmp_path: Path) -> None:
+    """Test that UV_CACHE_DIR is set to enable wheel caching."""
+    env = uv_plugin.get_build_environment()
+    
+    # UV_CACHE_DIR should be set to the part's cache directory
+    # to ensure wheels built from source (when no-binary=true) are cached
+    assert "UV_CACHE_DIR" in env, "UV_CACHE_DIR should be set in build environment"
+    
+    # The cache dir should point to a uv subdirectory in the part's cache
+    cache_dir = Path(env["UV_CACHE_DIR"])
+    assert cache_dir.name == "uv", f"UV_CACHE_DIR should point to 'uv' subdirectory, got {cache_dir.name}"

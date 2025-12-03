@@ -806,7 +806,7 @@ def test_from_yaml_data_with_metadata_file(
     fs: pyfakefs.fake_filesystem.FakeFilesystem,
 ):
     """Test that from_yaml_data loads metadata.yaml when present.
-    
+
     This test reproduces the bug reported in issue where using --project-dir
     with a separate metadata.yaml file fails because from_yaml_data doesn't
     call the preprocessing functions.
@@ -828,19 +828,19 @@ name: test-charm
 summary: A test charm
 description: A charm for testing metadata loading
 """
-    
+
     fs.create_file("/project/charmcraft.yaml", contents=charmcraft_yaml)
     fs.create_file("/project/metadata.yaml", contents=metadata_yaml)
-    
+
     # Load the YAML data
     with open("/project/charmcraft.yaml") as f:
         data = util.safe_yaml_load(f)
-    
+
     # This should work but currently fails because from_yaml_data doesn't
     # call the preprocessing functions that load metadata.yaml
     filepath = pathlib.Path("/project/charmcraft.yaml")
     result = project.CharmcraftProject.from_yaml_data(data, filepath)
-    
+
     # The name, summary, description should be loaded from metadata.yaml
     assert result.name == "test-charm"
     assert result.summary == "A test charm"

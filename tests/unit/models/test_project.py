@@ -753,8 +753,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad invalid-base.yaml content:
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]', input: {'name': 'ubuntu', 'channel': '24.04'})
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]', input: {'name': 'ubuntu', 'channel': 'devel'})"""
             ),
         ),
         pytest.param(
@@ -771,7 +771,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad platforms-empty-parts.yaml content:
-                - dictionary should have at least 1 item after validation, not 0 (in field 'parts')"""
+                - dictionary should have at least 1 item after validation, not 0 (in field 'parts', input: {})"""
             ),
             id="empty-parts-in-platform-charm",
         ),

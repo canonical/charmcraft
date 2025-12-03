@@ -408,3 +408,28 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
             check=True,
         ),
     ]
+
+
+def test_build_copies_build_manifest(build_dir, install_dir, fake_run):
+    """Test that .build.manifest file from charm build is preserved in install_dir."""
+    def _fake_charm_build(*args, **kwargs):
+        # Simulate charm build creating .build.manifest in the install_dir
+        (install_dir / ".build.manifest").write_text("pip:\n  - some-package==1.0.0\n")
+        return CompletedProcess(("charm", "build"), 0)
+
+    fake_run.side_effect = [
+        CompletedProcess(("charm", "proof"), 0),
+        _fake_charm_build(),
+    ]
+
+    returncode = _reactive.build(
+        charm_name="test-charm",
+        build_dir=build_dir,
+        install_dir=install_dir,
+        charm_build_arguments=[],
+    )
+
+    assert returncode == 0
+    # The .build.manifest file should exist in install_dir after build
+    assert (install_dir / ".build.manifest").exists()
+    assert "pip:" in (install_dir / ".build.manifest").read_text()

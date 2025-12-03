@@ -30,7 +30,7 @@ from craft_cli import CraftError
 from craft_store import models, publisher
 from craft_store.publisher import Releases
 
-from charmcraft import errors, store
+from charmcraft import errors, services, store
 from charmcraft.application import commands
 from charmcraft.application.commands import SetResourceArchitecturesCommand
 from charmcraft.application.commands import store as store_commands
@@ -619,16 +619,15 @@ def test_upload_without_configured_project(
 
     # Create a service factory without a configured project
     # This simulates running upload outside a project directory
-    from charmcraft import services
     services.register_services()
     factory = craft_application.ServiceFactory(app=APP_METADATA)
-    
+
     # Set up the project service with project_dir but don't configure it
     # This is the key to reproduce the bug: the service exists but is not configured
     factory.update_kwargs("project", project_dir=new_path)
-    
+
     cmd = store_commands.UploadCommand({"app": APP_METADATA, "services": factory})
-    
+
     parsed_args = argparse.Namespace(
         filepath=charm_file,
         release=None,

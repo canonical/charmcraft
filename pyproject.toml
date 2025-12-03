@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=5.7",
+    "craft-application~=6.0",
     "craft-cli>=2.15.0",
     "craft-grammar>=2.0.0",
     "craft-parts~=2.20",
@@ -83,21 +83,11 @@ types = [
     "types-tabulate",
     "types-urllib3",
 ]
-dev-jammy = [
-    # Stay on 2.4 for Jammy
-    "python-apt~=2.4.0;sys_platform=='linux'",
-]
-dev-noble = [
-    # 2.7 for Noble
-    "python-apt~=2.7.0;sys_platform=='linux'",
-]
-dev-plucky = [
-    # 2.9 for Oracular+
-    "python-apt~=2.9.0;sys_platform=='linux'",
-]
-dev-questing = [
-    "python-apt~=3.0.0;sys_platform=='linux'",
-]
+dev-jammy = ["python-apt~=2.4.0;sys_platform=='linux'"]
+dev-noble = ["python-apt~=2.7.0;sys_platform=='linux'"]
+dev-plucky = ["python-apt~=2.9.0;sys_platform=='linux'"]
+dev-questing = ["python-apt~=3.0.0;sys_platform=='linux'"]
+dev-resolute = ["python-apt~=3.0.0;sys_platform=='linux'"]
 tics = ["flake8", "pylint"]
 
 [tool.uv]
@@ -148,6 +138,7 @@ conflicts = [
         { group = "dev-noble" },
         { group = "dev-plucky" },
         { group = "dev-questing" },
+        { group = "dev-resolute" },
     ]
 ]
 

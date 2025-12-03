@@ -123,7 +123,7 @@ class PackageService(services.PackageService):
                 raise errors.CraftError(msg) from exc
 
         bases = self.get_manifest_bases()
-        
+
         # Get charmtool version if reactive plugin is used
         charmtool_version = self._get_charmtool_version()
 
@@ -146,7 +146,7 @@ class PackageService(services.PackageService):
         project = cast(
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
-        
+
         # Check if reactive plugin is explicitly used
         plugins = {
             part.get("plugin")
@@ -166,7 +166,7 @@ class PackageService(services.PackageService):
                 timeout=10,
             )
             version_data = json.loads(result.stdout)
-            
+
             tool_name = "charm-tools"
             if (
                 tool_name in version_data
@@ -179,7 +179,7 @@ class PackageService(services.PackageService):
                 )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError, KeyError) as exc:
             emit.debug(f"Could not get charm tools version: {exc}")
-        
+
         return None
 
     def get_manifest_bases(self) -> list[models.Base]:

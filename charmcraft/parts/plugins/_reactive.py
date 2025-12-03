@@ -16,6 +16,7 @@
 
 import json
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -198,7 +199,7 @@ def build(
       install_dir
 
     - Run "charm build"
-    
+
     - Copy .build.manifest if it exists
 
     Note that no files/dirs in the original project are modified nor removed
@@ -226,15 +227,14 @@ def build(
         return call_error.returncode
     finally:
         charm_build_dir.unlink()
-    
+
     # Copy .build.manifest file if it exists (charm build may create it in install_dir or cwd)
     # Check both the install_dir (where charm build outputs) and current directory
     cwd_manifest = Path.cwd() / ".build.manifest"
     install_manifest = install_dir / ".build.manifest"
-    
+
     # If .build.manifest exists in cwd but not in install_dir, copy it
     if cwd_manifest.exists() and not install_manifest.exists():
-        import shutil
         shutil.copy2(cwd_manifest, install_manifest)
         print(f"Copied .build.manifest from {cwd_manifest} to {install_manifest}")
 

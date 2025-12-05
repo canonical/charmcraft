@@ -36,21 +36,22 @@ What's new
 Charmcraft 4.1 brings the following new features.
 
 Support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases. As
-an interim base, the purpose of Ubuntu 25.10-based charms is for testing before the
-upcoming 26.04 release is stable. As such, minor Charmcraft releases may change how
-these charms build. See our
+an interim base, the purpose of Ubuntu 25.10-based charms is for testing for changes
+that will affect the upcoming 26.04 release. As such, minor Charmcraft releases may
+change how these charms build. See our
 :ref:`Interim bases policy <explanation-bases-lts-and-interim-bases>` for further
 information.
 
-12-factor app charm HTTP proxy integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+12-factor app charm HTTP proxy relation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charms that use any of the 12-factor app :ref:`extensions` can now use the
-``http_proxy`` relation, such as that provided by the
-`Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_ charm. Simply provide
-a ``requires`` relation such as:
+Charms that use a 12-factor app :ref:`extension <extensions>` can now use the
+``http_proxy`` relation. The
+`Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`_ charm is an example
+provider. To use this relation in your app, add it to the ``requires`` key:
 
 .. code-block:: yaml
 
@@ -60,8 +61,7 @@ a ``requires`` relation such as:
         optional: true
         limit: 1
 
-This relation is also included in new 12-factor app charms created with their init
-profiles.
+The init profiles for 12-factor apps now include this relation.
 
 Support for Spring Boot profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

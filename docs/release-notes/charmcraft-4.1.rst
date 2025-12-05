@@ -83,7 +83,7 @@ See individual issue links for any mitigations.
 - `#1990 <https://github.com/canonical/charmcraft/issues/1990>`_ Cannot stage
   packages with Charmcraft
 - `#2493 <https://github.com/canonical/charmcraft/issues/2493>`_ Packing fails when
-  using a separate metadata.yaml file and the `--project-dir` argument.
+  using a separate metadata.yaml file and the ``--project-dir`` argument.
 - `#2492 <https://github.com/canonical/charmcraft/issues/2492>`_ Internal error when
   uploading a charm outside of a project directory.
 

@@ -194,6 +194,34 @@ def test_fetchlib_store_not_found(
 
 
 @pytest.mark.slow
+def test_fetchlib_all_with_not_found(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    new_path: pathlib.Path,
+    config,
+) -> None:
+    """When running fetch-lib without args and a library is not found, show the library name."""
+    # Create a local library file with a fake lib_id that doesn't exist in Charmhub
+    factory.create_lib_filepath(
+        "testcharm",
+        "testlib",
+        api=0,
+        patch=1,
+        lib_id="fakefakefakefakefakefakefakefake",
+    )
+
+    args = argparse.Namespace(library=None, format=None)
+
+    with pytest.raises(errors.LibraryError) as exc_info:
+        FetchLibCommand(config).run(args)
+
+    # The error message should contain the actual library name, not "None"
+    assert "charms.testcharm.v0.testlib" in exc_info.value.args[0]
+    assert exc_info.value.args[0] == (
+        "Library charms.testcharm.v0.testlib not found in Charmhub."
+    )
+
+
+@pytest.mark.slow
 @pytest.mark.parametrize("formatted", [None, "json"])
 def test_fetchlib_store_is_old(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,

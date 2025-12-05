@@ -39,7 +39,7 @@ Support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases. As
-an interim base, the purpose of Ubuntu 25.10-based charms is for testing for changes
+an interim base, the purpose of charms built on Ubuntu 25.10 is to test changes
 that will affect the upcoming 26.04 release. As such, minor Charmcraft releases may
 change how these charms build. See our
 :ref:`Interim bases policy <explanation-bases-lts-and-interim-bases>` for further

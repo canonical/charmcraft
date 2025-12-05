@@ -126,7 +126,7 @@ README.md
 
 To manage your charm's dependencies, use uv.
 
-To migrate from the 'charm' plugin, see:
+To migrate from the Charm plugin to the uv plugin, see:
 https://documentation.ubuntu.com/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
 """
 

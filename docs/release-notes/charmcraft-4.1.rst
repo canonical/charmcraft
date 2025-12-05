@@ -38,8 +38,8 @@ Charmcraft 4.1 brings the following new features.
 Support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charmcraft 4.1 adds experimental support for Ubuntu 25.10 and Ubuntu 26.04 LTS bases. As
-an interim base, the purpose of charms built on Ubuntu 25.10 is to test changes
+Charmcraft 4.1 adds experimental support for the Ubuntu 25.10 and Ubuntu 26.04 LTS
+bases. The purpose of charms built on the Ubuntu 25.10 interim base is to test changes
 that will affect the upcoming 26.04 release. As such, minor Charmcraft releases may
 change how these charms build. See our
 :ref:`Interim bases policy <explanation-bases-lts-and-interim-bases>` for further
@@ -88,8 +88,8 @@ See individual issue links for any mitigations.
   uploading a charm outside of a project directory.
 
 
-Fixed bugs and issues
----------------------
+.. Fixed bugs and issues
+.. ---------------------
 
 Contributors
 ------------

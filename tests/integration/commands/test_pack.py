@@ -47,6 +47,9 @@ def test_build_basic_charm(
         "sys.argv",
         ["charmcraft", "pack", "--destructive-mode"],
     )
+    (new_path / "requirements.txt").write_text(
+        "distro==1.4.0"
+    )  # Any requirement will do.
 
     app.configure({})
     assert app.run() == 0

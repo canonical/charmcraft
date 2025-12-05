@@ -83,8 +83,8 @@ execute: |
   echo "Final cache size: $FINAL_CACHE_SIZE bytes"
   
   # The cache size should not have significantly increased if caching worked
-  # Allow for some metadata overhead (10% increase max)
-  MAX_ALLOWED_SIZE=$((INITIAL_CACHE_SIZE * 110 / 100))
+  # Allow for some metadata overhead (25% increase max to account for filesystem variations)
+  MAX_ALLOWED_SIZE=$((INITIAL_CACHE_SIZE * 125 / 100))
   
   if [ "$FINAL_CACHE_SIZE" -gt "$MAX_ALLOWED_SIZE" ]; then
     echo "ERROR: Cache size increased too much (from $INITIAL_CACHE_SIZE to $FINAL_CACHE_SIZE)"

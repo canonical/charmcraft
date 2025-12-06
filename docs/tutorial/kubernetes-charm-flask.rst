@@ -747,7 +747,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`flask-framework extension in Rockcraft
-        <flask-framework-reference>`
+        <reference-flask-framework>`
 
         :ref:`flask-framework extension in Charmcraft
         <flask-framework-extension>`

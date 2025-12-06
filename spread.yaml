@@ -227,7 +227,7 @@ suites:
   tests/spread/charms/:
     summary: real charm building tests
     prepare: |
-      snap install juju --channel=3.6/stable
+      snap install juju --channel=3/stable
       snap install microk8s --channel=1.28-strict/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
@@ -259,7 +259,7 @@ suites:
     kill-timeout: 60m # Setting up Juju can take a while.
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
-      snap install juju --channel=3.6/stable
+      snap install juju --channel=3/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory

@@ -1,0 +1,87 @@
+summary: >
+  pack a charm from outside the charm directory using --project-dir
+  with metadata.yaml, config.yaml, and actions.yaml
+
+include:
+  - tests/
+
+prepare: |
+  charmcraft init --project-dir=charm
+
+  # Remove fields from charmcraft.yaml that will be in metadata.yaml
+  cat <<- EOF > charm/charmcraft.yaml
+  type: charm
+
+  base: ubuntu@24.04
+  platforms:
+    amd64:
+
+  parts:
+    charm:
+      plugin: charm
+      source: .
+
+  EOF
+
+  # Create metadata.yaml with the required fields
+  cat <<- EOF > charm/metadata.yaml
+  name: test-charm
+  summary: A test charm
+  description: A charm for testing metadata loading with --project-dir
+
+  #### TEST-COPY ####
+  EOF
+
+  # Create config.yaml
+  cat <<- EOF > charm/config.yaml
+  options:
+    test-option:
+      default: test-value
+      description: A test configuration option
+      type: string
+  #### TEST-COPY ####
+
+  EOF
+
+  # Create actions.yaml
+  cat <<- EOF > charm/actions.yaml
+  test-action:
+    description: A test action for validation
+  #### TEST-COPY ####
+
+  EOF
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  tests.pkgs install unzip
+
+  # Pack the charm from outside the directory using --project-dir
+  charmcraft pack --verbose --project-dir=charm
+
+  # Verify the charm was created in the current directory (not in charm/)
+  test ! -f charm/test-charm*.charm
+  test -f test-charm*.charm
+
+  # Verify all the metadata files are included
+  unzip -l test-charm*.charm | MATCH "metadata.yaml"
+  unzip -l test-charm*.charm | MATCH "config.yaml"
+  unzip -l test-charm*.charm | MATCH "actions.yaml"
+
+  # Verify the content from metadata.yaml was loaded
+  unzip -p test-charm*.charm metadata.yaml | MATCH "name: test-charm"
+  unzip -p test-charm*.charm metadata.yaml | MATCH "summary: A test charm"
+  unzip -p test-charm*.charm metadata.yaml | MATCH "#### TEST-COPY ####"
+
+  # Verify the content from config.yaml was loaded
+  unzip -p test-charm*.charm config.yaml | MATCH "test-option"
+  unzip -p test-charm*.charm config.yaml | MATCH "#### TEST-COPY ####"
+
+  # Verify the content from actions.yaml was loaded
+  unzip -p test-charm*.charm actions.yaml | MATCH "test-action"
+  unzip -p test-charm*.charm actions.yaml | MATCH "#### TEST-COPY ####"

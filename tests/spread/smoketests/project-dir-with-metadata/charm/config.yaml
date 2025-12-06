@@ -1,0 +1,6 @@
+options:
+  test-option:
+    default: test-value
+    description: A test configuration option
+    type: string
+#### TEST-COPY ####

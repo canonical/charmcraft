@@ -4,59 +4,11 @@ summary: >
 
 include:
   - tests/
-
-prepare: |
-  charmcraft init --project-dir=charm
-
-  # Remove fields from charmcraft.yaml that will be in metadata.yaml
-  cat <<- EOF > charm/charmcraft.yaml
-  type: charm
-
-  base: ubuntu@24.04
-  platforms:
-    amd64:
-
-  parts:
-    charm:
-      plugin: charm
-      source: .
-
-  EOF
-
-  # Create metadata.yaml with the required fields
-  cat <<- EOF > charm/metadata.yaml
-  name: test-charm
-  summary: A test charm
-  description: A charm for testing metadata loading with --project-dir
-
-  #### TEST-COPY ####
-  EOF
-
-  # Create config.yaml
-  cat <<- EOF > charm/config.yaml
-  options:
-    test-option:
-      default: test-value
-      description: A test configuration option
-      type: string
-  #### TEST-COPY ####
-
-  EOF
-
-  # Create actions.yaml
-  cat <<- EOF > charm/actions.yaml
-  test-action:
-    description: A test action for validation
-  #### TEST-COPY ####
-
-  EOF
+  - charm/
 
 restore: |
-  pushd charm
+  cd charm
   charmcraft clean
-  popd
-
-  rm -rf charm
 
 execute: |
   tests.pkgs install unzip

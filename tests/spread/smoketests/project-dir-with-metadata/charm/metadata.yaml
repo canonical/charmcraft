@@ -1,0 +1,5 @@
+name: test-charm
+summary: A test charm
+description: A charm for testing metadata loading with --project-dir
+
+#### TEST-COPY ####

@@ -236,7 +236,7 @@ def build(
     # If .build.manifest exists in cwd but not in install_dir, copy it
     if cwd_manifest.exists() and not install_manifest.exists():
         shutil.copy2(cwd_manifest, install_manifest)
-        print(f"Copied .build.manifest from {cwd_manifest} to {install_manifest}")
+        print(f"Copied .build.manifest to {install_manifest}")
 
     return 0
 

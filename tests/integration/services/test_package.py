@@ -136,7 +136,7 @@ def test_reactive_charm_includes_build_manifest(monkeypatch, new_path, package_s
     test_prime_dir.mkdir()
     test_stage_dir = new_path / "stage"
     test_stage_dir.mkdir()
-    
+
     # Simulate charm build creating .build.manifest in stage directory
     (test_stage_dir / ".build.manifest").write_text(
         "pip:\n  - some-package==1.0.0\nlayers:\n  - layer:basic\n"

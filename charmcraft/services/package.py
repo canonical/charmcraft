@@ -177,8 +177,14 @@ class PackageService(services.PackageService):
                     f"{tool_name} {version_data[tool_name]['version']} "
                     f"({version_data[tool_name]['git']})"
                 )
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError, KeyError) as exc:
-            emit.debug(f"Could not get charm tools version: {exc}")
+        except subprocess.CalledProcessError as exc:
+            emit.debug(f"Charm command failed: {exc}")
+        except subprocess.TimeoutExpired as exc:
+            emit.debug(f"Charm command timed out: {exc}")
+        except FileNotFoundError as exc:
+            emit.debug(f"Charm command not found: {exc}")
+        except (json.JSONDecodeError, KeyError) as exc:
+            emit.debug(f"Could not parse charm tools version: {exc}")
 
         return None
 

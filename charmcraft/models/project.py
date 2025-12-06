@@ -258,13 +258,6 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     @classmethod
     @override
     def from_yaml_data(cls, data: dict[str, Any], filepath: pathlib.Path) -> Self:
-        project_dir = filepath.parent
-
-        preprocess.add_default_parts(data)
-        preprocess.add_metadata(project_dir, data)
-        preprocess.add_config(project_dir, data)
-        preprocess.add_actions(project_dir, data)
-
         return cls.unmarshal(data)
 
     @classmethod

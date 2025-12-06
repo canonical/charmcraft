@@ -80,8 +80,8 @@ class ProjectService(BaseProjectService):
         return platforms
 
     @override
-    @staticmethod
     def _app_preprocess_project(
+        self,
         project: dict[str, Any],
         *,
         build_on: str,
@@ -90,7 +90,7 @@ class ProjectService(BaseProjectService):
     ) -> None:
         """Run Charmcraft-specific pre-processing on the project."""
         # Extensions get applied on as close as possible to what the user provided.
-        project_dir = pathlib.Path.cwd()
+        project_dir = self._project_dir
         extensions.apply_extensions(project_dir, project)
         # Preprocessing "magic" to create a fully-formed charm.
         preprocess.add_default_parts(project)

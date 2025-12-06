@@ -200,6 +200,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     charmhub: SkipJsonSchema[Charmhub | None] = pydantic.Field(
         default=None,
         exclude=True,
+        deprecated=(
+            "The 'charmhub' field is deprecated and no longer used. It will be removed in a "
+            f"future release. Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
+            f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
+        ),
     )
 
     # Default project properties that Charmcraft currently does not use. Types are set

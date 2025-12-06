@@ -79,8 +79,9 @@ class ProjectService(BaseProjectService):
 
         return platforms
 
-    def _app_preprocess_project(  # type: ignore[override]
-        self,
+    @override
+    @staticmethod
+    def _app_preprocess_project(
         project: dict[str, Any],
         *,
         build_on: str,
@@ -89,7 +90,10 @@ class ProjectService(BaseProjectService):
     ) -> None:
         """Run Charmcraft-specific pre-processing on the project."""
         # Extensions get applied on as close as possible to what the user provided.
-        project_dir = self._project_dir
+        # TODO: This uses cwd() which doesn't work correctly with --project-dir.
+        # The base class defines this as a staticmethod, preventing access to self._project_dir.
+        # This is a known limitation that needs to be addressed in craft-application.
+        project_dir = pathlib.Path.cwd()
         extensions.apply_extensions(project_dir, project)
         # Preprocessing "magic" to create a fully-formed charm.
         preprocess.add_default_parts(project)

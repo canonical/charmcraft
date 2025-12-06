@@ -4,9 +4,12 @@ priority: 100
 
 environment:
   # The stable variant was temporarily removed due to a race condition in craft-providers
-  # where snap watch fails with "daemon is stopping to wait for socket activation".
-  # See: https://github.com/canonical/charmcraft/issues/XXXX
-  # TODO: Re-enable once craft-providers handles this transient error with retries
+  # where snap watch fails with "daemon is stopping to wait for socket activation" during
+  # base instance setup. This is a transient snapd error that craft-providers should handle
+  # with retries but currently doesn't. The two variant tests the same functionality (reactive
+  # charm building) with charm-tools 2.x instead of 3.x.
+  # TODO: Re-enable once craft-providers handles this transient snapd error with retries
+  # TODO: File an issue with craft-providers about adding retry logic for snap watch failures
   # CHARM_SNAP_CHANNEL/stable: stable
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 

@@ -878,7 +878,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`django-framework extension in Rockcraft
-        <django-framework-reference>`
+        <reference-django-framework>`
 
         :ref:`django-framework extension in Charmcraft <django-framework-extension>`
 

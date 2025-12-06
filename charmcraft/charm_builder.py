@@ -27,7 +27,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from typing import List
+from typing import List, Optional
 
 from charmcraft import instrum
 from charmcraft.const import (
@@ -68,10 +68,10 @@ class CharmBuilder:
         builddir: pathlib.Path,
         installdir: pathlib.Path,
         entrypoint: pathlib.Path,
-        allow_pip_binary: bool = None,
-        binary_python_packages: List[str] = None,
-        python_packages: List[str] = None,
-        requirements: List[pathlib.Path] = None,
+        allow_pip_binary: Optional[bool] = None,
+        binary_python_packages: Optional[List[str]] = None,
+        python_packages: Optional[List[str]] = None,
+        requirements: Optional[List[pathlib.Path]] = None,
         strict_dependencies: bool = False,
     ) -> None:
         self.builddir = builddir

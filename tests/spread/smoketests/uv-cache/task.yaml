@@ -26,71 +26,71 @@ restore: |
 
 execute: |
   CACHE_DIR=$(cat /tmp/uv_cache_dir.txt)
-  
+
   echo "Building first charm (charm1) - this should build wheels from source..."
   pushd charm1
   rm -f *.charm
-  
+
   # Build the first charm with UV cache enabled
   CRAFT_SHARED_CACHE="$CACHE_DIR" charmcraft pack
-  
+
   # Verify charm was created
   test -f *.charm
-  
+
   # Check that the UV cache directory was created
   test -d "$CACHE_DIR"
-  
+
   # Look for UV cache subdirectory structure
   # The cache should be in format: $CACHE_DIR/charmcraft-buildd-base-v*/BuilddBaseAlias.*/uv/
   UV_CACHE_PATH=$(find "$CACHE_DIR" -type d -name "uv" 2>/dev/null | head -1)
-  
+
   if [ -z "$UV_CACHE_PATH" ]; then
     echo "ERROR: UV cache directory not found in $CACHE_DIR"
     echo "Cache directory contents:"
     find "$CACHE_DIR" -type d
     exit 1
   fi
-  
+
   echo "UV cache found at: $UV_CACHE_PATH"
-  
+
   # Check that the UV cache contains some files (wheels that were built)
   CACHE_FILE_COUNT=$(find "$UV_CACHE_PATH" -type f | wc -l)
   if [ "$CACHE_FILE_COUNT" -eq 0 ]; then
     echo "ERROR: UV cache directory is empty"
     exit 1
   fi
-  
+
   echo "UV cache contains $CACHE_FILE_COUNT files"
-  
+
   # Store initial cache size
   INITIAL_CACHE_SIZE=$(du -sb "$UV_CACHE_PATH" | cut -f1)
   echo "Initial cache size: $INITIAL_CACHE_SIZE bytes"
-  
+
   popd
-  
+
   echo "Building second charm (charm2) - this should reuse cached wheels..."
   pushd charm2
   rm -f *.charm
-  
+
   # Build the second charm with the same UV cache
   CRAFT_SHARED_CACHE="$CACHE_DIR" charmcraft pack
-  
+
   # Verify charm was created
   test -f *.charm
-  
+
   # Check that cache was reused (size should be same or similar, not doubled)
   FINAL_CACHE_SIZE=$(du -sb "$UV_CACHE_PATH" | cut -f1)
   echo "Final cache size: $FINAL_CACHE_SIZE bytes"
-  
+
   # The cache size should not have significantly increased if caching worked
   # Allow for some metadata overhead (25% increase max to account for filesystem variations)
   MAX_ALLOWED_SIZE=$((INITIAL_CACHE_SIZE * 125 / 100))
-  
+
   if [ "$FINAL_CACHE_SIZE" -gt "$MAX_ALLOWED_SIZE" ]; then
     echo "ERROR: Cache size increased too much (from $INITIAL_CACHE_SIZE to $FINAL_CACHE_SIZE)"
     echo "This suggests wheels were rebuilt instead of being reused from cache"
     exit 1
   fi
-  
+
   echo "SUCCESS: Cache was properly reused between builds"
   popd

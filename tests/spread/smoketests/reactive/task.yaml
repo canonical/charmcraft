@@ -3,11 +3,12 @@ summary: pack a simple reactive charm
 priority: 100
 
 environment:
-  # The stable variant was temporarily removed due to a race condition in craft-providers
-  # where snap watch fails with "daemon is stopping to wait for socket activation" during
-  # base instance setup. This is a transient snapd error that craft-providers should handle
-  # with retries but currently doesn't. The two variant tests the same functionality (reactive
-  # charm building) with charm-tools 2.x instead of 3.x.
+  # The stable variant was temporarily removed due to a transient snapd timing issue where
+  # snap watch fails with "daemon is stopping to wait for socket activation" during base
+  # instance setup. This occurs when snapd daemon is transitioning between states after being
+  # restarted. craft-providers should handle this with retries but currently doesn't. The two
+  # variant tests the same functionality (reactive charm building) with charm-tools 2.x instead
+  # of 3.x, so we maintain test coverage.
   # TODO: Re-enable once craft-providers handles this transient snapd error with retries
   # TODO: File an issue with craft-providers about adding retry logic for snap watch failures
   # CHARM_SNAP_CHANNEL/stable: stable

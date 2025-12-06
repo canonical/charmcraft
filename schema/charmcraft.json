@@ -180,19 +180,6 @@
 					"default": null,
 					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
 				},
-				"charmhub": {
-					"anyOf": [
-						{
-							"$ref": "#/$defs/Charmhub"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"deprecated": true,
-					"description": "(DEPRECATED): Configuration for accessing charmhub."
-				},
 				"charm-libs": {
 					"items": {
 						"$ref": "#/$defs/CharmLib"
@@ -621,38 +608,6 @@
 			"title": "CharmLib",
 			"type": "object"
 		},
-		"Charmhub": {
-			"additionalProperties": false,
-			"description": "Definition of Charmhub endpoint configuration.",
-			"properties": {
-				"api-url": {
-					"default": "https://api.charmhub.io",
-					"format": "uri",
-					"maxLength": 2083,
-					"minLength": 1,
-					"title": "Api-Url",
-					"type": "string"
-				},
-				"storage-url": {
-					"default": "https://storage.snapcraftcontent.com",
-					"format": "uri",
-					"maxLength": 2083,
-					"minLength": 1,
-					"title": "Storage-Url",
-					"type": "string"
-				},
-				"registry-url": {
-					"default": "https://registry.jujucharms.com",
-					"format": "uri",
-					"maxLength": 2083,
-					"minLength": 1,
-					"title": "Registry-Url",
-					"type": "string"
-				}
-			},
-			"title": "Charmhub",
-			"type": "object"
-		},
 		"Ignore": {
 			"additionalProperties": false,
 			"description": "Definition of `analysis.ignore` configuration.",
@@ -1067,19 +1022,6 @@
 					],
 					"default": null,
 					"description": "How analysis done on the charm will behave.\n\nCurrently the only options are to ignore attributes or linters."
-				},
-				"charmhub": {
-					"anyOf": [
-						{
-							"$ref": "#/$defs/Charmhub"
-						},
-						{
-							"type": "null"
-						}
-					],
-					"default": null,
-					"deprecated": true,
-					"description": "(DEPRECATED): Configuration for accessing charmhub."
 				},
 				"charm-libs": {
 					"items": {

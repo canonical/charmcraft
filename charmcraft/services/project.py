@@ -90,9 +90,9 @@ class ProjectService(BaseProjectService):
     ) -> None:
         """Run Charmcraft-specific pre-processing on the project."""
         # Extensions get applied on as close as possible to what the user provided.
-        # TODO: This uses cwd() which doesn't work correctly with --project-dir.
-        # The base class defines this as a staticmethod, preventing access to self._project_dir.
-        # This is a known limitation that needs to be addressed in craft-application.
+        # NOTE: This uses cwd(), which doesn't work correctly with --project-dir unless
+        # the working directory is changed before calling this method. This is currently
+        # worked around by changing the working directory in main.py via os.chdir() in _run_inner().
         project_dir = pathlib.Path.cwd()
         extensions.apply_extensions(project_dir, project)
         # Preprocessing "magic" to create a fully-formed charm.

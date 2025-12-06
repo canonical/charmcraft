@@ -1535,10 +1535,9 @@ class FetchLibCommand(CharmcraftCommand):
                 ]
             )
         except errors.LibraryError:
-            raise errors.LibraryError(
-                message=f"Library {parsed_args.library} not found in Charmhub.",
-                logpath_report=False,
-            )
+            # Re-raise the original error which has better details than parsed_args.library
+            # (which could be None if no library was specified on the command line)
+            raise
 
         # check if something needs to be done
         analysis = []
@@ -1559,7 +1558,7 @@ class FetchLibCommand(CharmcraftCommand):
                     break
             else:
                 raise errors.LibraryError(
-                    message=f"Library {parsed_args.library} not found in Charmhub.",
+                    message=f"Library {lib_data.full_name} not found in Charmhub.",
                     logpath_report=False,
                 )
             emit.debug(f"Store tip: {tip}")

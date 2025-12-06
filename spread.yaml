@@ -158,6 +158,10 @@ prepare: |
       journalctl -xe
   fi
 
+  # Ensure snapd is fully operational after snap installations
+  systemctl restart snapd
+  snap wait system seed.loaded
+
   lxd waitready --timeout=30
   lxd init --auto
 
@@ -168,6 +172,10 @@ prepare: |
   snap install astral-uv --classic
 
   install_charmcraft
+
+  # Ensure all snaps are fully ready before running tests
+  systemctl restart snapd
+  snap wait system seed.loaded
 
 suites:
   docs/howto/code/: &docsuite

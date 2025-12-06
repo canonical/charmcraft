@@ -30,7 +30,7 @@ from craft_cli import CraftError
 from craft_store import models, publisher
 from craft_store.publisher import Releases
 
-from charmcraft import errors, store
+from charmcraft import errors, services, store
 from charmcraft.application import commands
 from charmcraft.application.commands import SetResourceArchitecturesCommand
 from charmcraft.application.commands import store as store_commands
@@ -41,7 +41,7 @@ from charmcraft.application.commands.store import (
 )
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
-from charmcraft.store.models import Library
+from charmcraft.store.models import Library, Uploaded
 from charmcraft.utils import cli
 from tests import get_fake_revision
 
@@ -594,3 +594,51 @@ def test_promote_revisions(
     emitter.assert_message(
         "0 revisions promoted from latest/candidate to latest/stable"
     )
+
+
+def test_upload_without_configured_project(
+    monkeypatch,
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    new_path: pathlib.Path,
+):
+    """Test that upload works outside a project directory (project not configured)."""
+    # Create a fake charm file to upload
+    charm_file = new_path / "test-charm.charm"
+    charm_file.write_bytes(b"fake charm content")
+
+    # Mock the Store class
+    mock_store_instance = mock.Mock()
+    mock_store_instance.upload.return_value = Uploaded(
+        ok=True,
+        status="approved",
+        revision=42,
+        errors=[],
+    )
+    mock_store_cls = mock.Mock(return_value=mock_store_instance)
+    monkeypatch.setattr(store_commands, "Store", mock_store_cls)
+
+    # Create a service factory without a configured project
+    # This simulates running upload outside a project directory
+    services.register_services()
+    factory = craft_application.ServiceFactory(app=APP_METADATA)
+
+    # Set up the project service with project_dir but don't configure it
+    # This is the key to reproduce the bug: the service exists but is not configured
+    factory.update_kwargs("project", project_dir=new_path)
+
+    cmd = store_commands.UploadCommand({"app": APP_METADATA, "services": factory})
+
+    parsed_args = argparse.Namespace(
+        filepath=charm_file,
+        release=None,
+        name="test-charm",
+        resource=[],
+        format=None,
+    )
+
+    # This should not crash with RuntimeError("Project not configured yet.")
+    result = cmd.run(parsed_args)
+
+    assert result == 0
+    mock_store_instance.upload.assert_called_once_with("test-charm", charm_file)
+    emitter.assert_message("Revision 42 of 'test-charm' created")

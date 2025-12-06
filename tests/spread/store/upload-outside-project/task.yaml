@@ -1,0 +1,56 @@
+summary: upload charm from outside project directory
+
+include:
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME --profile=machine
+  cd charm
+
+  cat <<- EOF >> charmcraft.yaml
+  charmhub:
+    api-url: https://api.staging.charmhub.io
+    storage-url: https://storage.staging.snapcraftcontent.com
+  EOF
+
+restore: |
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm upload-dir
+
+execute: |
+  cd charm
+  
+  # pack the charm
+  charmcraft pack --verbose
+  test -f $CHARM_DEFAULT_NAME*.charm
+  charm_filepath=$(ls $CHARM_DEFAULT_NAME*.charm)
+  
+  # Move the charm file to a different directory (outside project)
+  mkdir -p ../upload-dir
+  mv $charm_filepath ../upload-dir/
+  
+  # Change to the upload directory (which has no charmcraft.yaml)
+  cd ../upload-dir
+  
+  # Verify we're outside the project directory
+  if [ -f charmcraft.yaml ]; then
+    echo "ERROR: charmcraft.yaml should not exist in upload directory"
+    exit 1
+  fi
+  
+  # Upload the charm from outside the project directory
+  # This should NOT crash with "Project not configured yet" error
+  charm_file=$(ls $CHARM_DEFAULT_NAME*.charm)
+  uploaded_revno=$(charmcraft upload $charm_file --format=json | jq .revision)
+  
+  # Verify we got a valid revision number
+  if [ -z "$uploaded_revno" ] || [ "$uploaded_revno" == "null" ]; then
+    echo "ERROR: Failed to upload charm or get revision number"
+    exit 1
+  fi
+  
+  echo "Successfully uploaded charm from outside project directory. Revision: $uploaded_revno"

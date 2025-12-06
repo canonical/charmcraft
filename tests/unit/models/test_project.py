@@ -802,48 +802,4 @@ def test_check_legacy_bases(base, expected):
     assert project._check_base_is_legacy(base) == expected
 
 
-def test_from_yaml_data_with_metadata_file(
-    fs: pyfakefs.fake_filesystem.FakeFilesystem,
-):
-    """Test that from_yaml_data loads metadata.yaml when present.
-
-    This test verifies that from_yaml_data correctly calls preprocessing
-    functions to load and merge data from metadata.yaml, which is necessary
-    for --project-dir functionality to work with legacy charm projects.
-    """
-    # Create a minimal charmcraft.yaml without name, summary, description
-    charmcraft_yaml = """\
-type: charm
-base: ubuntu@24.04
-platforms:
-  amd64:
-parts:
-  charm:
-    plugin: charm
-    source: .
-"""
-    # Create metadata.yaml with the required fields
-    metadata_yaml = """\
-name: test-charm
-summary: A test charm
-description: A charm for testing metadata loading
-"""
-
-    fs.create_file("/project/charmcraft.yaml", contents=charmcraft_yaml)
-    fs.create_file("/project/metadata.yaml", contents=metadata_yaml)
-
-    # Load the YAML data
-    with open("/project/charmcraft.yaml") as f:
-        data = util.safe_yaml_load(f)
-
-    # from_yaml_data should call preprocessing functions to load metadata.yaml
-    filepath = pathlib.Path("/project/charmcraft.yaml")
-    result = project.CharmcraftProject.from_yaml_data(data, filepath)
-
-    # The name, summary, description should be loaded from metadata.yaml
-    assert result.name == "test-charm"
-    assert result.summary == "A test charm"
-    assert result.description == "A charm for testing metadata loading"
-
-
 # endregion

@@ -79,8 +79,7 @@ class ProjectService(BaseProjectService):
 
         return platforms
 
-    @override
-    def _app_preprocess_project(
+    def _app_preprocess_project(  # type: ignore[override]
         self,
         project: dict[str, Any],
         *,

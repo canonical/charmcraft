@@ -831,7 +831,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`express-framework extension in Rockcraft
-        <expressjs-framework-reference>`
+        <reference-express-framework>`
 
         :ref:`express-framework extension in Charmcraft
         <expressjs-framework-extension>`

@@ -52,7 +52,7 @@ jobs:
           yq e 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -i snap/snapcraft.yaml
       - name: Build snap
         uses: canonical/action-build@v1
-        id: charmcraft
+        id: snapcraft
       - name: Upload snap artifact
         uses: actions/upload-artifact@v4
         with:
@@ -60,7 +60,7 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
       - name: Verify Charmcraft snap
         run: |
-          sudo snap install --dangerous --classic ${{ steps.charmcraft.outputs.snap }}
+          sudo snap install --dangerous --classic ${{ steps.snapcraft.outputs.snap }}
 
   spread:
     needs: [predicate, snap-build]

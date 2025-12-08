@@ -158,10 +158,6 @@ prepare: |
       journalctl -xe
   fi
 
-  # Ensure snapd is fully operational after snap installations
-  systemctl restart snapd
-  snap wait system seed.loaded
-
   lxd waitready --timeout=30
   lxd init --auto
 
@@ -172,10 +168,6 @@ prepare: |
   snap install astral-uv --classic
 
   install_charmcraft
-
-  # Ensure all snaps are fully ready before running tests
-  systemctl restart snapd
-  snap wait system seed.loaded
 
 suites:
   docs/howto/code/: &docsuite
@@ -196,10 +188,6 @@ suites:
       refresh_or_install_snap juju "$juju_channel"
       refresh_or_install_snap microk8s "$microk8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
-
-      # Ensure snapd is ready after installing additional snaps
-      systemctl restart snapd
-      snap wait system seed.loaded
 
       if [[ -v CONTAINER_REGISTRY_URL ]]; then
         CONTAINER_REGISTRY_HOSTPORT=$(echo "$CONTAINER_REGISTRY_URL" | awk -F/ '{print $3}')
@@ -241,11 +229,6 @@ suites:
     prepare: |
       snap install juju --channel=3.2/stable
       snap install microk8s --channel=1.28-strict/stable
-
-      # Ensure snapd is ready after installing additional snaps
-      systemctl restart snapd
-      snap wait system seed.loaded
-
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -277,11 +260,6 @@ suites:
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
       snap install juju --channel=3.2/stable
-
-      # Ensure snapd is ready after installing additional snaps
-      systemctl restart snapd
-      snap wait system seed.loaded
-
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -311,11 +289,6 @@ suites:
   tests/spread/store/:
     prepare: |
       snap install docker
-
-      # Ensure snapd is ready after installing docker snap
-      systemctl restart snapd
-      snap wait system seed.loaded
-
       # make sure docker is working
       retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
       # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker

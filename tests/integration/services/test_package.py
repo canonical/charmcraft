@@ -21,11 +21,25 @@ import pathlib
 import freezegun
 import pytest
 import pytest_check
+from craft_application import util
 
 import charmcraft
 from charmcraft import const
 from charmcraft.application.main import APP_METADATA
 from charmcraft.services.package import PackageService
+
+
+def _normalize_architecture(content: str) -> str:
+    """Normalize architecture in expected test output to match host architecture.
+    
+    On ARM Macs, the host architecture is arm64, but test fixtures have amd64.
+    This helper replaces amd64 with the actual host architecture.
+    """
+    host_arch = util.get_host_architecture()
+    if host_arch != "amd64":
+        # Replace amd64 with the actual host architecture
+        content = content.replace("- amd64", f"- {host_arch}")
+    return content
 
 
 @pytest.fixture(
@@ -70,7 +84,8 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
+        expected_content = _normalize_architecture(file.read_text())
+        pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
 
 
 @freezegun.freeze_time(
@@ -91,7 +106,8 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
+        expected_content = _normalize_architecture(file.read_text())
+        pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
 
 
 @pytest.mark.parametrize(

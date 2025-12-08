@@ -9,6 +9,9 @@ platforms:
   jammy-amd64:
     build-on: [ubuntu@22.04:amd64]
     build-for: [ubuntu@22.04:amd64]
+  jammy-arm64:
+    build-on: [ubuntu@22.04:arm64]
+    build-for: [ubuntu@22.04:arm64]
   "ubuntu@24.04:riscv64":
 
 parts:

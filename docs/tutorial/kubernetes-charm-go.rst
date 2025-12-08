@@ -822,7 +822,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`go-framework extension in Rockcraft
-        <go-framework-reference>`
+        <reference-go-framework>`
 
         :ref:`go-framework extension in Charmcraft
         <go-framework-extension>`

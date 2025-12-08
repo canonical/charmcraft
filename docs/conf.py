@@ -159,6 +159,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/npm_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",
     "common/craft-parts/reference/plugins/python_plugin.rst",
+    "common/craft-parts/reference/plugins/python_v2_plugin.rst",
     "common/craft-parts/reference/plugins/qmake_plugin.rst",
     "common/craft-parts/reference/plugins/rust_plugin.rst",
     "common/craft-parts/reference/plugins/scons_plugin.rst",
@@ -170,7 +171,7 @@ exclude_patterns = [
     "reuse/reference/extensions/environment_variables.rst",
     "reuse/reference/extensions/environment_variables_spring_boot.rst",
     "reuse/reference/extensions/http_proxy.rst",
-    "reuse/tutorial/*"
+    "reuse/tutorial/*",
 ]
 
 rst_epilog = """
@@ -190,7 +191,7 @@ autodoc_default_options = {"exclude-members": "model_post_init"}
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/en/latest/", None),
+    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/latest/", None),
     "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
     "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),

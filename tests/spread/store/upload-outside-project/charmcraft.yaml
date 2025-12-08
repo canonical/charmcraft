@@ -7,6 +7,10 @@ bases:
     - name: ubuntu
       channel: "22.04"
 
+parts:
+  charm:
+    plugin: nil
+
 charmhub:
   api-url: https://api.staging.charmhub.io
   storage-url: https://storage.staging.snapcraftcontent.com

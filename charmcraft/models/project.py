@@ -360,6 +360,23 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
                 part.setdefault("source", ".")
         return {name: process_part_config(part) for name, part in parts.items()}
 
+    @pydantic.model_validator(mode="after")
+    def _warn_charmhub_deprecated(self) -> Self:
+        repeat = False
+        with warnings.catch_warnings(record=True) as caught:
+            if self.charmhub:
+                repeat = True
+                for warning in caught:
+                    if isinstance(warning.message, Warning):
+                        message = warning.message.args[0]
+                    else:
+                        message = warning.message
+                    emit.progress(f"WARNING: {message}", permanent=True)
+        if repeat:
+            for warning in caught:
+                warnings.warn(warning.message, stacklevel=1)
+        return self
+
 
 class CharmProject(CharmcraftProject):
     """A base class for all charm types."""

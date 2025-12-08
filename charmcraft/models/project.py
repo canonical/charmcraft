@@ -852,35 +852,6 @@ class BasesCharm(CharmProject):
         ),
     )
 
-    @pydantic.model_validator(mode="after")
-    def _validate_charmhub_with_bases(self) -> Self:
-        """Validate that charmhub is only used with allowed bases."""
-        if not self.charmhub:
-            return self
-
-        # Check all run-on bases across all base configurations
-        invalid_bases = set()
-        for base_config in self.bases:
-            for run_base in base_config.run_on:
-                base_str = f"{run_base.name}@{run_base.channel}"
-                if base_str not in const.CHARMHUB_ALLOWED_BASES:
-                    invalid_bases.add(base_str)
-
-        if invalid_bases:
-            if len(invalid_bases) == 1:
-                raise ValueError(
-                    f"The 'charmhub' field is not supported for base {invalid_bases.pop()!r}. "
-                    f"Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
-                    f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
-                )
-            invalid_bases_str = humanize_list(sorted(invalid_bases), conjunction="or")
-            raise ValueError(
-                f"The 'charmhub' field is not supported for bases {invalid_bases_str}. "
-                f"Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
-                f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
-            )
-        return self
-
 
 class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""

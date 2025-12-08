@@ -31,7 +31,7 @@ from charmcraft.services.package import PackageService
 
 def _normalize_architecture(content: str) -> str:
     """Normalize architecture in expected test output to match host architecture.
-    
+
     On ARM Macs, the host architecture is arm64, but test fixtures have amd64.
     This helper replaces amd64 with the actual host architecture, but only if
     the file doesn't already contain the host architecture (to avoid duplicates).
@@ -39,6 +39,7 @@ def _normalize_architecture(content: str) -> str:
     host_arch = util.get_host_architecture()
     if host_arch != "amd64":
         # Only replace if the host architecture isn't already present
+        # The "- " prefix ensures we only match YAML list items, not other occurrences
         if f"- {host_arch}" not in content:
             content = content.replace("- amd64", f"- {host_arch}")
     return content

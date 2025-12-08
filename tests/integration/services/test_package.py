@@ -17,6 +17,7 @@
 
 import datetime
 import pathlib
+import string
 
 import freezegun
 import pytest
@@ -29,20 +30,13 @@ from charmcraft.application.main import APP_METADATA
 from charmcraft.services.package import PackageService
 
 
-def _normalize_architecture(content: str) -> str:
-    """Normalize architecture in expected test output to match host architecture.
+def _substitute_template_values(content: str) -> str:
+    """Substitute template placeholders in expected test output.
 
-    On ARM Macs, the host architecture is arm64, but test fixtures have amd64.
-    This helper replaces amd64 with the actual host architecture, but only if
-    the file doesn't already contain the host architecture (to avoid duplicates).
+    Replaces ${ARCH} with the host architecture.
     """
-    host_arch = util.get_host_architecture()
-    if host_arch != "amd64":
-        # Only replace if the host architecture isn't already present
-        # The "- " prefix ensures we only match YAML list items, not other occurrences
-        if f"- {host_arch}" not in content:
-            content = content.replace("- amd64", f"- {host_arch}")
-    return content
+    template = string.Template(content)
+    return template.safe_substitute(ARCH=util.get_host_architecture())
 
 
 @pytest.fixture(
@@ -87,7 +81,7 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        expected_content = _normalize_architecture(file.read_text())
+        expected_content = _substitute_template_values(file.read_text())
         pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
 
 
@@ -109,7 +103,7 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        expected_content = _normalize_architecture(file.read_text())
+        expected_content = _substitute_template_values(file.read_text())
         pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
 
 

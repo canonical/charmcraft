@@ -2,35 +2,28 @@ summary: upload charm from outside project directory
 
 include:
   - tests/
+  - charm/
+  - upload-dir/
 
 prepare: |
   tests.pkgs install jq
-  charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME --profile=machine
-  cd charm
-
-  cat <<- EOF >> charmcraft.yaml
-  charmhub:
-    api-url: https://api.staging.charmhub.io
-    storage-url: https://storage.staging.snapcraftcontent.com
-  EOF
 
 restore: |
   pushd charm
   charmcraft clean
   popd
 
-  rm -rf charm upload-dir
-
 execute: |
+  # Set the charm name in the charmcraft.yaml
   cd charm
+  sed -i "1i name: $CHARM_DEFAULT_NAME" charmcraft.yaml
   
   # pack the charm
   charmcraft pack --verbose
   test -f $CHARM_DEFAULT_NAME*.charm
   charm_filepath=$(ls $CHARM_DEFAULT_NAME*.charm)
   
-  # Move the charm file to a different directory (outside project)
-  mkdir -p ../upload-dir
+  # Move the charm file to the upload directory (outside project)
   mv $charm_filepath ../upload-dir/
   
   # Change to the upload directory (which has no charmcraft.yaml)

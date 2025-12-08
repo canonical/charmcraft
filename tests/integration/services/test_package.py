@@ -33,12 +33,14 @@ def _normalize_architecture(content: str) -> str:
     """Normalize architecture in expected test output to match host architecture.
     
     On ARM Macs, the host architecture is arm64, but test fixtures have amd64.
-    This helper replaces amd64 with the actual host architecture.
+    This helper replaces amd64 with the actual host architecture, but only if
+    the file doesn't already contain the host architecture (to avoid duplicates).
     """
     host_arch = util.get_host_architecture()
     if host_arch != "amd64":
-        # Replace amd64 with the actual host architecture
-        content = content.replace("- amd64", f"- {host_arch}")
+        # Only replace if the host architecture isn't already present
+        if f"- {host_arch}" not in content:
+            content = content.replace("- amd64", f"- {host_arch}")
     return content
 
 

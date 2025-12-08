@@ -412,6 +412,7 @@ def test_build_charm_build_raises_warning_messages_does_not_raise(
 
 def test_build_copies_build_manifest(build_dir, install_dir, fake_run):
     """Test that .build.manifest file from charm build is preserved in install_dir."""
+
     def _fake_charm_build(*args, **kwargs):
         # Simulate charm build creating .build.manifest in the install_dir
         (install_dir / ".build.manifest").write_text("pip:\n  - some-package==1.0.0\n")

@@ -22,7 +22,6 @@ import textwrap
 from textwrap import dedent
 from typing import Any
 
-import craft_cli.pytest_plugin
 import hypothesis
 import pydantic
 import pyfakefs.fake_filesystem

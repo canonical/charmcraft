@@ -1,0 +1,32 @@
+summary: pack external reactive charms
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+environment:
+  CHARM/content_cache: https://git.launchpad.net/content-cache-charm
+  CHARM/ceph_fs: https://git.launchpad.net/charm-ceph-fs
+  CHARM/openstack_manila: https://opendev.org/openstack/charm-manila
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: reactive-test
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+
+restore: |
+  rm -f ~/*.charm
+
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+
+  rm ~/*.charm
+  mv *.charm ~/
+  juju deploy ~/*.charm

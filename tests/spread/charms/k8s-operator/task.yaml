@@ -1,0 +1,51 @@
+summary: pack external k8s operator charms
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 60m
+
+environment:
+  CHARM/alertmanager: https://github.com/canonical/alertmanager-k8s-operator
+  CHARM/discourse: https://git.launchpad.net/charm-k8s-discourse
+  CHARM/grafana: https://github.com/canonical/grafana-k8s-operator
+  # Requires some pre-setup.
+  # CHARM/grafana_agent: https://github.com/canonical/grafana-agent-k8s-operator
+  CHARM/hydra: https://github.com/canonical/hydra-operator
+  CHARM/identity_platform: https://github.com/canonical/identity-platform-login-ui-operator
+  CHARM/indico: https://github.com/canonical/indico-operator
+  CHARM/kafka: https://github.com/canonical/kafka-k8s-operator
+  CHARM/loki: https://github.com/canonical/loki-k8s-operator
+  CHARM/mattermost: https://git.launchpad.net/charm-k8s-mattermost
+  # Uses tox, needs a different workflow right now.
+  # CHARM/mongodb: https://github.com/canonical/mongodb-k8s-operator
+  # Uses tox, needs a different workflow right now.
+  # CHARM/mysql: https://github.com/canonical/mysql-k8s-operator
+  CHARM/pgbouncer: https://github.com/canonical/pgbouncer-k8s-operator
+  CHARM/postgresql: https://github.com/canonical/postgresql-k8s-operator
+  CHARM/prometheus: https://github.com/canonical/prometheus-k8s-operator
+  CHARM/redis: https://github.com/canonical/redis-k8s-operator
+  CHARM/traefik: https://github.com/canonical/traefik-k8s-operator
+  CHARM/wordpress: https://github.com/canonical/wordpress-k8s-operator
+  CHARM/zookeeper: https://github.com/canonical/zookeeper-k8s-operator
+  JUJU_CONTROLLER: k8s
+  JUJU_MODEL: k8s-operator-test
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+
+restore: |
+  rm -f ~/*.charm
+
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+
+  mv *.charm ~/
+  # TODO: pull the referenced OCI images and deploy to juju.
+  # ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

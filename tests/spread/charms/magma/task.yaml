@@ -1,0 +1,24 @@
+summary: pack external magma charm
+# This test is broken. See https://github.com/canonical/charmcraft/issues/1215
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+environment:
+  CHARM: https://github.com/canonical/charmed-magma
+  CHARM_DIR: "orchestrator-bundle/orc8r-certifier-operator"
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+
+restore: |
+  pushd charm/"${CHARM_DIR}"
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm/"${CHARM_DIR}"
+  charmcraft pack --verbose

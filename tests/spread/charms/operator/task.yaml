@@ -1,0 +1,49 @@
+summary: pack external operator charms
+manual: true
+systems:
+  - ubuntu-22.04-64
+kill-timeout: 30m
+
+environment:
+  CHARM/cos_proxy: https://github.com/canonical/cos-proxy-operator
+  CHARM/dex_auth: https://github.com/canonical/dex-auth-operator
+  CHARM/github_runner: https://github.com/canonical/github-runner-operator
+  CHARM/hardware_observer: https://github.com/canonical/hardware-observer-operator
+  CHARM/kafka: https://github.com/canonical/kafka-operator
+  CHARM/kratos: https://github.com/canonical/kratos-operator
+  CHARM/minio: https://github.com/canonical/minio-operator
+  CHARM/mlflow: https://github.com/canonical/mlflow-operator
+  CHARM/mongodb: https://github.com/canonical/mongodb-operator
+  # Disabled because it uses a tox-based workflow
+  # CHARM/mysql: https://github.com/canonical/mysql-operator
+  # Doesn't use charmcraft
+  # CHARM/nats: https://github.com/canonical/nats-operator
+  CHARM/opensearch: https://github.com/canonical/opensearch-operator
+  CHARM/pgbouncer: https://github.com/canonical/pgbouncer-operator
+  CHARM/postgresql: https://github.com/canonical/postgresql-operator
+  CHARM/saml_integrator: https://github.com/canonical/saml-integrator-operator
+  CHARM/seldon_core: https://github.com/canonical/seldon-core-operator
+  CHARM/tls_certificates: https://github.com/canonical/tls-certificates-operator
+  CHARM/zookeeper: https://github.com/canonical/zookeeper-operator
+  JUJU_CONTROLLER: lxd
+  JUJU_MODEL: operator-test
+
+prepare: |
+  git clone --depth=1 "${CHARM}" charm
+
+restore: |
+  rm -f ~/*.charm
+
+  pushd charm
+  charmcraft clean
+  popd
+
+  rm -rf charm
+
+execute: |
+  cd charm
+  charmcraft pack --verbose
+
+  mv *.charm ~/
+  # We can only deploy one of the charms in the model, so deploy the first one.
+  ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

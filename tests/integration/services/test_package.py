@@ -17,26 +17,15 @@
 
 import datetime
 import pathlib
-import string
 
 import freezegun
 import pytest
 import pytest_check
-from craft_application import util
 
 import charmcraft
 from charmcraft import const
 from charmcraft.application.main import APP_METADATA
 from charmcraft.services.package import PackageService
-
-
-def _substitute_template_values(content: str) -> str:
-    """Substitute template placeholders in expected test output.
-
-    Replaces ${ARCH} with the host architecture.
-    """
-    template = string.Template(content)
-    return template.safe_substitute(ARCH=util.get_host_architecture())
 
 
 @pytest.fixture(
@@ -81,8 +70,7 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        expected_content = _substitute_template_values(file.read_text())
-        pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
+        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
 
 
 @freezegun.freeze_time(
@@ -103,8 +91,7 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
-        expected_content = _substitute_template_values(file.read_text())
-        pytest_check.equal((test_prime_dir / file.name).read_text(), expected_content)
+        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
 
 
 @pytest.mark.parametrize(

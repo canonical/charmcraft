@@ -4,7 +4,7 @@ bases:
 - name: ubuntu
   channel: '22.04'
   architectures:
-  - ${ARCH}
+  - amd64
 analysis:
   attributes:
   - name: language

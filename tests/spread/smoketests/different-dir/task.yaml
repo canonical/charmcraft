@@ -1,4 +1,6 @@
 summary: pack a init-created charm from a different directory
+systems:
+  - ubuntu-24.04-64 # Only run this on the default base for our templates.
 
 prepare: |
   charmcraft init --project-dir=charm

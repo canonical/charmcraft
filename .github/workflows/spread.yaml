@@ -22,7 +22,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: snap
-          path: ${{ steps.charmcraft.outputs.snap }}
+          path: ${{ steps.charmcraft.outputs.spread-snap }}
 
   snap-tests:
     runs-on: [self-hosted, spread-installed]
@@ -48,7 +48,7 @@ jobs:
       - name: Download snap artifact
         uses: actions/download-artifact@v4
         with:
-          name: snap
+          name: spread-snap
 
       - name: Run spread
         run: |
@@ -87,7 +87,7 @@ jobs:
         name: Download snap artifact
         uses: actions/download-artifact@v4
         with:
-          name: snap
+          name: spread-snap
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Run spread

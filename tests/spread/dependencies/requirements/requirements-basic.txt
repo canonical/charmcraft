@@ -1,3 +1,0 @@
-# Basic requirements.txt without hashes, but with various forms of reqs
-ops~=2.15
-pyxdg<999.99

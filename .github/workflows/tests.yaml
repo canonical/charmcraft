@@ -89,7 +89,10 @@ jobs:
   macos-smoke-test:
     strategy:
       matrix:
-        os: [macos-14-large, macos-15-intel]
+		# Macos 15 disabled until we figure out how to get
+		# multipass working:
+		# https://matrix.to/#/!wYnVWUesJSMqzJhKgo:matrix.org/$HKhgZ0-OP6vlqOftcukIO3XQ5r_vmNwhqijxR4_avxs
+        os: [macos-14-large]
     runs-on: ${{ matrix.os }}
     steps:
       # Installing and caching homebrew using the action should speed up subsequent CI:

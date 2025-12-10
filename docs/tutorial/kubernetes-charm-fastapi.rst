@@ -806,7 +806,7 @@ in a number of typical ways, but there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`fastapi-framework extension in Rockcraft
-        <fastapi-framework-reference>`
+        <reference-fastapi-framework>`
 
         :ref:`fastapi-framework extension in Charmcraft
         <fastapi-framework-extension>`

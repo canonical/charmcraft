@@ -46,14 +46,14 @@ jobs:
     runs-on: [self-hosted, amd64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Build snap
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -64,7 +64,7 @@ jobs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
       - name: Checkout charmcraft
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Find spread systems
         id: select
         run: |
@@ -85,13 +85,13 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: snap
 
@@ -114,14 +114,14 @@ jobs:
     steps:
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
 
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: snap
 

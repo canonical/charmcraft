@@ -3,7 +3,7 @@
 Charmcraft 4.1 release notes
 ============================
 
-8 December 2025
+11 December 2025
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.1.
 

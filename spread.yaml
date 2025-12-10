@@ -43,11 +43,11 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
-      # https://github.com/canonical/charmcraft/issues/2480
-      # - ubuntu-25.10-64:
-      #     workers: 6
-      #     memory: 8G
-      #     storage: 40G
+      - ubuntu-25.10-64:
+          image: ubuntu-os-cloud/ubuntu-2510-amd64
+          workers: 6
+          memory: 8G
+          storage: 40G
       - ubuntu-26.04-64:
           image: ubuntu-os-cloud-devel/ubuntu-2604-lts-amd64
           workers: 6

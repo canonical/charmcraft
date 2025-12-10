@@ -48,10 +48,11 @@ backends:
       #     workers: 6
       #     memory: 8G
       #     storage: 40G
-      # - ubuntu-26.04-64:
-      #     workers: 6
-      #     memory: 8G
-      #     storage: 40G
+      - ubuntu-26.04-64:
+          image: ubuntu-os-cloud-devel/ubuntu-2604-lts-amd64
+          workers: 6
+          memory: 8G
+          storage: 40G
   ci:
     type: adhoc
     systems:

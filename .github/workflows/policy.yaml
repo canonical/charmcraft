@@ -1,3 +1,5 @@
+# Testing changes from https://github.com/canonical/starflow/pull/101
+# TODO: Revert to @main after starflow PR #101 is merged
 name: Check policy
 on:
   pull_request:
@@ -9,10 +11,10 @@ on:
 
 jobs:
   policy:
-    uses: canonical/starflow/.github/workflows/policy.yaml@main
+    uses: canonical/starflow/.github/workflows/policy.yaml@copilot/use-pristine-ubuntu-action
   python-scans:
     name: Security scan
-    uses: canonical/starflow/.github/workflows/scan-python.yaml@main
+    uses: canonical/starflow/.github/workflows/scan-python.yaml@copilot/use-pristine-ubuntu-action
     with:
       packages: python-apt-dev
       # 1. requirements-noble.txt can't build on jammy

@@ -97,7 +97,7 @@ class Uploaded:
     """
 
     ok: bool
-    status: int
+    status: str
     revision: int
     errors: list[Error]
 

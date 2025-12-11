@@ -19,13 +19,13 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
-          name: snap
+          name: spread-snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
   snap-tests:
-    runs-on: self-hosted
+    runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
     strategy:
       fail-fast: false
@@ -46,16 +46,16 @@ jobs:
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v6
         with:
-          name: snap
+          name: spread-snap
 
       - name: Run spread
         run: |
           spread ${{ matrix.spread }}
 
   snap-store-tests:
-    runs-on: self-hosted
+    runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
 
     steps:
@@ -85,9 +85,9 @@ jobs:
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Download snap artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v6
         with:
-          name: snap
+          name: spread-snap
 
       - if: steps.decisions.outputs.RUN == 'true'
         name: Run spread

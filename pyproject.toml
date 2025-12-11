@@ -35,7 +35,7 @@ strict = ["charmcraft"]
 pythonVersion = "3.8"
 pythonPlatform = "Linux"
 venvPath = ".tox"
-venv = "py38"
+venv = "test-py3.10"
 
 [tool.mypy]
 python_version = "3.8"

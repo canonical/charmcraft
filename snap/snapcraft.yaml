@@ -70,8 +70,8 @@ grade: stable
 confinement: classic
 
 build-packages:
-  - cargo
-  - rustc
+  - cargo-1.85
+  - rustc-1.85
   - pkg-config
   - python3.10-dev
   - libpython3.10-dev
@@ -122,6 +122,8 @@ parts:
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
+      - CARGO: cargo-1.85
+      - RUSTC: rustc-1.85
     override-pull: |
       craftctl default
       # Ensure we don't have a dubious ownership error from git with a remote build.

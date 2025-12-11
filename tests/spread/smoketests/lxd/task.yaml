@@ -2,6 +2,7 @@ summary: pack a init-created charm with lxd
 
 # run last because this test deletes base instances
 priority: -10
+kill-timeout: 30m  # This is slow on Ubuntu 20.04
 
 prepare: |
   charmcraft init --project-dir=charm

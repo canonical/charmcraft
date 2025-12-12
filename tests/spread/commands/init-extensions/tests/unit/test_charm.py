@@ -7,22 +7,14 @@ import os
 import pathlib
 
 import charm
-import scenario
-import scenario.errors
+from ops import testing
 
 
 def test_smoke():
     """The purpose of this test is that the charm does not raise on a handled event."""
     os.chdir(pathlib.Path(charm.__file__).parent.parent)
-    ctx = scenario.Context(charm.HelloWorldCharm)
-    container_name = next(iter(ctx.charm_spec.meta["containers"].keys()))
-    container = scenario.Container(
-        name=container_name,
-        can_connect=True,
-    )
-    state_in = scenario.State(containers={container})
-    out = ctx.run(
-        ctx.on.pebble_ready(container),
-        state_in,
-    )
-    assert type(out.unit_status) in (scenario.WaitingStatus, scenario.BlockedStatus)
+    ctx = testing.Context(charm.HelloWorldCharm)
+    state_in = testing.State.from_context(ctx)
+    container = next(iter(state_in.containers))
+    state_out = ctx.run(ctx.on.pebble_ready(container), state_in)
+    assert type(state_out.unit_status) in (testing.WaitingStatus, testing.BlockedStatus)

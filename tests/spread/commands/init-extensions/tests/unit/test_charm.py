@@ -17,7 +17,7 @@ def test_smoke():
     ctx = scenario.Context(charm.HelloWorldCharm)
     state_in = scenario.State.from_context(ctx)
     out = ctx.run(
-        ctx.on.pebble_ready(container),
+        ctx.on.pebble_ready(next(iter(state_in.containers))),
         state_in,
     )
     assert type(out.unit_status) in (scenario.WaitingStatus, scenario.BlockedStatus)

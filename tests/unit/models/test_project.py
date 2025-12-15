@@ -18,6 +18,7 @@
 import itertools
 import json
 import pathlib
+import re
 import textwrap
 from textwrap import dedent
 from typing import Any
@@ -691,23 +692,71 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@22.04"])
-def test_devel_bases(monkeypatch, base):
-    monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
+@pytest.mark.parametrize("base", const.SUPPORTED_BASE_STRINGS)
+def test_supported_base_works_with_its_own_build_base(base: str):
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": base,
+            "build-base": base,
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "nil"}},
+        }
+    )
 
+
+@pytest.mark.parametrize("base", const.DEVEL_BASE_STRINGS)
+def test_devel_base_needs_build_base(base: str):
     with pytest.raises(
         pydantic.ValidationError,
-        match=r"requires a build-base \(recommended: 'build-base: ubuntu@devel'\)",
+        match=r"requires a build-base \(recommended: 'build-base: ubuntu@(devel|\d\d\.\d\d)'\)",
     ):
-        project.PlatformCharm(
-            type="charm",
-            name="test-charm",
-            summary="",
-            description="",
-            base=base,
-            platforms={"amd64": None},
-            parts={"charm": {"plugin": "charm"}},
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": base,
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "nil"}},
+            }
         )
+
+
+@pytest.mark.parametrize("base", ["ubuntu@26.04"])
+def test_unreleased_devel_base_needs_devel(base: str):
+    with pytest.raises(
+        pydantic.ValidationError,
+        match=re.escape(f"development build-base must be used when base is '{base}'"),
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": base,
+                "build-base": base,
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "nil"}},
+            }
+        )
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": base,
+            "build-base": "ubuntu@devel",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "nil"}},
+        }
+    )
 
 
 @pytest.mark.parametrize(
@@ -753,8 +802,8 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad invalid-base.yaml content:
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]')
-                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]')"""
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': '24.04'} (in field 'bases[0]', input: {'name': 'ubuntu', 'channel': '24.04'})
+                - base requires 'platforms' definition: {'name': 'ubuntu', 'channel': 'devel'} (in field 'bases[1]', input: {'name': 'ubuntu', 'channel': 'devel'})"""
             ),
         ),
         pytest.param(
@@ -771,7 +820,7 @@ def test_read_charm_from_yaml_file_self_contained_success(tmp_path, filename: st
             dedent(
                 """\
                 Bad platforms-empty-parts.yaml content:
-                - dictionary should have at least 1 item after validation, not 0 (in field 'parts')"""
+                - dictionary should have at least 1 item after validation, not 0 (in field 'parts', input: {})"""
             ),
             id="empty-parts-in-platform-charm",
         ),
@@ -795,11 +844,10 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         ({"name": "ubuntu", "channel": "24.04"}, False),
         ({"name": "ubuntu", "channel": "24.10"}, False),
         ({"name": "ubuntu", "channel": "25.04"}, False),
+        ({"name": "ubuntu", "channel": "25.10"}, False),
+        ({"name": "ubuntu", "channel": "26.04"}, False),
         ({"name": "almalinux", "channel": "9"}, True),
     ],
 )
 def test_check_legacy_bases(base, expected):
     assert project._check_base_is_legacy(base) == expected
-
-
-# endregion

@@ -1,0 +1,20 @@
+type: charm
+name: test-charm
+summary: An invalid multi-base charm using the charm plugin
+description: test-charm
+
+platforms:
+  noble:  # This is allowed, but not in combination with the others.
+    build-on: ubuntu@24.04:amd64
+    build-for: ubuntu@24.04:amd64
+  questing:
+    build-on: ubuntu@25.10:amd64
+    build-for: ubuntu@25.10:amd64
+  resolute:
+    build-on: ubuntu@26.04:amd64
+    build-for: ubuntu@26.04:amd64
+
+parts:
+  my-part:
+    plugin: charm
+    source: .

@@ -13,6 +13,7 @@ keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _fastapi-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
@@ -47,35 +48,32 @@ by running ``juju config <application> token=<token>``.
 .. |framework| replace:: FastAPI
 .. |framework_prefix| replace:: APP
 
+.. _fastapi-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _fastapi-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables.rst
 
+.. _fastapi-framework-extension-http-proxy:
 
-HTTP Proxy
-----------
+.. include:: /reuse/reference/extensions/http_proxy.rst
 
-Proxy settings should be set as model configurations. Charms generated
-using the ``fastapi-framework`` extension will make the Juju proxy
-settings available as the ``HTTP_PROXY``, ``HTTPS_PROXY`` and
-``NO_PROXY`` environment variables. For example, the ``juju-http-proxy``
-environment variable will be exposed as ``HTTP_PROXY`` to the FastAPI
-service.
-
-    See more: `Juju | List of model configuration
-    keys <https://juju.is/docs/juju/list-of-model-configuration-keys>`_
-
+.. _fastapi-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
 
 Extra services defined in the file
-:external+rockcraft:ref:`rockcraft.yaml <rockcraft.yaml_reference>`
+:external+rockcraft:ref:`rockcraft.yaml <reference-rockcraft-yaml>`
 with names ending in ``-worker`` or ``-scheduler`` will be passed the
 same environment variables as the main application. If there is more
 than one unit in the application, the services with the name ending in
 ``-worker`` will run in all units. The services with name ending in
 ``-scheduler`` will only run in one of the units of the application.
 
+.. _fastapi-framework-extension-observability:
 
 Observability
 -------------
@@ -132,6 +130,7 @@ during the migration.
 If you prefer you can also use different tooling for migration, for example `Alembic
 <https://alembic.sqlalchemy.org/en/latest/>`__.
 
+.. _fastapi-framework-extension-secrets:
 
 Secrets
 -------
@@ -152,3 +151,40 @@ the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. _fastapi-grafana-graphs:
+
+Grafana dashboard graphs
+------------------------
+
+If the FastAPI app is connected to the `Canonical Observability Stack
+(COS) <https://charmhub.io/topics/canonical-observability-stack>`_,
+the Grafana dashboard **FastAPI Operator** displays the following
+default graphs:
+
+* Requests: Number of requests over time.
+* Status code count: Number of requests broken by responses status code.
+* Requests per second: Number of requests per second over time.
+* 2XX Rate: Portion of responses that were successful (in the 200 range).
+* 3XX Rate: Portion of responses that were redirects (in the 300 range).
+* 4XX Rate: Portion of responses that were client errors (in the 400 range).
+* 5XX Rate: Portion of responses that were server errors (in the 500 range).
+* Request duration percentile: The 50th, 90th, and 99th percentile of all the
+  request duration lengths after sorting them from slowest to fastest. For
+  example, the 50th percentile represents the length of time (or less) that
+  50\% of the requests lasted.
+
+.. note::
+
+  The default Grafana dashboard makes use of the ``prometheus_fastapi_instrumentator``
+  package. To enable the metrics, you need to install the package and add the
+  following lines to your FastAPI application code:
+
+  .. code-block:: python
+    :caption: app.py
+
+    from prometheus_fastapi_instrumentator import Instrumentator
+
+    app = FastAPI()
+
+    Instrumentator().instrument(app).expose(app)

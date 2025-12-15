@@ -119,12 +119,7 @@ Run the Django app locally
 We will test the Django app by visiting the app in a web
 browser.
 
-Change into the ``~/django_hello_world`` directory:
-
-.. code-block:: bash
-
-    cd django_hello_world
-
+Change into the ``~/django_hello_world`` directory.
 Open the settings file of the app located at
 ``~/django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
@@ -764,7 +759,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Change back into the charm directory.
 
 The ``django-framework`` Charmcraft extension supports adding
 configurations in ``charmcraft.yaml`` which will be passed as
@@ -838,7 +833,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/django-hello-world`` for the tutorial:
+following in the project directory ``~/django-hello-world`` for the tutorial:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -883,7 +878,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`django-framework extension in Rockcraft
-        <django-framework-reference>`
+        <reference-django-framework>`
 
         :ref:`django-framework extension in Charmcraft <django-framework-extension>`
 

@@ -18,6 +18,16 @@ Once the VM is up, open a shell into it:
 
     multipass shell charm-dev
 
+Unless stated otherwise, we will work entirely within the VM from now on.
+
+Install Rockcraft and Charmcraft
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. admonition:: This extension is under active development
+
+    This tutorial requires the edge releases of Rockcraft and Charmcraft, which are
+    riskier than the stable releases.
+
 In order to create the rock, you need to install Rockcraft with
 classic confinement, which grants it access to the whole file system:
 
@@ -25,24 +35,29 @@ classic confinement, which grants it access to the whole file system:
 
     sudo snap install rockcraft --channel latest/edge --classic
 
-
-LXD will be required for building the rock.
-Make sure it is installed and initialized:
-
-.. code-block:: bash
-
-    lxd --version
-    lxd init --auto
-
-
-If ``LXD`` is not installed, install it with ``sudo snap install lxd``.
-
 In order to create the charm, you'll need to install Charmcraft:
 
 .. code-block:: bash
 
     sudo snap install charmcraft --channel latest/edge --classic
 
+Install LXD, MicroK8s, and Juju
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LXD will be required for building the rock.
+Make sure it is installed:
+
+.. code-block:: bash
+
+    lxd --version
+
+If LXD is not installed, install it with ``sudo snap install lxd``.
+
+Initialize LXD:
+
+.. code-block:: bash
+
+    lxd init --auto
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
 Let's install MicroK8s using the ``1.31-strict/stable`` track, add the current
@@ -54,15 +69,17 @@ user to the group, and activate the changes:
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
 
-Several MicroK8s add-ons are required for deployment:
+Several MicroK8s addons are required for deployment. We need
+``hostpath-storage`` so Juju can provide storage volumes,
+``registry`` to host the OCI image for our app, and ``ingress``
+so that we can expose and access the app.
+
+Enable the necessary MicroK8s addons:
 
 .. code-block:: bash
 
-    # Required for Juju to provide storage volumes
     sudo microk8s enable hostpath-storage
-    # Required to host the OCI image of the application
     sudo microk8s enable registry
-    # Required to expose the application
     sudo microk8s enable ingress
 
 Check the status of MicroK8s:

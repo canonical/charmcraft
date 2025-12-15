@@ -251,7 +251,7 @@ Create the charm
 ----------------
 
 From the ``~/go-hello-world`` directory, let's create a new directory
-for the charm and change inside it:
+for the charm and go inside it:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -473,8 +473,8 @@ Provide a configuration
 To demonstrate how to provide a configuration to the Go app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Go app configuration under the
-keyword ``GREETING``. Change back to the ``~/go-hello-world`` directory using
-``cd ..`` and replace the code into ``main.go`` with the following:
+keyword ``GREETING``. Return to the ``~/go-hello-world`` directory
+and replace the code into ``main.go`` with the following:
 
 .. literalinclude:: code/go/greeting_main.txt
     :caption: ~/go-hello-world/main.go
@@ -521,7 +521,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The ``go-framework`` Charmcraft extension supports adding configurations
 to ``charmcraft.yaml``, which will be passed as environment variables to
@@ -702,7 +702,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The Go app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
@@ -777,7 +777,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/go-hello-world`` for the tutorial:
+following in the project directory ``~/go-hello-world`` for the tutorial:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -822,7 +822,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`go-framework extension in Rockcraft
-        <go-framework-reference>`
+        <reference-go-framework>`
 
         :ref:`go-framework extension in Charmcraft
         <go-framework-extension>`

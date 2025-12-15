@@ -1,0 +1,16 @@
+type: charm
+name: test-charm
+summary: An invalid charm based on Ubuntu Resolute (26.04 LTS) with the reactive plugin.
+description: test-charm
+
+base: ubuntu@26.04
+build-base: ubuntu@devel
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+
+parts:
+  my-part:
+    plugin: reactive
+    source: .

@@ -3,8 +3,8 @@
 ``<libname>.py`` file
 =====================
 
-File ``<libname>.py`` is a Python file in your charm project that holds a charm
-library -- that is, code that enables charm developers to easily share and reuse
+File ``<libname>.py`` is a Python file in your charm project that holds a Charmhub-hosted
+charm library -- that is, code that enables charm developers to easily share and reuse
 auxiliary logic related to  charms -- for example, logic related to the relations
 between charms.
 
@@ -13,6 +13,15 @@ a reference to the origin charm. This does not prevent reuse, modification or sh
 
 The publishing tools around libraries are deliberately kept simple.
 Libraries are however versioned and uniquely identified.
+
+.. admonition:: More information about charm libraries
+    :class: hint
+
+    - :external+charmlibs:ref:`Charmlibs | The different kinds of charm libraries <charm-libs>`
+    - :external+charmlibs:ref:`Charmlibs | Manage Python package libraries <how-to-manage-charm-libraries>`
+    - :ref:`Manage Charmhub-hosted libraries <manage-libraries>`
+    - :external+charmlibs:ref:`Charmlibs | General libraries listing <general-libs-listing>`
+    - :external+charmlibs:ref:`Charmlibs | Interface libraries listing <interface-libs-listing>`
 
 
 Location
@@ -163,183 +172,3 @@ Code
 
 After the docstring and the metadata, there's the library code.
 This is regular Python code.
-
-
-Popular libraries
------------------
-
-This is a list of some popular charm libraries available from Charmhub.
-
-.. note::
-
-    This list does not and will not contain all charm libraries on Charmhub. However if
-    you believe a library is missing from this list, please
-    `open a pull request <https://github.com/canonical/charmcraft/pull/new/>`_ adding
-    the library you believe to be missing.
-
-
-Libraries that define relations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The following libraries provide programmatic instructions for relating to a specific
-charm.
-
-.. list-table::
-    :header-rows: 1
-
-    * - Library
-      - Used in
-      - Description
-    * - `fluentbit <https://charmhub.io/fluentbit/libraries/fluentbit>`_
-      - `fluentbit charm <https://charmhub.io/fluentbit>`_
-      - Defines both sides of a relation interface to the
-        fluentbit charm.
-    * - `redis <https://charmhub.io/redis-k8s/libraries/redis>`_
-      -
-      - Import RedisRequires from this lib to relate your charm to the
-        `redis charm <https://charmhub.io/redis-k8s>`_
-    * - `grafana_dashboard
-        <https://charmhub.io/grafana-k8s/libraries/grafana-dashboard>`_
-      -
-      - Defines a relation interface for charms that provide a dashboard to the
-        `grafana-k8s charm <https://charmhub.io/grafana-k8s>`_
-    * - `grafana_source <https://charmhub.io/grafana-k8s/libraries/grafana-source>`_
-      -
-      - Defines a relation interface for charms that serve as a data source for the
-        `grafana-k8s charm <https://charmhub.io/grafana-k8s>`_
-    * - `prometheus_scrape
-        <https://charmhub.io/prometheus-k8s/libraries/prometheus_scrape>`_
-      -
-      - Defines a relation interface for charms that want to expose metrics endpoints
-        to the `prometheus charm <https://charmhub.io/prometheus-k8s>`_.
-    * - `alertmanager_dispatch
-        <https://charmhub.io/alertmanager-k8s/libraries/alertmanager_dispatch>`_
-      -
-      - Defines a relation to the `alertmanager-dispatch charm
-        <https://charmhub.io/alertmanager-k8s>`_.
-    * - `karma_dashboard <https://charmhub.io/karma-k8s/libraries/karma_dashboard>`_
-      - `karma-k8s <https://charmhub.io/karma-k8s>`_
-      - Defines an interface for charms wishing to consume or provide a
-        karma-dashboard relation.
-    * - `loki_push_api
-        <https://charmhub.io/loki-k8s/libraries/loki_push_api>`_
-      - `loki-k8s <https://charmhub.io/loki-k8s>`_
-      - Defines a relation interface for charms wishing to provide or consume the
-        Loki Push API---e.g., a charm that wants to send logs to Loki.
-    * - `log_proxy <https://charmhub.io/loki-k8s/libraries/log_proxy>`_
-      - `loki-k8s <https://charmhub.io/loki-k8s>`_
-      - Defines a relation interface that allows a charm to act as a Log Proxy for
-        Loki (via the Loki Push API).
-    * - `guacd <https://charmhub.io/apache-guacd/libraries/guacd>`_
-      - `apache-guacd <https://charmhub.io/apache-guacd>`_
-      - Defines a relation for charms wishing to set up a native server side proxy
-        for Apache Guacamole.
-
-
-Libraries that provide tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These libraries provide reusable tooling, typically to interact with cloud services,
-or to perform operations common to several charms.
-
-.. list-table::
-    :header-rows: 1
-
-    * - Library
-      - Used in
-      - Description
-    * - `cert <https://charmhub.io/kubernetes-dashboard/libraries/cert>`_
-      - `kubernetes-dashboard <https://charmhub.io/kubernetes-dashboard>`_
-      - Generates a self signed certificate.
-    * - `capture_events
-        <https://discourse.charmhub.io/t/harness-recipe-capture-events/6581>`_
-      - - `traefik-k8s <https://charmhub.io/traefik-k8s>`_,
-        - `data-platform-libs <https://github.com/canonical/data-platform-libs/>`_
-      - Helper for unit testing events.
-    * - `networking <https://discourse.charmhub.io/t/harness-and-network-mocks/6633>`_
-      -
-      - Provides tools for mocking networks.
-    * - `compound-status <https://charmhub.io/compound-status>`_
-      -
-      - Provides utilities to track multiple independent statuses in charms.
-    * - `resurrect <https://github.com/PietroPasotti/resurrect>`_
-      - `github-runner-image-builder
-        <https://github.com/canonical/github-runner-image-builder-operator>`_
-      - Provides utilities to periodically trigger charm hooks
-
-
-Libraries that provide tools for Kubernetes charms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These libraries provide tooling for charms that run on top of Kubernetes clouds.
-
-.. list-table::
-    :header-rows: 1
-
-    * - Library
-      - Used in
-      - Description
-    * - `kubernetes_service_patch
-        <https://charmhub.io/observability-libs/libraries/kubernetes_service_patch>`_
-      - - `cos-configuration-k8s <https://charmhub.io/cos-configuration-k8s>`_
-        - `alertmanager-k8s <https://charmhub.io/alertmanager-k8s>`_
-        - `grafana-agent-k8s <https://charmhub.io/grafana-agent-k8s>`_
-        - `prometheus-k8s <https://charmhub.io/prometheus-k8s>`_
-        - `loki-k8s <https://charmhub.io/loki-k8s>`_
-        - `traefik-k8s <https://charmhub.io/traefik-k8s>`_
-      - Allows charm authors to simply and elegantly define service overrides that
-        persist through a charm upgrade.
-    * - `ingress <https://charmhub.io/nginx-ingress-integrator/libraries/ingress>`_
-      - `nginx-ingress-integrator <https://charmhub.io/nginx-ingress-integrator>`_
-      - Configures nginx to use an existing Kubernetes Ingress.
-    * - `ingress-per-unit <https://charmhub.io/traefik-k8s/libraries/ingress_per_unit>`_
-      - `traefik-k8s <https://charmhub.io/traefik-k8s>`_
-      - Configures traefik to provide per-unit routing.
-
-
-Libraries that provide tools for machine charms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These libraries contain tools meant for use in machine charms, e.g., libraries that
-interact with package managers or other CLI tools that are often not present in
-containers.
-
-.. list-table::
-    :header-rows: 1
-
-    * - Library
-      - Used in
-      - Description
-    * - `apt <https://charmhub.io/operator-libs-linux/libraries/apt>`_
-      - - `mysql <https://charmhub.io/mysql>`_
-        - `zookeeper <https://charmhub.io/zookeeper>`_
-        - `cos-proxy <https://charmhub.io/cos-proxy>`_
-        - `kafka <https://charmhub.io/kafka>`_
-        - `ceph-mon <https://charmhub.io/ceph-mon>`_
-      - Install and manage packages via ``apt``.
-    * - `dnf <https://charmhub.io/operator-libs-linux/libraries/dnf>`_
-      -
-      - Install and manage packages via ``dnf``.
-    * - `grub <https://charmhub.io/operator-libs-linux/libraries/grub>`_
-      -
-      - Manage kernel configuration via ``grub``.
-    * - `passwd <https://charmhub.io/operator-libs-linux/libraries/passwd>`_
-      -
-      - Manage users and groups on a Linux system.
-    * - `snap <https://charmhub.io/operator-libs-linux/libraries/snap>`_
-      - - `mongodb <https://charmhub.io/mongodb>`_
-        - `mongodb-k8s <https://charmhub.io/mongodb-k8s>`_
-        - `postgresql <https://charmhub.io/postgresql>`_
-        - `grafana-agent <https://charmhub.io/grafana-agent>`_
-        - `kafka <https://charmhub.io/kafka>`_
-      - Install and manage packages via ``snapd``.
-    * - `sysctl <https://charmhub.io/operator-libs-linux/libraries/sysctl>`_
-      - `kafka <https://charmhub.io/kafka>`_
-      - Manage sysctl configuration.
-    * - `systemd <https://charmhub.io/operator-libs-linux/libraries/systemd>`_
-      - - `mongodb <https://charmhub.io/mongodb>`_
-        - `pgbouncer <https://charmhub.io/pgbouncer>`_
-        - `cos-proxy <https://charmhub.io/cos-proxy>`_
-        - `ceph-mon <https://charmhub.io/ceph-mon>`_
-        - `calico <https://charmhub.io/calico>`_
-      - Interact with services via ``systemd``.

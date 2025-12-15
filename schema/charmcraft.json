@@ -57,7 +57,6 @@
 					],
 					"maxLength": 40,
 					"minLength": 1,
-					"pattern": "^([a-z0-9][a-z0-9-]?)*[a-z]+([a-z0-9-]?[a-z0-9])*$",
 					"title": "Project Name",
 					"type": "string"
 				},
@@ -853,7 +852,6 @@
 					],
 					"maxLength": 40,
 					"minLength": 1,
-					"pattern": "^([a-z0-9][a-z0-9-]?)*[a-z]+([a-z0-9-]?[a-z0-9])*$",
 					"title": "Project Name",
 					"type": "string"
 				},
@@ -900,11 +898,14 @@
 								"ubuntu@20.04",
 								"ubuntu@22.04",
 								"ubuntu@24.04",
-								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
 								"almalinux@9"
 							],
+							"type": "string"
+						},
+						{
+							"const": "ubuntu@26.04",
 							"type": "string"
 						},
 						{
@@ -922,7 +923,6 @@
 								"ubuntu@20.04",
 								"ubuntu@22.04",
 								"ubuntu@24.04",
-								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
 								"almalinux@9"
@@ -986,6 +986,19 @@
 									],
 									"type": "object"
 								}
+							]
+						}
+					},
+					"propertyNames": {
+						"description": "The name of this platform. May not contain '/'",
+						"examples": [
+							"riscv64",
+							"my-special-platform"
+						],
+						"not": {
+							"enum": [
+								"*",
+								"any"
 							]
 						}
 					},

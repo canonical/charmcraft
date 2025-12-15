@@ -43,6 +43,15 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
+      # https://github.com/canonical/charmcraft/issues/2480
+      # - ubuntu-25.10-64:
+      #     workers: 6
+      #     memory: 8G
+      #     storage: 40G
+      # - ubuntu-26.04-64:
+      #     workers: 6
+      #     memory: 8G
+      #     storage: 40G
   ci:
     type: adhoc
     systems:
@@ -106,6 +115,11 @@ backends:
           workers: 4
       - ubuntu-24.04-64:
           workers: 4
+      - ubuntu-25.10-64:
+          workers: 4
+      - ubuntu-26.04-64:
+          workers: 4
+
 prepare: |
   set -e
 
@@ -213,7 +227,7 @@ suites:
   tests/spread/charms/:
     summary: real charm building tests
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable
       snap install microk8s --channel=1.28-strict/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
@@ -245,7 +259,7 @@ suites:
     kill-timeout: 60m # Setting up Juju can take a while.
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -326,3 +340,13 @@ suites:
     summary: Destructive tests for Ubuntu Noble (24.04 LTS) builds
     systems:
       - ubuntu-24.04-64
+
+  tests/spread/ubuntu-25.10/:
+    summary: Destructive tests for Ubuntu Questing (25.10) builds
+    systems:
+      - ubuntu-25.10-64
+
+  tests/spread/ubuntu-26.04/:
+    summary: Destructive tests for Ubuntu Resolute (26.04 LTS) builds
+    systems:
+      - ubuntu-26.04-64

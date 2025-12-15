@@ -264,7 +264,7 @@ Create the charm
 ----------------
 
 From the ``~/fastapi-hello-world`` directory, let's create a new directory
-for the charm and change inside it:
+for the charm and go inside it:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -483,8 +483,8 @@ Provide a configuration
 To demonstrate how to provide a configuration to the FastAPI app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the FastAPI app configuration under the
-keyword ``APP_GREETING``. Change back to the ``~/fastapi-hello-world`` directory
-using ``cd ..`` and copy the following code into ``app.py``:
+keyword ``APP_GREETING``. Return to the ``~/fastapi-hello-world`` directory
+and copy the following code into ``app.py``:
 
 .. literalinclude:: code/fastapi/greeting_app.py
     :caption: ~/fastapi-hello-world/app.py
@@ -532,7 +532,7 @@ Let's pack and upload the new version of the rock:
 Update the charm
 ~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The ``fastapi-framework`` Charmcraft extension supports adding
 configurations to ``charmcraft.yaml`` which will be passed as
@@ -686,7 +686,7 @@ Let's pack and upload the new version of the rock:
 Update the charm again
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Change back into the charm directory using ``cd charm``.
+Return to the charm directory.
 
 The FastAPI app now requires a database which needs to be declared in the
 ``charmcraft.yaml`` file. Open ``charmcraft.yaml`` in a text editor and
@@ -761,7 +761,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the rock directory ``~/fastapi-hello-world`` for the tutorial:
+following in the project directory ``~/fastapi-hello-world`` for the tutorial:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -806,7 +806,7 @@ in a number of typical ways, but there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`fastapi-framework extension in Rockcraft
-        <fastapi-framework-reference>`
+        <reference-fastapi-framework>`
 
         :ref:`fastapi-framework extension in Charmcraft
         <fastapi-framework-extension>`

@@ -57,8 +57,8 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric names, and use hyphens (-) to separate words. For
-    charms that have already standardised on underscores, it is not necessary to
+    Prefer lowercase alphanumeric action names, and use hyphens (-) to separate words.
+    For charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some action names be dashed and some be underscored.
 
@@ -224,7 +224,7 @@ where the charm must be built on and run on.
 and where that build can run. Each item can be expressed using two different
 internal structures, a short and a long form. The long one is more explicit:
 
-.. code-block:: yaml
+.. code:: yaml
 
     bases:
       - build-on:
@@ -258,7 +258,7 @@ to the machine architecture.
 
 .. collapse:: Example
 
-    .. code-block:: yaml
+    .. code:: yaml
 
         bases:
           - build-on:
@@ -329,9 +329,14 @@ to the machine architecture.
 
 **Status:** Optional.
 
-**Purpose:** Declares charm libraries for Charmcraft to include in the charm
+**Purpose:** Declares Charmhub-hosted libraries for Charmcraft to include in the charm
 project. For each lib, include both the lib name (in ``<charm>.<library>`` format)
 and the lib version (in ``"<api version>[.<patch version>]"`` string format).
+
+.. note::
+
+   This key is only for Charmhub-hosted libraries.
+   Regular Python packages should instead be listed in your charm's Python dependencies.
 
 **Structure:**
 
@@ -470,7 +475,7 @@ secret URI.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric names, separated with dashes if required. For
+    Prefer lowercase alphanumeric option names, separated with dashes if required. For
     charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some config names be dashed and some be underscored.
@@ -507,7 +512,7 @@ container. It dictates the mount point for the specific container.
 Optionally, you can specify the location attribute on the `storage`_ itself,
 which also sets the mount point in the charm container.
 
-.. code-block:: yaml
+.. code:: yaml
 
     containers:
       <container name>:
@@ -570,7 +575,7 @@ which also sets the mount point in the charm container.
 
 **Structure:**
 
-.. code-block:: yaml
+.. code:: yaml
 
     devices:
         # Each key represents the name of the device
@@ -670,7 +675,7 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 .. admonition:: Best practice
     :class: hint
 
-    The name should be slug-oriented (ASCII lowercase letters, numbers, and
+    The charm name should be slug-oriented (ASCII lowercase letters, numbers, and
     hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
     For example, ``argo-server-k8s``.
 
@@ -895,9 +900,9 @@ endpoint.
 .. admonition:: Best practice
     :class: hint
 
-    Always include the ``optional`` key, rather than relying on the default
-    value to indicate that the relation is required. Although this field is
-    not enforced by Juju, including it makes it clear to users (and other tools)
+    Include the ``optional`` key in all endpoint definitions, rather than relying on
+    the default value to indicate that the relation is required. Although this field
+    is not enforced by Juju, including it makes it clear to users (and other tools)
     whether the relation is required.
 
 
@@ -981,7 +986,7 @@ at least one ``requires`` integration with ``container`` scope.
 
 **Structure:**
 
-.. code-block:: yaml
+.. code:: yaml
 
     storage:
       # Each key represents the name of the storage

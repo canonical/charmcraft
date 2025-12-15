@@ -1,0 +1,107 @@
+name: Spread (manual - large/flaky)
+on:
+  schedule:
+    # At 00:00 on Wednesday and Sunday.
+    - cron: "0 0 * * WED,SUN"
+
+  workflow_dispatch:
+
+  # If we're editing this file, run it on the pull request.
+  pull_request:
+    # The 3 default types + "labeled"
+    types: [labeled, opened, reopened, synchronize]
+    paths:
+      - .github/workflows/spread-manual.yaml
+      - tests/spread/charms/**
+      - tests/spread/smoketests/parallel-build/*
+      - tests/spread/smoketests/remote-build/*
+
+# Only ever run one of this test at a time.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  # Decide if the tests should be ran
+  predicate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.eval.outputs.should_run }}
+    steps:
+      - id: eval
+        run: |
+          # OR's the three different conditions in which this should run:
+          # - This is an actual scheduled run
+          # - This is a manually triggered run via the Actions tab
+          # - This is a PR with the 'PR: Run Manual Spread' label
+          should_run=${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+  snap-build:
+    needs: predicate
+    if: needs.predicate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      # speed up build times by using wheels, when available
+      - name: Use wheels
+        run: |
+          yq e 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -i snap/snapcraft.yaml
+      - name: Build snap
+        uses: canonical/action-build@v1
+        id: snapcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Verify Charmcraft snap
+        run: |
+          sudo snap install --dangerous --classic ${{ steps.snapcraft.outputs.snap }}
+
+  spread:
+    needs: [predicate, snap-build]
+    if: needs.predicate.outputs.should_run == 'true'
+    runs-on: spread-installed
+    strategy:
+      fail-fast: false
+      # Each of these tasks can spin up several machines in spread.
+      max-parallel: 2
+      matrix:
+        task:
+          - charms/k8s-operator
+          - charms/operator
+          - charms/reactive
+          - smoketests/parallel-build
+          - smoketests/remote-build
+
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+      - name: Checkout charmcraft
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Download snap artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: snap
+      - name: Spread k8s operator
+        env:
+          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
+        run: |
+          spread google:tests/spread/${{ matrix.task }}
+      - name: Clean up jobs
+        if: ${{ always() }}
+        run: |
+          spread -discard
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

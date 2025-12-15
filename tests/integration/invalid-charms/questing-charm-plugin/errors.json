@@ -1,0 +1,18 @@
+[
+  {
+    "type": "value_error",
+    "loc": [
+      "parts"
+    ],
+    "msg": "Value error, Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@25.10'",
+    "input": {
+      "my-part": {
+        "plugin": "charm",
+        "source": "."
+      }
+    },
+    "ctx": {
+      "error": "Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@25.10'"
+    }
+  }
+]

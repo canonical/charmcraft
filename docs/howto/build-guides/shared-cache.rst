@@ -31,7 +31,7 @@ While it's recommended that you use the ``charmcraft/pack`` action from
 `craft-actions`_ where possible, the following workflow will manually pack a charm,
 caching the intermediate files:
 
-.. code-block:: yaml
+.. code:: yaml
 
     name: Pack charm
     on:
@@ -59,7 +59,7 @@ On GitLab
 The following example ``gitlab-ci.yml`` will install and run Charmcraft to pack your
 charm, caching the intermediate artefacts:
 
-.. code-block:: yaml
+.. code:: yaml
 
     pack-charm:
       cache:

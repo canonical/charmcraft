@@ -11,33 +11,11 @@ Prerequisites
 -------------
 
 - A working FastAPI application charmed with 12-factor tooling. This guide will be
-  following the `tutorial up until you deploy the app
-  <https://documentation.ubuntu.com/charmcraft/latest/tutorial/
-  kubernetes-charm-fastapi/#deploy-the-fastapi-app>`_.
+  following the :ref:`tutorial up until you deploy the app
+  <deploy-the-fastapi-app>`.
 - A Juju model
 - Basic familiarity with `SQLAlchemy <https://www.sqlalchemy.org/>`_ and
   `Alembic <https://alembic.sqlalchemy.org/en/latest/>`_.
-
-
-Object Relational Mapper
-------------------------
-
-To follow the 12-factor methodology, your application should treat backing services
-(like databases) as attached resources. While you can write raw SQL, using an
-**Object Relational Mapper (ORM)** like SQLAlchemy allows you to interact with your
-database using Python classes.
-
-This abstraction layer provides two main benefits:
-
-1. **Safety:** It prevents common security issues like SQL injection.
-
-2. **Portability:** It decouples your code from the specific SQL dialect,
-making it easier to switch database backends if necessary.
-
-.. admonition:: Note
-
- While this guide uses MySQL, since we are using ORM's you can swap out
- the db provider very easily.
 
 
 Prepare the environment
@@ -47,14 +25,14 @@ MySQL requires a specific Python driver. Ensure your ``requirements.txt`` includ
 a MySQL driver compatible with SQLAlchemy, such as ``pymysql``.
 
 .. code-block::
-    :caption: :caption:
+    :caption: requirements.txt
 
     fastapi
     sqlalchemy
     alembic
     PyMySQL[rsa]
 
-.. admonition:: Warning
+.. warning::
 
   When using ``pymysql``, your connection string (handled later by the charm)
   generally follows the format ``mysql+pymysql://user:pass@host/db``.
@@ -70,7 +48,7 @@ Create a file named ``models.py``:
 
 
 .. code-block:: python
-    :caption: models.py
+    :caption: requirements.txt
 
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.orm import declarative_base
@@ -90,7 +68,7 @@ Define migrations
 -----------------
 
 Database schemas change over time. To manage these changes without losing data,
-we use **Alembic** for migrations.
+let's use **Alembic** for migrations.
 
 Initialize Alembic
 ~~~~~~~~~~~~~~~~~~
@@ -138,8 +116,7 @@ adhering to 12-factor principles.
 Generate a migration
 ~~~~~~~~~~~~~~~~~~~~
 
-Create the revision file that instructs the database how to create the ``users`` table:
-
+Create the revision file that instructs the database how to create the ``users`` table.
 This command requires us to connect to the database, but since we do not have access
 to the database, we will use SQLite instead by setting the enviroment variable to
 a non-existent SQLite instance:
@@ -198,6 +175,7 @@ Create a simple endpoint in ``app.py`` to test the connection:
 
 .. code-block:: python
     :caption: app.py
+    :emphasize-lines: 12-23
 
     from fastapi import FastAPI, Depends, HTTPException
     from sqlalchemy.orm import Session
@@ -223,13 +201,13 @@ Create a simple endpoint in ``app.py`` to test the connection:
         users = db.query(models.User).offset(skip).limit(limit).all()
         return users
 
-Update the ``rockcraft.yaml``
------------------------------
+Update ``rockcraft.yaml``
+-------------------------
 
 We need to add two new parts into our ``rockcraft.yaml`` file to copy
 the Alembic related files and packages needed to run the database migrations.
 
-.. admonition:: Warning
+.. warning::
 
   Do not forget to change the version to ``0.2`` while updating the ``rockcraft.yaml``
   file
@@ -265,18 +243,19 @@ Now we can pack the file and upload it to local registry:
       docker://localhost:32000/fastapi-hello-world:0.2
 
 
-.. admonition:: Note
+.. note::
 
   If you are using Canonical K8s instead of MicroK8s you need to use this command
   to upload to local registry:
+
   .. code-block:: bash
 
     sudo /snap/k8s/current/bin/ctr --address /run/containerd/containerd.sock
     --namespace k8s.io images import --base-name docker.io/library/fastapi-hello-world
     ./fastapi-hello-world_0.2_amd64.rock
 
-Update the ``charmcraft.yaml``
-------------------------------
+Update ``charmcraft.yaml``
+--------------------------
 
 Add the ``mysql`` integration to the ``charmcraft.yaml`` file:
 
@@ -292,16 +271,17 @@ Add the ``mysql`` integration to the ``charmcraft.yaml`` file:
 Deploy the app
 --------------
 
-Let's deploy the app into Juju:
+Let's deploy the app with Juju:
 
 .. code-block:: bash
 
     juju deploy ./charm/fastapi-hello-world_amd64.charm --resource app-image=localhost:32000/fastapi-hello-world:0.2
 
-.. admonition:: Note
+.. note::
 
   If you are using Canonical Kubernetes instead of MicroK8s you
   need to use this command to deploy your charm:
+
   .. code-block:: bash
 
     juju deploy ./charm/fastapi-hello-world_amd64.charm

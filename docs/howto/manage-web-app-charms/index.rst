@@ -98,11 +98,4 @@ ready to use it.
    :maxdepth: 2
 
    Use your 12-factor app charm <use-web-app-charm>
-
-Database integration
---------------------
-
-.. toctree::
-   :maxdepth: 2
-
    Use a database with your 12-factor app charm <use-a-database>

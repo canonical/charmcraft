@@ -1,5 +1,8 @@
 .. _use-db-with-12-factor-charms:
 
+.. _meta::
+    :description: Integrate a MySQL database into your charmed 12-factor app written with FastAPI.
+
 Use a database with your 12-factor app charm
 ============================================
 
@@ -22,7 +25,7 @@ Prepare the environment
 -----------------------
 
 MySQL requires a specific Python driver. Ensure your ``requirements.txt`` includes
-a MySQL driver compatible with SQLAlchemy, such as ``pymysql``.
+a MySQL driver compatible with SQLAlchemy, such as pymysql.
 
 .. code-block::
     :caption: requirements.txt
@@ -32,10 +35,8 @@ a MySQL driver compatible with SQLAlchemy, such as ``pymysql``.
     alembic
     PyMySQL[rsa]
 
-.. warning::
-
-  When using ``pymysql``, your connection string (handled later by the charm)
-  generally follows the format ``mysql+pymysql://user:pass@host/db``.
+When using pymysql, your connection string (handled later by the charm)
+follows the format ``mysql+pymysql://user:pass@host/db``.
 
 
 Declare models
@@ -48,7 +49,7 @@ Create a file named ``models.py``:
 
 
 .. code-block:: python
-    :caption: requirements.txt
+    :caption: models.py
 
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.orm import declarative_base
@@ -68,19 +69,16 @@ Define migrations
 -----------------
 
 Database schemas change over time. To manage these changes without losing data,
-let's use **Alembic** for migrations.
+let's use Alembic for migrations.
 
-Initialize Alembic
-~~~~~~~~~~~~~~~~~~
+Configure Alembic
+~~~~~~~~~~~~~~~~~
 
 In your project root, run:
 
 .. code-block:: bash
 
     alembic init alembic
-
-Configure the environment
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Edit ``alembic/env.py`` to point to your models so Alembic can detect changes.
 You also need to configure it to read the database URL from the environment,
@@ -113,8 +111,8 @@ adhering to 12-factor principles.
 
     # ... rest of the file ...
 
-Generate a migration
-~~~~~~~~~~~~~~~~~~~~
+Generate a migration script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create the revision file that instructs the database how to create the ``users`` table.
 This command requires us to connect to the database, but since we do not have access
@@ -129,10 +127,10 @@ a non-existent SQLite instance:
 Set up automated updates
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's create  a ``migrate.sh`` file to put our migration commands so that 12-Factor
-can automatically run your upgrades. This file will be automatically picked up
-by 12-factor tooling and will be run when a database integration event happens
-(ex: created, changed, departed).
+Create  a ``migrate.sh`` script for our migration commands so that 12-Factor
+can automatically run your upgrades. This file will automatically run when a 
+database integration event happens
+(such as created, changed, or departed).
 
 .. code-block:: bash
     :caption: migrate.sh
@@ -143,7 +141,7 @@ by 12-factor tooling and will be run when a database integration event happens
 Create engine and run
 ~~~~~~~~~~~~~~~~~~~~~
 
-Now, set up the database connection. The application should read
+Now it's time to set up the database connection. The application should read
 the connection string from the ``MYSQL_DB_CONNECT_STRING`` environment variable.
 
 Create ``database.py``:
@@ -230,7 +228,7 @@ the Alembic related files and packages needed to run the database migrations.
         - app/database.py
         - app/models.py
 
-Now we can pack the file and upload it to local registry:
+Pack the rock and upload it to the local container registry:
 
 .. code-block:: bash
 
@@ -252,7 +250,7 @@ Now we can pack the file and upload it to local registry:
 
     sudo /snap/k8s/current/bin/ctr --address /run/containerd/containerd.sock
     --namespace k8s.io images import --base-name docker.io/library/fastapi-hello-world
-    ./fastapi-hello-world_0.2_amd64.rock
+    ./fastapi-hello-world_0.2_$(dpkg --print-architecture).rock
 
 Update ``charmcraft.yaml``
 --------------------------
@@ -271,11 +269,12 @@ Add the ``mysql`` integration to the ``charmcraft.yaml`` file:
 Deploy the app
 --------------
 
-Let's deploy the app with Juju:
+Deploy the app with Juju:
 
 .. code-block:: bash
 
-    juju deploy ./charm/fastapi-hello-world_amd64.charm --resource app-image=localhost:32000/fastapi-hello-world:0.2
+    juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
+      --resource app-image=localhost:32000/fastapi-hello-world:0.2
 
 .. note::
 
@@ -284,13 +283,14 @@ Let's deploy the app with Juju:
 
   .. code-block:: bash
 
-    juju deploy ./charm/fastapi-hello-world_amd64.charm
-    --resource app-image=fastapi-hello-world:0.2
+    juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
+      --resource app-image=fastapi-hello-world:0.2
 
 Integrate with MySQL
 --------------------
 
-Deploy a MySQL database and integrate it with your application.
+With everything in place, you're ready to deploy a MySQL database and integrate
+it with your application.
 The 12-factor tooling handles the relation data and injects
 the connection string into your app container.
 
@@ -314,9 +314,13 @@ variable will be populated with the credentials to access the MySQL unit.
 Verify the database is working
 ------------------------------
 
-Verify the relation by creating a user through your API.
+As a final step, verify the relation by creating a user through your API.
 
-Find the application IP using ``juju status``.
+First, get the application's IP:
+
+.. code-block:: bash
+
+    juju status
 
 Send a POST request:
 

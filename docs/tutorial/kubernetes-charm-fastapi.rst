@@ -359,7 +359,7 @@ pack, subsequent charm packings are faster.
 
     See the :literalref:`pack<ref_commands_pack>` command reference.
 
-.. _deploy-the-fastapi-app:
+.. _write-your-first-kubernetes-charm-for-a-fastapi-app-deploy-the-fastapi-app:
 
 Deploy the FastAPI app
 ----------------------

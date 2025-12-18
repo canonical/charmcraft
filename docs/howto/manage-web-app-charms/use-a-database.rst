@@ -15,7 +15,7 @@ Prerequisites
 
 - A working FastAPI application charmed with 12-factor tooling. This guide will be
   following the :ref:`tutorial up until you deploy the app
-  <deploy-the-fastapi-app>`.
+  <write-your-first-kubernetes-charm-for-a-fastapi-app-deploy-the-fastapi-app>`.
 - A Juju model
 - Basic familiarity with `SQLAlchemy <https://www.sqlalchemy.org/>`_ and
   `Alembic <https://alembic.sqlalchemy.org/en/latest/>`_.
@@ -129,7 +129,7 @@ Set up automated updates
 
 Create  a ``migrate.sh`` script for our migration commands so that 12-Factor
 app tooling can automatically run your upgrades. This file will automatically run
-when a database integration event happens (such as created, changed, or departed).
+when a database integration event happens (such as ``created``, ``changed```, or ``departed``).
 
 .. code-block:: bash
     :caption: migrate.sh
@@ -204,11 +204,6 @@ Update ``rockcraft.yaml``
 We need to add two new parts into our ``rockcraft.yaml`` file to copy
 the Alembic related files and packages needed to run the database migrations.
 
-.. warning::
-
-  Do not forget to change the version to ``0.2`` while updating the ``rockcraft.yaml``
-  file
-
 .. code-block:: yaml
     :caption: rockcraft.yaml
     :emphasize-lines: 6,24-37
@@ -218,7 +213,7 @@ the Alembic related files and packages needed to run the database migrations.
 
     name: fastapi-hello-world
     base: ubuntu@24.04 # the base environment for this FastAPI application
-    version: '0.18' # just for humans. Semantic versioning is recommended
+    version: '0.2' # just for humans. Semantic versioning is recommended
     summary: A summary of your FastAPI application # 79 char long summary
     description: |
         This is fastapi project's description. You have a paragraph or two to tell the
@@ -254,27 +249,29 @@ the Alembic related files and packages needed to run the database migrations.
 
 Pack the rock and upload it to the local container registry:
 
-.. code-block:: bash
+.. tabs::
 
-    rockcraft pack
+    .. group-tab:: MicroK8s
+        .. code-block:: bash
 
-    rockcraft.skopeo copy \
-      --insecure-policy \
-      --dest-tls-verify=false \
-      oci-archive:fastapi-hello-world_0.2_$(dpkg --print-architecture).rock \
-      docker://localhost:32000/fastapi-hello-world:0.2
+            rockcraft pack
 
+            rockcraft.skopeo copy \
+            --insecure-policy \
+            --dest-tls-verify=false \
+            oci-archive:fastapi-hello-world_0.2_$(dpkg --print-architecture).rock \
+            docker://localhost:32000/fastapi-hello-world:0.2
 
-.. note::
+    .. group-tab:: Canonical K8s
+        .. code-block:: bash
 
-  If you are using Canonical K8s instead of MicroK8s you need to use this command
-  to upload to local registry:
+            rockcraft pack
 
-  .. code-block:: bash
-
-    sudo /snap/k8s/current/bin/ctr --address /run/containerd/containerd.sock
-    --namespace k8s.io images import --base-name docker.io/library/fastapi-hello-world
-    ./fastapi-hello-world_0.2_$(dpkg --print-architecture).rock
+            sudo /snap/k8s/current/bin/ctr \
+            --address /run/containerd/containerd.sock \
+            --namespace k8s.io images import \
+            --base-name docker.io/library/fastapi-hello-world \
+            ./fastapi-hello-world_0.2_$(dpkg --print-architecture).rock
 
 Update ``charmcraft.yaml``
 --------------------------
@@ -295,20 +292,20 @@ Deploy the app
 
 Deploy the app with Juju:
 
-.. code-block:: bash
+.. tabs::
 
-    juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
-      --resource app-image=localhost:32000/fastapi-hello-world:0.2
+    .. group-tab:: MicroK8s
+        .. code-block:: bash
 
-.. note::
+            juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
+            --resource app-image=localhost:32000/fastapi-hello-world:0.2
 
-  If you are using Canonical Kubernetes instead of MicroK8s you
-  need to use this command to deploy your charm:
+    .. group-tab:: Canonical K8s
+        .. code-block:: bash
 
-  .. code-block:: bash
+            juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
+            --resource app-image=fastapi-hello-world:0.2
 
-    juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
-      --resource app-image=fastapi-hello-world:0.2
 
 Integrate with MySQL
 --------------------

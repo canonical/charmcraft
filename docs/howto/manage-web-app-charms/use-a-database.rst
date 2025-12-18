@@ -24,8 +24,8 @@ Prerequisites
 Prepare the environment
 -----------------------
 
-MySQL requires a specific Python driver. Ensure your ``requirements.txt`` includes
-a MySQL driver compatible with SQLAlchemy, such as pymysql.
+MySQL requires a specific Python driver. We will use  pymysql, ensure your
+``requirements.txt`` includes it.
 
 .. code-block::
     :caption: requirements.txt
@@ -116,8 +116,8 @@ Generate a migration script
 
 Create the revision file that instructs the database how to create the ``users`` table.
 This command requires us to connect to the database, but since we do not have access
-to the database, we will use SQLite instead by setting the enviroment variable to
-a non-existent SQLite instance:
+to the database, we will use SQLite as an empty database for only this step by setting
+the enviroment variable to a non-existent SQLite instance:
 
 .. code-block:: bash
 
@@ -128,9 +128,8 @@ Set up automated updates
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create  a ``migrate.sh`` script for our migration commands so that 12-Factor
-can automatically run your upgrades. This file will automatically run when a 
-database integration event happens
-(such as created, changed, or departed).
+app tooling can automatically run your upgrades. This file will automatically run
+when a database integration event happens (such as created, changed, or departed).
 
 .. code-block:: bash
     :caption: migrate.sh
@@ -138,8 +137,8 @@ database integration event happens
     alembic upgrade head
 
 
-Create engine and run
-~~~~~~~~~~~~~~~~~~~~~
+Write the database connection code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now it's time to set up the database connection. The application should read
 the connection string from the ``MYSQL_DB_CONNECT_STRING`` environment variable.
@@ -212,21 +211,46 @@ the Alembic related files and packages needed to run the database migrations.
 
 .. code-block:: yaml
     :caption: rockcraft.yaml
+    :emphasize-lines: 6,24-37
+
+    # See https://documentation.ubuntu.com/rockcraft/1.16.0/reference/extensions/fastapi-framework
+    # For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
+
+    name: fastapi-hello-world
+    base: ubuntu@24.04 # the base environment for this FastAPI application
+    version: '0.18' # just for humans. Semantic versioning is recommended
+    summary: A summary of your FastAPI application # 79 char long summary
+    description: |
+        This is fastapi project's description. You have a paragraph or two to tell the
+        most important story about it. Keep it under 100 words though,
+        we live in tweetspace and your description wants to look good in the
+        container registries out there.
+    # the platforms this rock should be built on and run on.
+    # you can check your architecture with `dpkg --print-architecture`
+    platforms:
+        amd64:
+        # arm64:
+        # ppc64el:
+        # s390x:
+
+    extensions:
+    - FastAPI-framework
 
     parts:
-      Alembic:
-        plugin: dump
-        source: .
-        organize:
-          alembic: app/alembic
-          alembic.ini: app/alembic.ini
-          database.py: app/database.py
-          models.py: app/models.py
-        stage:
-        - app/alembic
-        - app/alembic.ini
-        - app/database.py
-        - app/models.py
+        alembic:
+            plugin: dump
+            source: .
+            organize:
+            alembic: app/alembic
+            alembic.ini: app/alembic.ini
+            database.py: app/database.py
+            models.py: app/models.py
+            stage:
+            - app/alembic
+            - app/alembic.ini
+            - app/database.py
+            - app/models.py
+
 
 Pack the rock and upload it to the local container registry:
 

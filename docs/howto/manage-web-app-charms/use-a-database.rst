@@ -24,8 +24,8 @@ Prerequisites
 Prepare the environment
 -----------------------
 
-MySQL requires a specific Python driver. We will use  pymysql, ensure your
-``requirements.txt`` includes it.
+For Python projects, MySQL requires the pymysql driver. Add it to
+``requirements.txt``.
 
 .. code-block::
     :caption: requirements.txt
@@ -42,7 +42,7 @@ follows the format ``mysql+pymysql://user:pass@host/db``.
 Declare models
 --------------
 
-First, define the structure of your data. We will create a simple ``User``
+First, define the structure of your data. Create a simple ``User``
 model using SQLAlchemy's declarative system.
 
 Create a file named ``models.py``:
@@ -114,10 +114,10 @@ adhering to 12-factor principles.
 Generate a migration script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create the revision file that instructs the database how to create the ``users`` table.
-This command requires us to connect to the database, but since we do not have access
-to the database, we will use SQLite as an empty database for only this step by setting
-the enviroment variable to a non-existent SQLite instance:
+For migration, you need a revision file that instructs the database how to create the ``users`` table.
+This command requires you to connect to the database, but since access isn't available,
+use SQLite as an empty database for only this step. Set the environment variable
+to a non-existent SQLite instance:
 
 .. code-block:: bash
 
@@ -201,7 +201,7 @@ Create a simple endpoint in ``app.py`` to test the connection:
 Update ``rockcraft.yaml``
 -------------------------
 
-We need to add two new parts into our ``rockcraft.yaml`` file to copy
+Next, add two parts to ``rockcraft.yaml`` file that copy
 the Alembic related files and packages needed to run the database migrations.
 
 .. code-block:: yaml
@@ -236,10 +236,10 @@ the Alembic related files and packages needed to run the database migrations.
             plugin: dump
             source: .
             organize:
-            alembic: app/alembic
-            alembic.ini: app/alembic.ini
-            database.py: app/database.py
-            models.py: app/models.py
+                alembic: app/alembic
+                alembic.ini: app/alembic.ini
+                database.py: app/database.py
+                models.py: app/models.py
             stage:
             - app/alembic
             - app/alembic.ini

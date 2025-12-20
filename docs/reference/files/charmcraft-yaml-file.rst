@@ -62,6 +62,13 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
     change them, and it is better to be consistent within a charm then to have
     some action names be dashed and some be underscored.
 
+.. admonition:: Best practice
+    :class: hint
+
+    Always explicitly include the ``additionalProperties`` key. The default value is
+    different in Juju 3 (``true``) and Juju 4 (``false``), so explicitly including it
+    in the actions definition ensures consistent behaviour.
+
 
 .. _charmcraft-yaml-key-analysis:
 

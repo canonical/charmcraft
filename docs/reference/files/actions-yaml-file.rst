@@ -143,7 +143,9 @@ validation, defined as follows:
     2. It does not currently support the JSON Schema concepts ``$schema`` and ``$ref``.
     3. The ``additionalProperties`` and ``required`` keys from JSON Schema can be used
        at the top-level of an action (adjacent to ``description`` and ``params``), but
-       also used anywhere within a nested schema.
+       also used anywhere within a nested schema. Note that Juju 4 flips the default
+       used in JSON Schema (Juju 3 and JSON Schema use a ``true`` default, Juju 4 uses
+       a default of ``false``).
 
         See more: `JSON schema <https://www.learnjsonschema.com/>`_
 
@@ -222,8 +224,9 @@ Juju will parse additional keywords as a `JSON Schema`_ with some limitations:
   type `object <jsonschema-object>`_ with a map of ``properties`` corresponding to
   each key in ``params``. This instance is what Juju uses to validate user input.
 
-It is highly recommended to provide ``additionalProperties: false`` to avoid user
-frustration with accidental typos.
+It is highly recommended to explictly include ``additionalProperties`` to have consistent
+behaviour in Juju 3 and Juju 4. Using the Juju 4 default, ``additionalProperties: false``,
+avoids user frustration with accidental typos.
 
 .. _JSON-Schema: https://json-schema.org/
 .. _jsonschema-object: https://json-schema.org/understanding-json-schema/reference/object.html

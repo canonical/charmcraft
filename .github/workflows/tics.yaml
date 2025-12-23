@@ -1,3 +1,5 @@
+# Testing changes from https://github.com/canonical/starflow/pull/101
+# TODO: Revert to @main after starflow PR #101 is merged
 name: TICS
 on:
   push:
@@ -18,7 +20,7 @@ on:
 
 jobs:
   TICS:
-    uses: canonical/starflow/.github/workflows/tics.yaml@main
+    uses: canonical/starflow/.github/workflows/tics.yaml@copilot/use-pristine-ubuntu-action
     with:
       project: "charmcraft"
     secrets: inherit

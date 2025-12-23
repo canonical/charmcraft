@@ -1,3 +1,5 @@
+# Testing changes from https://github.com/canonical/starflow/pull/101
+# TODO: Revert to @main after starflow PR #101 is merged
 name: QA
 on:
   push:
@@ -12,9 +14,9 @@ on:
 
 jobs:
   lint:
-    uses: canonical/starflow/.github/workflows/lint-python.yaml@main
+    uses: canonical/starflow/.github/workflows/lint-python.yaml@copilot/use-pristine-ubuntu-action
   test:
-    uses: canonical/starflow/.github/workflows/test-python.yaml@main
+    uses: canonical/starflow/.github/workflows/test-python.yaml@copilot/use-pristine-ubuntu-action
     with:
       # Limiting to amd64 is a workaround for https://github.com/canonical/charmcraft/issues/2018
       # Once that's resolved we should run fast and slow tests on ARM64 Ubuntu too.

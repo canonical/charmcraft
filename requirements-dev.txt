@@ -54,7 +54,7 @@ pymacaroons==0.13.0
 pynacl==1.5.0
 pyproject-api==1.6.1
 pyrfc3339==1.1
-pyright==1.1.377
+pyright==1.1.408
 pytest==8.0.2
 pytest-check==2.3.1
 pytest-cov==4.1.0

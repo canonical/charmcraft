@@ -224,7 +224,7 @@ Juju will parse additional keywords as a `JSON Schema`_ with some limitations:
   type `object <jsonschema-object>`_ with a map of ``properties`` corresponding to
   each key in ``params``. This instance is what Juju uses to validate user input.
 
-It is highly recommended to explictly include ``additionalProperties`` to have consistent
+Explicitly include ``additionalProperties``, which provides consistent
 behaviour between Juju 3 and Juju 4. Using the Juju 4 default, ``additionalProperties: false``,
 avoids user frustration with accidental typos.
 

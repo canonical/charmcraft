@@ -11,12 +11,15 @@ from charm import SERVICE_NAME, {{ class_name }}
 
 CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
+# A minimal Pebble layer for our testing.Container objects.
+# Our charm doesn't retrieve the service command or the check URL
+# from Pebble, so this layer doesn't need a real command or URL.
 MOCK_LAYER = ops.pebble.Layer(
     {
         "services": {
             SERVICE_NAME: {
                 "override": "replace",
-                "command": "/bin/foo",  # The specific command isn't important for unit tests.
+                "command": "mock-command",
                 "startup": "enabled",
             }
         },
@@ -27,7 +30,7 @@ MOCK_LAYER = ops.pebble.Layer(
                 "threshold": 3,
                 "startup": "enabled",
                 "http": {
-                    "url": "http://localhost:8000/version",  # The specific URL isn't important.
+                    "url": "http://localhost:1234/mock-endpoint",
                 },
             }
         },

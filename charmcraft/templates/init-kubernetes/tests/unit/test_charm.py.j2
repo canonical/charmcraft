@@ -11,7 +11,7 @@ from charm import SERVICE_NAME, {{ class_name }}
 
 CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
-layer = ops.pebble.Layer(
+MOCK_LAYER = ops.pebble.Layer(
     {
         "services": {
             SERVICE_NAME: {
@@ -52,7 +52,7 @@ def test_pebble_ready(monkeypatch: pytest.MonkeyPatch):
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers={"base": layer},
+        layers={"base": MOCK_LAYER},
         service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )
@@ -81,7 +81,7 @@ def test_pebble_ready_service_not_ready():
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers={"base": layer},
+        layers={"base": MOCK_LAYER},
         service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )

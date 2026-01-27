@@ -9,7 +9,7 @@ jobs:
       - name: Install ty
         id: snap-install
         run: |
-          echo -n jobs="$(sudo snap install --no-wait --edge astral-ty)" >> $GITHUB_OUTPUT
+          echo -n jobs="$(sudo snap install --no-wait --beta astral-ty)" >> $GITHUB_OUTPUT
       - name: Check out code
         uses: actions/checkout@v6
       - name: Set up uv with caching

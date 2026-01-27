@@ -20,6 +20,10 @@ platforms:
   amd64:
   arm64:
 
+assumes:
+  - juju >= 3.6
+  - k8s-api
+
 parts:
   charm:
     plugin: uv

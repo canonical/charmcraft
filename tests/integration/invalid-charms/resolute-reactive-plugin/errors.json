@@ -13,7 +13,6 @@
     },
     "ctx": {
       "error": "Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@26.04'"
-    },
-    "url": "https://errors.pydantic.dev/2.11/v/value_error"
+    }
   }
 ]

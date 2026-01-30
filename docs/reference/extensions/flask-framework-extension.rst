@@ -12,6 +12,7 @@ application. This document describes all the keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _flask-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
 ----------------------------------------------
@@ -44,21 +45,31 @@ charm can set it by running ``juju config <application> token=<token>``.
 .. |framework| replace:: Flask
 .. |framework_prefix| replace:: FLASK
 
+.. _flask-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _flask-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables.rst
+
+.. _flask-framework-extension-http-proxy:
+
 .. include:: /reuse/reference/extensions/http_proxy.rst
 
+.. _flask-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
 
 Extra services defined in the file
-:external+rockcraft:ref:`rockcraft.yaml <rockcraft.yaml_reference>`
+:external+rockcraft:ref:`rockcraft.yaml <reference-rockcraft-yaml>`
 with names ending in ``-worker`` or ``-scheduler`` will be passed the same environment
 variables as the main application. If there is more than one unit in the application,
 the services with the name ending in ``-worker`` will run in all units. The services
 with name ending in ``-scheduler`` will only run in one of the units of the application.
 
+.. _flask-framework-extension-observability:
 
 Observability
 -------------
@@ -112,6 +123,7 @@ tables during the migration.
 If you prefer you can also use different tooling for migration, for example `Alembic
 <https://alembic.sqlalchemy.org/en/latest/>`__.
 
+.. _flask-framework-extension-secrets:
 
 Secrets
 -------

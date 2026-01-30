@@ -829,7 +829,7 @@ in a number of typical ways. But there is a lot more to explore:
       - `Matrix channel <https://matrix.to/#/#12-factor-charms:ubuntu.com>`_
     * - "What is...?"
       - :external+rockcraft:ref:`spring-boot-framework extension in Rockcraft
-        <spring-boot-framework-reference>`
+        <reference-spring-boot-framework>`
 
         :ref:`spring-boot-framework extension in Charmcraft
         <spring-boot-framework-extension>`

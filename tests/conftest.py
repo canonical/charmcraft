@@ -74,7 +74,9 @@ platforms:
 
 parts:
   charm:
-    plugin: charm
+    plugin: python
+    source: .
+    python-requirements: [requirements.txt]
 """
 
 

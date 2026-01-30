@@ -13,6 +13,7 @@ keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. _django-framework-extension-database:
 
 Database requirement
 --------------------
@@ -29,6 +30,7 @@ for every application, such as
 :ref:`how-to guide <manage-12-factor-app-charms>` for how to deploy
 a database and integrate the Django application with it.
 
+.. _django-framework-extension-config-options:
 
 ``config.options`` key
 ----------------------
@@ -68,22 +70,32 @@ will be set automatically.
 .. |framework| replace:: Django
 .. |framework_prefix| replace:: DJANGO
 
+.. _django-framework-extension-relations:
+
 .. include:: /reuse/reference/extensions/integrations.rst
+
+.. _django-framework-extension-environment-variables:
+
 .. include:: /reuse/reference/extensions/environment_variables.rst
+
+.. _django-framework-extension-relations-http-proxy:
+
 .. include:: /reuse/reference/extensions/http_proxy.rst
 
+.. _django-framework-extension-worker-scheduler-services:
 
 Worker and Scheduler Services
 -----------------------------
 
 Extra services defined in the file
-:external+rockcraft:ref:`rockcraft.yaml <rockcraft.yaml_reference>`
+:external+rockcraft:ref:`rockcraft.yaml <reference-rockcraft-yaml>`
 with names ending in ``-worker`` or ``-scheduler`` will be passed the
 same environment variables as the main application. If there is more
 than one unit in the application, the services with the name ending in
 ``-worker`` will run in all units. The services with name ending in
 ``-scheduler`` will only run in one of the units of the application.
 
+.. _django-framework-extension-observability:
 
 Observability
 -------------
@@ -136,6 +148,7 @@ locking any tables for the duration of the migration.
 
 If the migration script fails, the app won't start, and the app charm becomes blocked.
 
+.. _django-framework-extension-secrets:
 
 Secrets
 -------

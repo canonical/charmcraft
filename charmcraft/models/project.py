@@ -41,6 +41,7 @@ from typing_extensions import Self, override
 
 from charmcraft import const, preprocess
 from charmcraft.const import (
+    SUPPORTED_BASE_STRINGS,
     BaseStr,
     BuildBaseStr,
 )
@@ -904,8 +905,11 @@ class PlatformCharm(CharmProject):
     @pydantic.model_validator(mode="after")
     def _validate_dev_base_needs_build_base(self) -> Self:
         if not self.build_base and self.base in const.DEVEL_BASE_STRINGS:
+            recommended_base = (
+                self.base if self.base in SUPPORTED_BASE_STRINGS else "ubuntu@devel"
+            )
             raise ValueError(
-                f"Base {self.base} requires a build-base (recommended: 'build-base: ubuntu@devel')"
+                f"Base {self.base} requires a build-base (recommended: 'build-base: {recommended_base}')"
             )
         return self
 

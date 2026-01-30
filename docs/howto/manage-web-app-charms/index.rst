@@ -98,4 +98,4 @@ ready to use it.
    :maxdepth: 2
 
    Use your 12-factor app charm <use-web-app-charm>
-
+   Use a database with your 12-factor app charm <use-a-database>

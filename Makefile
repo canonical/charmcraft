@@ -130,6 +130,8 @@ else
 	# Work around installation conflict in GH CI.
 	if [ "${CI:-nope}" != "nope" ]; then sudo rm -f /usr/local/bin/idle* /usr/local/bin/pip* /usr/local/bin/py* ; fi
 	brew install skopeo
+	brew install gnutls
+	brew postinstall gnutls
 	brew install libgit2@1.7  # For building pygit2
 	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
 endif

@@ -3,10 +3,10 @@
 Manage charms
 =============
 
-    See first: :external+juju:ref:`Juju | Charm <charm>`,
-    :external+juju:ref:`Juju | Manage charms <manage-charms>`
-
-.. _initialise-a-charm:
+This guide shows how to initialise, configure, pack, and publish a
+:external+juju:ref:`charm <charm>`. You should understand
+:external+juju:ref:`how to manage charms or bundles <manage-charms>`
+before you begin.
 
 Initialise a charm
 ------------------
@@ -57,89 +57,75 @@ with useful content.
         ./src:
         charm.py
 
-The command also allows you to not specify any profile (in that case you get the
-``kubernetes`` profile -- a minimal profile with scaffolding for a Kubernetes charm)
-and has flags that you can use to specify a different directory to operate
-in, a charm name different from the name of the root directory, etc.
+The command also allows you to not specify any :ref:`profile <profile>`
+(in that case you get the ``kubernetes`` profile -- a minimal profile
+with scaffolding for a Kubernetes charm) and has flags that you can use
+for other operations. For example, to specify:
 
-    See more: :ref:`ref_commands_revisions`, :ref:`profile`, :ref:`files`
-
-    See more: :ref:`manage-extensions`
+- a different directory to operate in
+- a charm name different from the name of the root directory.
 
 .. _add-charm-project-metadata-an-icon-docs:
 
 Add charm project metadata, an icon, docs
 -----------------------------------------
 
+You can add metadata, links, documentation, and an icon to your charm project.
 
 Specify that the project is a charm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify that the project is a charm, set the ``type`` key to ``charm`` in
-your project file:
+To specify that the project is a charm, set the
+:ref:`charmcraft-yaml-key-type` key to ``charm`` in your project file:
 
 .. code-block:: yaml
 
     type: charm
-
-..
-
-    See more: :ref:`charmcraft-yaml-key-type`
 
 .. _specify-a-name:
 
 Specify a name
 ~~~~~~~~~~~~~~
 
-To specify a pack-and-deploy name for your charm, in your charm's project file, specify
-the ``name`` key. E.g.,
+To specify a pack-and-deploy :ref:`charmcraft-yaml-key-name` for your
+charm, in your charm's project :ref:`file <files>`, specify the ``name``
+key. For example:
 
 .. code-block:: yaml
 
     name: traefik-k8s
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-name`
-
 
 Specify a title
 ~~~~~~~~~~~~~~~
 
-To specify a title for your charm's page on Charmhub, in your charm's project file,
-specify a value for the ``title`` key. E.g.,
+To specify a :ref:`charmcraft-yaml-key-title` for your charm's page on
+Charmhub, in your charm's project file, specify a value for the ``title``
+key. For example:
 
 .. code-block:: yaml
 
     title: |
       Traefik Ingress Operator for Kubernetes
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-title`
-
 
 Add a summary
 ~~~~~~~~~~~~~
 
-To add a summary line for your charm, in your charm's project file, specify a
-value for the ``summary`` key. E.g.,
+To add a :ref:`charmcraft-yaml-key-summary` line for your charm, in your
+charm's project file, specify a value for the ``summary`` key. For example:
 
 .. code-block:: yaml
 
     summary: |
       A Juju charm to run a Traefik-powered ingress controller on Kubernetes.
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-summary`
-
-
 Add a description
 ~~~~~~~~~~~~~~~~~
 
-To add a longer description for your charm, in your charm's project
-file, specify a value for the ``description`` key. E.g.,
+To add a longer :ref:`charmcraft-yaml-key-description` for your charm,
+in your charm's project file, specify a value for the ``description``
+key. For example:
 
 .. code-block:: yaml
 
@@ -147,35 +133,24 @@ file, specify a value for the ``description`` key. E.g.,
       A Juju-operated Traefik operator that routes requests from the outside of a
       Kubernetes cluster to Juju units and applications.
 
-..
-
-
-    See more: :ref:`charmcraft-yaml-key-description`
-
-
 Add contact information
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 To add maintainer contact information for a charm, in your charm's project
 file, specify a value for the :ref:`links.contact <charmcraft-yaml-key-links-contact>`
-key. E.g.,
+key. For example:
 
 .. code-block:: yaml
 
     links:
       contact: Please send your answer to Old Pink, care of the Funny Farm, Chalfont
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-contact`
-
-
 Add a link to source code
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To add a link to the source code for a charm, in your charm's project
-file, specify an item under the :ref:`links.source <charmcraft-yaml-key-links-source>`
-key. E.g.,
+To add a :ref:`link <charmcraft-yaml-key-links>` to the source code for a charm,
+in your charm's project file, specify an item under the
+:ref:`links.source <charmcraft-yaml-key-links-source>` key. For example:
 
 .. code-block:: yaml
 
@@ -183,17 +158,13 @@ key. E.g.,
       source:
       - https://github.com/canonical/traefik-k8s-operator
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-links`
-
 
 Add a link to the bug tracker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To add a link to the bug tracker for a charm, in your charm's project
 file, specify an item under the :ref:`links.issues <charmcraft-yaml-key-links-website>`
-key. E.g.,
+key. For example
 
 .. code-block:: yaml
 
@@ -201,27 +172,18 @@ key. E.g.,
       issues:
         - https://github.com/canonical/traefik-k8s-operator/issues
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-links`
-
-
 Add a link to the website
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If your charm has a website outside of Charmhub, to add a link to this website, in your
 charm's project file, specify an item under the :ref:`links.website
-<charmcraft-yaml-key-links-website>` key. E.g.,
+<charmcraft-yaml-key-links-website>` key. For example:
 
 .. code-block:: yaml
 
     links:
       website:
       - https://charmed-kubeflow.io/
-
-..
-
-    See more: :ref:`charmcraft-yaml-key-links`
 
 .. _add-docs:
 
@@ -241,10 +203,6 @@ in your charm's project file under the
 
     links:
       documentation: https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778
-
-..
-
-    See more: :ref:`charmcraft-yaml-key-links`
 
 The **Description** tab can contain additional documentation, such as tutorials or
 how-to guides.
@@ -272,8 +230,8 @@ a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description*
 Add terms of use
 ~~~~~~~~~~~~~~~~
 
-To add terms of use for your charm, in your charm's project file, specify a
-value for the ``terms`` key. E.g.,
+To add :ref:`charmcraft-yaml-key-terms` of use for your charm, in your
+charm's project file, specify a value for the ``terms`` key. For example:
 
 .. code-block:: yaml
 
@@ -281,15 +239,10 @@ value for the ``terms`` key. E.g.,
       - Butterscotch is regal
       - Cara is adorable
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-terms`
-
-
 Add an icon
 ~~~~~~~~~~~
 
-    See more: :ref:`manage-icons`
+:ref:`manage-icons` describes how to add and manage icons.
 
 
 .. _add-runtime-details-to-a-charm:
@@ -297,44 +250,38 @@ Add an icon
 Add runtime details to a charm
 ------------------------------
 
+You can specify runtime requirements, resource needs, and operational
+features for your charm.
 
 Require a specific Juju version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To require a specific Juju version for your charm, in your charm's project file,
-specify the ``assumes`` key. E.g.,
+specify the :ref:`charmcraft-yaml-key-assumes` key. For example:
 
 .. code-block:: yaml
 
     assumes:
       - juju >= 3.5
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-assumes`
-
 
 Require a Kubernetes cloud
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To require a Kubernetes cloud for your charm, in your charm's
-project file, specify the ``assumes`` key. E.g.,
+project file, specify the ``assumes`` key. For example:
 
 .. code-block:: yaml
 
     assumes:
       - k8s-api
 
-..
-
-
-  See more: :ref:`charmcraft-yaml-key-assumes`
-
 Require a specific base and platforms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To require a specific base and platforms for your charm, in your charm's
-project file, specify the ``base``, and ``platforms`` keys. E.g.,
+To require a specific :ref:`charmcraft-yaml-key-base` and platforms for your
+charm, in your charm's project file, specify the ``base``, and ``platforms``
+keys. For example:
 
 .. note::
     In Charmcraft < 3.0 this was done via a single key: ``bases``.
@@ -366,148 +313,111 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
         # The run time architecture
         build-for: <list-of-arch> | <arch>
 
-..
-
-    See more: :ref:`charmcraft-yaml-key-base`, :ref:`charmcraft-yaml-key-build-base`
+If the ``base`` is a development base, use :ref:`charmcraft-yaml-key-build-base`.
 
 
 Specify container requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify container requirements, in your charm's project file, specify the
-``containers`` key.
-
-    See more: :ref:`charmcraft-yaml-key-containers`
-
+To specify :ref:`container <charmcraft-yaml-key-containers>` requirements,
+in your charm's project file, specify the ``containers`` key.
 
 Specify associated resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify the resources associated with the charm, in your charm's project
-file, specify the ``resources`` key.
-
-    See :ref:`manage-resources`.
-
+To specify the :ref:`resources <manage-resources>` associated with the charm,
+in your charm's project file, specify the ``resources`` key.
 
 Specify device requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify device requirements, in your charm's project file, specify the
-``devices`` key.
-
-    See more: :ref:`charmcraft-yaml-key-devices`
-
-.. _manage-storage:
+To specify :ref:`device <charmcraft-yaml-key-devices>` requirements, in
+your charm's project file, specify the ``devices`` key.
 
 Manage storage
 ~~~~~~~~~~~~~~
 
-To specify storage requirements, in your charm's project file, specify
-the ``storage`` key.
-
-    See more: :ref:`charmcraft-yaml-key-storage`
+To specify :ref:`charmcraft-yaml-key-storage` requirements, in your
+charm's project file, specify the ``storage`` key.
 
 
 Specify extra binding requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To specify extra binding requirements, in your charm's project file,
-specify the ``extra-bindings`` key.
-
-    See more: :ref:`charmcraft-yaml-key-extra-bindings`
-
+To specify :ref:`extra binding <charmcraft-yaml-key-extra-bindings>`
+requirements, in your charm's project file, specify the ``extra-bindings`` key.
 
 Require subordinate deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To require subordinate deployment for your charm (i.e., for it to be deployed to the
-same machine as another charm, called its *principal*), in your charm's
-project file, specify the ``subordinate`` key.
-
-    See more: :ref:`charmcraft-yaml-key-subordinate`
+To require :ref:`charmcraft-yaml-key-subordinate` deployment for your charm
+(i.e., for it to be deployed to the same machine as another charm, called
+its *principal*), in your charm's project file, specify the ``subordinate`` key.
 
 .. _manage-actions:
 
 Manage actions
 ~~~~~~~~~~~~~~
 
-    See first: :external+juju:ref:`Juju | Action <action>`,
-    :external+juju:ref:`Juju | Manage actions <manage-actions>`
+First, understand :external+juju:ref:`how to manage actions <manage-actions>` in Juju.
 
-To declare an action in your charm, in your charm's project file,
-specify the ``actions`` key.
-
-    See more: :ref:`charmcraft-yaml-key-actions`
-
-    See next: :external+ops:ref:`Ops | Manage actions <manage-actions>`
+To declare an :external+juju:ref:`action <action>` in your charm, in your
+charm's project file, specify the :ref:`charmcraft-yaml-key-actions` key.
 
 .. _manage-the-app-configuration:
 
 Manage the app configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    See first: :external+juju:ref:`Juju | Configuration > Application configuration
-    <application-configuration>`,
-    :external+juju:ref:`Juju | Manage applications > Configure
-    <configure-an-application>`
+First, see :external+juju:ref:`application-configuration` and
+:external+juju:ref:`configure-an-application` to understand how to
+configure an application.
 
 To declare a configuration option for your charm, in your charm's project file,
-specify the ``config`` key.
-
-
-    See more: :ref:`charmcraft-yaml-key-config`
-
-    See next: :external+ops:ref:`Ops | Manage configuration <manage-configuration>`
+specify the :ref:`charmcraft-yaml-key-config` key.
 
 .. _manage-relations:
 
 Manage relations
 ~~~~~~~~~~~~~~~~
 
-    See first: :external+juju:ref:`Juju | Relation <relation>`,
-    :external+juju:ref:`Juju | Manage relations <manage-relations>`
+First, understand :external+juju:ref:`how to manage relations <manage-relations>`
+in Juju.
 
-    To declare a relation endpoint in your charm, in your charm's project file,
-    specify the ``peers``, ``provides``, or ``requires`` key.
-
-    See more: :ref:`charmcraft-yaml-key-peers`
-
-    See more: :external+ops:ref:`Ops | Manage relations <manage-relations>`
+To declare a :external+juju:ref:`relation <relation>` endpoint in your
+charm, in your charm's project file, specify the ``peers``, ``provides``,
+or ``requires`` key.
 
 
 Specify necessary libs
 ~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-libraries`
+:ref:`manage-libraries` describes how to specify the necessary libraries.
 
 .. _manage-secrets:
 
 Manage secrets
 ~~~~~~~~~~~~~~
 
-    See first: :external+juju:ref:`Juju | Manage secrets <manage-secrets>`,
-    :external+juju:ref:`Juju | Secret <secret>`
+First, understand :external+juju:ref:`how to manage secrets <manage-secrets>`
+in Juju.
 
-To make your charm capable of accepting a user secret, in your charm's
-project file, specify the ``config`` key with the ``type`` subkey set to
-``secret``.
-
-    See more: :ref:`charmcraft-yaml-key-config`
-
-    See next: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`
-
+To make your charm capable of accepting a user :external+juju:ref:`secret <secret>`,
+in your charm's project file, specify the ``config`` key with the ``type``
+subkey set to ``secret``.
 
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-parts`
+:ref:`manage-parts` describes how to specify the necessary parts.
 
 .. _pack-a-charm:
 
 Pack a charm
 ------------
 
-To pack a charm directory, in the charm's root directory, run the command below:
+To :ref:`ref_commands_pack` a charm directory, in the charm's root directory,
+run:
 
 .. code-block:: bash
 
@@ -577,8 +487,6 @@ is just a zip file with metadata and the operator code itself.
 The command has a number of flags that allow you to specify a different charm directory
 to pack, whether to force pack if there are linting errors, etc.
 
-   See more: :ref:`ref_commands_pack`
-
 .. caution::
 
     **If you've declared any resources :** This will *not* pack the resources.
@@ -594,8 +502,6 @@ to pack, whether to force pack if there are linting errors, etc.
 
 ..
 
-    See next: :external+juju:ref:`Juju | Manage charms <manage-charms>`
-
 .. _publish-a-charm:
 
 Publish a charm on Charmhub
@@ -609,7 +515,8 @@ Publish a charm on Charmhub
 
 ..
 
-   See more: :ref:`manage-the-current-charmhub-user`
+You should also understand how to
+:ref:`manage the current Charmhub user <manage-the-current-charmhub-user>`.
 
 2. Register your charm's name (the one you specified in ``charmcraft.yaml`` > ``name``):
 
@@ -619,17 +526,17 @@ Publish a charm on Charmhub
 
    ..
 
-   See more: :ref:`manage-names`
-
    .. note::
 
        This automatically creates 4 channels, all with track ``latest`` but with
        different risk levels, namely, edge, beta, candidate, stable, respectively.
 
-   See more: :ref:`manage-channels`.
+You should also understand how to :ref:`manage names <manage-names>` and
+:ref:`manage channels <manage-channels>`.
 
-3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
-   your charm's filepath. E.g., if you are in the charm's root directory,
+3. :ref:`Upload <ref_commands_upload>` the charm to Charmhub: Use the
+``charmcraft upload`` command followed by the your charm's filepath.
+For example, if you are in the charm's root directory:
 
    .. code-block:: bash
 
@@ -641,15 +548,15 @@ Publish a charm on Charmhub
 
    ..
 
-   See more: :ref:`ref_commands_upload`
-
    .. note::
 
-       Each time you upload a charm to Charmhub, that creates a revision (unless
-       you upload the exact same file again). See more: :ref:`manage-charm-revisions`.
+       Each time you upload a charm to Charmhub, that creates a
+       :ref:`revision <manage-charm-revisions>` (unless you upload the exact
+       same file again).
 
-4. If your charm has associated resources: These are not packed with the rest of the
-   charm project, so you must upload them explicitly to Charmhub as well. For example:
+4. If your charm has associated :ref:`resources <manage-resources>`: These
+are not packed with the rest of the charm project, so you must upload them
+explicitly to Charmhub as well. For example:
 
    .. code-block:: bash
 
@@ -660,18 +567,15 @@ Publish a charm on Charmhub
 
        Revision 1 created of resource 'someresource' for charm 'my-awesome-charm'
 
-   ..
-
-   See more: :ref:`manage-resources`
-
    .. note::
 
-       Each time you upload a resource to Charmhub, that creates a revision (unless you
-       upload the exact same file again). See more: :ref:`manage-resource-revisions`.
+       Each time you upload a resource to Charmhub, that creates a
+       :ref:`revision <manage-resource-revisions>` (unless you upload the
+       exact same file again).
 
 5. Release the charm: To release a charm, release your revision of choice to the
    target release channel. For a charm that has a resource, also specify the
-   resource and its revision. E.g.,
+   resource and its revision. For example:
 
    .. code-block:: bash
 
@@ -682,30 +586,21 @@ Publish a charm on Charmhub
 
        Revision 1 of charm 'my-awesome-charm' released to beta (attaching resources: 'someresource' r1)
 
-..
-
-   See more: :ref:`manage-charm-revisions`
-
    .. note::
 
-       This automatically opens the channel. See more: :ref:`manage-channels`.
+       This automatically opens the :ref:`channel <manage-channels>`.
 
-   ..
+   .. tip::
 
-   See next: :external+juju:ref:`Juju | Deploy a charm <deploy-a-charm>`,
-   :external+juju:ref:`Juju | Update a charm <update-a-charm>`
-
-.. tip::
-
-    To update the charm on Charmhub, repeat the upload and release steps.
+       To update the charm on Charmhub, repeat the upload and release steps.
 
 .. important::
 
     Releasing a charm on Charmhub gives it a public URL. However, the charm will not
-    appear in the Charmhub search results until it has passed formal review. To request
-    formal review, reach out to the community to announce your charm and ask for a
-    review by an experienced community member. See more:
-    :external+ops:ref:`Ops | Make your charm discoverable <make-your-charm-discoverable>`.
+    appear in the Charmhub search results until it has passed formal review. To
+    :external+ops:ref:`make your charm discoverable <make-your-charm-discoverable>`,
+    reach out to the community to announce your charm and ask for a review
+    by an experienced community member.
 
     Also, the point of publishing and having a charm publicly listed on Charmhub is so
     others can reuse it and potentially contribute to it as well. To publicise your

@@ -7,6 +7,7 @@ environment:
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 
 prepare: |
+  tests.pkgs install unzip
   cd reactivecharm
 
   sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
@@ -29,3 +30,6 @@ execute: |
   cd reactivecharm
   charmcraft pack
   test -f reactive-test*.charm
+
+  # Verify that .build.manifest file is present in the charm
+  unzip -l reactive-test*.charm | MATCH ".build.manifest"

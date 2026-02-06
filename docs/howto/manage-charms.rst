@@ -391,7 +391,7 @@ To declare a configuration option for your charm, set the
 Manage relations
 ~~~~~~~~~~~~~~~~
 
-First, understand :external+juju:ref:`how to manage relations <manage-relations>`
+First, review :external+juju:ref:`how to manage relations <manage-relations>`
 in Juju.
 
 To declare a :external+juju:ref:`relation <relation>` endpoint in your

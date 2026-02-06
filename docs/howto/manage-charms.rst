@@ -414,7 +414,7 @@ During operation, Juju mediates charm secrets.
 how users work with charm secrets.
 
 To provide a user-defined secret in your charm, add an entry to the
-:ref:`config.options <charmcraft-yaml-key-config>` key, with ``type: secret``..
+:ref:`config.options <charmcraft-yaml-key-config>` key, with ``type: secret``.
 
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~

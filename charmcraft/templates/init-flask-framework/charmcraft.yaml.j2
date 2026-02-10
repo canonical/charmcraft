@@ -1,18 +1,12 @@
 # This file configures Charmcraft.
 # See https://juju.is/docs/sdk/charmcraft-config for guidance.
-# For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com 
+# For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
 
 name: {{ name }}
 
 type: charm
 
-bases:
-  - build-on:
-    - name: ubuntu
-      channel: "22.04"
-    run-on:
-    - name: ubuntu
-      channel: "22.04"
+base: ubuntu@24.04
 
 # the platforms this charm should be built on and run on.
 # you can check your architecture with `dpkg --print-architecture`

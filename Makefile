@@ -20,6 +20,12 @@ endif
 
 include common.mk
 
+ifeq ($(OS),Darwin)  # Support libgit2 on macos
+LDFLAGS += "-L/opt/homebrew/opt/libgit2@1.7/lib"
+CPPFLAGS += "-I/opt/homebrew/opt/libgit2@1.7/include"
+PKG_CONFIG_PATH += "/opt/homebrew/opt/libgit2@1.7/lib/pkgconfig"
+endif
+
 # common.mk globs too much, such as test expectations
 PRETTIER_FILES="tests/spread/**/task.yaml" "*.yaml" "*.md" "snap/snapcraft.yaml" ".github/**/*.{yml,yaml}"
 
@@ -126,14 +132,15 @@ ifneq ($(OS),Darwin)
 else ifeq ($(shell which brew),)
 	$(warning brew not installed. Please install dependencies yourself.)
 else
+ifeq ($(shell uname -m),x86_64)
 	brew install multipass
+endif
 	# Work around installation conflict in GH CI.
 	if [ "${CI:-nope}" != "nope" ]; then sudo rm -f /usr/local/bin/idle* /usr/local/bin/pip* /usr/local/bin/py* ; fi
 	brew install skopeo
 	brew install gnutls
 	brew postinstall gnutls
 	brew install libgit2@1.7  # For building pygit2
-	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
 endif
 
 .PHONY: schema

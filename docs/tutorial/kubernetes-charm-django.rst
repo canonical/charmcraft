@@ -125,7 +125,7 @@ Open the settings file of the app located at
 to allow all traffic:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/settings.py
+    :caption: ~/django-hello-world/django_hello_world/django_hello_world/settings.py
 
     ALLOWED_HOSTS = ['*']
 

@@ -22,7 +22,7 @@ async def root(user_agent: Annotated[str | None, Header()] = None):
         )
         conn.commit()
 
-    return {"message": os.getenv("APP_GREETING", "Hello World")}
+    return {"message": os.getenv("APP_GREETING")}
 
 
 @app.get("/visitors")

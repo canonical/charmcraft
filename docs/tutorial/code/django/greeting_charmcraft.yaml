@@ -3,5 +3,5 @@ config:
     greeting:
       description: |
         The greeting to be returned by the Django application.
-      default: "Hello, world!"
+      default: "Hello!"
       type: string

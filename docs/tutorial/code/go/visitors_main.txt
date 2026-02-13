@@ -30,9 +30,6 @@ func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
         }
 
         greeting, found := os.LookupEnv("APP_GREETING")
-        if !found {
-                greeting = "Hello, world!"
-        }
 
         fmt.Fprintln(w, greeting)
 }

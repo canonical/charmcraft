@@ -23,7 +23,7 @@ router.get('/', async function(req, res, next) {
       [timestamp, userAgent]
     );
 
-    const greeting = process.env["APP_GREETING"] || "Hello, world!";
+    const greeting = process.env["APP_GREETING"];
     res.send(greeting + "\n");
   } catch (error) {
     console.error("An error occurred:", error);

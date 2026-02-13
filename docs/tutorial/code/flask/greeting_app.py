@@ -8,7 +8,7 @@ app.config.from_prefixed_env()
 
 @app.route("/")
 def index():
-    greeting = app.config.get("GREETING", "Hello, world!")
+    greeting = app.config.get("GREETING")
     return f"{greeting}\n"
 
 

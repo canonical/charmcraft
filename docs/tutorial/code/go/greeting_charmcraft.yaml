@@ -5,5 +5,5 @@ config:
     greeting:
       description: |
         The greeting to be returned by the Go application.
-      default: "Hello, world!"
+      default: "Hello!"
       type: string

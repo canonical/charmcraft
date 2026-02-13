@@ -25,7 +25,7 @@ def index():
         conn.commit()
 
 
-    greeting = app.config.get("GREETING", "Hello, world!")
+    greeting = app.config.get("GREETING")
     return f"{greeting}\n"
 
 

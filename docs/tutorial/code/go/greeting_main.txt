@@ -10,9 +10,6 @@ import (
 func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
   log.Printf("new hello world request")
   greeting, found := os.LookupEnv("APP_GREETING")
-  if !found {
-        greeting = "Hello, world!"
-  }
   fmt.Fprintln(w, greeting)
 }
 

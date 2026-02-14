@@ -8,7 +8,7 @@ charset-normalizer==3.3.2
 click==8.1.8
 codespell==2.2.6
 colorama==0.4.6
-coverage==7.4.4
+coverage==7.13.4
 craft-cli==2.4.0
 craft-parts==1.25.3
 craft-providers==1.20.4

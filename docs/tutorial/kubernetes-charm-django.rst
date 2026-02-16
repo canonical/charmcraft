@@ -304,20 +304,12 @@ We will also use PostgreSQL as the database for our Django app. In
 Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
+:ref:`About the migrate.sh file <django-migrate-sh>` describes how to
+use the ``migrate.sh`` file to run CLI tools for `database migrations
+<https://docs.djangoproject.com/en/5.2/topics/migrations/>`__. This script
+runs before the app is initialized.
 
-.. tip::
-
-    You can use the ``migrate.sh`` file to run cli tools for database migration.
-    This script runs before the app is initialized.
-
-    See more:
-    :ref:`Django framework extension | Regarding the migrate.sh file <django-migrate-sh>`.
-
-    See more:
-    `Django database migration tooling
-    <https://docs.djangoproject.com/en/5.2/topics/migrations/>`__
-
-Now let's pack the rock:
+Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -327,10 +319,6 @@ Now let's pack the rock:
 
 Depending on your system and network, this step can take several minutes to
 finish.
-
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
 
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
@@ -356,11 +344,6 @@ This command contains the following pieces:
   and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our Django app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
-
-.. seealso::
-
-    See more: `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
 Create the charm
@@ -406,7 +389,7 @@ Edit the project file by adding the following section to the end:
     ``django-framework`` profile? Run ``charmcraft expand-extensions``
     from the ``~/django-hello-world/charm/`` directory.
 
-Now let's pack the charm:
+Now let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -422,10 +405,6 @@ respond with something similar to
 ``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 Deploy the Django app
 ---------------------
@@ -481,8 +460,9 @@ Integrate PostgreSQL with the Django app:
     :end-before: [docs:integrate-postgres-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Django app. You can
-monitor its progress with:
+It will take a few minutes to deploy the Django app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor
+its progress:
 
 .. code-block:: bash
 
@@ -496,14 +476,8 @@ waits to become integrated with the PostgreSQL database. Due to the
 start until the database is ready.
 
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To monitor your deployment, keep a
+``juju status`` session active in a second terminal.
 
 The Django app should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the

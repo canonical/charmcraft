@@ -82,13 +82,7 @@ Install ``devpack-for-spring`` and Java.
     :end-before: [docs:install-devpack-for-spring-end]
     :dedent: 2
 
-Create the demo Spring Boot app that will be used for
-this tutorial.
-
-.. seealso::
-
-    For more information about the options: `Spring Boot CLI | Using the CLI
-    <https://docs.spring.io/spring-boot/cli/using-the-cli.html>`_
+`Create the demo Spring Boot app <https://docs.spring.io/spring-boot/cli/using-the-cli.html#cli.using-the-cli.initialize-new-project>`_.
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -210,7 +204,7 @@ Verfiy that the ``name`` is ``spring-boot-hello-world``.
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Now let's pack the rock:
+Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -220,10 +214,6 @@ Now let's pack the rock:
 
 Depending on your system and network, this step can take several
 minutes to finish.
-
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
 
 Once Rockcraft has finished packing the Spring Boot rock,
 the terminal will respond with something similar to
@@ -249,12 +239,6 @@ This command contains the following pieces:
   and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our Spring Boot app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
-
-.. seealso::
-
-    See more: `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
-
 
 Create the charm
 ----------------
@@ -329,7 +313,7 @@ project file if required.
     ``spring-boot-framework`` profile? Run ``charmcraft expand-extensions``
     from the ``~/spring-boot-hello-world/charm/`` directory.
 
-Let's pack the charm:
+Let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -345,11 +329,6 @@ respond with something similar to
 ``Packed spring-boot-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
-
 
 Deploy the Spring Boot app
 --------------------------
@@ -385,8 +364,9 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Spring Boot app. You can monitor its
-progress with:
+It will take a few minutes to deploy the Spring Boot app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor
+its progress:
 
 .. code-block:: bash
 
@@ -394,14 +374,8 @@ progress with:
 
 It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To monitor your deployment, keep a
+``juju status`` session active in a second terminal.
 
 The Spring Boot app should now be running. We can monitor the status of
 the deployment using ``juju status``, which should be similar to the

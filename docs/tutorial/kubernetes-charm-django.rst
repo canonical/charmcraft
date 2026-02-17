@@ -119,9 +119,9 @@ Run the Django app locally
 We will test the Django app by visiting the app in a web
 browser.
 
-Change into the ``~/django_hello_world`` directory.
+Change into the ``~/django-hello-world/django_hello_world`` directory.
 Open the settings file of the app located at
-``~/django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
+``./django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
 
 .. code-block:: python

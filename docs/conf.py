@@ -115,9 +115,6 @@ extensions.extend(
 # endregion
 
 exclude_patterns = [
-    # Workaround for https://github.com/canonical/pydantic-kitbash/issues/49
-    "common/craft-parts/reference/part_properties.rst",
-
     "_build",
     "Thumbs.db",
     ".DS_Store",

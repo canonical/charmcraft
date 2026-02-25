@@ -76,7 +76,7 @@ Let's create a new directory for this tutorial and enter into it:
     distinguish it from the Django project (``django_hello_world``) and
     the charm/rock artifacts (``django-hello-world``). Rockcraft and Charmcraft
     will generate projects named ``django-hello-world`` when we pass
-    the name explicitly during the project initialisation. 
+    the name explicitly during the project initialisation.
 
 Finally, install ``python3-venv`` and create a virtual environment:
 

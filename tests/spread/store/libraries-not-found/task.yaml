@@ -1,0 +1,46 @@
+---
+summary: test fetch-lib error message when library not found
+
+environment:
+  CHARM_NAME: nonexistent-charm-$(uuidgen | sed -e 's/-//g')
+
+include:
+  - tests/
+
+prepare: |
+  tests.pkgs install jq
+
+  # Create a temporary charm directory with a library that has a fake lib_id
+  mkdir -p charm/lib/charms/nonexistent_charm/v0
+
+  # Create a library file with metadata that won't exist in Charmhub
+  cat > charm/lib/charms/nonexistent_charm/v0/fake_lib.py << 'EOF'
+  # Test library with fake ID
+  LIBID = "00000000000000000000000000000000"
+  LIBAPI = 0
+  LIBPATCH = 1
+
+  # Some library code
+  def test_function():
+      pass
+  EOF
+
+restore: |
+  rm -rf charm
+
+execute: |
+  cd charm
+
+  # Try to fetch all libraries (without specifying a library name)
+  # This should fail with error showing library name, not "None"
+  output=$(charmcraft fetch-lib 2>&1) && exit 1 || true
+
+  # Verify the error message contains the library name
+  echo "$output" | MATCH "charms.nonexistent_charm.v0.fake_lib"
+
+  # Verify the error message does NOT contain "Library None"
+  echo "$output" | NOMATCH "Library None"
+
+  # Verify the full error message format
+  echo "$output" | \
+    MATCH "Library charms.nonexistent_charm.v0.fake_lib not found"

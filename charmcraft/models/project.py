@@ -198,9 +198,9 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             Currently the only options are to ignore attributes or linters."""
         ),
     )
-    charmhub: Charmhub | None = pydantic.Field(
+    charmhub: SkipJsonSchema[Charmhub | None] = pydantic.Field(
         default=None,
-        description="(DEPRECATED): Configuration for accessing charmhub.",
+        exclude=True,
         deprecated=(
             "The 'charmhub' field is deprecated and no longer used. It will be removed in a "
             f"future release. Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
@@ -910,6 +910,49 @@ class PlatformCharm(CharmProject):
             )
             raise ValueError(
                 f"Base {self.base} requires a build-base (recommended: 'build-base: {recommended_base}')"
+            )
+        return self
+
+    @pydantic.model_validator(mode="after")
+    def _validate_charmhub_with_platforms(self) -> Self:
+        """Validate that charmhub is only used with allowed bases."""
+        if not self.charmhub:
+            return self
+
+        # For single base charms
+        if self.base is not None:
+            if self.base not in const.CHARMHUB_ALLOWED_BASES:
+                raise ValueError(
+                    f"The 'charmhub' field is not supported for base {self.base!r}. "
+                    f"Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
+                    f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
+                )
+            return self
+
+        # For multi-base charms (no explicit base, uses platforms)
+        build_bases = {
+            str(info.build_base)
+            for info in craft_platforms.charm.get_platforms_charm_build_plan(
+                base=None,
+                platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
+                    self.platforms, mode="json", by_alias=True
+                ),
+            )
+        }
+
+        invalid_bases = build_bases - const.CHARMHUB_ALLOWED_BASES
+        if invalid_bases:
+            if len(invalid_bases) == 1:
+                raise ValueError(
+                    f"The 'charmhub' field is not supported for base {invalid_bases.pop()!r}. "
+                    f"Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
+                    f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
+                )
+            invalid_bases_str = humanize_list(sorted(invalid_bases), conjunction="or")
+            raise ValueError(
+                f"The 'charmhub' field is not supported for bases {invalid_bases_str}. "
+                f"Use the ${const.STORE_API_ENV_VAR}, ${const.STORE_STORAGE_ENV_VAR} "
+                f"and ${const.STORE_REGISTRY_ENV_VAR} environment variables instead."
             )
         return self
 

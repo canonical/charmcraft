@@ -70,13 +70,12 @@ Let's create a new directory for this tutorial and enter into it:
     mkdir django-tutorial
     cd django-tutorial
 
-.. note::
 
-    We'll name the outer workspace directory ``~/django-tutorial`` so we can
-    distinguish it from the Django project (``django_hello_world``) and
-    the charm/rock artifacts (``django-hello-world``). Rockcraft and Charmcraft
-    will generate projects named ``django-hello-world`` when we pass
-    the name explicitly during the project initialisation.
+We'll name the outer workspace directory ``~/django-tutorial/`` so we can
+distinguish it from the Django project (``django_hello_world``) and
+the charm/rock artifacts (``django-hello-world``). Rockcraft and Charmcraft
+will generate projects named ``django-hello-world`` when we pass
+the name explicitly during the project initialisation.
 
 Finally, install ``python3-venv`` and create a virtual environment:
 

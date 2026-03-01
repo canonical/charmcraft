@@ -18,14 +18,14 @@ jobs:
     runs-on: [self-hosted, linux, amd64, noble, medium]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Build snap
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -36,7 +36,7 @@ jobs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
       - name: Checkout charmcraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -61,7 +61,7 @@ jobs:
           sudo ip6tables -P FORWARD ACCEPT
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
@@ -72,18 +72,18 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: snap
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v6
         with:
           go-version: 1.24
 

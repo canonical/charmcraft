@@ -9,12 +9,10 @@ and view details about extensions in use.
 View all the available extensions
 ---------------------------------
 
-To view all the available Rockcraft / Charmcraft extensions, run the
-``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
-
 To view all the available Rockcraft or Charmcraft extensions, run the
-:external+rockcraft:ref:`rockcraft list-extensions or charmcraft list-extension <ref_commands_list-extensions>`
-command. For example:
+:external+rockcraft:ref:`rockcraft list-extensions <ref_commands_list-extensions>`
+or :ref:`charmcraft list-extensions <ref_commands_list-extensions>` command.
+For example:
 
 .. code-block:: bash
 
@@ -213,7 +211,7 @@ then run  ``charmcraft expand-extensions``. For example:
               Run app.config.from_prefixed_env() in your Flask application in order to
               receive this configuration.
 
-To Expand ``charmcraft.yaml`` using the extensions specified in the file
-and output the resulting configuration to the terminal, visit
+To expand ``charmcraft.yaml`` using the extensions specified in the file
+and output the resulting configuration to the terminal, run
 :ref:`ref_commands_expand-extensions`. To expand the
-extensions listed in ``rockcraft.yaml``, visit :ref:`ref_commands_expand-extensions`.
+extensions listed in ``rockcraft.yaml``, run :ref:`ref_commands_expand-extensions`.

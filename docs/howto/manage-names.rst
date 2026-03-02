@@ -10,8 +10,8 @@ This guide shows how to register, view, and unregister names on Charmhub.
 Register a name on Charmhub
 ---------------------------
 
-To :ref:`ref_commands_register` a name for your charm on Charmhub, use the ``charmcraft register`` command
-followed by your desired name. For example:
+To register a name for your charm on Charmhub, run
+:ref:`charmcraft register <ref_commands_register>`:
 
 .. code-block:: bash
 
@@ -30,7 +30,8 @@ To view the names you've registered on Charmhub, run
 Unregister a name
 -----------------
 
-To :ref:`ref_commands_unregister` a name, run ``charmcraft unregister`` followed by the name.
+To deregister a name, run :ref:`charmcraft unregister <ref_commands_unregister>`
+followed by the name.
 
 .. caution::
 

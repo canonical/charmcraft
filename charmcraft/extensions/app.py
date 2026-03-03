@@ -17,6 +17,7 @@
 """Gunicorn based extensions."""
 
 import copy
+from pathlib import Path
 from typing import Any
 
 from overrides import override
@@ -68,6 +69,8 @@ OAUTH_DYNAMIC_OPTIONS = {
         "default": "openid profile email",
     },
 }
+
+COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 
 
 class _AppBase(Extension):
@@ -129,6 +132,7 @@ class _AppBase(Extension):
                 f"the '{self.framework}-framework' extension is incompatible with "
                 f"type {charm_type!r}"
             )
+        self._validate_cos_custom_dir()
         parts = self.yaml_data.get("parts")
         if parts and "charm" in parts:
             raise ExtensionError(
@@ -189,6 +193,35 @@ class _AppBase(Extension):
             raise ExtensionError(
                 "Non-optional configuration options can not have default values.\n"
                 f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
+            )
+
+    def _validate_cos_custom_dir(self) -> None:
+        """Validate the custom COS directory if present."""
+        custom_dir = Path(self.project_root) / "cos_custom"
+        if not custom_dir.is_dir():
+            return
+        root_files: list[str] = []
+        invalid_dirs: list[str] = []
+
+        for entry in custom_dir.iterdir():
+            if entry.is_file():
+                root_files.append(entry.name)
+            elif entry.is_dir() and entry.name not in COS_SUBDIRS:
+                invalid_dirs.append(entry.name)
+
+        if root_files or invalid_dirs:
+            details: list[str] = []
+            if root_files:
+                details.append(
+                    "root files: " + ", ".join(root_files)
+                )
+            if invalid_dirs:
+                details.append(
+                    "invalid subdirectories: " + ", ".join(invalid_dirs)
+                )
+            raise ExtensionError(
+                "custom COS directory must only contain the following subdirectories: "
+                f"{COS_SUBDIRS}. Found {'; '.join(details)}"
             )
 
     def _get_root_snippet(self) -> dict[str, Any]:

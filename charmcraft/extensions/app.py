@@ -212,13 +212,9 @@ class _AppBase(Extension):
         if root_files or invalid_dirs:
             details: list[str] = []
             if root_files:
-                details.append(
-                    "root files: " + ", ".join(root_files)
-                )
+                details.append("root files: " + ", ".join(root_files))
             if invalid_dirs:
-                details.append(
-                    "invalid subdirectories: " + ", ".join(invalid_dirs)
-                )
+                details.append("invalid subdirectories: " + ", ".join(invalid_dirs))
             raise ExtensionError(
                 "custom COS directory must only contain the following subdirectories: "
                 f"{COS_SUBDIRS}. Found {'; '.join(details)}"

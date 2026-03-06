@@ -103,9 +103,7 @@ extensions.extend(
         "sphinx_toolbox",
         "sphinx_toolbox.more_autodoc",
         "sphinx.ext.autodoc",  # Must be loaded after more_autodoc
-        "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-        "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
         "sphinxext.rediraffe",

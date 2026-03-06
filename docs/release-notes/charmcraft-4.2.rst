@@ -109,5 +109,4 @@ this release:
 :literalref:`@smethnani <https://github.com/smethnani>`,
 :literalref:`@tigarmo <https://github.com/tigarmo>`,
 :literalref:`@tonyandrewmeyer <https://github.com/tonyandrewmeyer>`,
-:literalref:`@unknown <https://github.com/unknown>`,
 and :literalref:`@zhijie-yang <https://github.com/zhijie-yang>`

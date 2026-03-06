@@ -3,10 +3,14 @@
 Manage icons
 ============
 
+This guide shows how to create, validate, and add an icon to your charm's
+Charmhub page.
+
 Learn about icon requirements and best practices
 ------------------------------------------------
 
-  See more: :ref:`icon-svg-file`
+You can learn about icon requirements and best practices from the
+:ref:`icon SVG file <icon-svg-file>` reference.
 
 Create an icon
 --------------
@@ -75,10 +79,10 @@ Add an icon to its charm's Charmhub page
 ----------------------------------------
 
 To add the icon to the charm's Charmhub page, save it as ``icon.svg``, place it
-in the root directory of the charm, and then publish the charm to a channel of the
-form ``<track>/stable`` (e.g., ``latest/stable``). Note that the track that you publish
-the icon to needs to be the default track for the icon to be displayed on Charmhub.
-Please raise a
+in the root directory of the charm, and then :ref:`publish the charm to a channel <publish-a-charm>`
+of the form ``<track>/stable`` (e.g., ``latest/stable``). Note that the
+track that you publish the icon to needs to be the default track for the
+icon to be displayed on Charmhub. Please raise a
 `CharmHub request <https://discourse.charmhub.io/c/charmhub-requests/46>`_
 on Discourse to set a track as the default track.
 
@@ -88,7 +92,3 @@ on Discourse to set a track as the default track.
    <https://snapcraft.io/blog/better-snap-metadata-handling-coming-your-way-soon>`_).
    So either release the revision with the icon to a ``stable`` channel and then
    roll it back, or wait until your charm is ready for a "stable" ``stable`` release.
-
-..
-
-   See more: :ref:`publish-a-charm`

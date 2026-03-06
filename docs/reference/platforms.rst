@@ -256,4 +256,9 @@ This can be further filtered with the ``--platform`` argument or the
 ``charmcraft pack --platform amd64-debug`` on an ``amd64`` system would pack
 only the second binary.
 
+.. |star| replace:: charm
+.. |Starcraft| replace:: Charmcraft
+
+.. include:: /common/craft-application/reference/strict-platform-names.rst
+
 .. _Debian's naming convention: https://wiki.debian.org/SupportedArchitectures

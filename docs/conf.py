@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
+import importlib
+import craft_application_docs
 
 import datetime
 import os
@@ -106,6 +108,7 @@ extensions.extend(
         "sphinx_toolbox.collapse",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
+        "sphinx_substitution_extensions",
         "sphinxext.rediraffe",
     ]
 )
@@ -118,6 +121,12 @@ exclude_patterns = [
     ".DS_Store",
     "env",
     "sphinx-starter-pack",
+    # Excluded craft-application documents that need substitutions:
+    "common/craft-application/how-to-guides/build-remotely.rst",
+    "common/craft-application/how-to-guides/reuse-packages-between-builds.rst",
+    "common/craft-application/reference/fetch-service.rst",
+    "common/craft-application/reference/remote-builds.rst",
+    "common/craft-application/reference/strict-platform-names.rst",
     # Excluded here because they are either included explicitly in other
     # documents (so they generate "duplicate label" errors) or they aren't
     # used in this documentation at all (so they generate "unreferenced"
@@ -236,6 +245,19 @@ def setup(app):
 
 # Setup libraries documentation snippets for use in charmcraft docs.
 common_docs_path = pathlib.Path(__file__).parent / "common"
-craft_parts_docs_path = pathlib.Path(craft_parts_docs.__file__).parent / "craft-parts"
-(common_docs_path / "craft-parts").unlink(missing_ok=True)
-(common_docs_path / "craft-parts").symlink_to(craft_parts_docs_path, target_is_directory=True)
+def link_common_docs(library_name: str) -> None:
+    """Create a link to the appropriate common documentation directory."""
+    common_lib_path = common_docs_path / library_name
+
+    docs_module_name = f"{library_name.replace('-', '_')}_docs"
+    docs_module = importlib.import_module(docs_module_name)
+    docs_path = pathlib.Path(docs_module.__file__).parent / library_name
+
+    if common_lib_path.is_symlink() and common_lib_path.readlink() == docs_path:
+        return
+
+    common_lib_path.unlink(missing_ok=True)
+    common_lib_path.symlink_to(docs_path, target_is_directory=True)
+
+link_common_docs("craft-parts")
+link_common_docs("craft-application")

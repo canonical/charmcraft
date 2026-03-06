@@ -130,6 +130,11 @@ constraint-dependencies = [
     # version of rpds that uses Rust 2024 edition. For now, just constrain us until
     # we can get a newer version of rust.
     "rpds-py<0.25;python_version<'3.13' and platform_system=='Linux'",
+
+    # Constrain libgit2 for the core24 Ubuntu base.
+    # Ubuntu 24.04 contains libgit2 1.7, which for pygit2 requires 1.13 or 1.14.
+    # https://www.pygit2.org/install.html#version-numbers
+    "pygit2>=1.13,<1.15",
 ]
 conflicts = [
     [

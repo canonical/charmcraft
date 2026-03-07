@@ -61,6 +61,8 @@ from charmcraft.application.commands.store import (
 )
 from charmcraft.application.commands.version import Version
 
+from charmcraft.application.commands.purge import PurgeCommand
+
 
 def fill_command_groups(app: craft_application.Application) -> None:
     """Fill in all the command groups for Charmcraft."""
@@ -119,7 +121,8 @@ def fill_command_groups(app: craft_application.Application) -> None:
             Analyse,
             Analyze,
             InitCommand,
-            Version,
+            Version,  
+            PurgeCommand,
         ],
     )
 

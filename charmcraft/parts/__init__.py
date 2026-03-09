@@ -47,6 +47,8 @@ def get_app_plugins() -> dict[str, type[craft_parts.plugins.Plugin]]:
 def setup_parts() -> None:
     """Initialize craft-parts plugins."""
     craft_parts.plugins.register(get_app_plugins())
+    # Plugins added to craft-parts that are either inappropriate for or untested with charms.
+    craft_parts.plugins.unregister("colcon", "ruby")
 
 
 def process_part_config(data: dict[str, Any]) -> dict[str, Any]:

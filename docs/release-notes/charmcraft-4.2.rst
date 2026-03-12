@@ -39,32 +39,31 @@ Init template updates
 ~~~~~~~~~~~~~~~~~~~~~
 
 Charmcraft 4.2 sets Ubuntu 24.04 as the default base for new charms using the
-machine, kubernetes, :ref:`django-framework <django-framework-extension>`,
-and :ref:`flask-framework <flask-framework-extension>` init templates.
+machine, kubernetes, django-framework and flask-framework init templates.
 
 The machine and kubernetes templates also now assume Juju 3.6 or newer.
 
 Faster startup for new charms or after cleaning
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When installed as a Snap, Charmcraft now injects not just itself, but also the
-core24 snap into the created container from the host machine, speeding up initial
-builds and reducing the download time.
+When installed as a snap, Charmcraft now also injects the core24 snap into the
+created container from the host machine, speeding up initial builds and reducing the
+download time.
 
-uv plugin compiles bytecode
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compiled bytecode from the uv plugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :ref:`craft_parts_uv_plugin` now compiles bytecode for installed Python files
 by default. To disable this for your charm, set ``UV_COMPILE_BYTECODE: false`` in
 the part's :ref:`reference-part-properties-build-environment` key.
 
-Better documentation
-~~~~~~~~~~~~~~~~~~~~
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`how-to-guides` have been improved, and two new documents have been added:
+Across the documentation, we made numerous technical corrections, fixed many links,
+and revised the formatting. We also added:
 
 - :doc:`How to use a database with your 12-factor charm </howto/manage-web-app-charms/use-a-database>`
-- :doc:`Part properties reference </common/craft-parts/reference/part_properties>`
 
 Known issues
 ------------
@@ -74,14 +73,14 @@ patch releases.
 
 See individual issue links for any mitigations.
 
-- `#2078 <https://github.com/canonical/charmcraft/issues/2078>`_
-  ``charmcraft clean`` does not clean all platforms for a charm.
-- `#1990 <https://github.com/canonical/charmcraft/issues/1990>`_ Cannot stage
+- `#2078 <https://github.com/canonical/charmcraft/issues/2078>`__
+  ``charmcraft clean`` does not clean all platforms for a charm
+- `#1990 <https://github.com/canonical/charmcraft/issues/1990>`__ Cannot stage
   packages with Charmcraft
-- `#2493 <https://github.com/canonical/charmcraft/issues/2493>`_ Packing fails when
-  using a separate metadata.yaml file and the ``--project-dir`` argument.
-- `#2492 <https://github.com/canonical/charmcraft/issues/2492>`_ Internal error when
-  uploading a charm outside of a project directory.
+- `#2493 <https://github.com/canonical/charmcraft/issues/2493>`__ Packing fails when
+  using a separate metadata.yaml file and the ``--project-dir`` argument
+- `#2492 <https://github.com/canonical/charmcraft/issues/2492>`__ Internal error when
+  uploading a charm outside of a project directory
 
 
 .. Fixed bugs and issues

@@ -15,16 +15,15 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-import importlib
-import craft_application_docs
-
 import datetime
+import importlib
 import os
 import pathlib
 import subprocess
 import sys
 
 import craft_parts_docs
+import craft_application_docs
 
 import charmcraft
 

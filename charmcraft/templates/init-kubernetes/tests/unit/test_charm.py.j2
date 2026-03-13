@@ -3,19 +3,23 @@
 #
 # To learn more about testing, see https://documentation.ubuntu.com/ops/latest/explanation/testing/
 
+import ops
 import pytest
-from ops import pebble, testing
+from ops import testing
 
 from charm import SERVICE_NAME, {{ class_name }}
 
 CHECK_NAME = "service-ready"  # Name of Pebble check in the mock workload container.
 
-layer = pebble.Layer(
+# A minimal Pebble layer for our testing.Container objects.
+# Our charm doesn't retrieve the service command or the check URL
+# from Pebble, so this layer doesn't need a real command or URL.
+MOCK_LAYER = ops.pebble.Layer(
     {
         "services": {
             SERVICE_NAME: {
                 "override": "replace",
-                "command": "/bin/foo",  # The specific command isn't important for unit tests.
+                "command": "mock-command",
                 "startup": "enabled",
             }
         },
@@ -26,7 +30,7 @@ layer = pebble.Layer(
                 "threshold": 3,
                 "startup": "enabled",
                 "http": {
-                    "url": "http://localhost:8000/version",  # The specific URL isn't important.
+                    "url": "http://localhost:1234/mock-endpoint",
                 },
             }
         },
@@ -45,14 +49,14 @@ def test_pebble_ready(monkeypatch: pytest.MonkeyPatch):
     ctx = testing.Context({{ class_name }})
     check_in = testing.CheckInfo(
         CHECK_NAME,
-        level=pebble.CheckLevel.READY,
-        status=pebble.CheckStatus.UP,  # Simulate the Pebble check passing.
+        level=ops.pebble.CheckLevel.READY,
+        status=ops.pebble.CheckStatus.UP,  # Simulate the Pebble check passing.
     )
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers={"base": layer},
-        service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
+        layers={"base": MOCK_LAYER},
+        service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )
     state_in = testing.State(containers={container_in})
@@ -63,7 +67,7 @@ def test_pebble_ready(monkeypatch: pytest.MonkeyPatch):
 
     # Assert:
     container_out = state_out.get_container(container_in.name)
-    assert container_out.service_statuses[SERVICE_NAME] == pebble.ServiceStatus.ACTIVE
+    assert container_out.service_statuses[SERVICE_NAME] == ops.pebble.ServiceStatus.ACTIVE
     assert state_out.workload_version is not None
     assert state_out.unit_status == testing.ActiveStatus()
 
@@ -74,14 +78,14 @@ def test_pebble_ready_service_not_ready():
     ctx = testing.Context({{ class_name }})
     check_in = testing.CheckInfo(
         CHECK_NAME,
-        level=pebble.CheckLevel.READY,
-        status=pebble.CheckStatus.DOWN,  # Simulate the Pebble check failing.
+        level=ops.pebble.CheckLevel.READY,
+        status=ops.pebble.CheckStatus.DOWN,  # Simulate the Pebble check failing.
     )
     container_in = testing.Container(
         "some-container",
         can_connect=True,
-        layers={"base": layer},
-        service_statuses={SERVICE_NAME: pebble.ServiceStatus.INACTIVE},
+        layers={"base": MOCK_LAYER},
+        service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
         check_infos={check_in},
     )
     state_in = testing.State(containers={container_in})

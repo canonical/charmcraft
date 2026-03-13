@@ -103,9 +103,7 @@ extensions.extend(
         "sphinx_toolbox",
         "sphinx_toolbox.more_autodoc",
         "sphinx.ext.autodoc",  # Must be loaded after more_autodoc
-        "sphinxcontrib.details.directive",
         "sphinx_toolbox.collapse",
-        "sphinxcontrib.details.directive",
         "sphinx.ext.napoleon",
         "sphinx_autodoc_typehints",  # must be loaded after napoleon
         "sphinxext.rediraffe",
@@ -115,9 +113,6 @@ extensions.extend(
 # endregion
 
 exclude_patterns = [
-    # Workaround for https://github.com/canonical/pydantic-kitbash/issues/49
-    "common/craft-parts/reference/part_properties.rst",
-
     "_build",
     "Thumbs.db",
     ".DS_Store",
@@ -147,6 +142,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/autotools_plugin.rst",
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
+    "common/craft-parts/reference/plugins/colcon_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_plugin.rst",
     "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
@@ -161,6 +157,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/python_plugin.rst",
     "common/craft-parts/reference/plugins/python_v2_plugin.rst",
     "common/craft-parts/reference/plugins/qmake_plugin.rst",
+    "common/craft-parts/reference/plugins/ruby_plugin.rst",
     "common/craft-parts/reference/plugins/rust_plugin.rst",
     "common/craft-parts/reference/plugins/scons_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",

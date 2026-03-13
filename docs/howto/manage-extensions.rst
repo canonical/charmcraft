@@ -3,13 +3,16 @@
 Manage extensions
 =================
 
-   See also: :ref:`extensions`
+This guide shows how to view available :ref:`extensions <extensions>`
+and view details about extensions in use.
 
 View all the available extensions
 ---------------------------------
 
-To view all the available Rockcraft / Charmcraft extensions, run the
-``rockcraft list-extensions`` / ``charmcraft list-extensions`` command. For example:
+To view all the available Rockcraft or Charmcraft extensions, run the
+:external+rockcraft:ref:`rockcraft list-extensions <ref_commands_list-extensions>`
+or :ref:`charmcraft list-extensions <ref_commands_list-extensions>` command.
+For example:
 
 .. code-block:: bash
 
@@ -17,11 +20,6 @@ To view all the available Rockcraft / Charmcraft extensions, run the
    Extension name    Supported bases    Experimental bases
    ----------------  -----------------  --------------------
    flask-framework                      ubuntu@22.04
-
-..
-
-   See more: :external+rockcraft:ref:`Rockcraft | rockcraft list-extensions
-   <ref_commands_list-extensions>`, :ref:`ref_commands_list-extensions`
 
 View details about the extension in use
 ---------------------------------------
@@ -213,7 +211,7 @@ then run  ``charmcraft expand-extensions``. For example:
               Run app.config.from_prefixed_env() in your Flask application in order to
               receive this configuration.
 
-..
-
-   See more: :external+rockcraft:ref:`Rockcraft | rockcraft expand-extensions
-   <ref_commands_expand-extensions>`, :ref:`ref_commands_expand-extensions`
+To expand ``charmcraft.yaml`` using the extensions specified in the file
+and output the resulting configuration to the terminal, run
+:ref:`ref_commands_expand-extensions`. To expand the
+extensions listed in ``rockcraft.yaml``, run :ref:`ref_commands_expand-extensions`.

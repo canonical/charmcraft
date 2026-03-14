@@ -144,6 +144,11 @@ linkcheck_ignore = [
     r"^https://([\w-]*\.)?npmjs.org",
     r"^https://rsync.samba.org",
     r"^https://ubuntu.com",
+    r"https://github.com/.*#",
+    "http://django-hello-world",
+    "http://www.inkscape.org",
+    "https://matrix.to",
+    "https://www.npmjs.com/",
 ]
 
 # Give linkcheck multiple tries on failure

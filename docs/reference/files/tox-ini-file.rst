@@ -7,8 +7,9 @@
 The ``tox.ini`` file in your charm's root directory is a typical tox
 configuration file.
 
-    See more: `tox |
-    Configuration <https://tox.wiki/en/latest/user_guide.html#configuration>`_
+.. seealso::
+
+    `Configuration <https://tox.wiki/en/latest/reference/config.html>`__ in the tox documentation
 
 Charmcraft creates this file and defines the following tox environments:
 

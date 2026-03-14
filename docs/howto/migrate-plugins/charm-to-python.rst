@@ -99,7 +99,7 @@ that can find these is::
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
 If run from the base directory of a charm, this will show all the PYDEPS declarations
-from all loaded charm libs, which can be used to help generate the input for a tool
+from all loaded charmlibs, which can be used to help generate the input for a tool
 that generates ``requirements.txt``.
 
 Include extra files

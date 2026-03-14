@@ -75,6 +75,7 @@ docs/_build/
 docs/reference/commands/
 !docs/reference/commands/index.rst
 docs/reference/_autosummary/
+docs/common/craft-application
 docs/common/craft-parts
 
 # PyBuilder

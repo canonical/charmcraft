@@ -32,6 +32,19 @@ See :ref:`build-on <reference-build-on>` and
 :ref:`build-for <reference-build-for>` for information on the ``build-on``
 and ``build-for`` keys.
 
+
+.. _reference-platforms-naming:
+
+Naming rules
+~~~~~~~~~~~~
+
+.. |star| replace:: charm
+.. |Starcraft| replace:: Charmcraft
+
+.. include:: /common/craft-application/reference/strict-platform-names.rst
+    :start-after: ------------
+
+
 .. _reference-platforms-shorthand:
 
 Shorthand notation

@@ -149,8 +149,8 @@ different architecture, use the following snippet:
 
 Building on AMD64 will produce one charm that runs on ``riscv64``.
 
-Note that the charm developer must ensure the charm is compatible with the
-target architectures. By default, the `charm`_,
+Note that the charm developer must ensure the charm is compatible with the target
+architectures. By default, the :ref:`reference-charmcraft-yaml-charm-plugin`,
 :ref:`python <craft_parts_python_plugin>`, :ref:`poetry <craft_parts_poetry_plugin>`,
 and :ref:`uv <craft_parts_uv_plugin>` plugins will install wheels for python packages
 for the ``build-on`` architecture rather than the ``build-for``. For more information,
@@ -193,5 +193,4 @@ With both snippets, building on AMD64 will produce two charms, one for
 AMD64 systems running Ubuntu 22.04 LTS and one for AMD64 systems running
 Ubuntu 24.04 LTS.
 
-.. _charm: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-charm-plugin
 .. _craft-parts#974: https://github.com/canonical/craft-parts/issues/974

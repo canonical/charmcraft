@@ -27,7 +27,7 @@ with useful content.
 
     charmcraft init --profile <profile>
 
-.. collapse:: Example session
+.. dropdown:: Example session
 
     .. code-block:: bash
 
@@ -262,7 +262,7 @@ a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description*
 .. admonition:: Examples of good documentation in small charms
 
     * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
-    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
+    * `Repository policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
 .. admonition:: Examples of good documentation in big charms
 
@@ -518,7 +518,7 @@ compile any modules, check that all the key files are in place, and produce a
 compressed archive with the extension ``.charm``. As you can verify, this archive
 is just a zip file with metadata and the operator code itself.
 
-.. collapse:: Example session for a charm called microsample-vm
+.. dropdown:: Example session for a charm called microsample-vm
 
     Pack the charm:
 
@@ -629,7 +629,7 @@ Publish a charm on Charmhub
    See more: :ref:`manage-channels`.
 
 3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
-   your charm's filepath. E.g., if you are in the charm's root directory,
+   your charm's path. E.g., if you are in the charm's root directory,
 
    .. code-block:: bash
 

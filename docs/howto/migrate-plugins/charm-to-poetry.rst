@@ -79,7 +79,7 @@ that can find these is::
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
 If run from the base directory of a charm, this will show all the PYDEPS declarations
-from all loaded charm libs.
+from all loaded charmlibs.
 
 Include extra files
 -------------------

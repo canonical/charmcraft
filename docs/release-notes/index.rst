@@ -32,7 +32,7 @@ Charmcraft 2
 Charmcraft 2 is supported for older deployments and features. If you require a feature
 that Charmcraft 3 doesn't support, please check the :ref:`3.0 breaking changes
 <release-3.0.0>` and, if your issue isn't listed as a breaking change, please `file a
-bug report <issues>`_.
+bug report <https://github.com/canonical/charmcraft/issues/new>`__.
 
 - :ref:`Charmcraft 2.7.0 <release-2.7.0>`
 

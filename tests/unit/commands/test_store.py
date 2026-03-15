@@ -594,3 +594,70 @@ def test_promote_revisions(
     emitter.assert_message(
         "0 revisions promoted from latest/candidate to latest/stable"
     )
+
+
+# region FetchLibCommand tests
+
+
+def test_fetchlib_error_message_uses_library_name(
+    tmp_path: pathlib.Path,
+    service_factory: craft_application.ServiceFactory,
+    monkeypatch,
+):
+    """Test that FetchLibCommand error message uses library name, not None.
+
+    When fetch-lib is run without arguments and a library is not found,
+    the error message should use the library's full name, not "None".
+
+    This is a regression test for https://github.com/canonical/charmcraft/issues/XXXX
+    """
+    from charmcraft.application.commands.store import FetchLibCommand
+    from charmcraft.utils import charmlibs
+
+    # Change to tmp_path to avoid polluting the real directory
+    monkeypatch.chdir(tmp_path)
+
+    # Create a library file structure
+    lib_path = tmp_path / "lib" / "charms" / "testcharm" / "v0"
+    lib_path.mkdir(parents=True)
+    lib_file = lib_path / "testlib.py"
+    
+    # Write a minimal library file with required metadata
+    lib_file.write_text("""
+# Library metadata
+LIBID = "test-lib-id-12345678"
+LIBAPI = 0
+LIBPATCH = 1
+
+def some_function():
+    pass
+""")
+
+    # Mock the store service to return empty metadata (simulating library not found)
+    mock_store_svc = mock.Mock()
+    mock_store_svc.get_libraries_metadata.return_value = []
+    
+    service_factory.store = mock_store_svc
+    
+    # Create command config
+    config = {
+        "app": APP_METADATA,
+        "services": service_factory,
+    }
+    
+    # Run the command without specifying a library (should update all)
+    cmd = FetchLibCommand(config)
+    args = argparse.Namespace(library=None, format=None)
+    
+    # The command should raise a LibraryError with a message that does NOT contain "None"
+    with pytest.raises(errors.LibraryError) as exc_info:
+        cmd.run(args)
+    
+    # Verify the error message includes library details and not "None"
+    error_message = str(exc_info.value.args[0])
+    assert "None" not in error_message, f"Error message should not contain 'None': {error_message}"
+    # The error should mention the declared libraries
+    assert "declared charm-libs" in error_message or "testcharm.testlib" in error_message
+
+
+# endregion

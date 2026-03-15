@@ -3,16 +3,16 @@
 Manage channels
 ===============
 
-    See first: :external+juju:ref:`Juju | Charm channel <charm-channel>`
+This guide shows how to create, view, customise, open, and close a
+:external+juju:ref:`Charm channel <charm-channel>`.
 
 Create a channel
 ----------------
 
-When you register a name on Charmhub, that automatically creates 4 channels, all with
-track ``latest`` but with different risk levels, namely, ``edge``, ``beta``,
-``candidate``, ``stable``, respectively.
-
-    See more: :ref:`register-a-name`
+When you :ref:`register a name on Charmhub <register-a-name>`, that
+automatically creates 4 channels, all with track ``latest`` but with
+different risk levels, namely, ``edge``, ``beta``, ``candidate``,
+``stable``, respectively.
 
 .. raw:: html
 
@@ -46,8 +46,9 @@ track ``latest`` but with different risk levels, namely, ``edge``, ``beta``,
 View the available channels
 ---------------------------
 
-To view a charm's channels on Charmhub, run ``charmcraft status`` followed by the name
-of the charm. E.g.,
+To view a charm's channels on Charmhub, run
+:ref:`charmcraft status <ref_commands_status>` followed by the name
+of the charm:
 
 .. code-block:: bash
 
@@ -64,17 +65,11 @@ but different risk levels, namely, ``edge``, ``beta``, ``candidate``, and ``stab
              beta       0.1        1
              edge       ↑          ↑
 
-
-   See more: :ref:`ref_commands_status`
-
-
 Customise a channel's track
 ---------------------------
 
-You can request a track guardrail and create a track.
-
-    See more: :ref:`manage-tracks`
-
+:ref:`manage-tracks` describes how to request a track guardrail and
+create a track.
 
 Open a channel
 --------------

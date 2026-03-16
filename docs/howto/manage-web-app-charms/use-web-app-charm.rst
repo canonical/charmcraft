@@ -59,39 +59,45 @@ framework using Pebble.
 
 To view the Pebble logs for a deployed web app, run:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: Django
+    .. tab-item:: Django
+        :sync: django
 
         .. code-block:: bash
 
             juju ssh --container django-app <django-app-name>/0 pebble logs
 
-    .. group-tab:: Express
+    .. tab-item:: Express
+        :sync: express
 
         .. code-block:: bash
 
             juju ssh --container app <express-app-name>/0 pebble logs
 
-    .. group-tab:: FastAPI
+    .. tab-item:: FastAPI
+        :sync: fastapi
 
         .. code-block:: bash
 
             juju ssh --container app <fastapi-app-name>/0 pebble logs
 
-    .. group-tab:: Flask
+    .. tab-item:: Flask
+        :sync: flask
 
         .. code-block:: bash
 
             juju ssh --container flask-app <flask-app-name>/0 pebble logs
 
-    .. group-tab:: Go
+    .. tab-item:: Go
+        :sync: go
 
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 pebble logs
 
-    .. group-tab:: Spring Boot
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
 
         .. code-block:: bash
 
@@ -108,39 +114,45 @@ View app details
 
 To view more details about the web app itself, run:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: Django
+    .. tab-item:: Django
+        :sync: django
 
         .. code-block:: bash
 
             juju ssh --container django-app <django-app-name>/0 pebble plan
 
-    .. group-tab:: Express
+    .. tab-item:: Express
+        :sync: express
 
         .. code-block:: bash
 
             juju ssh --container app <express-app-name>/0 pebble plan
 
-    .. group-tab:: FastAPI
+    .. tab-item:: FastAPI
+        :sync: fastapi
 
         .. code-block:: bash
 
             juju ssh --container app <fastapi-app-name>/0 pebble plan
 
-    .. group-tab:: Flask
+    .. tab-item:: Flask
+        :sync: flask
 
         .. code-block:: bash
 
             juju ssh --container flask-app <flask-app-name>/0 pebble plan
 
-    .. group-tab:: Go
+    .. tab-item:: Go
+        :sync: go
 
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 pebble plan
 
-    .. group-tab:: Spring Boot
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
 
         .. code-block:: bash
 
@@ -159,47 +171,53 @@ use).
 SSH into the Juju container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can debug the app directly and monitor its status by SSHing into the
+You can debug the app directly and monitor its status by :vale-ignore:`SSHing` into the
 Juju container:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: Django
+    .. tab-item:: Django
+        :sync: django
 
         .. code-block:: bash
 
             juju ssh --container django-app <django-app-name>/0 \
               pebble exec --context=django -- bash
 
-    .. group-tab:: Express
+    .. tab-item:: Express
+        :sync: express
 
         .. code-block:: bash
 
             juju ssh --container app <express-app-name>/0 \
               pebble exec --context=expressjs -- bash
 
-    .. group-tab:: FastAPI
+    .. tab-item:: FastAPI
+        :sync: fastapi
 
         .. code-block:: bash
 
             juju ssh --container app <fastapi-app-name>/0 \
               pebble exec --context=fastapi -- bash
 
-    .. group-tab:: Flask
+    .. tab-item:: Flask
+        :sync: flask
 
         .. code-block:: bash
 
             juju ssh --container flask-app <flask-app-name>/0 \
               pebble exec --context=flask -- bash
 
-    .. group-tab:: Go
+    .. tab-item:: Go
+        :sync: go
 
         .. code-block:: bash
 
             juju ssh --container app <go-app-name>/0 \
               pebble exec --context=go -- bash
 
-    .. group-tab:: Spring Boot
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
 
         .. code-block:: bash
 
@@ -249,39 +267,45 @@ This command outputs the logs of the sidecar container pod. To fetch logs
 specific to the workload of the web app, you need to specify the container
 name of the web app with the ``-c`` option.
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: Django
+    .. tab-item:: Django
+        :sync: django
 
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
 
-    .. group-tab:: Express
+    .. tab-item:: Express
+        :sync: express
 
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-    .. group-tab:: FastAPI
+    .. tab-item:: FastAPI
+        :sync: fastapi
 
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-    .. group-tab:: Flask
+    .. tab-item:: Flask
+        :sync: flask
 
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-    .. group-tab:: Go
+    .. tab-item:: Go
+        :sync: go
 
         .. code-block:: bash
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-    .. group-tab:: Spring Boot
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
 
         .. code-block:: bash
 

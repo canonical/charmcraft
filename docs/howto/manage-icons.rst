@@ -63,7 +63,7 @@ file and delete the bitmap.
 .. figure:: https://assets.ubuntu.com/v1/2ef5c7f5-manage-icons-create-3.png
    :alt: Draw something
 
-*Cloud icon: “Cloud by unlimicon from the Noun Project” [CC BY]*
+*Cloud icon: “Cloud by :vale-ignore:`unlimicon` from the Noun Project” [CC BY]*
 
 Validate an icon
 ----------------

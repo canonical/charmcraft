@@ -3,9 +3,14 @@
 Manage Charmcraft
 =================
 
+This guide shows how to install, check the version, upgrade, and
+uninstall Charmcraft.
 
 Install Charmcraft
 ------------------
+
+You can install Charmcraft on Linux, macOS, or in an isolated environment
+using Multipass.
 
 On Linux
 ~~~~~~~~
@@ -35,10 +40,8 @@ required, but here are steps to set it up manually:
     newgrp lxd
     lxd init --auto
 
-You can also install Charmcraft in an isolated environment.
-
-    See more: :ref:`install-in-an-isolated-environment`
-
+You can also install Charmcraft
+:ref:`in an isolated environment <install-in-an-isolated-environment>`.
 
 On macOS
 ~~~~~~~~
@@ -95,12 +98,10 @@ continues with the packing process:
     Packing charm 'test-charm_ubuntu-20.04-amd64.charm'...
     Starting charmcraft-test-charm-12886917363-0-0-amd64 ...
 
-You can also install Charmcraft in an isolated environment.
-
-    See more: :ref:`install-in-an-isolated-environment`
+You can also install Charmcraft
+:ref:`in an isolated environment <install-in-an-isolated-environment>`.
 
 .. _install-in-an-isolated-environment:
-
 
 In an isolated environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -128,20 +129,14 @@ Last, open a shell in your new Ubuntu virtual machine, and install Charmcraft th
 
 That's it. You can now start typing in Charmcraft commands.
 
-
 Check the installed version of Charmcraft
 -----------------------------------------
 
-To check the installed version, run:
+To check the installed :ref:`ref_commands_version`, run:
 
 .. code-block:: bash
 
     charmcraft version
-
-..
-
-    See more: :ref:`ref_commands_version`
-
 
 Upgrade Charmcraft
 ------------------

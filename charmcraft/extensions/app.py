@@ -20,6 +20,7 @@ import copy
 from pathlib import Path
 from typing import Any
 
+import yaml
 from overrides import override
 
 from ..errors import ExtensionError
@@ -71,6 +72,8 @@ OAUTH_DYNAMIC_OPTIONS = {
 }
 
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
+PAAS_CONFIG_FILE = "paas-config.yaml"
+JSON_LOGGING_SUPPORTED_FRAMEWORKS = {"fastapi", "flask", "django"}
 
 
 class _AppBase(Extension):
@@ -193,6 +196,34 @@ class _AppBase(Extension):
             raise ExtensionError(
                 "Non-optional configuration options can not have default values.\n"
                 f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
+            )
+        self._check_paas_config()
+
+    def _check_paas_config(self) -> None:
+        """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
+        config_path = self.project_root / PAAS_CONFIG_FILE
+        if not config_path.exists():
+            return
+
+        try:
+            parsed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ExtensionError(f"invalid YAML in {PAAS_CONFIG_FILE}: {exc}") from exc
+
+        if parsed is None:
+            return
+        if not isinstance(parsed, dict):
+            raise ExtensionError(f"{PAAS_CONFIG_FILE} must contain a top-level mapping")
+
+        framework_logging_format = parsed.get("framework_logging_format")
+        if (
+            isinstance(framework_logging_format, str)
+            and framework_logging_format.lower() == "json"
+            and self.framework not in JSON_LOGGING_SUPPORTED_FRAMEWORKS
+        ):
+            raise ExtensionError(
+                f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
+                f"for '{self.framework}-framework'"
             )
 
     def _validate_cos_custom_dir(self) -> None:

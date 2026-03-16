@@ -125,6 +125,7 @@ exclude_patterns = [
     "common/craft-application/how-to-guides/reuse-packages-between-builds.rst",
     "common/craft-application/reference/fetch-service.rst",
     "common/craft-application/reference/remote-builds.rst",
+    # Snippets that are incorporated into existing pages.
     "common/craft-application/reference/strict-platform-names.rst",
     # Excluded here because they are either included explicitly in other
     # documents (so they generate "duplicate label" errors) or they aren't

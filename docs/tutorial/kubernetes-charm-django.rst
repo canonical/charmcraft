@@ -149,7 +149,7 @@ Now, run the Django app to verify that it works:
     Specifying ``0.0.0.0:8000`` allows for traffic outside of the Multipass VM.
 
     When you run the command for the first time, you'll see a warning about
-    unapplied migrations. We can ignore this warning for now, as we aren't
+    migrations. We can ignore this warning for now, as we aren't
     currently performing any database operations. We'll set up the database later.
 
 Now we need the private IP address of the Multipass VM. Outside of the
@@ -242,7 +242,7 @@ Verify that the ``name`` is ``django-hello-world``.
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Django apps require a database. Django will use a sqlite
+Django apps require a database. Django will use a SQLite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
@@ -348,7 +348,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/django/task.yaml
@@ -519,7 +519,8 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model               Controller      Cloud/Region        Version  SLA          Timestamp
     django-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  16:47:01+10:00
@@ -863,7 +864,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Integrating the app with PostgreSQL to be production ready
 - Exposing the app using an ingress
 - Adding an initial app and configuring the app

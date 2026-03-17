@@ -4,7 +4,7 @@ Plugins
 =======
 
 Most charms only need one, maybe two parts, typically consisting of one of Charmcraft's
-application-specific plugins such as the `charm plugin`_ or the `reactive plugin`_ and
+application-specific plugins such as the :ref:`reference-charmcraft-yaml-charm-plugin` or the :ref:`reference-charmcraft-yaml-reactive-plugin` and
 potentially the addition of further files using the :ref:`craft_parts_dump_plugin`.
 
 .. warning::
@@ -24,5 +24,5 @@ potentially the addition of further files using the :ref:`craft_parts_dump_plugi
     poetry_plugin
     uv_plugin
 
-.. _charm plugin: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-charm-plugin
+.. _charm plugin: reference-charmcraft-yaml-charm-plugin
 .. _reactive plugin: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-reactive-plugin

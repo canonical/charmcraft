@@ -18,7 +18,7 @@ Here, ``<endpoint name>`` corresponds to the endpoint of the application with wh
 you want the integration, and ``<endpoint interface name>`` is the endpoint schema
 to which this relation conforms. Both the ``<endpoint name>`` and
 ``<endpoint interface name>`` must coincide with the structs defined in the
-pfoject file of that particular application's charm. The key ``optional``
+project file of that particular application's charm. The key ``optional``
 with value ``False`` means that the charm will get blocked and stop the services if
 the integration is not provided.
 
@@ -101,7 +101,7 @@ You must prepare an ingress if you wish to integrate your 12-factor web app
 with the `Canonical Observability Stack
 (COS) <https://charmhub.io/topics/canonical-observability-stack>`_.
 COS relies on the Traefik ingress to expose, for example, Grafana.
-On MicroK8s, Traefik requires the MetalLB loadbalancer to be enabled which
+On MicroK8s, Traefik requires the MetalLB load balancer to be enabled which
 requires an IP range. Provide the IP range and enable the addon with:
 
 .. code-block:: bash

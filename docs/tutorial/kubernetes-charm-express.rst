@@ -193,7 +193,7 @@ The top of the file should look similar to the following snippet:
 
     ...
 
-Verfiy that the ``name`` is ``expressjs-hello-world``.
+Verify that the ``name`` is ``expressjs-hello-world``.
 
 Ensure that ``platforms`` includes the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
@@ -393,7 +393,8 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model                  Controller      Cloud/Region        Version  SLA          Timestamp
     expressjs-hello-world  dev-controller  microk8s/localhost  3.6.5    unsupported  12:24:51+03:00
@@ -763,10 +764,15 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+
+    curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
+
     Number of visitors 2
 
 Tear things down
@@ -807,7 +813,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

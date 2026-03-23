@@ -3,17 +3,18 @@
 Manage the current Charmhub user
 ================================
 
-    See first: `Charmhub`_
-
+This guide explains how to log in to  `Charmhub`_, check the currently
+logged-in user, and log out.
 
 Log in to Charmhub
 ------------------
 
+How you log in depends on whether you're working in a local or remote environment.
 
 Local environments
 ~~~~~~~~~~~~~~~~~~
 
-To log in to Charmhub, run ``charmcraft login``:
+To log in to Charmhub, run :ref:`charmcraft login <ref_commands_login>`:
 
 .. code-block:: bash
 
@@ -24,11 +25,6 @@ To log in to Charmhub, run ``charmcraft login``:
     Opening an authorization web page in your browser.
     If it does not open, please open this URL:
     ...
-
-..
-
-   See more: :ref:`ref_commands_login`
-
 
 Remote environments
 ~~~~~~~~~~~~~~~~~~~
@@ -136,18 +132,12 @@ will push and release a charm could be:
         ...
         charmcraft upload my-super-charm.charm --release edge
 
-
 Check the currently logged in user
 ----------------------------------
 
-To check the currently logged in user, run ``charmcraft whoami``.
-
-    See more: :ref:`ref_commands_whoami`
-
+To check the currently logged in user, run :ref:`charmcraft whoami <ref_commands_whoami>`.
 
 Log out of Charmhub
 -------------------
 
-To log out of Charmhub, run ``charmcraft logout``.
-
-    See more: :ref:`ref_commands_logout`
+To log out of Charmhub, run :ref:`charmcraft logout <ref_commands_logout>`.

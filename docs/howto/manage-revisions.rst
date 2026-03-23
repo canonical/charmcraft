@@ -3,28 +3,26 @@
 Manage charm revisions
 ======================
 
+This guide shows you how to create, view, and promote charm revisions,
+and how to release a charm revision into a channel.
+
 .. raw:: html
 
     <!--As opposed to resource revisions.-->
 
-
 Create a charm revision
 -----------------------
 
-A charm revision is created implicitly every time you upload a charm to
-Charmhub (unless you're uploading the exact same file again).
-
-    See more: :ref:`publish-a-charm`
-
+A charm revision is created implicitly every time you
+:ref:`upload a charm on Charmhub <publish-a-charm>` (unless you're
+uploading the exact same file again).
 
 View the existing charm revisions
 ---------------------------------
 
-To inspect the existing charm revisions, run ``charmcraft revisions``
-followed by the name of the charm.
-
-    See more: :ref:`ref_commands_revisions`
-
+To inspect the existing charm revisions, run
+:ref:`charmcraft revisions <ref_commands_revisions>`, followed by the name
+of the charm.
 
 Promote a charm revision to a better risk level
 -----------------------------------------------
@@ -65,14 +63,14 @@ maintained separately from Charmcraft.
         3.6/beta:       ↑
         3.6/edge:       100  2023-02-03  (100)  860kB  amd64  ubuntu@20.04, ubuntu@18.04
 
-
 .. _release-a-revision-into-a-channel:
 
 Release a charm revision into a channel
 ---------------------------------------
 
-To release a specific charm revision to a channel, run ``charmcraft release`` followed
-by the name of the charm and flags specifying the revision and its target channel. E.g.,
+To :ref:`ref_commands_release` a specific charm revision to a channel, run ``charmcraft release``,
+followed by the name of the charm and flags specifying the revision and
+its target channel. For example,
 
 .. code-block:: bash
 
@@ -82,16 +80,10 @@ by the name of the charm and flags specifying the revision and its target channe
 
     Revision 1 of charm 'my-awesome-charm' released to beta
 
-..
-
-    See more: :ref:`ref_commands_release`
-
-This opens the channel you're releasing to.
-
-    See more: :ref:`manage-channels`
+This opens the channel you're releasing to. For more information on
+managing channels, see :ref:`manage-channels`.
 
 Following the release, Charmhub will display the charm's information at
 ``charmhub.io/<charm-name>``. (The default information displayed is obtained from the
 most stable channel.) Your charm will also become available for download.
-
-    See more: :external+juju:ref:`Juju | Manage charms <manage-charms>`
+For more information on managing charms, see :external+juju:ref:`manage-charms`.

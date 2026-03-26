@@ -118,7 +118,7 @@ To create a new track yourself, follow the steps below:
 
    Of course, the tracks must conform to the existing guardrail for the charm.
 
-   For more information on the API endpoint to create a new track, see
+   For the API reference for creating a new track, see
    `create_tracks <https://api.charmhub.io/docs/default/#create-tracks>`__
 
 That's it, you now have a new track for your charm!

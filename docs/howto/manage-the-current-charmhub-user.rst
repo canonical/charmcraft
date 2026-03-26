@@ -135,7 +135,7 @@ will push and release a charm could be:
 Check the currently logged in user
 ----------------------------------
 
-To check the currently logged in user, run :ref:`charmcraft whoami <ref_commands_whoami>`.
+To check the currently logged-in user, run :ref:`charmcraft whoami <ref_commands_whoami>`.
 
 Log out of Charmhub
 -------------------

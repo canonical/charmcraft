@@ -117,9 +117,7 @@ Fixed bugs and issues
 The following issues have been resolved in Charmcraft 4.2:
 
 - `#1930 <https://github.com/canonical/charmcraft/issues/1930>`__
-  ``charmcraft pack -o`` fails with ``FileNotFoundError`` when used with
-  the ``--output`` (``-o``) argument. The ``--project-dir`` (``-p``) argument
-  also now works correctly when combined with ``-o``.
+  charmcraft pack -o fails: FileNotFoundError
 
 Contributors
 ------------

@@ -647,6 +647,46 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
     }
 
 
+def test_invalid_paas_config_yaml_fails_pack(flask_input_yaml, tmp_path):
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: [json", encoding="utf-8"
+    )
+
+    with pytest.raises(ExtensionError, match=r"invalid YAML in paas-config.yaml"):
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+
+def test_json_framework_logging_disallowed_framework_fails_pack(tmp_path):
+    go_input_yaml = {
+        "type": "charm",
+        "name": "test-go",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {
+            "amd64": None,
+        },
+        "extensions": ["go-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
+    }
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: json\n", encoding="utf-8"
+    )
+
+    with pytest.raises(
+        ExtensionError,
+        match=r"framework_logging_format: json in paas-config.yaml is not supported for 'go-framework'",
+    ):
+        extensions.apply_extensions(tmp_path, go_input_yaml)
+
+
+def test_json_framework_logging_supported_framework_passes(flask_input_yaml, tmp_path):
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: json\n", encoding="utf-8"
+    )
+    extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+
 @pytest.mark.parametrize(
     ("input_yaml", "requires", "expected_options"),
     [

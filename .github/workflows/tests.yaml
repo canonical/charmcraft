@@ -116,55 +116,56 @@ jobs:
             dist\charmcraft-installer-self-signed.exe
             dist\charmcraft-installer.msix
 
-  macos-smoke-test:
-    strategy:
-      matrix:
-        os: [macos-13, macos-14-large]
-    runs-on: ${{ matrix.os }}
-    steps:
-      # Installing and caching homebrew using the action should speed up subsequent CI:
-      # https://github.com/Homebrew/actions/tree/master/setup-homebrew
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-      - name: Cache Homebrew Bundler RubyGems
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ runner.os }}-rubygems-
-      - name: Install Homebrew Bundler RubyGems
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: brew install-bundler-gems
-      - name: Install dependencies with homebrew
-        run: |
-          brew install multipass
-          brew install libgit2@1.7  # For building pygit2
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up uv with caching
-        id: setup-uv
-        uses: astral-sh/setup-uv@v5
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
-      - name: Build and install Charmcraft
-        run: |
-          uv sync --no-dev
-      - name: Check for fully-configured multipass
-        run: |
-          while ! multipass version; do
-            sleep 1
-          done
-      - name: Init and pack
-        run: |
-          source .venv/bin/activate
-          mkdir test-charm
-          cd test-charm
-          export CRAFT_VERBOSITY_LEVEL=trace
-          charmcraft init --profile=machine
-          charmcraft pack
-          test -f *.charm
+  # Disabled macos tests because of https://github.com/canonical/charmcraft/issues/2605
+  # macos-smoke-test:
+  #   strategy:
+  #     matrix:
+  #       os: [macos-13, macos-14-large]
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     # Installing and caching homebrew using the action should speed up subsequent CI:
+  #     # https://github.com/Homebrew/actions/tree/master/setup-homebrew
+  #     - name: Set up Homebrew
+  #       id: set-up-homebrew
+  #       uses: Homebrew/actions/setup-homebrew@master
+  #     - name: Cache Homebrew Bundler RubyGems
+  #       id: cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+  #         key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+  #         restore-keys: ${{ runner.os }}-rubygems-
+  #     - name: Install Homebrew Bundler RubyGems
+  #       if: steps.cache.outputs.cache-hit != 'true'
+  #       run: brew install-bundler-gems
+  #     - name: Install dependencies with homebrew
+  #       run: |
+  #         brew install multipass
+  #         brew install libgit2@1.7  # For building pygit2
+  #     - name: Checkout code
+  #       uses: actions/checkout@v6
+  #     - name: Set up uv with caching
+  #       id: setup-uv
+  #       uses: astral-sh/setup-uv@v7
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.12"
+  #         cache: "pip"
+  #     - name: Build and install Charmcraft
+  #       run: |
+  #         uv sync --no-dev
+  #     - name: Check for fully-configured multipass
+  #       run: |
+  #         while ! multipass version; do
+  #           sleep 1
+  #         done
+  #     - name: Init and pack
+  #       run: |
+  #         source .venv/bin/activate
+  #         mkdir test-charm
+  #         cd test-charm
+  #         export CRAFT_VERBOSITY_LEVEL=trace
+  #         charmcraft init --profile=machine
+  #         charmcraft pack
+  #         test -f *.charm

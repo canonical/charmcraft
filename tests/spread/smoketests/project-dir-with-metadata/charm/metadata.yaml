@@ -1,0 +1,6 @@
+name: test-charm
+summary: A test charm
+description: A charm for testing metadata loading with --project-dir
+
+# The marker below is used by the test to verify that this file was correctly copied/loaded into the charm package.
+#### TEST-COPY ####

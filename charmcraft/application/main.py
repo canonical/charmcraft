@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 from typing import Any
 
 import craft_application
@@ -156,6 +157,9 @@ class Charmcraft(craft_application.Application):
                 "project",
                 project_dir=self.project_dir,
             )
+            # Change to the project directory so that both finding charmcraft.yaml
+            # and preprocessing with pathlib.Path.cwd() work correctly with --project-dir
+            os.chdir(self.project_dir)
         return super()._run_inner()
 
 

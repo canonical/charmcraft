@@ -117,7 +117,7 @@ Fixed bugs and issues
 The following issues have been resolved in Charmcraft 4.2:
 
 - `#1930 <https://github.com/canonical/charmcraft/issues/1930>`__
-  charmcraft pack -o fails: FileNotFoundError
+  ``charmcraft pack -o`` fails: ``FileNotFoundError``
 
 Contributors
 ------------

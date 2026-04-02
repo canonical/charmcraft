@@ -147,15 +147,21 @@ class Charmcraft(craft_application.Application):
             dispatcher = self._get_dispatcher()
             dispatcher.load_command(self.app_config)
             parsed_args = dispatcher.parsed_args()
-            self.project_dir = (
+            new_project_dir = (
                 getattr(parsed_args, "project_dir", self.project_dir)
                 .expanduser()
                 .resolve()
             )
-            self.services.update_kwargs(
-                "project",
-                project_dir=self.project_dir,
-            )
+            if new_project_dir != self.project_dir:
+                self.project_dir = new_project_dir
+                self.services.update_kwargs(
+                    "project",
+                    project_dir=self.project_dir,
+                )
+                # The project service may have been cached during plugin loading
+                # with the wrong project_dir (CWD instead of the -p argument).
+                # Evict it so it gets re-created with the correct project_dir.
+                self.services._services.pop("project", None)
         return super()._run_inner()
 
 

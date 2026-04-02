@@ -344,6 +344,8 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
     # The run time base, the base format is <os-name>@<os-release>,
     # accepted bases are:
     # - ubuntu@24.04
+    # - ubuntu@25.10
+    # - ubuntu@26.04
     base: <base>
     # The build time base, if not defined the base is also the build time
     # base, in addition to valid bases, the build-base can be "devel"

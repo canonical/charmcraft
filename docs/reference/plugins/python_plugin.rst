@@ -53,7 +53,7 @@ Example
 -------
 
 The following project file can be used with a standard charm structure
-to build a charm for Ubuntu 24.04:
+to build a charm for Ubuntu 26.04:
 
 .. literalinclude:: python-charmcraft.yaml
    :language: yaml

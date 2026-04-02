@@ -120,12 +120,12 @@ Example ``build-on`` values containing both a base and an architecture include:
 .. code:: yaml
 
     build-on:
-      - ubuntu@24.04:riscv64
+      - ubuntu@26.04:riscv64
 
 .. code:: yaml
 
     build-on:
-      - ubuntu@22.04:amd64
+      - ubuntu@24.04:amd64
 
 .. _reference-build-for:
 
@@ -204,6 +204,8 @@ Supported bases are:
 * ``ubuntu@24.04``
 * ``ubuntu@24.10``
 * ``ubuntu@25.04``
+* ``ubuntu@25.10``
+* ``ubuntu@26.04``
 * ``almalinux@9``
 
 ``build-base``
@@ -233,7 +235,7 @@ Consider the following snippet:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      amd64:
        build-on: [amd64]
@@ -247,17 +249,17 @@ Consider the following snippet:
 
 This snippet generates a build plan with 4 items:
 
-+--------+---------------+---------------+-----------------+----------------+--------------+
-| number | platform name | build-on arch | build-time base | build-for arch | runtime base |
-+========+===============+===============+=================+================+==============+
-| 1      | amd64         | amd64         | Ubuntu 24.04    | amd64          | Ubuntu 24.04 |
-+--------+---------------+---------------+-----------------+----------------+--------------+
-| 2      | amd64-debug   | amd64         | Ubuntu 24.04    | amd64          | Ubuntu 24.04 |
-+--------+---------------+---------------+-----------------+----------------+--------------+
-| 3      | riscv64-cross | amd64         | Ubuntu 24.04    | riscv64        | Ubuntu 24.04 |
-+--------+---------------+---------------+-----------------+----------------+--------------+
-| 4      | riscv64-cross | riscv64       | Ubuntu 24.04    | riscv64        | Ubuntu 24.04 |
-+--------+---------------+---------------+-----------------+----------------+--------------+
++--------+---------------+---------------+------------------+----------------+------------------+
+| number | platform name | build-on arch | build-time base  | build-for arch | runtime base     |
++========+===============+===============+==================+================+==================+
+| 1      | amd64         | amd64         | Ubuntu 26.04 LTS | amd64          | Ubuntu 26.04 LTS |
++--------+---------------+---------------+------------------+----------------+------------------+
+| 2      | amd64-debug   | amd64         | Ubuntu 26.04 LTS | amd64          | Ubuntu 26.04 LTS |
++--------+---------------+---------------+------------------+----------------+------------------+
+| 3      | riscv64-cross | amd64         | Ubuntu 26.04 LTS | riscv64        | Ubuntu 26.04 LTS |
++--------+---------------+---------------+------------------+----------------+------------------+
+| 4      | riscv64-cross | riscv64       | Ubuntu 26.04 LTS | riscv64        | Ubuntu 26.04 LTS |
++--------+---------------+---------------+------------------+----------------+------------------+
 
 If Charmcraft executes on a RISC-V system, it filters the build plan to
 only builds with a ``build-on`` of ``riscv64``. This means Charmcraft will only

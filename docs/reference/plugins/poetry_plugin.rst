@@ -40,7 +40,7 @@ Example
 -------
 
 The following project file can be used with a poetry project to build
-the charm for Ubuntu 24.04:
+the charm for Ubuntu 26.04:
 
 .. literalinclude:: poetry-charmcraft.yaml
    :language: yaml

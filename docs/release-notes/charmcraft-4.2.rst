@@ -83,8 +83,13 @@ See individual issue links for any mitigations.
   uploading a charm outside of a project directory
 
 
-.. Fixed bugs and issues
-.. ---------------------
+Fixed bugs and issues
+---------------------
+
+The following issues have been resolved in Charmcraft 4.2:
+
+- `#1930 <https://github.com/canonical/charmcraft/issues/1930>`__
+  ``charmcraft pack -o`` fails: ``FileNotFoundError``
 
 Contributors
 ------------

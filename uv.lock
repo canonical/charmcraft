@@ -48,6 +48,7 @@ constraints = [
     { name = "typing-extensions", specifier = "!=4.14.0" },
     { name = "webencodings", specifier = ">=0.4.0" },
 ]
+build-constraints = [{ name = "maturin", marker = "python_full_version < '3.14'", specifier = "<1.12.0" }]
 
 [[package]]
 name = "alabaster"

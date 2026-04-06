@@ -147,7 +147,7 @@ parts:
       # Set up the rust compiler
       rustup default 1.85
     override-build: |
-      uv venv --relocatable $CRAFT_PART_INSTALL
+      uv venv --relocatable --clear $CRAFT_PART_INSTALL
       uv sync --no-dev --no-editable --no-binary
       . $CRAFT_PART_INSTALL/bin/activate
       uv pip install -r requirements-jammy.txt

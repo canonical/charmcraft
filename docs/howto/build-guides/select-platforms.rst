@@ -177,7 +177,7 @@ notation<reference-platforms-multi-base>`:
        build-for: [ubuntu@22.04:amd64]
      ubuntu-24.04-amd64:
        build-on: [ubuntu@24.04:amd64]
-       build-for: [ubuntu@42.04:amd64]
+       build-for: [ubuntu@24.04:amd64]
      ubuntu-26.04-amd64:
        build-on: [ubuntu@26.04:amd64]
        build-for: [ubuntu@26.04:amd64]

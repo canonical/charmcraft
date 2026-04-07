@@ -249,17 +249,29 @@ Consider the following snippet:
 
 This snippet generates a build plan with 4 items:
 
-+--------+---------------+---------------+------------------+----------------+------------------+
-| number | platform name | build-on arch | build-time base  | build-for arch | runtime base     |
-+========+===============+===============+==================+================+==================+
-| 1      | amd64         | amd64         | Ubuntu 26.04 LTS | amd64          | Ubuntu 26.04 LTS |
-+--------+---------------+---------------+------------------+----------------+------------------+
-| 2      | amd64-debug   | amd64         | Ubuntu 26.04 LTS | amd64          | Ubuntu 26.04 LTS |
-+--------+---------------+---------------+------------------+----------------+------------------+
-| 3      | riscv64-cross | amd64         | Ubuntu 26.04 LTS | riscv64        | Ubuntu 26.04 LTS |
-+--------+---------------+---------------+------------------+----------------+------------------+
-| 4      | riscv64-cross | riscv64       | Ubuntu 26.04 LTS | riscv64        | Ubuntu 26.04 LTS |
-+--------+---------------+---------------+------------------+----------------+------------------+
+.. list-table:: Build Plan
+    :header-rows: 1
+
+    * - Platform
+      - Builds and runs on
+      - Build-time architecture
+      - Runtime architecture
+    * - amd64
+      - Ubuntu 26.04 LTS
+      - amd64
+      - amd64
+    * - amd64-debug
+      - Ubuntu 26.04 LTS
+      - amd64
+      - amd64
+    * - riscv64-cross
+      - Ubuntu 26.04 LTS
+      - amd64
+      - riscv64
+    * - riscv64-cross
+      - Ubuntu 26.04 LTS
+      - riscv64
+      - riscv64
 
 If Charmcraft executes on a RISC-V system, it filters the build plan to
 only builds with a ``build-on`` of ``riscv64``. This means Charmcraft will only

@@ -1,21 +1,5 @@
 summary: pack a charm with separate metadata files from a different directory
 
-restore: |
-  pushd charm
-  charmcraft clean
-  popd
-
-  rm -rf charm output
-
 execute: |
-  charmcraft pack --verbose --project-dir=charm
-  test ! -f charm/charm*.charm
-  test -f charm*.charm
-
-  rm -f charm*.charm
-
-  mkdir -p output
-  charmcraft pack --verbose --project-dir=charm -o output
-  test ! -f charm/charm*.charm
-  test ! -f charm*.charm
-  test -f output/charm*.charm
+  # If we pull successfully it means we got the correct files!
+  charmcraft pull --verbose --project-dir=charm

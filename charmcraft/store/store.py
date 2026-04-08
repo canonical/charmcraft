@@ -275,6 +275,49 @@ class Store:
         )
 
     @_store_client_wrapper()
+    def get_collaborators(self, charm: str):
+        """Get charm collaborators."""
+        return self._client.request_urlpath_json(
+            "GET",
+            f"/v1/charm/{charm}/collaborators",
+        )
+
+    @_store_client_wrapper()
+    def get_collaborator_invites(self, charm: str):
+        """Get collaborator invitations."""
+        return self._client.request_urlpath_json(
+            "GET",
+            f"/v1/charm/{charm}/collaborators/invites",
+        )
+
+    @_store_client_wrapper()
+    def invite_collaborator(self, charm: str, collaborator: str):
+        """Invite a charm collaborator."""
+        return self._client.request_urlpath_json(
+            "POST",
+            f"/v1/charm/{charm}/collaborators/invites",
+            json={"invites": [{"email": collaborator}]},
+        )
+
+    @_store_client_wrapper()
+    def revoke_invite(self, charm: str, collaborator: str) -> None:
+        """Invite a charm collaborator."""
+        self._client.request_urlpath_text(
+            "POST",
+            f"/v1/charm/{charm}/collaborators/invites/revoke",
+            json={"invites": [{"email": collaborator}]},
+        )
+
+    @_store_client_wrapper()
+    def accept_invite(self, charm: str, token: str) -> None:
+        """Invite a charm collaborator."""
+        self._client.request_urlpath_text(
+            "POST",
+            f"/v1/charm/{charm}/collaborators/invites/accept",
+            json={"token": token},
+        )
+
+    @_store_client_wrapper()
     def unregister_name(self, name: str) -> None:
         """Unregister a package that hasn't been published.
 

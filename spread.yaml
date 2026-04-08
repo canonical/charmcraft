@@ -138,6 +138,9 @@ prepare: |
     fi
   fi
 
+  # Needed because some cloud instances, e.g. 26.04, don't have packages cached.
+  apt-get update
+
   tests.pkgs install snapd
   tests.pkgs install unzip
 

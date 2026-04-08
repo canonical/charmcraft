@@ -249,7 +249,7 @@ Consider the following snippet:
 
 This snippet generates a build plan with 4 items:
 
-.. list-table:: Build Plan
+.. list-table::
     :header-rows: 1
 
     * - Platform

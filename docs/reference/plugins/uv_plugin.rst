@@ -42,7 +42,7 @@ Example
 -------
 
 The following project file can be used with a uv project to
-craft a charm with Ubuntu 26.04 as its base:
+craft a charm with Ubuntu 26.04 LTS as its base:
 
 .. literalinclude:: uv-charmcraft.yaml
     :language: yaml

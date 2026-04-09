@@ -1093,16 +1093,16 @@ wheels = [
 
 [[package]]
 name = "craft-platforms"
-version = "0.11.0"
+version = "0.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
     { name = "distro" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/be/f0/00dd4b4f0529eeb399fbaf1a9e536fd98f1ee0ba3e9a8febde94914ccd0b/craft_platforms-0.11.0.tar.gz", hash = "sha256:2e795922f471220e08c202881da761793e1f28961e77e0b476b1dbaa62860e7a", size = 299115, upload-time = "2026-03-05T18:58:41.961Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/b9/b7bef735949e73756910d85c1d4178e5c6523b70e5dbe5477ab0c2fd8d81/craft_platforms-0.11.1.tar.gz", hash = "sha256:5807e2b727c0cb9c7c85e5ecaf4181ed1b3f89e6232464736369dcb871ae9339", size = 355329, upload-time = "2026-04-09T14:07:58.52Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/51/1a645a07233087b253b922f30ebaef70818d9fb6a8c3e8cea8c0627ba735/craft_platforms-0.11.0-py3-none-any.whl", hash = "sha256:5c917233729870882cd4e3dfd13c6adc0165c2dbafe9f04337360fc0cad70277", size = 37828, upload-time = "2026-03-05T18:58:40.476Z" },
+    { url = "https://files.pythonhosted.org/packages/42/77/d2a19bde5e05ec30eef8f63f6f6e1cde9c4f07be5da7fb71a675e159eec2/craft_platforms-0.11.1-py3-none-any.whl", hash = "sha256:740dc7ba7f508a2fe8f3f8f8a6784fd70d48b36a2930a418a19c69cefe68d398", size = 37897, upload-time = "2026-04-09T14:07:56.931Z" },
 ]
 
 [[package]]

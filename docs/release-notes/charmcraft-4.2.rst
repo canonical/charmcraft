@@ -89,7 +89,7 @@ The following issues have been resolved in Charmcraft 4.2.1:
 - `#1930 <https://github.com/canonical/charmcraft/issues/1930>`__
   ``charmcraft pack -o`` fails: ``FileNotFoundError``
 - `#2493 <https://github.com/canonical/charmcraft/issues/2493>`__ Packing fails when
-  using a separate metadata.yaml file and the ``--project-dir`` argument
+  using a separate ``metadata.yaml`` file and the ``--project-dir`` argument
 
 Contributors
 ------------

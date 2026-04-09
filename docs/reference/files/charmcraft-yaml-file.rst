@@ -188,7 +188,7 @@ block must be satisfied.
 
 .. code-block:: yaml
 
-    base: ubuntu@24.04
+    base: ubuntu@26.04
 
 
 .. _charmcraft-yaml-key-bases:
@@ -210,6 +210,7 @@ block must be satisfied.
             # accepted bases are:
             # - ubuntu@22.04
             # - ubuntu@24.04
+            # - ubuntu@26.04
             base: <base>
             # The build time base. Only used if the runtime base is not stable.
             # Accepts all runtime bases and ``ubuntu@devel``

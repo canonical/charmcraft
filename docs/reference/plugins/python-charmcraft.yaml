@@ -4,7 +4,7 @@ title: My Python charm
 summary: An operator charm that uses the python plugin
 description: |
   An operator charm using the Python plugin.
-base: ubuntu@24.04
+base: ubuntu@26.04
 platforms:
   amd64:
 parts:

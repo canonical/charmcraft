@@ -4,7 +4,7 @@ title: My poetry charm
 summary: An operator charm using Poetry.
 description: |
   An operator charm that uses Poetry for its project.
-base: ubuntu@24.04
+base: ubuntu@26.04
 platforms:
   amd64:
 parts:

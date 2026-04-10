@@ -11,10 +11,11 @@ web app frameworks. While the overall basic logic is the same as
 :ref:`managing a charm <manage-charms>`, the following guides are about
 the 12-factor app charm workflow.
 
-Initialization
---------------
 
 .. _init-12-factor-charms:
+
+Initialization
+--------------
 
 You will need a rock for your 12-factor app charm.
 :external+rockcraft:ref:`Prepare a 12-factor app rock <set-up-web-app-rock>`

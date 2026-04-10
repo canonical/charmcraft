@@ -1,9 +1,94 @@
 :relatedlinks: [Juju](https://documentation.ubuntu.com/juju/), [Ops](https://documentation.ubuntu.com/ops/), [Charmlibs](https://canonical-charmlibs.readthedocs-hosted.com/), [Jubilant](https://documentation.ubuntu.com/jubilant/), [Concierge](https://github.com/canonical/concierge), [Pebble](https://documentation.ubuntu.com/pebble/)
 
-.. Charmcraft documentation root file
 
 Charmcraft
 ==========
+
+Charmcraft is the command-line tool for initializing, packaging, and publishing Juju
+charms.
+
+For new projects, Charmcraft generates all the necessary files, which can be tailored to
+an app by modifying the YAML and Ops-powered Python inside. With extensions, Charmcraft
+adapts the template content to languages and frameworks such as Django, Express, and Go.
+Then, with a few commands, charm authors can package the charm and publish it to
+Charmhub.
+
+With Charmcraft, developers can bypass boilerplate steps and focus on the content of
+their charms. Additionally, its integration with tools and platforms such as Ops and
+Charmhub provide a complete charm development experience.
+
+Charmcraft is for platform engineers, site reliability engineers, and systems
+administrators looking to charm an application for their Juju deployment.
+
+
+In this documentation
+---------------------
+
+.. list-table::
+    :widths: 35 65
+    :header-rows: 0
+
+    * - **Installation and setup**
+      - :ref:`manage-charmcraft`
+    * - **Vocabulary and syntax**
+      - :ref:`configure-package-information` • :ref:`commands` •
+        :ref:`charmcraft.yaml <charmcraft-yaml-file>` •
+        :ref:`Part keys <reference-part-properties>`
+    * - **Platform compatibility**
+      - :ref:`select-platforms` • :ref:`explanation-bases` •
+        :ref:`reference-platforms`
+    * - **Software integration**
+      - :ref:`parts` • :ref:`manage-resources` • :ref:`manage-libraries`
+    * - **12-factor web apps**
+      - :ref:`tutorial` • :ref:`init-12-factor-charms` •
+        :ref:`Configuration <configure-12-factor-charms>` •
+        :ref:`Integration <integrate-12-factor-charms>` •
+        :ref:`Usage <use-12-factor-charms>` • :ref:`extensions`
+    * - **Debugging**
+      - :ref:`charmcraft-analyzers-and-linters`
+    * - **Distribution**
+      - :ref:`publish-a-charm` • :ref:`manage-names` • :ref:`manage-tracks` •
+        :ref:`manage-channels` • :ref:`manage-charm-revisions`
+
+
+How this documentation is organized
+-----------------------------------
+
+The Charmcraft documentation embodies the `Diátaxis framework <https://diataxis.fr/>`__.
+
+* The :ref:`tutorials <tutorial>` are lessons that steps through the main process of
+  packaging a charm.
+* :ref:`how-to-guides` contain directions for crafting charms.
+* :ref:`References <reference>` describe the structure and function of the individual
+  components in Charmcraft.
+* :ref:`Explanations <explanation>` aid in understanding the concepts and relationships
+  of Charmcraft as a system.
+
+
+Project and community
+---------------------
+
+Charmcraft is a member of the Canonical family. It's an open source project that warmly
+welcomes community projects, contributions, suggestions, fixes and constructive
+feedback.
+
+
+Get involved
+~~~~~~~~~~~~
+
+* `Charmcraft Matrix channel <https://matrix.to/#/#charmcraft:ubuntu.com>`__
+* `Charmcraft forum <https://discourse.charmhub.io/c/charmcraft/3>`__
+* `Contribute to Charmcraft development <https://github.com/canonical/charmcraft/blob/main/CONTRIBUTING.md>`__
+* :ref:`contribute-to-this-documentation`
+
+
+Governance and policies
+~~~~~~~~~~~~~~~~~~~~~~~
+
+* `Ubuntu Code of Conduct <https://ubuntu.com/community/docs/ethos/code-of-conduct>`__
+* `Canonical Contributor License Agreement
+  <https://ubuntu.com/legal/contributors>`__
+
 
 .. toctree::
     :maxdepth: 2
@@ -15,66 +100,3 @@ Charmcraft
     explanation/index
     contribute-to-this-documentation
     release-notes/index
-
-Charmcraft is the command-line tool for initializing, packaging, and publishing
-:external+juju:ref:`Juju charms <charm>`.
-
-When initializing a project, Charmcraft generates all the necessary files, which can be
-further catered to an application by modifying the YAML and :external+ops:doc:`Ops
-<index>`-powered Python in the pre-populated template content. For Django, FastAPI,
-Flask, and Go applications, Charmcraft's extensions simplify this process further by
-only requiring minor YAML changes after initialization. With just a few simple commands,
-charm authors can then use Charmcraft to package a charm and publish it to `Charmhub`_.
-
-Charmcraft simplifies every step of the charming process, enabling charm authors to
-bypass boilerplate steps and focus on the contents of their charms. Additionally,
-Charmcraft's integration with tools and platforms such as Ops and Charmhub provides
-charm authors with a complete charm development experience.
-
-Charmcraft offers an efficient and straightforward way for anyone to charm an
-application for their Juju deployment, regardless of that application's complexity or
-scope.
-
-
-In this documentation
----------------------
-
-.. grid:: 1 1 2 2
-
-    .. grid-item-card:: Tutorial
-        :link: tutorial/index
-        :link-type: doc
-
-        **Get started** - a hands-on introduction to Charmcraft for new users
-
-    .. grid-item-card:: How-to guides
-        :link: howto/index
-        :link-type: doc
-
-        **Step-by-step guides** covering key operations and common tasks
-
-.. grid:: 1 1 2 2
-    :reverse:
-
-    .. grid-item-card:: Reference
-        :link: reference/index
-        :link-type: doc
-
-        **Technical information**, including commands, extensions, and project files
-
-    .. grid-item-card:: Explanation
-        :link: explanation/index
-        :link-type: doc
-
-        **Discussion and clarification** of key topics
-
-
-Project and community
----------------------
-
-Charmcraft is a member of the Canonical family. It's an open source project
-that warmly welcomes community projects, contributions, suggestions, fixes,
-and constructive feedback.
-
-- `Ubuntu Code of Conduct <https://ubuntu.com/community/code-of-conduct>`_
-- `Canonical contributor licence agreement <https://ubuntu.com/legal/contributors>`_

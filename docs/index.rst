@@ -4,7 +4,7 @@
 Charmcraft
 ==========
 
-Charmcraft is the command-line tool for initializing, packaging, and publishing Juju
+**Charmcraft** is the command-line tool for initializing, packaging, and publishing Juju
 charms.
 
 For new projects, Charmcraft generates all the necessary files, which can be tailored to

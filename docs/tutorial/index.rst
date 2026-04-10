@@ -1,7 +1,7 @@
 .. _tutorial:
 
-Tutorial
-========
+Tutorials
+=========
 
 The tutorials are guided lessons that help you develop skills by using Charmcraft. Each
 is self-contained and delivers a working result that marks a learning milestone and is

@@ -1,7 +1,7 @@
 .. _manage-charm-revisions:
 
-Manage charm revisions
-======================
+Manage revisions
+================
 
 .. raw:: html
 

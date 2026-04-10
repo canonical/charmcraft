@@ -222,7 +222,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/flask/task.yaml
@@ -351,7 +351,8 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model              Controller      Cloud/Region        Version  SLA          Timestamp
     flask-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  17:04:11+10:00
@@ -655,10 +656,15 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+
+    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+
     2
 
 Tear things down

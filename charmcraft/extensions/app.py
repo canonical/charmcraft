@@ -454,7 +454,7 @@ class FastAPIFramework(_AppBase):
         "webserver-port": {
             "type": "int",
             "default": 8080,
-            "description": "Bind to a socket with this port. Default: 8000. Sets env variable  UVICORN_PORT.",
+            "description": "Bind to a socket with this port. Default: 8080. Sets env variable  UVICORN_PORT.",
         },
         "webserver-log-level": {
             "type": "string",

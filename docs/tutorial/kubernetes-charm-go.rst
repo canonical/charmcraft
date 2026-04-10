@@ -191,7 +191,7 @@ The top of the file should look similar to the following snippet:
         # ppc64el:
         # s390x:
 
-Verfiy that the ``name`` is ``go-hello-world``.
+Verify that the ``name`` is ``go-hello-world``.
 
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
@@ -219,7 +219,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/go/task.yaml
@@ -389,7 +389,8 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model           Controller      Cloud/Region        Version  SLA          Timestamp
     go-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  14:35:07+02:00
@@ -732,10 +733,15 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+
     Number of visitors 2
 
 Tear things down

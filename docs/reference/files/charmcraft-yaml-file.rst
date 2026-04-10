@@ -24,7 +24,7 @@
 ``charmcraft.yaml`` is a file in your charm project that contains keys that allow you
 to declare information about the project in a form that can be used by Charmcraft.
 
-.. collapse:: Expand to view a full charm with sample content all at once
+.. dropdown:: Expand to view a full charm with sample content all at once
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :language: yaml
@@ -47,7 +47,7 @@ to declare information about the project in a form that can be used by Charmcraf
 
 The value of this key is the contents of :ref:`actions-yaml-file`.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :language: yaml
@@ -61,6 +61,13 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
     For charms that have already standardised on underscores, it is not necessary to
     change them, and it is better to be consistent within a charm then to have
     some action names be dashed and some be underscored.
+
+.. admonition:: Best practice
+    :class: hint
+
+    Always explicitly include the ``additionalProperties`` key. The default value is
+    different in Juju 3 (``true``) and Juju 4 (``false``), so explicitly including it
+    in the actions definition ensures consistent behaviour between versions.
 
 
 .. _charmcraft-yaml-key-analysis:
@@ -85,7 +92,7 @@ the ``charmcraft analyse`` command.
         attributes: [<check-name>,...]
         linters: [<check-name>,...]
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: analysis:
@@ -146,7 +153,7 @@ block must be satisfied.
       - ``k8s-api``
       - Since Juju 2.9.23
 
-.. collapse:: Simple example
+.. dropdown:: Simple example
 
     .. code-block:: yaml
 
@@ -154,7 +161,7 @@ block must be satisfied.
          - juju >= 2.9.23
          - k8s-api
 
-.. collapse:: Complex example
+.. dropdown:: Complex example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: assumes:
@@ -181,7 +188,7 @@ block must be satisfied.
 
 .. code-block:: yaml
 
-    base: ubuntu@24.04
+    base: ubuntu@26.04
 
 
 .. _charmcraft-yaml-key-bases:
@@ -193,7 +200,7 @@ block must be satisfied.
 
     ``bases`` is deprecated, replaced by `base`_, `build-base`_, and platforms.
 
-    .. collapse:: See more
+    .. dropdown:: See more
 
         The ``bases`` key is only accepted for bases supported before 2024-01-01.
 
@@ -203,6 +210,7 @@ block must be satisfied.
             # accepted bases are:
             # - ubuntu@22.04
             # - ubuntu@24.04
+            # - ubuntu@26.04
             base: <base>
             # The build time base. Only used if the runtime base is not stable.
             # Accepts all runtime bases and ``ubuntu@devel``
@@ -256,7 +264,7 @@ It implies that the specified base is to be used for both ``build-on`` and
 ``run-on``. As above, the list of architecture strings is also optional, defaulting
 to the machine architecture.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. code:: yaml
 
@@ -419,7 +427,7 @@ of the container registry for OCI image uploads. These keys are also optional.
 The key is used mostly in the context of "private" charm stores, defaulting to
 the standard Canonical services to operate with charms.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. code-block:: yaml
 
@@ -458,7 +466,7 @@ the standard Canonical services to operate with charms.
 If ``type`` is ``secret``, this is a string that needs to correspond to the
 secret URI.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: config:
@@ -543,7 +551,7 @@ which also sets the mount point in the charm container.
         uid: <unix UID>
         gid: <unix GID>
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: containers:
@@ -589,7 +597,7 @@ which also sets the mount point in the charm container.
             # (Optional) Maximum number of devices required
             countmax: <n>
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: devices:
@@ -635,7 +643,7 @@ which also sets the mount point in the charm container.
 
 **Purpose:** Links to various additional information, to be displayed on Charmhub.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: links:
@@ -705,64 +713,68 @@ is a map where keys are part properties.
 ..     https://github.com/canonical/charmcraft/issues/2378
 ..     See more: :ref:`part_properties`
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: parts:
         :end-before: peers:
 
-.. collapse:: Details
+Charmcraft offers two custom plugins specifically for writing charms.
 
-    .. TODO: These should be moved to their own plugin pages.
 
-    Charmcraft offers three custom parts plugins specifically for writing charms:
+.. _reference-charmcraft-yaml-charm-plugin:
 
-    **The** ``charm`` **plugin**
+Charm plugin
+~~~~~~~~~~~~
 
-    Used to pack a Charm that is based on the `Operator framework`_.
+Used to pack a Charm that is based on the `Operator framework`_.
 
-    Supports the following configuration:
+Supports the following configuration:
 
-    .. code-block:: yaml
+.. code-block:: yaml
 
-        parts:
-          my-charm:
-            plugin: charm
-            charm-entrypoint: <path to an entrypoint script>
-            charm-requirements: <list of requirements files>
-            charm-python-packages: <list of package names>
-            charm-binary-python-packages: <list of package names>
-            prime: <list of paths to extra files>
+    parts:
+      my-charm:
+        plugin: charm
+        charm-entrypoint: <path to an entrypoint script>
+        charm-requirements: <list of requirements files>
+        charm-python-packages: <list of package names>
+        charm-binary-python-packages: <list of package names>
+        prime: <list of paths to extra files>
 
-    In detail:
+In detail:
 
-    - ``charm-entrypoint``: The charm entry point, relative to the project directory. It is optional if not defined defaults to ``src/charm.py``.
-    - ``charm-requirements``: A list of requirements files specifying Python dependencies. It is optional; if not defined, defaults to a list with one ``requirements.txt`` entry if that file is present in the project directory.
-    - ``charm-python-packages``: A list of Python packages to install before installing requirements. These packages will be installed from sources and built locally at packing time. It is optional, defaults to empty.
-    - ``charm-binary-python-packages``: A list of python packages to install before installing requirements and regular Python packages. Binary packages are allowed, but they may also be installed from sources if a package is only available in source form. It is optional, defaults to empty.
+- ``charm-entrypoint``: The charm entry point, relative to the project directory. It is optional if not defined defaults to ``src/charm.py``.
+- ``charm-requirements``: A list of requirements files specifying Python dependencies. It is optional; if not defined, defaults to a list with one ``requirements.txt`` entry if that file is present in the project directory.
+- ``charm-python-packages``: A list of Python packages to install before installing requirements. These packages will be installed from sources and built locally at packing time. It is optional, defaults to empty.
+- ``charm-binary-python-packages``: A list of python packages to install before installing requirements and regular Python packages. Binary packages are allowed, but they may also be installed from sources if a package is only available in source form. It is optional, defaults to empty.
 
-    **The** ``reactive`` **plugin**
 
-    Used to pack charms using the reactive framework.
+.. _reference-charmcraft-yaml-reactive-plugin:
 
-    ..  important::
+Reactive plugin
+~~~~~~~~~~~~~~~
 
-        The reactive framework has been superseded by the `Operator framework`_.
-        Please use that framework instead of reactive. Support for reactive in
-        Charmcraft is only to ease the transition of old charms to the new framework.
+Used to pack charms using the reactive framework.
 
-    Supports the following configuration:
+..  important::
 
-    .. code-block:: yaml
+    The reactive framework has been superseded by the `Operator framework`_.
+    Please use that framework instead of reactive. Support for reactive in
+    Charmcraft is only to ease the transition of old charms to the new framework.
 
-        parts:
-          charm:
-            source: .
-            plugin: reactive
-            build-snaps: [charm]
-            reactive-charm-build-arguments: <list of command line options>
+Supports the following configuration:
 
-    The ``reactive_charm_build_arguments`` allows to include extra command line arguments in the underlying ``charm build`` call.
+.. code-block:: yaml
+
+    parts:
+      charm:
+        source: .
+        plugin: reactive
+        build-snaps: [charm]
+        reactive-charm-build-arguments: <list of command line options>
+
+The ``reactive_charm_build_arguments`` allows to include extra command line arguments in the underlying ``charm build`` call.
 
 
 .. _charmcraft-yaml-key-peers:
@@ -774,7 +786,7 @@ is a map where keys are part properties.
 
     See also: :external+juju:ref:`Juju | Relation (integration) <relation>`
 
-.. collapse:: Example featuring all three keys
+.. dropdown:: Example featuring all three keys
 
     .. code-block:: yaml
 
@@ -795,7 +807,7 @@ is a map where keys are part properties.
             scope: global
 
 
-.. collapse:: The full schema for a chosen endpoint role
+.. dropdown:: The full schema for a chosen endpoint role
 
     .. code-block:: yaml
 
@@ -954,7 +966,7 @@ at least one ``requires`` integration with ``container`` scope.
         description: <string description of the resource>
         filename: <path to resource if it is a file>
 
-.. collapse:: File resource example
+.. dropdown:: File resource example
 
 
     .. code-block:: yaml
@@ -964,7 +976,7 @@ at least one ``requires`` integration with ``container`` scope.
             type: file
             filename: /dev/h2o
 
-.. collapse:: OCI image example
+.. dropdown:: OCI image example
 
     .. code-block:: yaml
 
@@ -1024,7 +1036,7 @@ at least one ``requires`` integration with ``container`` scope.
           - transient
 
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: storage:  # Possible storage for the charm
@@ -1063,7 +1075,7 @@ to a principal charm.
 
 **Structure:** A short, one-line description of the charm. No more than 78 characters.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. code-block:: yaml
 
@@ -1086,7 +1098,7 @@ to a principal charm.
     terms:
       - <term>
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: terms:
@@ -1102,7 +1114,7 @@ to a principal charm.
 
 **Purpose:** A human-readable name for your charm
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: title:
@@ -1124,7 +1136,7 @@ to a principal charm.
 
 **Value:** ``charm``.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. code-block:: yaml
 

@@ -232,7 +232,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -406,7 +406,8 @@ the deployment using ``juju status``, which should be similar to the following
 output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model                Controller      Cloud/Region        Version  SLA          Timestamp
     fastapi-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  13:45:18+10:00
@@ -715,10 +716,15 @@ be incremented each time the root endpoint is requested. If we repeat
 this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
     {"message":"Hi!"}
-    :input: curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+
     {"count":2}
 
 Tear things down

@@ -199,7 +199,7 @@ The top of the file should look similar to the following snippet:
         # ppc64el:
         # s390x:
 
-Verfiy that the ``name`` is ``spring-boot-hello-world``.
+Verify that the ``name`` is ``spring-boot-hello-world``.
 
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
@@ -222,7 +222,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/spring-boot/task.yaml
@@ -382,7 +382,8 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model                    Controller      Cloud/Region        Version  SLA          Timestamp
     spring-boot-hello-world  dev-controller  microk8s/localhost  3.6.6    unsupported  16:22:04+02:00
@@ -734,10 +735,15 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+
     Number of visitors 2
 
 

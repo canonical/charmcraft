@@ -18,21 +18,21 @@ vary by both the version of Charmcraft and the version of `Juju`_.
 
 The general syntax for defining a distribution and series is to use
 ``base: <distribution>@<series>``. For example, a charm that runs on Ubuntu
-24.04 LTS may be defined with the following ``base`` key:
+26.04 LTS may be defined with the following ``base`` key:
 
 .. code-block:: yaml
 
-    base: ubuntu@24.04
+    base: ubuntu@26.04
 
 Select one build and one target architecture
 --------------------------------------------
 
-The following snippet defines a charm that both builds and runs on Ubuntu 24.04 LTS,
+The following snippet defines a charm that both builds and runs on Ubuntu 26.04 LTS,
 only on an AMD64 architecture:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      amd64:
        build-on: [amd64]
@@ -43,12 +43,12 @@ The ``build-on`` and ``build-for`` entries are identical, so the
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      amd64:
 
 The results are the same with either snippet. Building on AMD64 will
-produce one charm that runs on an AMD64 Ubuntu 24.04 LTS system. Charmcraft
+produce one charm that runs on an AMD64 Ubuntu 26.04 LTS system. Charmcraft
 will not build the charm on other architectures.
 
 .. note::
@@ -66,7 +66,7 @@ packs a single charm on an AMD64 host while declaring support for any architectu
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      all:
        build-on: [amd64]
@@ -77,14 +77,14 @@ be built on multiple architectures, they must be added to the ``build-on`` key:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      all:
        build-on: [amd64, riscv64]
        build-for: [all]
 
 In this sample, building on AMD64 or 64-bit RISC-V will produce one charm that
-runs on Ubuntu 24.04 LTS across all architectures.
+runs on Ubuntu 26.04 LTS across all architectures.
 
 .. important::
 
@@ -105,7 +105,7 @@ for both AMD64 and 64-bit RISC-V:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      amd64:
        build-on: [amd64]
@@ -119,7 +119,7 @@ platform, the shorthand notation can be used instead:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      amd64:
      riscv64:
@@ -141,7 +141,7 @@ different architecture, use the following snippet:
 
 .. code-block:: yaml
 
-   base: ubuntu@24.04
+   base: ubuntu@26.04
    platforms:
      riscv64-cross:
        build-on: [amd64]
@@ -149,8 +149,8 @@ different architecture, use the following snippet:
 
 Building on AMD64 will produce one charm that runs on ``riscv64``.
 
-Note that the charm developer must ensure the charm is compatible with the
-target architectures. By default, the `charm`_,
+Note that the charm developer must ensure the charm is compatible with the target
+architectures. By default, the :ref:`reference-charmcraft-yaml-charm-plugin`,
 :ref:`python <craft_parts_python_plugin>`, :ref:`poetry <craft_parts_poetry_plugin>`,
 and :ref:`uv <craft_parts_uv_plugin>` plugins will install wheels for python packages
 for the ``build-on`` architecture rather than the ``build-for``. For more information,
@@ -165,7 +165,7 @@ syntax to create multiple ``.charm`` files, each for a different base. To do thi
 base is defined in each platform entry instead of being defined with the top-level
 ``base`` and ``build-base`` keys.
 
-To build a charm for Ubuntu 22.04 LTS and a charm for Ubuntu 24.04 LTS, use the
+To build charms for Ubuntu 22.04 LTS, Ubuntu 24.04 LTS, and Ubuntu 26.04 LTS, use the
 following snippet which uses :ref:`multi-base
 notation<reference-platforms-multi-base>`:
 
@@ -178,6 +178,9 @@ notation<reference-platforms-multi-base>`:
      ubuntu-24.04-amd64:
        build-on: [ubuntu@24.04:amd64]
        build-for: [ubuntu@24.04:amd64]
+     ubuntu-26.04-amd64:
+       build-on: [ubuntu@26.04:amd64]
+       build-for: [ubuntu@26.04:amd64]
 
 The ``build-on`` and ``build-for`` entries are identical for each platform, so
 the :ref:`multi-base shorthand notation
@@ -188,10 +191,10 @@ the :ref:`multi-base shorthand notation
    platforms:
      ubuntu@22.04:amd64:
      ubuntu@24.04:amd64:
+     ubuntu@26.04:amd64:
 
-With both snippets, building on AMD64 will produce two charms, one for
-AMD64 systems running Ubuntu 22.04 LTS and one for AMD64 systems running
-Ubuntu 24.04 LTS.
+With both snippets, building on AMD64 will produce three charms, one for
+AMD64 systems running Ubuntu 22.04 LTS, one for AMD64 systems running Ubuntu 24.04 LTS,
+and one for AMD64 systems running Ubuntu 26.04 LTS.
 
-.. _charm: https://juju.is/docs/sdk/charmcraft-yaml#heading--the-charm-plugin
 .. _craft-parts#974: https://github.com/canonical/craft-parts/issues/974

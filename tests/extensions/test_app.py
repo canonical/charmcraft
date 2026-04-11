@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import copy
+import pathlib
 
 import pytest
 
@@ -625,6 +626,45 @@ def test_flask_incompatible_fields(modification, flask_input_yaml, tmp_path):
     charm.update(modification)
     with pytest.raises(ExtensionError):
         extensions.apply_extensions(tmp_path, copy.deepcopy(charm))
+
+
+def test_cos_custom_rejects_root_file(flask_input_yaml, tmp_path: pathlib.Path):
+    cos_dir = tmp_path / "cos_custom"
+    cos_dir.mkdir()
+    (cos_dir / "bad.txt").write_text("oops")
+
+    with pytest.raises(ExtensionError) as exc:
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+    error = str(exc.value)
+    assert "custom COS directory must only contain" in error
+    assert "root files: bad.txt" in error
+
+
+def test_cos_custom_rejects_unknown_subdir(flask_input_yaml, tmp_path: pathlib.Path):
+    cos_dir = tmp_path / "cos_custom"
+    (cos_dir / "unknown").mkdir(parents=True)
+
+    with pytest.raises(ExtensionError) as exc:
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+    error = str(exc.value)
+    assert "custom COS directory must only contain" in error
+    assert "invalid subdirectories: unknown" in error
+
+
+def test_cos_custom_allows_known_subdir(flask_input_yaml, tmp_path: pathlib.Path):
+    grafana_dir = tmp_path / "cos_custom" / "grafana_dashboards"
+    loki_dir = tmp_path / "cos_custom" / "loki_alert_rules"
+    prometheus_dir = tmp_path / "cos_custom" / "prometheus_alert_rules"
+    grafana_dir.mkdir(parents=True)
+    loki_dir.mkdir()
+    prometheus_dir.mkdir()
+    (grafana_dir / "dash.json").write_text("{}")
+    (loki_dir / "rules.yaml").write_text("groups: []")
+    (prometheus_dir / "rules.yaml").write_text("groups: []")
+
+    extensions.apply_extensions(tmp_path, flask_input_yaml)
 
 
 def test_handle_charm_part_requires_no_parts(flask_input_yaml, tmp_path):

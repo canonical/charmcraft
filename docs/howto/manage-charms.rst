@@ -66,10 +66,12 @@ in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`manage-extensions`
 
-.. _add-charm-project-metadata-an-icon-docs:
 
-Add charm project metadata, an icon, docs
------------------------------------------
+.. _add-charm-project-metadata-an-icon-docs:
+.. _configure-package-information:
+
+Configure package information
+-----------------------------
 
 
 Specify that the project is a charm
@@ -600,8 +602,8 @@ to pack, whether to force pack if there are linting errors, etc.
 
 .. _publish-a-charm:
 
-Publish a charm on Charmhub
----------------------------
+Publish a charm
+---------------
 
 1. Log in to Charmhub:
 

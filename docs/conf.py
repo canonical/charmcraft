@@ -31,10 +31,13 @@ project_dir = pathlib.Path(__file__).parents[1].resolve()
 
 project = "Charmcraft"
 author = "Canonical"
+# The full version, including alpha/beta/rc tags
 release = charmcraft.__version__
 if ".post" in release:
-    # The commit hash in the dev release version confuses the spellchecker
     release = "dev"
+else:
+    major, minor, *_ = release.split(".")
+    release = f"{major}.{minor}"
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 

@@ -57,6 +57,34 @@ The :ref:`craft_parts_uv_plugin` now compiles bytecode for installed Python file
 by default. To disable this for your charm, set ``UV_COMPILE_BYTECODE: false`` in
 the part's :ref:`reference-part-properties-build-environment` key.
 
+Updated documentation system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The documentation base is updated to Canonical's Sphinx Starter Pack 1.5. Going
+forward, the system will stay in step with the Starter Pack, keeping pace with its
+features.
+
+The documentation commands that are standard in Canonical products are accessible by
+prefixing them with ``docs-``:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 1 4
+
+    * - Command
+      - Result
+    * - ``make docs``
+      - Renders the docs as a static set of HTML pages.
+    * - ``make docs-auto``
+      - Hosts the docs in a local server you can view in the web browser. When you save
+        a change to a source file, the server updates the doc in real time.
+    * - ``make docs-lint``
+      - Checks for problems in the documentation.
+    * - ``make docs-clean``
+      - Removes the built docs and temporary files.
+    * - ``make docs-help``
+      - See the full list of commands from the Starter Pack.
+
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -36,7 +36,7 @@ assumes:
       - juju >= 3.5
       - juju < 4.0
   - k8s-api
-base: ubuntu@24.04
+base: ubuntu@26.04
 build-base: ubuntu@devel
 charm-libs:
   - lib: postgresql.postgres_client

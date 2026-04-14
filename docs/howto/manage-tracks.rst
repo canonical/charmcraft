@@ -97,7 +97,7 @@ To create a new track yourself, follow the steps below:
    and ``tracks`` keys of ``metadata``. Now you know what the new track may look like.
 
     See more: `Charmhub API docs > package\_metadata
-    <https://api.charmhub.io/docs/default.html#package_metadata>`_
+    <https://api.charmhub.io/docs/default/#package-metadata>`__
 
    .. important::
 
@@ -109,7 +109,7 @@ To create a new track yourself, follow the steps below:
            curl https://api.charmhub.io/v1/charm -H'Content-type: application/json' -H "$CHARMHUB_MACAROON_HEADER"
 
        See more: `Charmhub API docs > list_registered_names
-       <https://api.charmhub.io/docs/default.html#list_registered_names>`_.
+       <https://api.charmhub.io/docs/default/#list-registered-names>`__.
 
 
 3. Use ``curl`` to create a new track. Finally, to create a new track for your
@@ -125,6 +125,6 @@ To create a new track yourself, follow the steps below:
    Of course, the tracks must conform to the existing guardrail for the charm.
 
        See more: `Charmhub API docs > create_tracks
-       <https://api.charmhub.io/docs/default.html#create_tracks>`_
+       <https://api.charmhub.io/docs/default/#create-tracks>`__
 
 That's it, you now have a new track for your charm!

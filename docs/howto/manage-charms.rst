@@ -27,7 +27,7 @@ with useful content.
 
     charmcraft init --profile <profile>
 
-.. collapse:: Example session
+.. dropdown:: Example session
 
     .. code-block:: bash
 
@@ -66,10 +66,12 @@ in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`manage-extensions`
 
-.. _add-charm-project-metadata-an-icon-docs:
 
-Add charm project metadata, an icon, docs
------------------------------------------
+.. _add-charm-project-metadata-an-icon-docs:
+.. _configure-package-information:
+
+Configure package information
+-----------------------------
 
 
 Specify that the project is a charm
@@ -262,7 +264,7 @@ a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description*
 .. admonition:: Examples of good documentation in small charms
 
     * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
-    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
+    * `Repository policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
 .. admonition:: Examples of good documentation in big charms
 
@@ -344,6 +346,8 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
     # The run time base, the base format is <os-name>@<os-release>,
     # accepted bases are:
     # - ubuntu@24.04
+    # - ubuntu@25.10
+    # - ubuntu@26.04
     base: <base>
     # The build time base, if not defined the base is also the build time
     # base, in addition to valid bases, the build-base can be "devel"
@@ -518,7 +522,7 @@ compile any modules, check that all the key files are in place, and produce a
 compressed archive with the extension ``.charm``. As you can verify, this archive
 is just a zip file with metadata and the operator code itself.
 
-.. collapse:: Example session for a charm called microsample-vm
+.. dropdown:: Example session for a charm called microsample-vm
 
     Pack the charm:
 
@@ -598,8 +602,8 @@ to pack, whether to force pack if there are linting errors, etc.
 
 .. _publish-a-charm:
 
-Publish a charm on Charmhub
----------------------------
+Publish a charm
+---------------
 
 1. Log in to Charmhub:
 
@@ -629,7 +633,7 @@ Publish a charm on Charmhub
    See more: :ref:`manage-channels`.
 
 3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
-   your charm's filepath. E.g., if you are in the charm's root directory,
+   your charm's path. E.g., if you are in the charm's root directory,
 
    .. code-block:: bash
 

@@ -1,7 +1,7 @@
 .. _manage-charm-revisions:
 
-Manage charm revisions
-======================
+Manage revisions
+================
 
 .. raw:: html
 
@@ -44,7 +44,7 @@ be achieved with the `Charmhub Promotion
 Note that this GitHub action resides in a separate repository and is therefore
 maintained separately from Charmcraft.
 
-.. collapse:: Example outcome
+.. dropdown:: Example outcome
 
     For example, in the following output of ``juju info mongodb``, revision 100
     has been promoted from ``3.6/edge`` through ``3.6/beta`` and ``3.6/candidate`` all

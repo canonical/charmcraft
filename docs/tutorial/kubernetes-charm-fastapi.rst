@@ -209,7 +209,7 @@ Verify that the ``name`` is ``fastapi-hello-world``.
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Now let's pack the rock:
+Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -225,10 +225,6 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
-
 Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
 ``Packed fastapi-hello-world_0.1_<architecture>.rock``. The file name
@@ -236,7 +232,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/fastapi/task.yaml
@@ -253,11 +249,6 @@ This command contains the following pieces:
   and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our FastAPI app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
-
-.. seealso::
-
-    See more: `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
 Create the charm
@@ -333,7 +324,7 @@ project file if required.
     ``fastapi-framework`` profile? Run ``charmcraft expand-extensions``
     from the ``~/fastapi-hello-world/charm/`` directory.
 
-Let's pack the charm:
+Let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/fastapi/task.yaml
     :language: bash
@@ -354,10 +345,6 @@ respond with something similar to
 ``Packed fastapi-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 .. _write-your-first-kubernetes-charm-for-a-fastapi-app-deploy-the-fastapi-app:
 
@@ -400,8 +387,9 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-fastapi-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the FastAPI app. You can monitor
-its progress with:
+It will take a few minutes to deploy the FastAPI app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor
+its progress:
 
 .. code-block:: bash
 
@@ -410,21 +398,16 @@ its progress with:
 
 It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To monitor your deployment, keep a
+``juju status`` session active in a second terminal.
 
 The FastAPI app should now be running. We can monitor the status of
 the deployment using ``juju status``, which should be similar to the following
 output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model                Controller      Cloud/Region        Version  SLA          Timestamp
     fastapi-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  13:45:18+10:00
@@ -625,16 +608,10 @@ and paste the following code into it:
     ``POSTGRESQL_DB_CONNECT_STRING`` environment variable once PostgreSQL has
     been integrated with the charm.
 
-.. tip::
-
-    In production you can also use the ``migrate.sh`` file
-    and run CLI tools for database migration.
-
-    See more:
-    :ref:`FastAPI framework extension | Regarding the migrate.sh file <fastapi-migrate-sh>`.
-
-    You could also use different tooling for migration, for example `Alembic
-    <https://alembic.sqlalchemy.org/en/latest/>`__.
+:ref:`Regarding the migrate.sh file <fastapi-migrate-sh>` describes how to
+use the ``migrate.sh`` file and run CLI tools for database migration in production. Alternatively,
+use a different tooling for migration, for example `Alembic
+<https://alembic.sqlalchemy.org/en/latest/>`__.
 
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~
@@ -739,10 +716,15 @@ be incremented each time the root endpoint is requested. If we repeat
 this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
     {"message":"Hi!"}
-    :input: curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+
     {"count":2}
 
 Tear things down

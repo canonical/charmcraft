@@ -26,7 +26,7 @@ The predefined configuration options for the ``go-framework`` are:
   configured using this port. The environment variable passed to the app is
   ``APP_PORT``. Default value is 8080.
 
-* **app-secret-key**: Long secret you can use for sessions, csrf or any other thing
+* **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
   where you need a random secret shared by all units. The environment variable passed
   to the app is ``APP_METRICS_PORT``. The default value is random.
 

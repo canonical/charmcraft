@@ -193,12 +193,12 @@ The top of the file should look similar to the following snippet:
 
     ...
 
-Verfiy that the ``name`` is ``expressjs-hello-world``.
+Verify that the ``name`` is ``expressjs-hello-world``.
 
 Ensure that ``platforms`` includes the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Let's pack the rock:
+Let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -208,10 +208,6 @@ Let's pack the rock:
 
 Depending on your system and network, this step can take several
 minutes to finish.
-
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
 
 Once Rockcraft has finished packing the Express rock,
 the terminal will respond with something similar to
@@ -237,12 +233,6 @@ This command contains the following pieces:
   and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our Express app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
-
-.. seealso::
-
-    `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/noble/man1/skopeo.1.html>`_
-
 
 Create the charm
 ----------------
@@ -310,7 +300,7 @@ Verify that the ``name`` is ``expressjs-hello-world``. Ensure that ``platforms``
 includes the architecture of your host. Edit the ``platforms`` key in the
 project file if required.
 
-Let's pack the charm:
+Let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -326,11 +316,6 @@ respond with something similar to
 ``Packed expressjs-hello-world_ubuntu-24.04-<architecture>.charm``.
 The file name reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
-
 
 Deploy the Express app
 ------------------------
@@ -370,8 +355,9 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-expressjs-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Express app. You can monitor its
-progress with:
+It will take a few minutes to deploy the Express app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor its
+progress:
 
 .. code-block:: bash
 
@@ -379,21 +365,16 @@ progress with:
 
 It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To continue monitoring your deployment, keep
+a ``juju status`` session active in a second terminal.
 
 The Express app should now be running. We can monitor the status of
 the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+
+    juju status
 
     Model                  Controller      Cloud/Region        Version  SLA          Timestamp
     expressjs-hello-world  dev-controller  microk8s/localhost  3.6.5    unsupported  12:24:51+03:00
@@ -612,15 +593,11 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :end-before: [docs:change-migrate-permissions-end]
     :dedent: 2
 
-.. tip::
-
-    You could also use different tooling for migration, for example `prisma
-    <https://www.npmjs.com/package/prisma/>`__ or
-    `knex <https://www.npmjs.com/package/knex/>`__ .
-
-    See more:
-    :ref:`Express framework extension | Regarding the migrate.sh file <express-migrate-sh>`.
-
+:ref:`Regarding the migrate.sh file <express-migrate-sh>`
+describes how to use the ``migrate.sh`` file and run CLI tools for database
+migration in production. Alternatively, use different tooling for migration,
+for example `prisma <https://www.npmjs.com/package/prisma/>`__ or
+`knex <https://www.npmjs.com/package/knex/>`__ .
 
 To connect the Express app to PostgreSQL, we will use
 the ``pg-promise`` library. The app code needs to be updated to keep track of
@@ -763,10 +740,15 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+
+    curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
+
+.. terminal::
+
+    curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
+
     Number of visitors 2
 
 Tear things down
@@ -807,7 +789,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Exposing the app using an ingress
 - Configuring the app
 - Integrating the app with a database

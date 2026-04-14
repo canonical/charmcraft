@@ -17,7 +17,7 @@ The file contains a YAML map for each defined action. Each map starts with an
 ``<action name>`` key. The rest of this document gives details about this key.
 
 
-.. collapse:: Expand to view the full spec at once
+.. dropdown:: Expand to view the full spec at once
 
    .. code-block:: yaml
 
@@ -34,7 +34,7 @@ The file contains a YAML map for each defined action. Each map starts with an
         …
 
 
-.. collapse:: Expand to view a simple example
+.. dropdown:: Expand to view a simple example
 
    The following shows a simple example of an ``actions.yaml`` file, defining three
    actions named ``pause``, ``resume``, and ``snapshot``. The ``snapshot`` action takes
@@ -58,7 +58,7 @@ The file contains a YAML map for each defined action. Each map starts with an
              description: The filename to write to.
          additionalProperties: false
 
-.. collapse:: Expand to view a complex example
+.. dropdown:: Expand to view a complex example
 
     The following example showcases a more complex configuration file that uses
     features of JSON schema to define detailed options. It also makes the
@@ -220,8 +220,8 @@ action schema object. For example, ``additionalProperties`` or ``required``.
 Juju will parse additional keywords as a `JSON Schema`_ with some limitations:
 
 - The ``$schema`` and ``$ref`` keys are prohibited
-- `params <action-params>`_ is treated as a single top-level JSON Schema instance of
-  type `object <jsonschema-object>`_ with a map of ``properties`` corresponding to
+- ``params`` is treated as a single top-level JSON Schema instance of
+  type ``object`` with a map of ``properties`` corresponding to
   each key in ``params``. This instance is what Juju uses to validate user input.
 
 Explicitly include ``additionalProperties``, which provides consistent

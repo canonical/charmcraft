@@ -1,0 +1,267 @@
+# Copied from https://github.com/canonical/charm-lxd/blob/abf5e49f5ff15f6e54e9fdb9ffec59b7521cd3d2/charmcraft.yaml
+# Regression test for https://github.com/canonical/charmcraft/issues/2620
+name: lxd
+summary: Powerful system container and virtual machine manager
+links:
+  issues:
+  - https://github.com/canonical/charm-lxd/issues
+description: |
+  LXD is a modern, secure and powerful system container and virtual machine manager.
+  It provides a unified experience for running and managing full Linux systems
+  inside containers or virtual machines.
+resources:
+  lxd-binary:
+    type: file
+    filename: lxd
+    description: |
+      A debug version of the LXD binary or a tarball of architecture specific
+      binaries. In the case of a tarball, the binaries should be at the root
+      and be named as "lxd_${ARCH}".
+
+      Attaching an empty file will undo the sideloading.
+  lxd-snap:
+    type: file
+    filename: lxd.snap
+    description: |
+      A custom LXD snap or tarball of architecture specific snaps to install.
+      In the case of a tarball, the snaps should be at the root and be
+      named as "lxd_${ARCH}.snap".
+
+      Attaching an empty file will undo the sideloading.
+storage:
+  local:
+    type: block
+    description: Local storage pool for LXD
+    minimum-size: 10G
+    multiple:
+      range: 0-1
+extra-bindings:
+  # the FAN underlay network to use
+  fan:
+peers:
+  cluster:
+    interface: lxd-cluster
+provides:
+  bgp:
+    interface: lxd-bgp
+  dns:
+    interface: lxd-dns
+  grafana-dashboard:
+    interface: grafana-dashboard
+  grafana-dashboard-k8s:
+    interface: grafana_dashboard
+  https:
+    interface: lxd-https
+  metrics:
+    interface: lxd-metrics
+  prometheus-manual:
+    interface: prometheus-manual
+  metrics-endpoint:
+    interface: prometheus_scrape
+requires:
+  ceph:
+    interface: ceph-client
+    optional: true
+  certificates:
+    interface: tls-certificates
+  logging:
+    interface: loki_push_api
+  ovsdb-cms:
+    interface: ovsdb-cms
+
+type: charm
+platforms:
+  ubuntu@24.04:amd64:
+  ubuntu@24.04:arm64:
+  ubuntu@24.04:armhf:
+  ubuntu@24.04:ppc64el:
+  ubuntu@24.04:s390x:
+  ubuntu@22.04:amd64:
+  ubuntu@22.04:arm64:
+  ubuntu@22.04:armhf:
+  ubuntu@22.04:ppc64el:
+  ubuntu@22.04:s390x:
+
+charm-libs:
+  - lib: grafana-k8s.grafana_dashboard
+    version: "0"
+  - lib: loki-k8s.loki_push_api
+    version: "0"
+
+parts:
+  charm:
+    build-packages:
+    - ca-certificates
+    - cargo-1.85  # 22.04/24.04 bases comes with cargo==1.75.0 in main which is too old for python cryptography
+    - git
+    - libffi-dev
+    - libssl-dev
+    - pkg-config
+    - python3-dev
+    - rustc-1.85  # 22.04/24.04 bases comes with rustc==1.75.0 in main which is too old for python cryptography
+  grafana-dashboard:
+    build-packages:
+    - wget
+    override-pull: |-
+      mkdir -p src/grafana_dashboards
+      wget --https-only https://grafana.com/api/dashboards/19131/revisions/latest/download -O src/grafana_dashboards/LXD.json
+      sed -i 's/{DS_LXD}/{prometheusds}/g' src/grafana_dashboards/LXD.json
+    plugin: dump
+    source: .
+
+actions:
+ add-trusted-client:
+   description: The client certificate to add to the trusted list
+   params:
+     name:
+       description: The user-specified identifier (optional)
+       type: string
+     cert:
+       description: |
+         The raw X.509 PEM client certificate (required if cert-url isn't set).
+         -----BEGIN CERTIFICATE-----
+         <Client cert in PEM format to add to trust>
+         -----END CERTIFICATE-----
+         Pass the file with the certificate above as:
+         $ juju run --wait=2m lxd/leader add-trusted-client cert="$(cat client.crt)"
+       type: string
+     cert-url:
+       description: The HTTP/HTTPS URL to fetch the client certificate from (required if cert isn’t set)
+       type: string
+     projects:
+       description: A comma separated list of projects to restrict the client certificate to (optional)
+       type: string
+
+ debug:
+   description: Collect useful information for bug reports (calls lxd.buginfo)
+
+ get-client-token:
+   description: Return a client certificate add token to use by the client as `lxc remote add <remote-name> <token>`
+   params:
+     name:
+       description: The user-specified identifier
+       type: string
+     projects:
+       description: A comma separated list of projects to restrict the client certificate to (optional)
+       type: string
+
+ remove-trusted-client:
+   description: The client certificate fingerprint (SHA256) to remove from the trusted list
+   params:
+     fingerprint:
+       description: |
+         The fingerprint of the X.509 PEM client certificate. This will automatically ignore
+         `openssl`'s unneeded prefix (`sha256 Fingerprint=`) and extract the fingerprint.
+         $ juju run --wait=2m lxd/leader remove-trusted-client fingerprint="$(openssl x509 -noout -fingerprint -sha256 -in client.crt)"
+       type: string
+
+ show-pending-config:
+   description: Show the currently pending configuration changes (queued for after the reboot)
+
+config:
+  options:
+    kernel-hardening:
+      type: boolean
+      default: true
+      description: Restrict access to sensitive files/dirs (/proc/sched_debug, /sys/kernel/slab)
+
+    lxd-init-network:
+      type: boolean
+      default: true
+      description: Enable/disable the initialization of the default network
+
+    lxd-init-storage:
+      type: boolean
+      default: true
+      description: Enable/disable the initialization of the default storage pool
+
+    lxd-listen-bgp:
+      type: boolean
+      default: false
+      description: Enable/disable the BGP endpoint
+
+    lxd-listen-dns:
+      type: boolean
+      default: false
+      description: Enable/disable the authoritative DNS endpoint
+
+    lxd-listen-https:
+      type: boolean
+      default: false
+      description: Enable/disable the remote API (HTTPS)
+
+    lxd-listen-metrics:
+      type: boolean
+      default: false
+      description: Enable/disable the metrics endpoint
+
+    lxd-preseed:
+      type: string
+      description: Pass a YAML configuration to `lxd init` on initial start
+
+    mode:
+      type: string
+      default: "standalone"
+      description: Operate in `standalone` or `cluster` mode
+
+    snap-channel:
+      type: string
+      default: "auto"
+      description: The snap store channel for LXD to use or `auto` to use `lxd-installer` if available with a fallback to the default channel
+
+    snap-config-ceph-builtin:
+      type: boolean
+      description: Use snap-specific ceph configuration
+      default: true
+    snap-config-ceph-external:
+      type: boolean
+      description: Use the system's ceph tools (ignores snap-config-ceph-builtin)
+    snap-config-criu-enable:
+      type: boolean
+      description: Enable experimental live-migration support
+    snap-config-daemon-debug:
+      type: boolean
+      description: Increase logging to debug level
+    snap-config-daemon-group:
+      type: string
+      description: Set group of users that can interact with LXD
+    snap-config-daemon-syslog:
+      type: boolean
+      description: Send LXD log events to syslog
+    snap-config-lvm-external:
+      type: boolean
+      description: Use the system's LVM tools
+    snap-config-lxcfs-pidfd:
+      type: boolean
+      description: Start per-container process tracking
+    snap-config-lxcfs-loadavg:
+      type: boolean
+      description: Start tracking per-container load average
+    snap-config-lxcfs-cfs:
+      type: boolean
+      description: Consider CPU shares for CPU usage
+    snap-config-lxcfs-debug:
+      type: boolean
+      description: Increase logging to debug level
+    snap-config-openvswitch-builtin:
+      type: boolean
+      description: Run a snap-specific OVS daemon
+    snap-config-openvswitch-external:
+      type: boolean
+      description: Use the system's OVS tools (ignores snap-config-openvswitch-builtin)
+    snap-config-ovn-builtin:
+      type: boolean
+      description: Use snap-specific OVN configuration
+      default: true
+    snap-config-shiftfs-enable:
+      type: string
+      description: Enable shiftfs support
+    snap-config-ui-enable:
+      type: boolean
+      description: Enable the experimental web interface
+      default: false
+
+    sysctl-tuning:
+      type: boolean
+      default: true
+      description: Apply production sysctl tuning

@@ -1,7 +1,7 @@
 .. _charmcraft-analyzers-and-linters:
 
 
-Analysers and linters
+Analyzers and linters
 =====================
 
 The following are the different checks that Charmcraft will run

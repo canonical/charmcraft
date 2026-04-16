@@ -1,16 +1,10 @@
-First, install Multipass.
-
-.. seealso::
-
-    See more: `Multipass |
-    How to install Multipass <https://canonical.com/multipass/docs/install-multipass>`_
-
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
-from the 24.04 blueprint:
+First, :external+multipass:ref:`install multipass <how-to-guides-install-multipass>`.
+Then use Multipass to launch an Ubuntu VM with the name ``charm-dev``
+from the 26.04 blueprint:
 
 .. code-block:: text
 
-    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 24.04
+    multipass launch --cpus 4 --disk 50G --memory 4G --name charm-dev 26.04
 
 Once the VM is up, open a shell into it:
 
@@ -104,4 +98,3 @@ development controller:
     juju bootstrap microk8s dev-controller
 
 It could take a few minutes to download the images.
-

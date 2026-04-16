@@ -34,6 +34,9 @@ release = charmcraft.__version__
 # The commit hash in the dev release version confuses the spellchecker
 if ".post" in release:
     release = "dev"
+else:
+    major, minor, *_ = release.split(".")
+    release = f"{major}.{minor}"
 
 html_title = project + " documentation"
 
@@ -295,6 +298,7 @@ intersphinx_mapping = {
     "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
     "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
     "charmlibs": ("https://documentation.ubuntu.com/charmlibs/", None),
+    "multipass": ("https://documentation.ubuntu.com/multipass/latest/", None),
 }
 
 

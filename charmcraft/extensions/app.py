@@ -440,6 +440,12 @@ class GoFramework(_AppBase):
         """Return name of the container for the app image."""
         return "app"
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
 
 class FastAPIFramework(_AppBase):
     """Extension for 12-factor FastAPI applications."""
@@ -481,6 +487,12 @@ class FastAPIFramework(_AppBase):
         """Return name of the container for the app image."""
         return "app"
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
 
 class ExpressJSFramework(_AppBase):
     """Extension for 12-factor ExpressJS applications."""
@@ -507,6 +519,12 @@ class ExpressJSFramework(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
 
 
 class SpringBootFramework(_AppBase):

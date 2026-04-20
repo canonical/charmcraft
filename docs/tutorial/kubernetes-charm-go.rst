@@ -319,11 +319,6 @@ Let's :literalref:`pack<ref_commands_pack>` the charm:
     :end-before: [docs:charm-pack-end]
     :dedent: 2
 
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
-    extension is experimental.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 

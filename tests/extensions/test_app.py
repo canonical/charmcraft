@@ -231,7 +231,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["go-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": GoFramework.actions,
                 "assumes": ["k8s-api"],
@@ -306,7 +306,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["fastapi-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": FastAPIFramework.actions,
                 "assumes": ["k8s-api"],
@@ -381,7 +381,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["expressjs-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": ExpressJSFramework.actions,
                 "assumes": ["k8s-api"],

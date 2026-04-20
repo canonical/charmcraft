@@ -105,8 +105,6 @@ See individual issue links for any mitigations.
   ``charmcraft clean`` does not clean all platforms for a charm
 - `#1990 <https://github.com/canonical/charmcraft/issues/1990>`__ Cannot stage
   packages with Charmcraft
-- `#2493 <https://github.com/canonical/charmcraft/issues/2493>`__ Packing fails when
-  using a separate metadata.yaml file and the ``--project-dir`` argument
 - `#2492 <https://github.com/canonical/charmcraft/issues/2492>`__ Internal error when
   uploading a charm outside of a project directory
 
@@ -114,10 +112,14 @@ See individual issue links for any mitigations.
 Fixed bugs and issues
 ---------------------
 
-The following issues have been resolved in Charmcraft 4.2:
+The following issues have been resolved in Charmcraft 4.2.1:
 
 - `#1930 <https://github.com/canonical/charmcraft/issues/1930>`__
   ``charmcraft pack -o`` fails: ``FileNotFoundError``
+- `#2493 <https://github.com/canonical/charmcraft/issues/2493>`__ Packing fails when
+  using a separate ``metadata.yaml`` file and the ``--project-dir`` argument
+- `#2620 <https://github.com/canonical/charmcraft/issues/2620>`__ Multi-base shorthand
+  notation fails on v4.2.0
 
 Contributors
 ------------

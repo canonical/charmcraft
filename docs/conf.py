@@ -34,6 +34,9 @@ release = charmcraft.__version__
 # The commit hash in the dev release version confuses the spellchecker
 if ".post" in release:
     release = "dev"
+else:
+    major, minor, *_ = release.split(".")
+    release = f"{major}.{minor}"
 
 html_title = project + " documentation"
 

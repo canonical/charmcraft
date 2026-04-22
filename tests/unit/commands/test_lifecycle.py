@@ -25,6 +25,7 @@ from craft_cli.pytest_plugin import RecordingEmitter
 
 from charmcraft import application, models, services, utils
 from charmcraft.application.commands import lifecycle
+from charmcraft.application.commands.remote import RemoteBuild
 from charmcraft.store.models import Library
 
 if TYPE_CHECKING:
@@ -272,3 +273,31 @@ class TestPackMoveArtifacts:
             pack._run(parsed_args)
 
         assert (output_dir / artifact_name).read_text() == "charm content"
+
+
+# Reproducer for https://github.com/canonical/charmcraft/issues/2598
+def test_remote_build_project_name_attribute_error(
+    service_factory: services.ServiceFactory,
+):
+    """RemoteBuild._run should complete without AttributeError.
+
+    This test reproduces the bug where self._services.project returns a
+    ProjectService object instead of the actual project model, causing
+    `project.name` to raise AttributeError at the get_build_id() call.
+    """
+    cmd = RemoteBuild({"app": application.APP_METADATA, "services": service_factory})
+    parsed_args = argparse.Namespace(
+        launchpad_accept_public_upload=True,
+        recover=False,
+        launchpad_timeout=0,
+    )
+
+    # Prevent an actual Launchpad connection while still reaching the buggy line.
+    mock_builder = mock.MagicMock()
+    mock_builder.start_builds.return_value = []
+    service_factory.remote_build = mock_builder
+
+    # Bug: self._services.project is a ProjectService (no .name attribute).
+    # This call should succeed but currently raises:
+    #   AttributeError: 'ProjectService' object has no attribute 'name'
+    cmd._run(parsed_args)

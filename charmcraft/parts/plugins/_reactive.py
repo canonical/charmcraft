@@ -16,6 +16,7 @@
 
 import json
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -224,6 +225,12 @@ def build(
         return call_error.returncode
     finally:
         charm_build_dir.unlink()
+
+    # charm build places .build.manifest in build_dir alongside the charm directory.
+    # Copy it into install_dir so it ends up in the final .charm artifact.
+    build_manifest = build_dir / ".build.manifest"
+    if build_manifest.exists():
+        shutil.copy2(build_manifest, install_dir / ".build.manifest")
 
     return 0
 

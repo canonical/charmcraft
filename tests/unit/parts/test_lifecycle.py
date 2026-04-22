@@ -16,6 +16,7 @@
 import pathlib
 from unittest.mock import ANY, call, patch
 
+import craft_parts
 import pytest
 from craft_cli import CraftError
 from craft_parts import Action, ActionType, PartsError, Step
@@ -200,3 +201,59 @@ def test_parthelpers_get_dispatch_entrypoint(tmp_path):
 def test_parthelpers_get_dispatch_entrypoint_no_file(tmp_path):
     entrypoint = lifecycle._get_dispatch_entrypoint(tmp_path)
     assert entrypoint == ""
+
+
+# Reproducer for https://github.com/canonical/charmcraft/issues/710
+def test_stale_files_removed_from_prime_after_repack(tmp_path: pathlib.Path):
+    """Deleted source files must not appear in the prime dir on a subsequent pack.
+
+    When a file is deleted from the charm source between two consecutive packs,
+    craft-parts should detect the change and remove the stale file from the
+    stage and prime directories so it does not end up in the final .charm archive.
+
+    This test demonstrates the bug: craft-parts skips all lifecycle actions on the
+    second run (treating the previous state as up-to-date) and the deleted file
+    remains in prime, causing it to be included in the repacked charm.
+
+    Upstream issue: https://github.com/canonical/craft-parts/issues/851
+    """
+    src_dir = tmp_path / "src"
+    src_dir.mkdir()
+    (src_dir / "charm.py").write_text("# charm entrypoint")
+    alert_rules_dir = src_dir / "prometheus_alert_rules"
+    alert_rules_dir.mkdir()
+    alert_rule = alert_rules_dir / "always_firing.rule"
+    alert_rule.write_text("groups: []")
+
+    all_parts = {"my-charm": {"plugin": "dump", "source": str(src_dir)}}
+
+    def _run_lifecycle(work_dir: pathlib.Path) -> pathlib.Path:
+        lcm = craft_parts.LifecycleManager(
+            {"parts": all_parts},
+            application_name="charmcraft",
+            work_dir=work_dir,
+            cache_dir=work_dir / "cache",
+            project_name="test-charm",
+        )
+        actions = lcm.plan(craft_parts.Step.PRIME)
+        with lcm.action_executor() as aex:
+            aex.execute(actions)
+        return lcm.project_info.prime_dir
+
+    # First pack: both files should be present in prime.
+    prime_dir = _run_lifecycle(tmp_path)
+    assert (prime_dir / "charm.py").exists()
+    assert (prime_dir / "prometheus_alert_rules" / "always_firing.rule").exists()
+
+    # Simulate the user deleting the alert rule file between packs.
+    alert_rule.unlink()
+    assert not alert_rule.exists()
+
+    # Second pack: the deleted file must NOT be present in prime.
+    prime_dir = _run_lifecycle(tmp_path)
+    assert (prime_dir / "charm.py").exists()
+    # Bug: craft-parts skips all actions on the second run and the deleted file
+    # remains in prime, so this assertion fails.
+    assert not (prime_dir / "prometheus_alert_rules" / "always_firing.rule").exists(), (
+        "Stale file from deleted source is still present in prime directory after repack"
+    )

@@ -583,7 +583,11 @@ class UploadCommand(CharmcraftCommand):
                     emit.message(f"- {error.code}: {error.message}")
             return 1
 
-        if project := self._services.get("project").get():
+        try:
+            project = self._services.get("project").get()
+        except RuntimeError:
+            project = None
+        if project:
             libs_service = cast("CharmLibsService", self._services.get("charm_libs"))
             unpublished_libs = libs_service.get_unpublished_libs()
             if unpublished_libs:

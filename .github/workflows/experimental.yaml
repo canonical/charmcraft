@@ -24,9 +24,7 @@ jobs:
           done
           sudo snap alias astral-ty.ty ty
           uv sync --frozen
-      - name: Run ty and report as a comment
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Run ty
         run: |
           if ty check 2>&1 > ${{ runner.temp }}/ty.log; then
             echo '# Type checking with `ty` succeeded! 🎉🎉🎉' > ${{ runner.temp }}/comment.txt
@@ -38,4 +36,11 @@ jobs:
           cat ${{ runner.temp }}/ty.log >> ${{ runner.temp }}/comment.txt
           echo '```' >> ${{ runner.temp }}/comment.txt
           echo "</details>" >> ${{ runner.temp }}/comment.txt
+      - name: Report as a comment
+        # For fork PRs, the github.token only has read permissions, so commenting may fail.
+        # This step is informational only, so we allow it to fail without failing the job.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           gh pr comment ${{ github.event.number }} --body-file ${{ runner.temp }}/comment.txt

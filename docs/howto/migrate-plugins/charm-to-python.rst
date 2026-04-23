@@ -1,5 +1,8 @@
 .. _howto-migrate-to-python:
 
+.. meta::
+    :description: Learn how to migrate a charm from the Charm plugin to the Python plugin in Charmcraft, including updating project files and flattening requirements.
+
 Migrate from the Charm plugin to the Python plugin
 ==================================================
 
@@ -106,15 +109,16 @@ Include extra files
 -------------------
 
 The Python plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files were previously included
-from the main directory, they can be included again using the
-:ref:`craft_parts_dump_plugin`:
+as well as the generated virtual environment. If other files such as a charm's icon
+were previously included from the main directory, stage them in the charm in a new part
+that uses the :ref:`craft_parts_dump_plugin`:
 
 .. code-block:: yaml
-    :emphasize-lines: 7-11
+    :caption: charmcraft.yaml
+    :emphasize-lines: 7-12
 
     parts:
-      my-charm:  # This can be named anything you want
+      my-charm:
         plugin: python
         source: .
         python-requirements:
@@ -124,6 +128,7 @@ from the main directory, they can be included again using the
         source: .
         stage:
           - charm_version
+          - icon.svg
 
 
 .. _pip 22.3: https://pip.pypa.io/en/stable/news/#v22-3

@@ -1,5 +1,8 @@
 .. _howto-migrate-to-poetry:
 
+.. meta::
+    :description: Learn how to migrate a charm from the Charm plugin to the Poetry plugin in Charmcraft, including updating project files and managing dependencies.
+
 Migrate from the Charm plugin to the Poetry plugin
 ==================================================
 
@@ -85,15 +88,16 @@ Include extra files
 -------------------
 
 A Poetry plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files were previously included
-from the main directory, they can be included again using the
-:ref:`craft_parts_dump_plugin`:
+as well as the generated virtual environment. If other files such as a charm's icon
+were previously included from the main directory, stage them in the charm in a new part
+that uses the :ref:`craft_parts_dump_plugin`:
 
 .. code-block:: yaml
-    :emphasize-lines: 5-9
+    :caption: charmcraft.yaml
+    :emphasize-lines: 5-10
 
     parts:
-      my-charm:  # This can be named anything you want
+      my-charm:
         plugin: poetry
         source: .
       version-file:
@@ -101,6 +105,7 @@ from the main directory, they can be included again using the
         source: .
         stage:
           - charm_version
+          - icon.svg
 
 
 .. _dependency groups: https://python-poetry.org/docs/managing-dependencies/#dependency-groups

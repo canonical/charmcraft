@@ -23,6 +23,9 @@ include common.mk
 # common.mk globs too much, such as test expectations
 PRETTIER_FILES="tests/spread/**/task.yaml" "*.yaml" "*.md" "snap/snapcraft.yaml" ".github/**/*.{yml,yaml}"
 
+# Instructions and skills are imported from canonical/copilot-collections.
+PRETTIER_FILES += "!.github/instructions/**" "!.github/skills/**"
+
 .PHONY: format
 format: format-ruff format-codespell format-prettier  ## Run all automatic formatters
 

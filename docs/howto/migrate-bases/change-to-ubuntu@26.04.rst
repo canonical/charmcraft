@@ -43,6 +43,7 @@ For a charm with a ``bases`` key as follows:
 Replace the ``bases`` key with:
 
 .. code-block:: yaml
+    :caption: charmcraft.yaml
 
     base: ubuntu@26.04
     platforms:

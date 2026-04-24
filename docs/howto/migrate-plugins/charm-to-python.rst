@@ -1,7 +1,7 @@
 .. _howto-migrate-to-python:
 
 .. meta::
-    :description: Learn how to migrate a charm from the Charm plugin to the Python plugin in Charmcraft, including updating project files and flattening requirements.
+    :description: How to migrate a charm from the Charm plugin to the Python plugin in Charmcraft, including updating project files and flattening requirements.
 
 Migrate from the Charm plugin to the Python plugin
 ==================================================

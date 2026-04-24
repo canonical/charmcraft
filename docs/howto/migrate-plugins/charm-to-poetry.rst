@@ -1,7 +1,7 @@
 .. _howto-migrate-to-poetry:
 
 .. meta::
-    :description: Learn how to migrate a charm from the Charm plugin to the Poetry plugin in Charmcraft, including updating project files and managing dependencies.
+    :description: How to migrate a charm from the Charm plugin to the Poetry plugin in Charmcraft, including updating project files and managing dependencies.
 
 Migrate from the Charm plugin to the Poetry plugin
 ==================================================

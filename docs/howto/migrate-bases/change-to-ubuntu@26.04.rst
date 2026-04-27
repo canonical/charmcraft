@@ -6,13 +6,13 @@
 Change to the Ubuntu 26.04 LTS base
 ===================================
 
-This guide describes the process for migrating a charm from an older base to Ubuntu 26.04 LTS.
+This guide describes the process for migrating a charm from a lower base to Ubuntu 26.04 LTS.
 
 Migrate from the charm plugin
 -----------------------------
 
 The charm plugin isn't available for the ``ubuntu@26.04`` base. If your charm uses it,
-before changing the base, switch to one of the replacement plugins:
+switch to one of the replacement plugins:
 
 - :ref:`howto-migrate-to-uv`
 - :ref:`howto-migrate-to-python`
@@ -52,8 +52,8 @@ Replace the ``bases`` key with:
       riscv64:
       s390x:
 
-:ref:`reference-platforms` has all the details about the ``platforms`` syntax,
-including the grammar for specifying multiple bases and architectures.
+:ref:`reference-platforms` has all the details about the ``platforms`` key,
+including the syntax for specifying multiple bases and architectures.
 
 Update part names
 -----------------

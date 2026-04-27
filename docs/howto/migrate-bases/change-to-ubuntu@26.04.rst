@@ -11,7 +11,7 @@ This guide describes the process for migrating a charm from a lower base to Ubun
 Migrate from the charm plugin
 -----------------------------
 
-The charm plugin isn't available for the ``ubuntu@26.04`` base. If your charm uses it,
+The Charm plugin isn't available for the Ubuntu 26.04 LTS base. If your charm uses it,
 switch to one of the replacement plugins:
 
 - :ref:`howto-migrate-to-uv`

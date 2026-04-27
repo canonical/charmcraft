@@ -54,3 +54,21 @@ Replace the ``bases`` key with:
 
 :ref:`reference-platforms` has all the details about the ``platforms`` syntax,
 including the grammar for specifying multiple bases and architectures.
+
+Update part names
+-----------------
+
+If you update a charm to use the Ubuntu 26.04 LTS base, then you must also verify its
+part names. Part names on 26.04 and later bases can't contain any forward slashes (/).
+We recommend replacing them with a hyphen (-):
+
+.. code-block:: diff
+    :caption: charmcraft.yaml
+
+     base: ubuntu@26.04
+
+     # ...
+
+     parts:
+    -  my/part:
+    +  my-part:

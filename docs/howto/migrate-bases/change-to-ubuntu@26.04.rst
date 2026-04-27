@@ -21,11 +21,11 @@ switch to one of the replacement plugins:
 Update the base
 ---------------
 
-Charms currently using Ubuntu 22.04 LTS or older might use the ``bases`` key in
-``charmcraft.yaml``. Charmcraft doesn't support this with Ubuntu 26.04 LTS, instead relying
-on the ``base`` and ``platforms`` keys. The ``base`` key controls which Ubuntu release
-the charm uses, while the ``platforms`` key decides the CPU architectures of both the
-build machine and the production machine.
+Charms built with Ubuntu 22.04 LTS or lower might use the ``bases`` key in their project
+file. This key is not supported by the Ubuntu 26.04 LTS base and must be replaced with
+the ``base`` and ``platforms`` keys. The ``base`` key declares which Ubuntu release the
+charm uses, while the ``platforms`` key declares the CPU architectures of the build and
+production machines.
 
 For a charm with a ``bases`` key as follows:
 

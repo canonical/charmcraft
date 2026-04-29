@@ -91,7 +91,14 @@ def plugin(tmp_path, plugin_properties, spec):
 
 
 def test_get_build_package(plugin):
-    assert plugin.get_build_packages() == set()
+    assert plugin.get_build_packages() == {
+        "git",
+        "python3-pip",
+        "python3-setuptools",
+        "python3-venv",
+        "python3-wheel",
+        "virtualenv",
+    }
 
 
 def test_get_build_snaps(plugin):

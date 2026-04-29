@@ -237,6 +237,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
         return self._started_at
 
     @classmethod
+    def _get_devel_bases(cls) -> Iterable[Any]:
+        """Return craft-application devel bases that require build-base: devel."""
+        return ()
+
+    @classmethod
     def unmarshal(cls, data: dict[str, Any]):
         """Create a Charmcraft project from a dictionary of data."""
         if cls is not CharmcraftProject:
@@ -927,27 +932,27 @@ class PlatformCharm(CharmProject):
     def _validate_removed_questing_plugins(
         cls, value: dict[str, dict[str, Any]], info: pydantic.ValidationInfo
     ) -> dict[str, dict[str, Any]]:
-        """Check that the charm and reactive plugins aren't used on Ubuntu 25.10+."""
+        """Check that the charm and reactive plugins are only used on supported bases."""
         plugins = {v.get("plugin", k) for k, v in value.items()}
-        if not plugins & {"charm", "reactive"}:
+        legacy_plugins = plugins & {"charm", "reactive"}
+        if not legacy_plugins:
             return value
-        if (base := info.data.get("base")) in const.CHARM_OR_REACTIVE_BASES:
-            return value
-        if base is not None:
-            raise ValueError(
-                f"Cannot use 'charm' or 'reactive' plugins with base {base!r}"
-            )
-        # Multi-base charms.
-        build_bases = {
-            str(info.build_base)
-            for info in craft_platforms.charm.get_platforms_charm_build_plan(
-                base=None,
-                platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
-                    info.data["platforms"], mode="json", by_alias=True
-                ),
-            )
-        }
-        if invalid_bases := build_bases - const.CHARM_OR_REACTIVE_BASES:
+
+        if base := info.data.get("base"):
+            build_bases = {base}
+        else:
+            # Multi-base charms.
+            build_bases = {
+                str(info.build_base)
+                for info in craft_platforms.charm.get_platforms_charm_build_plan(
+                    base=None,
+                    platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
+                        info.data["platforms"], mode="json", by_alias=True
+                    ),
+                )
+            }
+
+        if invalid_bases := build_bases - const.REACTIVE_PLUGIN_BASES:
             if len(invalid_bases) == 1:
                 raise ValueError(
                     f"Cannot use 'charm' or 'reactive' plugins with base {invalid_bases.pop()!r}"
@@ -956,6 +961,19 @@ class PlatformCharm(CharmProject):
             raise ValueError(
                 f"Cannot use 'charm' or 'reactive' plugins with bases {invalid_bases_str}"
             )
+
+        if "charm" in legacy_plugins:
+            if invalid_bases := build_bases - const.CHARM_PLUGIN_BASES:
+                if len(invalid_bases) == 1:
+                    raise ValueError(
+                        f"Cannot use 'charm' plugin with base {invalid_bases.pop()!r}"
+                    )
+                invalid_bases_str = humanize_list(
+                    sorted(invalid_bases), conjunction="or"
+                )
+                raise ValueError(
+                    f"Cannot use 'charm' plugin with bases {invalid_bases_str}"
+                )
         return value
 
 

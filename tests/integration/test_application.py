@@ -125,5 +125,12 @@ def test_remove_charm_reactive_plugins(
 
     with pytest.raises(ValueError, match="plugin not registered: 'charm'"):
         craft_parts.plugins.plugins.get_plugin_class("charm")
-    with pytest.raises(ValueError, match="plugin not registered: 'reactive'"):
+
+    if charm_dir.name in {
+        "multibase-resolute-charm-plugin",
+        "resolute-charm-plugin",
+    }:
         craft_parts.plugins.plugins.get_plugin_class("reactive")
+    else:
+        with pytest.raises(ValueError, match="plugin not registered: 'reactive'"):
+            craft_parts.plugins.plugins.get_plugin_class("reactive")

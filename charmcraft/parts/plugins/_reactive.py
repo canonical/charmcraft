@@ -103,7 +103,14 @@ class ReactivePlugin(plugins.Plugin):
 
     def get_build_packages(self) -> set[str]:
         """Return a set of required packages to install in the build environment."""
-        return set()
+        return {
+            "git",
+            "python3-pip",
+            "python3-setuptools",
+            "python3-venv",
+            "python3-wheel",
+            "virtualenv",
+        }
 
     def get_build_environment(self) -> dict[str, str]:
         """Return a dictionary with the environment to use in the build step."""

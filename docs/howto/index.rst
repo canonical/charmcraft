@@ -16,25 +16,23 @@ installing on Linux, macOS, or an isolated environment.
 - :ref:`manage-charmcraft`
 
 
-Craft charms
-------------
+Craft
+-----
 
-Nearly every aspect of your charm can be configured to suit the needs of the application
-you are charming. Once you initialize the project with either the default profile or one
-of Charmcraft's web app extensions, you can modify a charm's YAML and Ops-powered Python
-to include any necessary libraries, parts, or other assets your application may require.
+Once you initialize the project, you can modify a charm's YAML and Ops-powered Python to
+include any necessary libraries, parts, or other assets your application may require.
 
 - :ref:`manage-charms`
-- :ref:`Manage builds <howto-build-guides>`
 - :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`
+- :ref:`select-platforms`
 - :ref:`manage-parts`
 - :ref:`manage-resources`
 - :ref:`manage-libraries`
 - :ref:`manage-extensions`
 
 
-Publish charms and manage releases
-----------------------------------
+Publish and release
+-------------------
 
 When you're ready to distribute your charm, Charmcraft provides commands to register it,
 publish it to Charmhub, and manage its releases.
@@ -50,9 +48,8 @@ publish it to Charmhub, and manage its releases.
 Migrate between plugins
 -----------------------
 
-Certain charms may benefit from using a plugin other than the default Charm plugin. For
-instructions on migrating away from the default Charm plugin, refer to the appropriate
-migration guide for your charm:
+For instructions on migrating away from the default Charm plugin, refer to the
+appropriate migration guide for your charm:
 
 - :ref:`howto-migrate-to-poetry`
 - :ref:`howto-migrate-to-python`
@@ -69,21 +66,24 @@ update a charm to the new base:
 
 
 .. toctree::
-   :hidden:
+    :hidden:
 
-   manage-charmcraft
-   manage-charms
-   Manage 12-factor app charms <manage-web-app-charms/index>
-   manage-extensions
-   manage-resources
-   manage-libraries
-   manage-parts
-   manage-the-current-charmhub-user
-   manage-names
-   manage-revisions
-   manage-channels
-   manage-tracks
-   manage-icons
-   Migrate plugins <migrate-plugins/index>
-   Migrate bases <migrate-bases/index>
-   Build <build-guides/index>
+    manage-charmcraft
+    manage-charms
+    Manage 12-factor app charms <manage-web-app-charms/index>
+    select-platforms
+    manage-extensions
+    manage-resources
+    manage-libraries
+    manage-parts
+    shared-cache
+    pack-a-hooks-based-charm-with-charmcraft
+    pack-a-reactive-charm-with-charmcraft
+    manage-the-current-charmhub-user
+    manage-names
+    manage-revisions
+    manage-channels
+    manage-tracks
+    manage-icons
+    Migrate plugins <migrate-plugins/index>
+    Migrate bases <migrate-bases/index>

@@ -10,8 +10,8 @@ concepts and relationships of Charmcraft as a complete system.
 Bases
 -----
 
-Charms run on a baseline software system, known as a *base*, that determines the feature
-set available to the charm.
+Charms run on a baseline software system, known as a *base*. This primarily determines
+what Python version the charm runs on.
 
 - :ref:`explanation-bases`
 

@@ -9,7 +9,7 @@ environments and manipulate files.
 .. admonition:: Unsupported plugins
     :class: important
 
-    The plugins available in :external+craft-parts:ref:`Craft Parts <plugins>` aren't
+    The additional plugins in :external+craft-parts:ref:`Craft Parts <plugins>` aren't
     supported in Charmcraft and should be used with caution.
 
     These plugins can significantly increase the size of a packed charm and may not work

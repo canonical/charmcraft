@@ -19,8 +19,8 @@ Linux, macOS, or an isolated environment.
 Craft
 -----
 
-Once you initialize the project, you can modify a charm's YAML and Ops to include any
-libraries, parts, or other assets your application may require.
+Once you initialize the project, you can modify a charm's project file and source code
+to include any libraries, parts, or other assets your application may require.
 
 - :ref:`manage-charms`
 - :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`

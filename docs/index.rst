@@ -8,18 +8,14 @@
 Charmcraft
 ==========
 
-**Charmcraft** is the command-line tool for initializing, packaging, and publishing Juju
-charms.
+**Charmcraft** is the command-line tool for building Juju charms.
 
-For new projects, Charmcraft generates all the necessary files, which can be tailored to
-an app by modifying the YAML and Ops-powered Python inside. With extensions, Charmcraft
-adapts the template content to languages and frameworks such as Django, Express, and Go.
-Then, with a few commands, charm authors can package the charm and publish it to
-Charmhub.
+It provides commands to build, pack, and publish charms and, with its Ops and Charmhub
+integration, offers a complete charm development experience.
 
-With Charmcraft, developers can bypass boilerplate steps and focus on the content of
-their charms. Additionally, its integration with tools and platforms such as Ops and
-Charmhub provide a complete charm development experience.
+Charmcraft supports popular languages web app frameworks such as Django, Express, and
+Go through its extensions. These generate boilerplate, saving charm developers time and
+allowing them to focus on the content of their charms.
 
 Charmcraft is for platform engineers, site reliability engineers, and systems
 administrators looking to charm an application for their Juju deployment.

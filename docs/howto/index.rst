@@ -10,8 +10,8 @@ Charmcraft.
 Install Charmcraft
 ------------------
 
-Charmcraft can be installed in just a few short steps, regardless of if you are
-installing on Linux, macOS, or an isolated environment.
+Charmcraft can be installed in a few short steps, regardless of if you are installing on
+Linux, macOS, or an isolated environment.
 
 - :ref:`manage-charmcraft`
 
@@ -19,8 +19,8 @@ installing on Linux, macOS, or an isolated environment.
 Craft
 -----
 
-Once you initialize the project, you can modify a charm's YAML and Ops-powered Python to
-include any necessary libraries, parts, or other assets your application may require.
+Once you initialize the project, you can modify a charm's YAML and Ops to include any
+libraries, parts, or other assets your application may require.
 
 - :ref:`manage-charms`
 - :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`
@@ -48,8 +48,8 @@ publish it to Charmhub, and manage its releases.
 Migrate between plugins
 -----------------------
 
-For instructions on migrating away from the default Charm plugin, refer to the
-appropriate migration guide for your charm:
+To migrate away from the default Charm plugin, refer to the guide for your charm's build
+system:
 
 - :ref:`howto-migrate-to-poetry`
 - :ref:`howto-migrate-to-python`

@@ -59,6 +59,15 @@ migration guide for your charm:
 - :ref:`howto-migrate-to-uv`
 
 
+Migrate bases
+-------------
+
+When a new Ubuntu base becomes available, refer to the appropriate migration guide to
+update a charm to the new base:
+
+- :ref:`howto-change-to-ubuntu-26-04`
+
+
 .. toctree::
    :hidden:
 
@@ -76,4 +85,5 @@ migration guide for your charm:
    manage-tracks
    manage-icons
    Migrate plugins <migrate-plugins/index>
+   Migrate bases <migrate-bases/index>
    Build <build-guides/index>

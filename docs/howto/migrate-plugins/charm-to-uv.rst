@@ -1,5 +1,8 @@
 .. _howto-migrate-to-uv:
 
+.. meta::
+    :description: How to migrate a charm from the Charm plugin to the uv plugin in Charmcraft, including updating project files and managing dependencies with uv.
+
 Migrate from the Charm plugin to the uv plugin
 ==============================================
 
@@ -157,9 +160,9 @@ Include extra files
 -------------------
 
 The uv plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files were previously included
-from the main directory, they can be included again using the
-:ref:`craft_parts_dump_plugin`:
+as well as the generated virtual environment. If other files such as a charm's icon
+were previously included from the main directory, stage them in the charm in a new part
+that uses the :ref:`craft_parts_dump_plugin`:
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
@@ -178,6 +181,7 @@ from the main directory, they can be included again using the
         source: .
         stage:
           - charm_version
+          - icon.svg
 
 
 .. _dependency groups: https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups

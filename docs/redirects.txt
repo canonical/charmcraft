@@ -27,3 +27,9 @@
 # Charmcraft.yaml file reference modernisation
 "reference/models/bases-charm.rst" "reference/files/charmcraft-yaml-file.rst"
 "reference/models/index.rst" "reference/files/charmcraft-yaml-file.rst"
+
+# Remove build-guides index
+"howto/build-guides/pack-a-hooks-based-charm-with-charmcraft" "howto/pack-a-hooks-based-charm-with-charmcraft"
+"howto/build-guides/pack-a-reactive-charm-with-charmcraft" "howto/pack-a-reactive-charm-with-charmcraft"
+"howto/build-guides/select-platforms" "howto/select-platforms"
+"howto/build-guides/shared-cache" "howto/shared-cache"

@@ -1,7 +1,7 @@
 .. _pack-a-reactive-charm-with-charmcraft:
 
-How to pack a reactive charm with Charmcraft
-==================================================
+Pack a reactive charm
+=====================
 
   Introduced in Charmcraft 1.4.
 

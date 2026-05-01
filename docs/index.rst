@@ -14,8 +14,8 @@ It provides commands to build, pack, and publish charms and integrates with Ops 
 Charmhub.
 
 Charmcraft supports popular languages and web app frameworks such as Django, Express,
-Python, and Go through its extensions. These create language-specific scaffolding that
-so developers can focus on the content of their charms.
+Python, and Go through its extensions. These create language-specific scaffolding so
+developers can focus on the content of their charms.
 
 Charmcraft is for platform engineers, site reliability engineers, and systems
 administrators looking to charm an application for their Juju deployment.

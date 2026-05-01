@@ -91,12 +91,15 @@ Governance and policies
 
 
 .. toctree::
-    :maxdepth: 2
     :hidden:
 
     tutorial/index
     howto/index
     reference/index
     explanation/index
-    contribute-to-this-documentation
+
+.. toctree::
+    :hidden:
+
     release-notes/index
+    contribute-to-this-documentation

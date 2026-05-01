@@ -31,5 +31,3 @@ environments and manipulate files.
     python_plugin
     poetry_plugin
     uv_plugin
-
-.. _charm plugin: reference-charmcraft-yaml-charm-plugin

@@ -121,6 +121,11 @@ The following issues have been resolved in Charmcraft 4.2.1:
 - `#2620 <https://github.com/canonical/charmcraft/issues/2620>`__ Multi-base shorthand
   notation fails on v4.2.0
 
+The following issues have been resolved in Charmcraft 4.2.2:
+
+- `#2598 <https://github.com/canonical/charmcraft/issues/2598>`__ Remote build fails
+  when getting project name
+
 Contributors
 ------------
 

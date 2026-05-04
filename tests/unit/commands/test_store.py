@@ -17,9 +17,11 @@
 
 import argparse
 import datetime
+import io
 import pathlib
 import textwrap
 import types
+import zipfile
 from unittest import mock
 
 import craft_application
@@ -38,6 +40,7 @@ from charmcraft.application.commands.store import (
     FetchLibs,
     LoginCommand,
     PublishLibCommand,
+    UploadCommand,
 )
 from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
@@ -594,3 +597,64 @@ def test_promote_revisions(
     emitter.assert_message(
         "0 revisions promoted from latest/candidate to latest/stable"
     )
+
+
+def test_upload_outside_project_dir_no_runtime_error(
+    monkeypatch,
+    new_path: pathlib.Path,
+):
+    # Reproducer for https://github.com/canonical/charmcraft/issues/2492
+    #
+    # When running `charmcraft upload ./my.charm` from OUTSIDE a directory
+    # containing a charmcraft.yaml, the upload succeeds but then charmcraft
+    # crashes with:
+    #   charmcraft internal error: RuntimeError('Project not configured yet.')
+    #
+    # This test asserts that the command completes successfully (returns 0)
+    # when there is no project configured.  Currently it FAILS because
+    # UploadCommand.run() calls self._services.get("project").get() without
+    # guarding against the RuntimeError raised when no project is configured.
+
+    # Build a minimal charm zip so get_name_from_zip works.
+    charm_path = new_path / "my.charm"
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(
+            "metadata.yaml",
+            "name: my-charm\nsummary: test\ndescription: test\n",
+        )
+    charm_path.write_bytes(buf.getvalue())
+
+    # Mock the Store so the upload itself "succeeds".
+    mock_uploaded = mock.Mock()
+    mock_uploaded.ok = True
+    mock_uploaded.revision = 7
+    mock_uploaded.errors = []
+
+    mock_store_instance = mock.Mock()
+    mock_store_instance.upload.return_value = mock_uploaded
+    mock_store_cls = mock.Mock(return_value=mock_store_instance)
+    monkeypatch.setattr(store_commands, "Store", mock_store_cls)
+
+    # Build a service factory where the project service is NOT configured,
+    # mimicking execution outside a project directory.
+    mock_services = mock.Mock(spec=craft_application.ServiceFactory)
+    mock_project_service = mock.Mock()
+    mock_project_service.get.side_effect = RuntimeError("Project not configured yet.")
+    mock_services.get.return_value = mock_project_service
+
+    cmd = UploadCommand({"app": APP_METADATA, "services": mock_services})
+    parsed_args = argparse.Namespace(
+        filepath=charm_path,
+        name=None,
+        release=None,
+        resource=[],
+        format=None,
+    )
+
+    # The command should complete without raising a RuntimeError.
+    # Currently this FAILS with RuntimeError('Project not configured yet.')
+    # because the code at store.py:586 does not guard against an unconfigured
+    # project service.
+    result = cmd.run(parsed_args)
+    assert result == 0

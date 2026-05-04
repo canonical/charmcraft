@@ -25,7 +25,6 @@ to include any libraries, parts, or other assets your application may require.
 - :ref:`manage-charms`
 - :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`
 - :ref:`select-platforms`
-- :ref:`manage-parts`
 - :ref:`manage-resources`
 - :ref:`manage-libraries`
 - :ref:`manage-extensions`
@@ -75,7 +74,6 @@ update a charm to the new base:
     manage-extensions
     manage-resources
     manage-libraries
-    manage-parts
     shared-cache
     pack-a-hooks-based-charm-with-charmcraft
     pack-a-reactive-charm-with-charmcraft

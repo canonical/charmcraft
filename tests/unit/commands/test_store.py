@@ -32,7 +32,10 @@ from craft_store.publisher import Releases
 
 from charmcraft import errors, store
 from charmcraft.application import commands
-from charmcraft.application.commands import SetResourceArchitecturesCommand
+from charmcraft.application.commands import (
+    FetchLibCommand,
+    SetResourceArchitecturesCommand,
+)
 from charmcraft.application.commands import store as store_commands
 from charmcraft.application.commands.store import (
     FetchLibs,
@@ -43,6 +46,7 @@ from charmcraft.application.main import APP_METADATA
 from charmcraft.models.project import CharmLib
 from charmcraft.store.models import Library
 from charmcraft.utils import cli
+from charmcraft.utils.charmlibs import LibData
 from tests import get_fake_revision
 
 BASIC_CHARMCRAFT_YAML = """\
@@ -368,6 +372,56 @@ def test_fetch_libs_success(
 
     emitter.assert_progress("Getting library metadata from charmhub")
     emitter.assert_message("Downloaded 1 charm libraries.")
+
+
+def test_fetch_lib_command_unregistered_lib_id_error_message(
+    monkeypatch, new_path: pathlib.Path
+) -> None:
+    """Reproducer for https://github.com/canonical/charmcraft/issues/2204
+
+    When `charmcraft fetch-lib` is run without arguments and a local library has a
+    lib_id that is not registered in Charmhub (e.g. a local/unpublished library),
+    the error message says "Library None not found in Charmhub." because
+    parsed_args.library is None. It should instead include the library's name.
+    """
+    local_lib = LibData(
+        lib_id="6c3e6b6680d64e9c89e611d1a15f65be",
+        api=0,
+        patch=40,
+        content="",
+        content_hash="somehash",
+        full_name="charms.testcharm.v0.testlib",
+        path=new_path / "lib/charms/testcharm/v0/testlib.py",
+        lib_name="testlib",
+        charm_name="testcharm",
+    )
+
+    # Patch get_libs_from_tree to simulate local libraries with an unregistered lib_id
+    monkeypatch.setattr(store_commands.utils, "get_libs_from_tree", lambda: [local_lib])
+    # Patch Store to avoid real network connections
+    monkeypatch.setattr(store_commands, "Store", mock.Mock())
+
+    # Set up a service factory where get_libraries_metadata returns no matching tips,
+    # simulating a lib_id not registered in Charmhub
+    mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
+    mock_service_factory.get.return_value.get_libraries_metadata.return_value = []
+
+    cmd = FetchLibCommand({"app": APP_METADATA, "services": mock_service_factory})
+
+    with pytest.raises(errors.LibraryError) as exc_info:
+        # No library argument — parsed_args.library is None
+        cmd.run(argparse.Namespace(library=None, format=None))
+
+    error_message = exc_info.value.args[0]
+    # Bug: the message currently says "Library None not found in Charmhub."
+    # Fix should produce a message that identifies the library by name, e.g.:
+    # "Library charms.testcharm.v0.testlib not found in Charmhub."
+    assert "None" not in error_message, (
+        f"Bug reproduced: error message uses 'None' instead of library name: {error_message!r}"
+    )
+    assert "testcharm" in error_message or "testlib" in error_message, (
+        f"Error message should identify the library, got: {error_message!r}"
+    )
 
 
 def test_promote_no_track_inference_noninteractive(

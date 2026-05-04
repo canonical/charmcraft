@@ -1,2 +1,2 @@
-fastapi[standard]
+fastapi[standard]==0.136.1
 psycopg2-binary

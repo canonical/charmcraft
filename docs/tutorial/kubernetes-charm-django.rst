@@ -18,6 +18,8 @@ running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
+Tested with Django 5.1.4.
+
 If you're new to the charming world, Django apps are
 specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.

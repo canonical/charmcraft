@@ -15,15 +15,19 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for the provider service."""
 
+import contextlib
 import functools
 import pathlib
 from collections.abc import Iterator
 from unittest import mock
 
 import craft_application
+import craft_platforms
 import pytest
+from craft_cli import CraftError
 from craft_cli.pytest_plugin import RecordingEmitter
 from craft_providers import bases
+from packaging.version import InvalidVersion
 
 from charmcraft.application.main import APP_METADATA
 from charmcraft.services.provider import ProviderService, _maybe_lock_cache
@@ -145,3 +149,34 @@ def test_maybe_lock_cache_with_another_lock(tmp_path: pathlib.Path) -> None:
     first_file_descriptor = _maybe_lock_cache(tmp_path)
     assert first_file_descriptor
     assert _maybe_lock_cache(tmp_path) is None
+
+
+def test_instance_handles_invalid_multipass_version(
+    provider_service: ProviderService,
+    fake_path: pathlib.Path,
+    default_build_info: craft_platforms.BuildInfo,
+) -> None:
+    # Reproducer for https://github.com/canonical/charmcraft/issues/1917
+    # When the installed multipass has a dev/pre-release version string like
+    # 1.15.0-dev.2929.pr661+gc67ef6641.mac, craft_providers raises InvalidVersion.
+    # Charmcraft's provider.instance() should handle this gracefully (e.g. by
+    # converting it to a CraftError) instead of crashing with an internal error.
+
+    @contextlib.contextmanager
+    def _raise_invalid_version(*args, **kwargs):
+        raise InvalidVersion("Invalid version: '1.15.0-dev.2929.pr661'")
+        yield  # required for @contextlib.contextmanager
+
+    with mock.patch.object(
+        craft_application.services.ProviderService,
+        "instance",
+        _raise_invalid_version,
+    ):
+        # InvalidVersion should be caught and converted to a user-friendly CraftError,
+        # not propagate as an unhandled internal error.
+        with pytest.raises(CraftError):
+            with provider_service.instance(
+                build_info=default_build_info,
+                work_dir=fake_path,
+            ):
+                pass

@@ -939,7 +939,8 @@ class PlatformCharm(CharmProject):
             return value
 
         if base := info.data.get("base"):
-            build_bases = {base}
+            build_base = info.data.get("build_base") or base
+            build_bases = {str(build_base)}
         else:
             # Multi-base charms.
             build_bases = {

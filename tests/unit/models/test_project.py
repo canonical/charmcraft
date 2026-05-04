@@ -772,6 +772,44 @@ def test_resolute_base_rejects_charm_plugin():
         )
 
 
+def test_legacy_plugins_are_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@25.10'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@25.10",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "reactive"}},
+            }
+        )
+
+
+def test_charm_plugin_is_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
 @pytest.mark.parametrize(
     "filename",
     [f.name for f in (pathlib.Path(__file__).parent / "valid_charms_yaml").iterdir()],

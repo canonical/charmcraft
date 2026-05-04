@@ -29,7 +29,6 @@ from craft_cli import emit
 from overrides import override  # pyright: ignore[reportUnknownVariableType]
 
 from charmcraft import models, utils
-from charmcraft.services.project import ProjectService
 
 OVERVIEW = """\
 Command remote-build sends the current project to be built
@@ -107,8 +106,7 @@ class RemoteBuild(ExtensibleCommand):
                 return 77  # permission denied from sysexits.h
 
         builder = self._services.remote_build
-        project_service = cast("ProjectService", self._services.project)
-        project = cast("models.Charm", project_service.get())
+        project = cast("models.Charm", self._services.get("project").get())
         config = cast(dict[str, Any], self.config)
         project_dir = (
             pathlib.Path(config.get("global_args", {}).get("project_dir") or ".")

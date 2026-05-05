@@ -14,8 +14,6 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-Tested with Flask 3.1.3.
-
 If you're new to the charming world, Flask apps are
 specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.
@@ -41,7 +39,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Flask app.
+#. Create a Flask app with Flask 3.1.3.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Flask app on a local

@@ -19,8 +19,6 @@ up and running with Juju. Let's get started!
 
 This tutorial should take 90 minutes for you to complete.
 
-Tested with FastAPI 0.136.1.
-
 If you're new to the charming world, FastAPI apps are
 specifically supported with a template to quickly generate a
 **rock** and a matching template to generate a **charm**.
@@ -46,7 +44,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a FastAPI app.
+#. Create a FastAPI app with FastAPI 0.136.1.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your FastAPI app on a local

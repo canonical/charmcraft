@@ -504,7 +504,7 @@ project file, specify the ``config`` key with the ``type`` subkey set to
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-parts`
+    See more: :ref:`parts`
 
 .. _pack-a-charm:
 

@@ -6,6 +6,7 @@
 
 "howto/set-up-charmcraft.rst" "howto/manage-charmcraft.rst"
 "howto/install-charmcraft.rst" "howto/manage-charmcraft.rst"
+"howto/manage-parts.rst" "reference/parts/index.rst"
 "tutorial/write-your-first-kubernetes-charm-for-a-django-app.rst" "tutorial/kubernetes-charm-django.rst"
 "tutorial/write-your-first-kubernetes-charm-for-a-flask-app.rst" "tutorial/kubernetes-charm-flask.rst"
 "tutorial/flask.rst" "tutorial/kubernetes-charm-flask.rst"

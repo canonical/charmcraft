@@ -86,6 +86,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/flask/requirements.txt
     :caption: ~/flask-hello-world/requirements.txt
+    :lines: 2-
 
 .. note::
 

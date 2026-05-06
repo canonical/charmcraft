@@ -97,6 +97,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-tutorial/requirements.txt
+    :lines: 2-
 
 .. note::
 

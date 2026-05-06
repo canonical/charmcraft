@@ -91,6 +91,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
     :caption: ~/fastapi-hello-world/requirements.txt
+    :lines: 2-
 
 .. note::
 

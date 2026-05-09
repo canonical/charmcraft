@@ -1,4 +1,4 @@
-name: Spread
+name: Spread tests for source
 on:
   pull_request:
     paths-ignore:

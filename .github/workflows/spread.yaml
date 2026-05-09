@@ -11,7 +11,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   merge_group:
     paths-ignore:
       - .github/**
@@ -23,7 +24,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   push:
     branches:
       - main
@@ -37,7 +39,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   schedule:
     - cron: "0 0 */2 * *"
 

@@ -1,6 +1,11 @@
 name: Experimental workflows
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "**/*.md"
+      - "*.md"
 
 jobs:
   typecheck-with-ty:

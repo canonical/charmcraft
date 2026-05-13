@@ -272,3 +272,54 @@ class TestPackMoveArtifacts:
             pack._run(parsed_args)
 
         assert (output_dir / artifact_name).read_text() == "charm content"
+
+    def test_no_move_when_project_dir_equals_output_dir(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+    ):
+        """Regression test for https://github.com/canonical/charmcraft/issues/2361.
+
+        When project_dir and output_dir are the same (e.g., ``charmcraft pack -p
+        ./worker -o ./worker``), no rename is attempted. This prevents a
+        FileNotFoundError that previously occurred when the charm file was placed
+        in the project directory but the code tried to rename it to itself.
+        """
+        project_dir = fake_project_dir
+        output_dir = fake_project_dir  # Same as project_dir
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        # The artifact exists in the project dir (as it would after a real managed build).
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        state_service.set("artifact", "test-platform", value=artifact_name)
+
+        parsed_args = argparse.Namespace(
+            output=output_dir,
+            project_dir=project_dir,
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+            ),
+        ):
+            pack._run(parsed_args)
+
+        # Artifact should still be in project_dir (no move since dirs are the same)
+        assert (project_dir / artifact_name).read_text() == "charm content"

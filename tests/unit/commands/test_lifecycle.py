@@ -282,9 +282,11 @@ class TestPackMoveArtifacts:
         """Regression test for https://github.com/canonical/charmcraft/issues/2361.
 
         When project_dir and output_dir are the same (e.g., ``charmcraft pack -p
-        ./worker -o ./worker``), no rename is attempted. This prevents a
-        FileNotFoundError that previously occurred when the charm file was placed
-        in the project directory but the code tried to rename it to itself.
+        ./worker -o ./worker``), the artifact rename step is skipped entirely.
+        Previously, the code attempted to rename the file to itself, which raised
+        a FileNotFoundError when the file was placed in the project directory by
+        the managed build container. This test verifies that the artifact remains
+        in place and no FileNotFoundError is raised during the move operation.
         """
         project_dir = fake_project_dir
         output_dir = fake_project_dir  # Same as project_dir

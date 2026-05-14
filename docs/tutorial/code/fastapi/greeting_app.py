@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI  # ty:ignore[unresolved-import]
 
 app = FastAPI()
 

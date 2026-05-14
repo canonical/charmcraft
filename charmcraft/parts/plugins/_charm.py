@@ -338,7 +338,7 @@ class CharmPlugin(plugins.Plugin):
 
     def post_build_callback(self, step_info):
         """Collect metrics left by charm_builder.py."""
-        instrum.merge_from(env.get_charm_builder_metrics_path())
+        instrum.merge_from(env.get_charm_builder_metrics_path())  # ty:ignore[invalid-argument-type]
 
     def _get_os_special_priority_paths(self) -> str | None:
         """Return a str of PATH for special OS."""

@@ -2,7 +2,7 @@
 
 import os
 
-import psycopg2
+import psycopg2  # ty:ignore[unresolved-import]
 
 DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
 

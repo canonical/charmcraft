@@ -333,7 +333,7 @@ def link_common_docs(library_name: str) -> None:
 
     docs_module_name = f"{library_name.replace('-', '_')}_docs"
     docs_module = importlib.import_module(docs_module_name)
-    docs_path = pathlib.Path(docs_module.__file__).parent / library_name
+    docs_path = pathlib.Path(docs_module.__file__).parent / library_name  # ty:ignore[invalid-argument-type]
 
     if common_lib_path.is_symlink() and common_lib_path.readlink() == docs_path:
         return

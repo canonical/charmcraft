@@ -6,7 +6,7 @@
 
 import logging
 
-import ops
+import ops  # ty:ignore[unresolved-import]
 
 # A standalone module for workload-specific logic (no charming concerns):
 import setuptools_scm_python

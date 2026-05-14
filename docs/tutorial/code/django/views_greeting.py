@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse  # ty:ignore[unresolved-import]
 
 
 def index(request):

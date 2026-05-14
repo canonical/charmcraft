@@ -224,7 +224,7 @@ class Store:
             kwargs["packages"] = packages
 
         try:
-            credentials = self._client.login(**kwargs)
+            credentials = self._client.login(**kwargs)  # ty:ignore[unresolved-attribute]
         except CredentialsAlreadyAvailable as exc:
             raise CraftError(
                 "Cannot login because credentials were found in your system "
@@ -238,12 +238,12 @@ class Store:
 
         There's no action really in the Store to logout, we just remove local credentials.
         """
-        self._client.logout()
+        self._client.logout()  # ty:ignore[unresolved-attribute]
 
     @_store_client_wrapper(auto_login=False)
     def whoami(self):
         """Return authenticated user details."""
-        response = self._client.whoami()
+        response = self._client.whoami()  # ty:ignore[unresolved-attribute]
 
         acc = response["account"]
         account = Account(
@@ -265,7 +265,7 @@ class Store:
 
     def _check_authorized(self) -> None:
         """Check if current credentials authenticated."""
-        self._client.whoami()
+        self._client.whoami()  # ty:ignore[unresolved-attribute]
 
     @_store_client_wrapper()
     def register_name(self, name, entity_type):
@@ -282,7 +282,7 @@ class Store:
 
         :raises: error messages from craft-store
         """
-        self._client.unregister_name(name)
+        self._client.unregister_name(name)  # ty:ignore[unresolved-attribute]
 
     @_store_client_wrapper()
     def list_registered_names(self, include_collaborations: bool) -> list[Entity]:
@@ -308,7 +308,7 @@ class Store:
         """Upload for all charms, bundles and resources (generic process)."""
         self._check_authorized()
 
-        upload_id = self._client.push_file(filepath)
+        upload_id = self._client.push_file(filepath)  # ty:ignore[unresolved-attribute]
         payload = {"upload-id": upload_id}
         if extra_fields is not None:
             payload.update(extra_fields)
@@ -503,7 +503,7 @@ class Store:
         self, charm_name: str, resource_name: str
     ) -> list[CharmResourceRevision]:
         """Return revisions for the indicated charm resource."""
-        return self._client.list_resource_revisions(charm_name, resource_name)
+        return self._client.list_resource_revisions(charm_name, resource_name)  # ty:ignore[unresolved-attribute]
 
     @_store_client_wrapper()
     def get_oci_registry_credentials(

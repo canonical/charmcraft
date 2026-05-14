@@ -2,7 +2,7 @@
 
 import flask
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__)  # ty:ignore[unresolved-attribute]
 app.config.from_prefixed_env()
 
 

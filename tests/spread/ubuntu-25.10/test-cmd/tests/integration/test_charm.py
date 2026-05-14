@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from pytest_operator.plugin import OpsTest
+from pytest_operator.plugin import OpsTest  # ty:ignore[unresolved-import]
 
 logger = logging.getLogger(__name__)
 

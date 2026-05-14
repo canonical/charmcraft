@@ -53,7 +53,7 @@ def test_lock_cache(
     }
     assert not lock_file.exists()
 
-    with provider.instance(**provider_kwargs):
+    with provider.instance(**provider_kwargs):  # ty:ignore[invalid-argument-type]
         # Test that the cache lock gets created
         assert lock_file.is_file()
         if bash_lock_cmd:
@@ -98,7 +98,7 @@ def test_locked_cache_no_cache(
         "cache_path": cache_path,
     }
 
-    with provider.instance(**provider_kwargs) as instance:
+    with provider.instance(**provider_kwargs) as instance:  # ty:ignore[invalid-argument-type]
         # Create a file in the cache and ensure it's not visible in the outer fs
         instance.execute_run(["touch", "/root/.cache/cache_cached"])
 
@@ -131,7 +131,7 @@ def test_cache_symlink(
         "work_dir": tmp_path,
         "cache_path": cache_path,
     }
-    with provider.instance(**provider_kwargs) as instance:
+    with provider.instance(**provider_kwargs) as instance:  # ty:ignore[invalid-argument-type]
         instance.execute_run(["test", "-d", "/root/.cache"], check=True)
         instance.execute_run(
             ["test", "-d", "/root/snap/charmcraft/common/cache"], check=True

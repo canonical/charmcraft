@@ -1,4 +1,4 @@
-from charms.reactive import set_flag, when_not
+from charms.reactive import set_flag, when_not  # ty:ignore[unresolved-import]
 
 
 @when_not("reactivecharm.installed")

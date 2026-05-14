@@ -1,6 +1,6 @@
 from time import sleep
 
-import flask
+import flask  # ty:ignore[unresolved-import]
 
 app = flask.Flask(__name__)
 

@@ -4,8 +4,8 @@ import datetime
 import os
 from typing import Annotated
 
-from fastapi import FastAPI, Header
-import psycopg2
+from fastapi import FastAPI, Header  # ty:ignore[unresolved-import]
+import psycopg2  # ty:ignore[unresolved-import]
 
 app = FastAPI()
 DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]

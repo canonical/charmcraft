@@ -222,8 +222,8 @@ def default_build_info() -> craft_platforms.BuildInfo:
     arch = util.get_host_architecture()
     return craft_platforms.BuildInfo(
         build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
-        build_on=arch,
-        build_for="arm64",
+        build_on=arch,  # ty:ignore[invalid-argument-type]
+        build_for="arm64",  # ty:ignore[invalid-argument-type]
         platform="distro-1-test64",
     )
 

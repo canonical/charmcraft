@@ -253,7 +253,7 @@ def test_timer_as_context_manager(fake_times, monkeypatch):
     monkeypatch.setattr(instrum, "_measurements", measurements)
     assert measurements.measurements == {}
 
-    with Timer("test message", foo=42):
+    with Timer("test message", foo=42):  # ty:ignore[invalid-argument-type]
         pass
 
     (recorded,) = measurements.measurements.values()
@@ -271,7 +271,7 @@ def test_timer_as_context_manager_with_mark(fake_times, monkeypatch):
     measurements = _Measurements()
     monkeypatch.setattr(instrum, "_measurements", measurements)
 
-    @Timer("test message", foo=42)
+    @Timer("test message", foo=42)  # ty:ignore[invalid-argument-type]
     def test_function(a, b):
         assert a == 17
         assert b == 35
@@ -295,7 +295,7 @@ def test_timer_as_decorator(fake_times, monkeypatch):
     monkeypatch.setattr(instrum, "_measurements", measurements)
     assert measurements.measurements == {}
 
-    with Timer("test message", foo=42) as timer:
+    with Timer("test message", foo=42) as timer:  # ty:ignore[invalid-argument-type]
         timer.mark("middle 1")
         timer.mark("middle 2")
 

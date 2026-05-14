@@ -235,7 +235,7 @@ class Framework(AttributeChecker):
                 for name in node.names:
                     yield name.name.split(".")
             elif isinstance(node, ast.ImportFrom):
-                yield node.module.split(".")
+                yield node.module.split(".")  # ty:ignore[unresolved-attribute]
 
     def _check_operator(self, basedir: pathlib.Path) -> bool:
         """Detect if the Operator Framework is used."""
@@ -790,7 +790,7 @@ class PyDeps(Linter):
         spec_matched = False
         for match in MIN_VERSION_REGEX.finditer(dep_spec):
             spec_matched = True
-            if version >= cls.get_version_tuple(match.group(1)):
+            if version >= cls.get_version_tuple(match.group(1)):  # ty:ignore[unsupported-operator]
                 return True
         for match in EXACT_VERSION_REGEX.finditer(dep_spec):
             spec_matched = True

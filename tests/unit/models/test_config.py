@@ -72,7 +72,7 @@ def test_empty_config():
 def test_correct_option_type(option, type_):
     config = JujuConfig(options={"my-opt": option})
 
-    assert isinstance(config.options["my-opt"], type_)
+    assert isinstance(config.options["my-opt"], type_)  # ty:ignore[not-subscriptable]
 
 
 @pytest.mark.parametrize(

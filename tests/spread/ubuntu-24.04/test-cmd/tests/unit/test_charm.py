@@ -1,7 +1,7 @@
 import pytest
-from ops import testing
+from ops import testing  # ty:ignore[unresolved-import]
 
-from charm import TestCmdCharm
+from charm import TestCmdCharm  # ty:ignore[unresolved-import]
 
 
 def mock_get_version():

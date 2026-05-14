@@ -88,11 +88,11 @@ def test_pack_update_charm_libs_empty(
     mock_store_anonymous_client.get_library.return_value = store_lib
 
     libs_service = cast("CharmLibsService", service_factory.get("charm_libs"))
-    libs_service.write = mock.Mock(wraps=libs_service.write)
+    libs_service.write = mock.Mock(wraps=libs_service.write)  # ty:ignore[invalid-assignment]
 
     pack._update_charm_libs()
 
-    libs_service.write.assert_called_once_with(store_lib)
+    libs_service.write.assert_called_once_with(store_lib)  # ty:ignore[unresolved-attribute]
 
     with check():
         emitter.assert_debug(repr(store_lib))

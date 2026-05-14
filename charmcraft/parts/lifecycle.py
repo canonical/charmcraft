@@ -108,8 +108,8 @@ class PartsLifecycle:
                         )
                         with instrum.Timer(
                             "Running step",
-                            step=act.step.name,  # type: ignore[arg-type]
-                            part=act.part_name,  # type: ignore[arg-type]
+                            step=act.step.name,  # type: ignore[arg-type]  # ty:ignore[invalid-argument-type]
+                            part=act.part_name,  # type: ignore[arg-type]  # ty:ignore[invalid-argument-type]
                         ):
                             with emit.open_stream("Execute action") as stream:
                                 aex.execute([act], stdout=stream, stderr=stream)

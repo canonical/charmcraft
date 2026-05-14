@@ -4,9 +4,9 @@ import datetime
 import os
 
 import flask
-import psycopg2
+import psycopg2  # ty:ignore[unresolved-import]
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__)  # ty:ignore[unresolved-attribute]
 app.config.from_prefixed_env()
 
 DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
@@ -15,7 +15,7 @@ DATABASE_URI = os.environ["POSTGRESQL_DB_CONNECT_STRING"]
 @app.route("/")
 def index():
     with psycopg2.connect(DATABASE_URI) as conn, conn.cursor() as cur:
-        user_agent = flask.request.headers.get('User-Agent')
+        user_agent = flask.request.headers.get('User-Agent')  # ty:ignore[unresolved-attribute]
         timestamp = datetime.datetime.now()
 
         cur.execute(

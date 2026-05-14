@@ -33,4 +33,4 @@ def get_fake_revision(**kwargs) -> models.resource_revision_model.CharmResourceR
         "type": "file",
     }
     data.update(kwargs)
-    return models.resource_revision_model.CharmResourceRevision(**data)
+    return models.resource_revision_model.CharmResourceRevision(**data)  # ty:ignore[invalid-argument-type]

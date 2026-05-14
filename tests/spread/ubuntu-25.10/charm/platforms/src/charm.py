@@ -6,7 +6,7 @@
 
 import logging
 
-import ops
+import ops  # ty:ignore[unresolved-import]
 
 logger = logging.getLogger(__name__)
 

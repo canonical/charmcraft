@@ -50,7 +50,7 @@ def dump_yaml(data: Any) -> str:  # noqa: ANN401 - yaml.dump takes anything, so 
     yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
     yaml.add_representer(
         pydantic.AnyUrl,
-        _repr_str,  # type: ignore[arg-type]
+        _repr_str,  # type: ignore[arg-type]  # ty:ignore[invalid-argument-type]
         Dumper=yaml.SafeDumper,
     )
     yaml.add_representer(

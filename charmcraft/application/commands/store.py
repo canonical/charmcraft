@@ -207,7 +207,7 @@ class LoginCommand(CharmcraftCommand):
         )
 
         if parsed_args.export:
-            credentials = self._services.store.get_credentials(
+            credentials = self._services.store.get_credentials(  # ty:ignore[unresolved-attribute]
                 packages=packages, **kwargs
             )
             parsed_args.export.write_text(credentials)
@@ -215,8 +215,8 @@ class LoginCommand(CharmcraftCommand):
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            self._services.store.login(packages=packages, **kwargs)  # ty:ignore[unresolved-attribute]
+            username = self._services.store.get_account_info()["username"]  # ty:ignore[unresolved-attribute]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -241,7 +241,7 @@ class LogoutCommand(CharmcraftCommand):
     def run(self, parsed_args):
         """Run the command."""
         try:
-            self._services.store.logout()
+            self._services.store.logout()  # ty:ignore[unresolved-attribute]
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")

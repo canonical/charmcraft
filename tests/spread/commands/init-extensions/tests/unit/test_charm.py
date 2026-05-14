@@ -6,8 +6,8 @@
 import os
 import pathlib
 
-import charm
-from ops import testing
+import charm  # ty:ignore[unresolved-import]
+from ops import testing  # ty:ignore[unresolved-import]
 
 
 def test_smoke():

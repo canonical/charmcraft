@@ -30,12 +30,12 @@ class FakeExtension(Extension):
     bases = [("ubuntu", "22.04")]
 
     @classmethod
-    def get_supported_bases(cls) -> list[tuple[str, ...]]:
+    def get_supported_bases(cls) -> list[tuple[str, ...]]:  # ty:ignore[invalid-method-override]
         """Return a list of tuple of supported bases."""
-        return cls.bases
+        return cls.bases  # ty:ignore[invalid-return-type]
 
     @staticmethod
-    def is_experimental(_base: tuple[str, ...] | None) -> bool:
+    def is_experimental(_base: tuple[str, ...] | None) -> bool:  # ty:ignore[invalid-method-override]
         """Return whether or not this extension is unstable for given base."""
         return False
 
@@ -59,7 +59,7 @@ class ExperimentalExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: str | None) -> bool:
+    def is_experimental(_base: str | None) -> bool:  # ty:ignore[invalid-method-override]
         return True
 
 

@@ -72,7 +72,7 @@ VALID_AUTHORS = [
 @pytest.fixture
 def init_command():
     return init.InitCommand(
-        {"app": charmcraft.application.APP_METADATA, "services": None}
+        {"app": charmcraft.application.APP_METADATA, "services": None}  # ty:ignore[possibly-missing-submodule]
     )
 
 

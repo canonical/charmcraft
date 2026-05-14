@@ -121,7 +121,7 @@ class ProviderService(services.ProviderService):
             clean_existing=clean_existing,
             prepare_instance=prepare_instance,
             project_name=project_name,
-            **kwargs,  # type: ignore[arg-type]
+            **kwargs,  # type: ignore[arg-type]  # ty:ignore[invalid-argument-type]
         ) as instance:
             try:
                 instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])

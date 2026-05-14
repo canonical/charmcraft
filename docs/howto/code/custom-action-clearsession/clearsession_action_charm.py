@@ -7,9 +7,9 @@
 import logging
 import typing
 
-import ops
+import ops  # ty:ignore[unresolved-import]
 
-import paas_charm.django
+import paas_charm.django  # ty:ignore[unresolved-import]
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
 
 import logging
 
-import ops
+import ops  # ty:ignore[unresolved-import]
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)

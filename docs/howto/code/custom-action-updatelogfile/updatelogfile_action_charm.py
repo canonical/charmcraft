@@ -7,9 +7,9 @@
 import logging
 import typing
 
-import ops
+import ops  # ty:ignore[unresolved-import]
 
-import paas_charm.flask
+import paas_charm.flask  # ty:ignore[unresolved-import]
 
 import requests
 

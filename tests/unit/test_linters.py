@@ -40,10 +40,10 @@ from charmcraft.models.lint import LintResult
     further_garbage=strategies.text(),
 )
 def test_fuzz_python_name_regex(name, next_char, further_garbage):
-    assert linters.PYTHON_NAME_REGEX.match(name).group(0) == name
-    assert linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}").group(0) == name
+    assert linters.PYTHON_NAME_REGEX.match(name).group(0) == name  # ty:ignore[unresolved-attribute]
+    assert linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}").group(0) == name  # ty:ignore[unresolved-attribute]
     assert (
-        linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}{further_garbage}").group(0)
+        linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}{further_garbage}").group(0)  # ty:ignore[unresolved-attribute]
         == name
     )
 
@@ -59,7 +59,7 @@ def test_fuzz_python_name_regex(name, next_char, further_garbage):
     ],
 )
 def test_min_version_regex_matches(string, expected):
-    assert linters.MIN_VERSION_REGEX.search(string).group(1) == expected
+    assert linters.MIN_VERSION_REGEX.search(string).group(1) == expected  # ty:ignore[unresolved-attribute]
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ def test_min_version_regex_matches(string, expected):
     ],
 )
 def test_approx_version_regex_matches(string, expected):
-    assert expected in linters.APPROX_VERSION_REGEX.search(string).group(1, 2)
+    assert expected in linters.APPROX_VERSION_REGEX.search(string).group(1, 2)  # ty:ignore[unresolved-attribute]
 
 
 @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ def test_approx_version_regex_matches(string, expected):
     [("==1.0.0", "1.0.0")],
 )
 def test_exact_version_regex_matches(string, expected):
-    assert linters.EXACT_VERSION_REGEX.search(string).group(1) == expected
+    assert linters.EXACT_VERSION_REGEX.search(string).group(1) == expected  # ty:ignore[unresolved-attribute]
 
 
 @pytest.fixture

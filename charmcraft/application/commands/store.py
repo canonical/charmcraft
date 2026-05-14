@@ -76,6 +76,14 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_WARNING = (
+    "WARNING: publishing charm libraries in Charmhub is deprecated. "
+    "Go to https://ubu.link/charmlibs-deprecation for more information."
+)
+
+
+def _emit_charmlibs_deprecation_warning() -> None:
+    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 class LoginCommand(CharmcraftCommand):
@@ -1255,6 +1263,7 @@ class CreateLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         lib_name = parsed_args.name
         valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
@@ -1349,6 +1358,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         charm_name = (
             self._services.get("project").get().name or utils.get_name_from_yaml()
         )

@@ -38,6 +38,7 @@ from charmcraft.application.commands.store import (
     CHARMLIBS_DEPRECATION_WARNING,
     CreateLibCommand,
     FetchLibs,
+    ListLibCommand,
     LoginCommand,
     PublishLibCommand,
 )
@@ -225,6 +226,19 @@ def test_create_lib_warns_deprecation(
     emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
+def test_list_lib_warns_deprecation(monkeypatch, emitter, service_factory) -> None:
+    mock_store = mock.Mock()
+    mock_store.return_value.get_libraries_tips.return_value = {}
+    monkeypatch.setattr(store_commands, "Store", mock_store)
+
+    cmd = ListLibCommand({"app": APP_METADATA, "services": service_factory})
+
+    cmd.run(argparse.Namespace(name="test-charm", format=False))
+
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+    emitter.assert_message("No libraries found for charm test-charm.")
+
+
 @pytest.mark.parametrize(
     ("updates", "expected"),
     [
@@ -260,6 +274,7 @@ def test_fetch_libs_no_charm_libs(
     with pytest.raises(errors.LibraryError) as exc_info:
         fetch_libs.run(argparse.Namespace())
 
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
     assert exc_info.value.resolution == "Add a 'charm-libs' section to charmcraft.yaml."
 
 
@@ -393,6 +408,7 @@ def test_fetch_libs_success(
 
     fetch_libs.run(argparse.Namespace())
 
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
     emitter.assert_progress("Getting library metadata from charmhub")
     emitter.assert_message("Downloaded 1 charm libraries.")
 

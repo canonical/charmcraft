@@ -1525,6 +1525,7 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
@@ -1676,6 +1677,7 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
+        _emit_charmlibs_deprecation_warning()
         store = cast("StoreService", self._services.get("store"))
         project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
@@ -1784,6 +1786,7 @@ class ListLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.name:
             charm_name = parsed_args.name
         else:

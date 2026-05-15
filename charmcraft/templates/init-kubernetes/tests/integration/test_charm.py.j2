@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(pathlib.Path("charmcraft.yaml").read_text())
 
 
+@pytest.mark.juju_setup
 def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
     """Deploy the charm under test."""
     resources = {

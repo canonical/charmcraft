@@ -94,7 +94,7 @@ lint = [
     { include-group = "types" },
 ]
 types = [
-    "mypy[reports]~=1.11",
+    "mypy[reports]~=2.1",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests",

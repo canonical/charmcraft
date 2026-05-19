@@ -18,6 +18,7 @@ conflicts = [[
     { package = "charmcraft", group = "dev-plucky" },
     { package = "charmcraft", group = "dev-questing" },
     { package = "charmcraft", group = "dev-resolute" },
+    { package = "charmcraft", group = "dev-stonking" },
 ]]
 
 [manifest]
@@ -368,6 +369,9 @@ dev-questing = [
 dev-resolute = [
     { name = "python-apt", version = "3.0.0+ubuntu1", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
 ]
+dev-stonking = [
+    { name = "python-apt", version = "3.0.0+ubuntu1", source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }, marker = "sys_platform == 'linux'" },
+]
 docs = [
     { name = "canonical-sphinx" },
     { name = "myst-parser" },
@@ -482,6 +486,7 @@ dev-noble = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifie
 dev-plucky = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=2.9.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
 dev-questing = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=3.0.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
 dev-resolute = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=3.0.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
+dev-stonking = [{ name = "python-apt", marker = "sys_platform == 'linux'", specifier = "~=3.0.0", index = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }]
 docs = [
     { name = "canonical-sphinx", specifier = "~=0.6" },
     { name = "myst-parser", specifier = ">=4.0.1" },

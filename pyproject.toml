@@ -107,6 +107,7 @@ dev-noble = ["python-apt~=2.7.0;sys_platform=='linux'"]
 dev-plucky = ["python-apt~=2.9.0;sys_platform=='linux'"]
 dev-questing = ["python-apt~=3.0.0;sys_platform=='linux'"]
 dev-resolute = ["python-apt~=3.0.0;sys_platform=='linux'"]
+dev-stonking = ["python-apt~=3.0.0;sys_platform=='linux'"]
 tics = ["flake8", "pylint"]
 
 [tool.uv]
@@ -168,6 +169,7 @@ conflicts = [
         { group = "dev-plucky" },
         { group = "dev-questing" },
         { group = "dev-resolute" },
+        { group = "dev-stonking" },
     ]
 ]
 build-constraint-dependencies = [

@@ -112,19 +112,23 @@ integration tests, which you can run using 'tox -e unit' and 'tox -e integration
 def _make_success_message(src_files: list[str]) -> str:
     src_files_str = "\n".join(src_files)
     return f"""\
-Charmed operator package file and directory tree initialised.
-
-Now edit the following package files to provide fundamental charm metadata
-and other information:
+Created project files for your charm:
 
 charmcraft.yaml
-{src_files_str}
+pyproject.toml
 README.md
+{src_files_str}
+...
 
 To manage your charm's dependencies, use uv.
 
 To migrate from the Charm plugin to the uv plugin, see:
 https://documentation.ubuntu.com/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+
+Next steps:
+ 1. Run 'uv lock'
+ 2. Commit the project files to source control, including uv.lock
+ 3. Edit the project files to provide metadata and write your charm code
 """
 
 

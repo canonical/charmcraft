@@ -100,8 +100,6 @@ files and directories::
     │   └── unit
     │       └── test_charm.py      - Unit tests
     ├── tox.ini                    - Configuration for tox, the tool to run all tests
-    ├── uv.lock                    - Specifies exact versions of Python dependencies,
-    │                                created if profile is 'kubernetes' or 'machine'
 
 You will need to edit at least charmcraft.yaml and README.md.
 

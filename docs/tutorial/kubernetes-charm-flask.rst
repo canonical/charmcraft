@@ -39,7 +39,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Flask app.
+#. Create a Flask app with Flask 3.1.3.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Flask app on a local
@@ -86,6 +86,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/flask/requirements.txt
     :caption: ~/flask-hello-world/requirements.txt
+    :lines: 2-
 
 .. note::
 

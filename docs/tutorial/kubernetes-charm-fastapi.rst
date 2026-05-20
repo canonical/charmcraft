@@ -44,7 +44,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a FastAPI app.
+#. Create a FastAPI app with FastAPI 0.136.1.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your FastAPI app on a local
@@ -91,6 +91,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
     :caption: ~/fastapi-hello-world/requirements.txt
+    :lines: 2-
 
 .. note::
 

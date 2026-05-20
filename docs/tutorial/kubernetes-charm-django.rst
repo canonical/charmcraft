@@ -43,7 +43,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a Django app.
+#. Create a Django app with Django 5.1.4.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Django app on a local
@@ -97,6 +97,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
     :caption: ~/django-tutorial/requirements.txt
+    :lines: 2-
 
 .. note::
 

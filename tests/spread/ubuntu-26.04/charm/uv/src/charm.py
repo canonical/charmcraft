@@ -3,6 +3,8 @@ from ops.main import main
 
 
 class TestCharm(CharmBase):
+    """Minimal charm implementation for Ubuntu 26.04 spread tests."""
+
     pass
 
 

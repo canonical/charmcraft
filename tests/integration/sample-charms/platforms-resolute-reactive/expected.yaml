@@ -1,0 +1,15 @@
+name: example-charm
+summary: An example charm with platforms
+description: |
+  A description for an example charm with platforms.
+base: ubuntu@26.04
+platforms:
+  amd64:
+    build-on:
+    - amd64
+    build-for:
+    - amd64
+parts:
+  reactive:
+    plugin: reactive
+type: charm

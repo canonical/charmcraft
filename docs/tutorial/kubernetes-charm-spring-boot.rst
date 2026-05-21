@@ -39,7 +39,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Spring Boot app.
+#. Create a Spring Boot 3.5.10 app.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Spring Boot app on a local

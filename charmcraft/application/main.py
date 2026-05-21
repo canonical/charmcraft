@@ -130,12 +130,11 @@ class Charmcraft(craft_application.Application):
             )
         except ProjectFileMissingError:
             return plugins
-        bases = {build_info.build_base for build_info in full_build_plan}
-        for base in bases:
-            if str(base) not in const.CHARM_OR_REACTIVE_BASES:
-                plugins.pop("charm")
-                plugins.pop("reactive")
-                break
+        bases = {str(build_info.build_base) for build_info in full_build_plan}
+        if any(base not in const.CHARM_PLUGIN_BASES for base in bases):
+            plugins.pop("charm", None)
+        if any(base not in const.REACTIVE_PLUGIN_BASES for base in bases):
+            plugins.pop("reactive", None)
 
         return plugins
 

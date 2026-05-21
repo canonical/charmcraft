@@ -15,7 +15,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
 
   pull_request:
@@ -28,7 +29,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
   merge_group:
     paths-ignore:
@@ -40,7 +42,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
 
   # Allows you to run this workflow manually from the Actions tab

@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-expressjs-app:
 
+.. meta::
+    :description: Learn how to build and deploy a Kubernetes charm for an Express app using Charmcraft, Rockcraft, and Juju. Uses the express-framework profile.
+
 Write your first Kubernetes charm for an Express app
 ======================================================
 

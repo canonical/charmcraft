@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-go-app:
 
+.. meta::
+    :description: Learn how to build and deploy a Kubernetes charm for a Go app using Charmcraft, Rockcraft, and Juju. Uses the go-framework profile.
+
 Write your first Kubernetes charm for a Go app
 ==============================================
 

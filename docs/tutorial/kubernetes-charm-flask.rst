@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-flask-app:
 
+.. meta::
+    :description: Learn how to build and deploy a Kubernetes charm for a Flask app using Charmcraft, Rockcraft, and Juju. Uses the flask-framework profile.
+
 Write your first Kubernetes charm for a Flask app
 =================================================
 

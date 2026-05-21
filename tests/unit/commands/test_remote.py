@@ -30,11 +30,6 @@ def test_remote_build_project_name_attr_regression(
     mocker: pytest_mock.MockerFixture, service_factory: services.ServiceFactory
 ) -> None:
     """Regression test for https://github.com/canonical/charmcraft/issues/2598.
-
-    The project service was being erroneously cast as the project model,
-    causing a later access to the ``.name`` attribute to raise
-    ``AttributeError: 'ProjectService' object has no attribute 'name'``
-    instead of the expected ``str``.
     """
     remote_build_cmd = RemoteBuild({"app": APP_METADATA, "services": service_factory})
     namespace = argparse.Namespace(

@@ -8,11 +8,27 @@ on:
       - work/check-policy # For development
 
 jobs:
+  filter:
+    outputs:
+      source-files: ${{ steps.filter.outputs.source-files }}
+    steps:
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: filter
+        with:
+          # Combine multiple negation checks into a union (¬A ∧ ¬B ∧ ¬C), because individual entries are checked independently (A ∨ B ∨ C).
+          # If we ever need to filter only for docs, glob 'docs/**/*' and '**/*.md'
+          filters: |
+            source-files:
+              - '!({docs/**,*.md,**/*.md,.readthedocs.yaml})'
   policy:
     uses: canonical/starflow/.github/workflows/policy.yaml@main
+    needs: filter
+    if: ${{ needs.filter.outputs.source-files }}
   python-scans:
     name: Security scan
     uses: canonical/starflow/.github/workflows/scan-python.yaml@main
+    needs: filter
+    if: ${{ needs.filter.outputs.source-files }}
     with:
       packages: python-apt-dev
       # 1. requirements-noble.txt can't build on jammy

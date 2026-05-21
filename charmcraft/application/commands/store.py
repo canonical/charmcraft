@@ -83,7 +83,7 @@ CHARMLIBS_DEPRECATION_WARNING = (
 
 
 def _emit_charmlibs_deprecation_warning() -> None:
-    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+    emit.warning(CHARMLIBS_DEPRECATION_WARNING)
 
 
 class LoginCommand(CharmcraftCommand):

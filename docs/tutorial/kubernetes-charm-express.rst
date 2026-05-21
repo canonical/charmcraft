@@ -373,6 +373,9 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/expressjs-hello-world/charm
 
     juju status
 
@@ -740,12 +743,18 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/expressjs-hello-world/charm
 
     curl http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
 
     Hi!
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/expressjs-hello-world/charm
 
     curl http://expressjs-hello-world/visitors --resolve expressjs-hello-world:80:127.0.0.1
 

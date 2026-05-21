@@ -494,6 +494,9 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/django-tutorial/charm
 
     juju status
 

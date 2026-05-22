@@ -12,6 +12,7 @@ on:
 
 jobs:
   filter:
+    runs-on: ubuntu-slim
     outputs:
       source-files: ${{ steps.filter.outputs.source-files }}
     steps:

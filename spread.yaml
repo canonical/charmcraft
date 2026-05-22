@@ -131,6 +131,13 @@ prepare: |
   fi
 
   if os.query is-ubuntu; then
+    if [[ "${SPREAD_SYSTEM:-}" == ubuntu-26.04-* ]]; then
+      ubuntu_sources=/etc/apt/sources.list.d/ubuntu.sources
+      if [[ -f "$ubuntu_sources" ]]; then
+        sed -i -E '/^Components:/ { /(^| )universe( |$)/! s/$/ universe/ }' "$ubuntu_sources"
+      fi
+    fi
+
     tempfile="$(mktemp)"
     if ! apt-get update > "$tempfile" 2>&1; then
         cat "$tempfile"

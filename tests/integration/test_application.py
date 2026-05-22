@@ -103,16 +103,74 @@ def test_load_invalid_charm(in_project_path: pathlib.Path, charm_dir: pathlib.Pa
 
 
 @pytest.mark.parametrize(
-    "charm_dir",
+    ("charm_dir_name", "removed_plugin", "match"),
     [
-        pytest.param(path, id=path.name)
-        for path in sorted((pathlib.Path(__file__).parent / "invalid-charms").iterdir())
-        if "charm-plugin" in path.name or "reactive-plugin" in path.name
+        pytest.param(
+            "multibase-charm-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="multibase-charm-plugin-charm",
+        ),
+        pytest.param(
+            "multibase-charm-plugin",
+            "reactive",
+            "plugin not registered: 'reactive'",
+            id="multibase-charm-plugin-reactive",
+        ),
+        pytest.param(
+            "multibase-questing-charm-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="multibase-questing-charm-plugin-charm",
+        ),
+        pytest.param(
+            "multibase-questing-charm-plugin",
+            "reactive",
+            "plugin not registered: 'reactive'",
+            id="multibase-questing-charm-plugin-reactive",
+        ),
+        pytest.param(
+            "multibase-resolute-charm-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="multibase-resolute-charm-plugin-charm",
+        ),
+        pytest.param(
+            "questing-charm-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="questing-charm-plugin-charm",
+        ),
+        pytest.param(
+            "questing-charm-plugin",
+            "reactive",
+            "plugin not registered: 'reactive'",
+            id="questing-charm-plugin-reactive",
+        ),
+        pytest.param(
+            "questing-reactive-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="questing-reactive-plugin-charm",
+        ),
+        pytest.param(
+            "questing-reactive-plugin",
+            "reactive",
+            "plugin not registered: 'reactive'",
+            id="questing-reactive-plugin-reactive",
+        ),
+        pytest.param(
+            "resolute-charm-plugin",
+            "charm",
+            "plugin not registered: 'charm'",
+            id="resolute-charm-plugin-charm",
+        ),
     ],
 )
 def test_remove_charm_reactive_plugins(
-    in_project_path: pathlib.Path, charm_dir: pathlib.Path
+    in_project_path: pathlib.Path, charm_dir_name: str, removed_plugin: str, match: str
 ):
+    charm_dir = pathlib.Path(__file__).parent / "invalid-charms" / charm_dir_name
     shutil.copytree(charm_dir, in_project_path, dirs_exist_ok=True)
 
     app = create_app()
@@ -123,7 +181,5 @@ def test_remove_charm_reactive_plugins(
     # Test that we have not registered plugins that we didn't
     app._initialize_craft_parts()
 
-    with pytest.raises(ValueError, match="plugin not registered: 'charm'"):
-        craft_parts.plugins.plugins.get_plugin_class("charm")
-    with pytest.raises(ValueError, match="plugin not registered: 'reactive'"):
-        craft_parts.plugins.plugins.get_plugin_class("reactive")
+    with pytest.raises(ValueError, match=match):
+        craft_parts.plugins.plugins.get_plugin_class(removed_plugin)

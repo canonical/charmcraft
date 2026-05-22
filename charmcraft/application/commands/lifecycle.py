@@ -62,10 +62,10 @@ class PackCommand(lifecycle.PackCommand):
         upload it to Charmhub with `charmcraft upload`.
 
         For the charm you must be inside a charm directory with a valid
-        `metadata.yaml`, `requirements.txt` including the `ops` package
-        for the Python operator framework, and an operator entrypoint,
-        usually `src/charm.py`.  See `charmcraft init` to create a
-        template charm directory structure.
+        `charmcraft.yaml` containing the charm metadata, a `requirements.txt`
+        including the `ops` package for the Python operator framework, and an
+        operator entrypoint, usually `src/charm.py`.  See `charmcraft init`
+        to create a template charm directory structure.
         """
     )
 

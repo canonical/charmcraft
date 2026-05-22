@@ -15,6 +15,8 @@ jobs:
     uses: canonical/starflow/.github/workflows/lint-python.yaml@main
   test:
     uses: canonical/starflow/.github/workflows/test-python.yaml@main
+    needs: lint
+    if: ${{ needs.lint.output.source-files == 'true' }}
     with:
       # Limiting to amd64 is a workaround for https://github.com/canonical/charmcraft/issues/2018
       # Once that's resolved we should run fast and slow tests on ARM64 Ubuntu too.

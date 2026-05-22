@@ -2,13 +2,16 @@ name: Spread tests for docs
 on:
   pull_request:
     paths:
+      - .github/workflow/spread-docs.yaml
       - spread.yaml
+      - .readthedocs.yaml
       - docs/**/code/**
   push:
     branches:
       - main
     paths:
       - spread.yaml
+      - .readthedocs.yaml
       - docs/**/code/**
   schedule:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays

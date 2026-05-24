@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING, Any, cast
 import craft_cli
 from craft_application.commands import lifecycle
 from craft_application.util import is_managed_mode
-from craft_cli import CraftError
 from typing_extensions import override
 
 from charmcraft import models, utils
@@ -107,21 +106,6 @@ class PackCommand(lifecycle.PackCommand):
     @staticmethod
     def _should_add_shell_args() -> bool:
         return True
-
-    def _validate_bases_indices(self, bases_indices):
-        """Validate that bases index is valid."""
-        if bases_indices is None:
-            return
-
-        project = cast(models.Charm, self._services.project)
-
-        msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(project.bases)
-        for bases_index in bases_indices:
-            if bases_index < 0:
-                raise CraftError(msg.format(bases_index))
-            if bases_index >= len_configured_bases:
-                raise CraftError(msg.format(bases_index))
 
     def _update_charm_libs(self) -> None:
         """Update charm libs attached to the project."""

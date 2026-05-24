@@ -1,5 +1,5 @@
 summary: pack a charm with separate metadata files from a different directory
 
 execute: |
-  # If we pull successfully it means we got the correct files!
-  charmcraft pull --verbose --project-dir=charm
+  # If we pack successfully it means we got the correct files!
+  charmcraft pack --verbose --project-dir=charm

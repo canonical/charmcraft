@@ -236,7 +236,7 @@ published automatically in respective tabs.
 
 To provide your main user documentation, include its URL in your charm's project file
 under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key.
-Charmcraft supports both native `Discourse <https://discourse.charmhub.io/>`_ topics
+Charmhub supports both `Discourse <https://discourse.charmhub.io/>`_ topics
 and externally hosted documentation sites.
 
 .. note::

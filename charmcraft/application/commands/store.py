@@ -78,7 +78,7 @@ VALID_ATTENUATIONS = {
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
 CHARMLIBS_DEPRECATION_WARNING = (
     "WARNING: Charmhub-hosted charm libraries are deprecated. "
-    "Go to https://ubu.link/charmlibs-deprecation for more information."
+    "Go to https://ubu.link/charmhub-libraries-deprecation for more information."
 )
 
 

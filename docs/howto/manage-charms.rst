@@ -1,3 +1,6 @@
+.. meta::
+    :description: Learn about initializing, configuring, packing, and publishing Juju charms with Charmcraft and releasing channel revisions on Charmhub.
+
 .. _manage-charms:
 
 Manage charms

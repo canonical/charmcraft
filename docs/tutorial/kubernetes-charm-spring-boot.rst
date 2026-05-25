@@ -1,7 +1,7 @@
 .. _write-your-first-kubernetes-charm-for-a-spring-boot-app:
 
 .. meta::
-    :description: Learn how to build and deploy a Kubernetes charm for a Spring Boot app using Charmcraft, Rockcraft, and Juju. Uses the spring-boot-framework profile.
+    :description: Learn the process of building and deploying a Kubernetes charm for a Spring Boot app. In this tutorial, we use the spring-boot-framework extension to package and orchestrate the application.
 
 Write your first Kubernetes charm for a Spring Boot app
 =======================================================

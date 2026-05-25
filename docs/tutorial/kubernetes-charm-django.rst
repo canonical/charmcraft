@@ -1,7 +1,7 @@
 .. _write-your-first-kubernetes-charm-for-a-django-app:
 
 .. meta::
-    :description: Learn how to build and deploy a Kubernetes charm for a Django app using Charmcraft, Rockcraft, and Juju. Uses the django-framework profile.
+    :description: Learn the process of building and deploying a Kubernetes charm for a Django app. In this tutorial, we use the django-framework extension to package and orchestrate the application.
 
 Write your first Kubernetes charm for a Django app
 ==================================================

@@ -234,15 +234,20 @@ If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
-To add content to the **Description** tab,
-create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
-in your charm's project file under the
-:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
+To provide your main user documentation, include its URL in your charm's project file
+under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key.
+Charmcraft supports both native `Discourse <https://discourse.charmhub.io/>`_ topics
+and externally hosted documentation sites.
+
+.. note::
+    When using an externally hosted site, Charmhub will display a **Read documentation** button
+    that will redirect users to the specified URL. The **Description** tab will display your
+    charm's basic metadata summary.
 
 .. code-block:: yaml
 
     links:
-      documentation: https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778
+      documentation: https://documentation.ubuntu.com/traefik-k8s-charm
 
 ..
 

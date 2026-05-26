@@ -1,7 +1,7 @@
-.. meta::
-    :description: Learn about initializing, configuring, packing, and publishing Juju charms with Charmcraft and releasing channel revisions on Charmhub.
-
 .. _manage-charms:
+
+.. meta::
+    :description: Learn how to manage the full lifecycle of a Juju charm with Charmcraft. Covers initialising, configuring, packing, publishing to Charmhub, and managing channel revisions.
 
 Manage charms
 =============
@@ -239,12 +239,12 @@ published automatically in respective tabs.
 
 To provide your main user documentation, include its URL in your charm's project file
 under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key.
-Charmhub supports both `Discourse <https://discourse.charmhub.io/>`_ topics
+Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
 and externally hosted documentation sites.
 
 .. note::
-    When using an externally hosted site, Charmhub will display a **Read documentation** button
-    that will redirect users to the specified URL. The **Description** tab will display your
+    With an externally-hosted site, Charmhub displays a **Read documentation** button
+    that redirects users to the specified URL. The **Description** tab displays your
     charm's basic metadata summary.
 
 .. code-block:: yaml

@@ -71,8 +71,6 @@ OAUTH_DYNAMIC_OPTIONS = {
 }
 
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
-VALKEY_INTERFACE = "valkey_client"
-VALKEY_PYTHON_PACKAGES = ["dpcharmlibs-interfaces"]
 
 
 class _AppBase(Extension):
@@ -118,10 +116,6 @@ class _AppBase(Extension):
 
     endpoint_dynamic_options: dict[str, dict[str, Any]] = {
         "oauth": OAUTH_DYNAMIC_OPTIONS
-    }
-
-    endpoint_extra_dependencies: dict[str, list[str]] = {
-        VALKEY_INTERFACE: VALKEY_PYTHON_PACKAGES,
     }
 
     def _get_nested(self, obj: dict, path: str) -> dict:
@@ -274,10 +268,6 @@ class _AppBase(Extension):
                 root_snippet, interface_name, config_options
             )
             root_snippet["config"]["options"].update(dynamic_config_options)
-        if extra_deps := self._get_extra_dependencies():
-            root_snippet["parts"]["charm"].setdefault(
-                "charm-python-packages", []
-            ).extend(extra_deps)
         return root_snippet
 
     def _get_dynamic_config_options(
@@ -300,20 +290,6 @@ class _AppBase(Extension):
             )
             dynamic_config_options.update(updated_config_options)
         return dynamic_config_options
-
-    def _get_extra_dependencies(self) -> list[str]:
-        require_interfaces = [
-            require.get("interface")
-            for _endpoint_name, require in self._get_nested(
-                self.yaml_data, "requires"
-            ).items()
-        ]
-        return [
-            dependency
-            for interface_name, extra_dependencies in self.endpoint_extra_dependencies.items()
-            if interface_name in require_interfaces
-            for dependency in extra_dependencies
-        ]
 
     def _get_updated_dynamic_config_options(
         self, endpoint_name: str, config_options: dict[str, dict[str, Any]]

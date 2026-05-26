@@ -92,6 +92,8 @@ The following issues have been resolved in Charmcraft 4.2.1:
   using a separate ``metadata.yaml`` file and the ``--project-dir`` argument
 - `#2620 <https://github.com/canonical/charmcraft/issues/2620>`__ Multi-base shorthand
   notation fails on v4.2.0
+- The ``charmcraft pack`` help text now refers to inline ``charmcraft.yaml``
+  metadata instead of the legacy ``metadata.yaml`` split-file format.
 
 The following issues have been resolved in Charmcraft 4.2.2:
 

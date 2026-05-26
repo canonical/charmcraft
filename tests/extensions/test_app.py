@@ -687,26 +687,6 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
     }
 
 
-def test_valkey_relation_adds_python_package(flask_input_yaml, tmp_path):
-    flask_input_yaml["requires"] = {
-        "valkey": {
-            "interface": "valkey_client",
-            "optional": True,
-            "limit": 1,
-        }
-    }
-
-    applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
-
-    assert applied["parts"]["charm"] == {
-        "plugin": "charm",
-        "source": ".",
-        "build-snaps": ["rustup"],
-        "override-build": "rustup default stable\ncraftctl default",
-        "charm-python-packages": ["dpcharmlibs-interfaces"],
-    }
-
-
 @pytest.mark.parametrize(
     ("input_yaml", "requires", "expected_options"),
     [

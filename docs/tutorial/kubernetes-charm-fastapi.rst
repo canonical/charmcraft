@@ -1,7 +1,7 @@
 .. _write-your-first-kubernetes-charm-for-a-fastapi-app:
 
 .. meta::
-    :description: Learn the process of building and deploying a Kubernetes charm for a FastAPI app. In this tutorial, we use the fastapi-framework extension to package and orchestrate the application.
+    :description: Learn the process of building and deploying a Kubernetes charm for a FastAPI app. In this tutorial, we use the fastapi-framework extension to package and orchestrate the app.
 
 Write your first Kubernetes charm for a FastAPI app
 ===================================================

@@ -1,7 +1,7 @@
 .. _manage-charms:
 
 .. meta::
-    :description: Learn how to manage the full lifecycle of a Juju charm with Charmcraft. Covers initialising, configuring, packing, publishing to Charmhub, and managing channel revisions.
+    :description: Learn how to manage the full life cycle of a Juju charm with Charmcraft. This tutorial covers initializing, configuring, packing, publishing to Charmhub, and managing channel revisions.
 
 Manage charms
 =============

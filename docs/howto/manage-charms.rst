@@ -239,8 +239,8 @@ published automatically in respective tabs.
 
 Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
 and externally hosted documentation sites. With an externally-hosted site,
-Charmhub displays a **Read documentation** button that redirects users to the specified URL.
-The **Description** tab displays your charm's basic metadata summary.
+Charmhub displays a **Read documentation** button that redirects users to the specified URL,
+while the **Description** tab displays your charm's basic metadata summary.
 
 To provide your main user documentation, include its URL in your charm's project file
 under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. E.g.,

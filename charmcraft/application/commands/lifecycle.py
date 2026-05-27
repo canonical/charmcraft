@@ -64,7 +64,7 @@ class PackCommand(lifecycle.PackCommand):
         For the charm you must be inside a charm directory with a valid
         `charmcraft.yaml` containing the charm metadata, a `requirements.txt`
         including the `ops` package for the Python operator framework, and an
-        operator entrypoint, usually `src/charm.py`.  See `charmcraft init`
+        operator entrypoint, usually `src/charm.py`.  See `charmcraft help init`
         to create a template charm directory structure.
         """
     )

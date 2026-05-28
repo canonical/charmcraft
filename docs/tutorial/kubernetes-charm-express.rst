@@ -41,7 +41,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create an Express app.
+#. Create an Express 4 app.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Express app on a local

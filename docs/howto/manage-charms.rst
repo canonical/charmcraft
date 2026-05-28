@@ -238,7 +238,7 @@ resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
 Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
-and externally hosted documentation sites. With an externally-hosted site,
+and externally-hosted documentation sites. With an externally-hosted site,
 Charmhub displays a **Read documentation** button that redirects users to the specified URL,
 while the **Description** tab displays your charm's basic metadata summary.
 

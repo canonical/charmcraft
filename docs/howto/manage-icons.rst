@@ -1,5 +1,8 @@
 .. _manage-icons:
 
+.. meta::
+    :description: How to create, validate, and add an icon to a charm's Charmhub page, including a demo of using Inkscape to draw the icon.
+
 Manage icons
 ============
 

@@ -224,6 +224,14 @@ def test_validate_with_base_key(tmp_path):
     ext.validate("fake")  # Should not raise
 
 
+def test_validate_with_shortform_bases_unsupported(tmp_path):
+    yaml_data = {"bases": [{"name": "ubuntu", "channel": "20.04"}]}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base: \('ubuntu', '20.04'\)"
+    ):
+        ext.validate("fake")
+
 def test_validate_with_unsupported_base_key(tmp_path):
     yaml_data = {"base": "ubuntu@20.04"}
     ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)

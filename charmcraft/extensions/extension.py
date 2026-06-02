@@ -85,9 +85,12 @@ class Extension(abc.ABC):
 
         if bases := self.yaml_data.get("bases"):
             for base in bases:
-                for build_on in base.get("build-on", []):
-                    bases_to_validate.append((build_on["name"], build_on["channel"]))
-
+                # Legacy bases support both short form ({name, channel, ...}) and long form ({build-on: [...]})
+                if "build-on" in base:
+                    for build_on in base.get("build-on", []):
+                        bases_to_validate.append((build_on["name"], build_on["channel"]))
+                elif "name" in base and "channel" in base:
+                    bases_to_validate.append((base["name"], base["channel"]))
         for build_base in bases_to_validate:
             if self.is_experimental(build_base) and not os.getenv(
                 const.EXPERIMENTAL_EXTENSIONS_ENV_VAR
@@ -139,14 +142,12 @@ class SinglePlatformExtension(Extension):
 
             if platform_data and (build_for := platform_data.get("build-for")):
                 build_for_items = build_for if isinstance(build_for, list) else [build_for]
-                if build_for_items and (
-                    base := craft_platforms.parse_base_and_architecture(build_for_items[0])[0]
-                ):
-                    bases.add((base.distribution, base.series))
-
+                for item in build_for_items:
+                    if base := craft_platforms.parse_base_and_architecture(item)[0]:
+                        bases.add((base.distribution, base.series))
         if len(bases) > 1:
             raise errors.ExtensionError(
-                f"Extension does not support multiple bases: {bases!r}"
+                f"Extension does not support multiple bases: {sorted(bases)!r}"
             )
 
         if len(bases) == 1:

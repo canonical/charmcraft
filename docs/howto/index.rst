@@ -61,7 +61,7 @@ migration guide for your charm:
 
 
 .. toctree::
-   :hidden:
+    :hidden:
 
     manage-charmcraft
     manage-charms

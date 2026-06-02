@@ -1,7 +1,7 @@
 .. _manage-icons:
 
 .. meta::
-    :description: How to create, validate, and add an icon to a charm's Charmhub page, including a demo of using Inkscape to draw the icon.
+    :description: How to create, validate, and add an icon to a charm's Charmhub page. Includes a demo of using Inkscape to draw the icon.
 
 Manage icons
 ============
@@ -84,8 +84,8 @@ Add an icon to its charm's Charmhub page
 To add the icon to the charm's Charmhub page, first save the icon as ``icon.svg`` in
 the root directory of the charm.
 
-If the charm uses the Charm plugin, Charmcraft automatically includes the icon when
-you pack the charm. Otherwise, use the Dump plugin to include the icon. See guidance
+If the charm uses the Charm plugin, the icon will be included in it.
+Otherwise, use the Dump plugin to include the icon. See guidance
 for the :ref:`Poetry plugin <howto-migrate-to-poetry-include-extra-files>`,
 :ref:`Python plugin <howto-migrate-to-python-include-extra-files>`, or
 :ref:`uv plugin <howto-migrate-to-uv-include-extra-files>`.

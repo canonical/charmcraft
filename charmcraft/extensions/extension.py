@@ -21,8 +21,9 @@ import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Final, final
+from typing import Any, Final
 
+import craft_platforms
 from craft_cli import emit
 
 from charmcraft import const, errors
@@ -69,41 +70,43 @@ class Extension(abc.ABC):
     def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
 
-    @final
     def validate(self, extension_name: str):
         """Validate that the extension can be used with the current project.
 
         :param extension_name: the name of the extension being parsed.
         :raises errors.ExtensionError: if the extension is incompatible with the project.
         """
-        if "bases" not in self.yaml_data:
-            # There is nothing to validate, the extension will set the preferred base.
-            return
+        # Collect all bases to validate
+        bases_to_validate: list[tuple[str, str]] = []
 
-        bases: list = self.yaml_data["bases"]
+        if base_str := self.yaml_data.get("base"):
+            name, _, channel = base_str.partition("@")
+            bases_to_validate.append((name, channel))
 
-        for base in bases:
-            for build_on in base.get("build-on", []):
-                build_base = (build_on["name"], build_on["channel"])
+        if bases := self.yaml_data.get("bases"):
+            for base in bases:
+                for build_on in base.get("build-on", []):
+                    bases_to_validate.append((build_on["name"], build_on["channel"]))
 
-                if self.is_experimental(build_base) and not os.getenv(
-                    const.EXPERIMENTAL_EXTENSIONS_ENV_VAR
-                ):
-                    raise errors.ExtensionError(
-                        f"Extension is experimental: {extension_name!r}",
-                        docs_url="https://juju.is/docs/sdk/charmcraft-config",  # no docs yet
-                    )
+        for build_base in bases_to_validate:
+            if self.is_experimental(build_base) and not os.getenv(
+                const.EXPERIMENTAL_EXTENSIONS_ENV_VAR
+            ):
+                raise errors.ExtensionError(
+                    f"Extension is experimental: {extension_name!r}",
+                    docs_url="https://juju.is/docs/sdk/charmcraft-config",  # no docs yet
+                )
 
-                if self.is_experimental(build_base):
-                    emit.progress(
-                        f"*EXPERIMENTAL* extension {extension_name!r} enabled",
-                        permanent=True,
-                    )
+            if self.is_experimental(build_base):
+                emit.progress(
+                    f"*EXPERIMENTAL* extension {extension_name!r} enabled",
+                    permanent=True,
+                )
 
-                if build_base not in self.get_supported_bases():
-                    raise errors.ExtensionError(
-                        f"Extension {extension_name!r} does not support base: {build_base!r}"
-                    )
+            if build_base not in self.get_supported_bases():
+                raise errors.ExtensionError(
+                    f"Extension {extension_name!r} does not support base: {build_base!r}"
+                )
 
         invalid_parts = [
             p
@@ -114,6 +117,33 @@ class Extension(abc.ABC):
             raise ValueError(
                 f"Extension has invalid part names: {invalid_parts!r}. "
                 "Format is <extension-name>/<part-name>"
+            )
+
+
+class SinglePlatformExtension(Extension):
+    """An extension that only supports a single base."""
+
+    def validate(self, extension_name: str) -> None:
+        """Validate that the extension is only used with a single base."""
+        super().validate(extension_name)
+
+        if "base" in self.yaml_data:
+            return
+
+        platforms = self.yaml_data.get("platforms", {})
+        bases = set()
+        for platform_label, platform_data in platforms.items():
+            if base := craft_platforms.parse_base_and_name(platform_label)[0]:
+                bases.add((base.distribution, base.series))
+                continue
+
+            if platform_data and (build_for := platform_data.get("build-for")):
+                if base := craft_platforms.parse_base_and_architecture(build_for[0])[0]:
+                    bases.add((base.distribution, base.series))
+
+        if len(bases) > 1:
+            raise errors.ExtensionError(
+                f"Extension does not support multiple bases: {bases!r}"
             )
 
 

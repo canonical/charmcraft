@@ -72,4 +72,5 @@ applications.
     parts/index
     platforms
     profile
+    remote-builds
     changelog

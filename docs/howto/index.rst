@@ -39,6 +39,7 @@ Publish charms and manage releases
 When you're ready to distribute your charm, Charmcraft provides commands to register it,
 publish it to Charmhub, and manage its releases.
 
+- :ref:`how-to-build-remotely`
 - :ref:`manage-the-current-charmhub-user`
 - :ref:`manage-names`
 - :ref:`manage-icons`
@@ -60,20 +61,21 @@ migration guide for your charm:
 
 
 .. toctree::
-   :hidden:
+    :hidden:
 
-   manage-charmcraft
-   manage-charms
-   Manage 12-factor app charms <manage-web-app-charms/index>
-   manage-extensions
-   manage-resources
-   manage-libraries
-   manage-parts
-   manage-the-current-charmhub-user
-   manage-names
-   manage-revisions
-   manage-channels
-   manage-tracks
-   manage-icons
-   Migrate plugins <migrate-plugins/index>
-   Build <build-guides/index>
+    manage-charmcraft
+    manage-charms
+    Manage 12-factor app charms <manage-web-app-charms/index>
+    manage-extensions
+    manage-resources
+    manage-libraries
+    manage-parts
+    build-remotely
+    manage-the-current-charmhub-user
+    manage-names
+    manage-revisions
+    manage-channels
+    manage-tracks
+    manage-icons
+    Migrate plugins <migrate-plugins/index>
+    Build <build-guides/index>

@@ -131,20 +131,43 @@ class SinglePlatformExtension(Extension):
             return
 
         platforms = self.yaml_data.get("platforms", {})
-        bases = set()
+        bases: set[tuple[str, str]] = set()
         for platform_label, platform_data in platforms.items():
             if base := craft_platforms.parse_base_and_name(platform_label)[0]:
                 bases.add((base.distribution, base.series))
                 continue
 
             if platform_data and (build_for := platform_data.get("build-for")):
-                if base := craft_platforms.parse_base_and_architecture(build_for[0])[0]:
+                build_for_items = build_for if isinstance(build_for, list) else [build_for]
+                if build_for_items and (
+                    base := craft_platforms.parse_base_and_architecture(build_for_items[0])[0]
+                ):
                     bases.add((base.distribution, base.series))
 
         if len(bases) > 1:
             raise errors.ExtensionError(
                 f"Extension does not support multiple bases: {bases!r}"
             )
+
+        if len(bases) == 1:
+            (build_base,) = bases
+            experimental = self.is_experimental(build_base)
+            if experimental and not os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+                raise errors.ExtensionError(
+                    f"Extension is experimental: {extension_name!r}",
+                    docs_url="https://juju.is/docs/sdk/charmcraft-config",  # no docs yet
+                )
+
+            if experimental:
+                emit.progress(
+                    f"*EXPERIMENTAL* extension {extension_name!r} enabled",
+                    permanent=True,
+                )
+
+            if build_base not in self.get_supported_bases():
+                raise errors.ExtensionError(
+                    f"Extension {extension_name!r} does not support base: {build_base!r}"
+                )
 
 
 def get_extensions_data_dir() -> Path:

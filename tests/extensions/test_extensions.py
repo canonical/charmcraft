@@ -292,11 +292,23 @@ def test_single_platform_extension_validation(tmp_path):
     ):
         ext.validate("mock")
 
-    # Test with build-for
+    # Test with build-for (list form)
     yaml_data = {"platforms": {"my-amd64": {"build-for": ["ubuntu@22.04:amd64"]}}}
     ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
     ext.validate("mock")
 
+    # Test with build-for (scalar form)
+    yaml_data = {"platforms": {"my-amd64": {"build-for": "ubuntu@22.04:amd64"}}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("mock")
+
+    # Test with unsupported base in platform label
+    yaml_data = {"platforms": {"ubuntu@20.04:amd64": None}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base: \('ubuntu', '20.04'\)"
+    ):
+        ext.validate("mock")
     # Test with different build-for
     yaml_data = {
         "platforms": {

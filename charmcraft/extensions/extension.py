@@ -70,46 +70,89 @@ class Extension(abc.ABC):
     def get_parts_snippet(self) -> dict[str, Any]:
         """Return the parts to add to parts."""
 
+    def _get_project_bases(self) -> set[tuple[str, str]]:
+        """Extract and normalize all bases used in the project."""
+        bases: set[tuple[str, str]] = set()
+
+        if base_str := self.yaml_data.get("base"):
+            if parsed := craft_platforms.parse_base_and_name(base_str)[0]:
+                bases.add((parsed.distribution, parsed.series))
+            else:
+                name, _, channel = base_str.partition("@")
+                bases.add((name, channel))
+
+        if platforms := self.yaml_data.get("platforms", {}):
+            for label, data in platforms.items():
+                if base := craft_platforms.parse_base_and_name(label)[0]:
+                    bases.add((base.distribution, base.series))
+                elif data and (build_for := data.get("build-for")):
+                    build_for_items = (
+                        build_for if isinstance(build_for, list) else [build_for]
+                    )
+                    for item in build_for_items:
+                        if base := craft_platforms.parse_base_and_architecture(item)[0]:
+                            bases.add((base.distribution, base.series))
+
+        if legacy_bases := self.yaml_data.get("bases"):
+            for b in legacy_bases:
+                # Handle both short form ({name, channel}) and long form ({build-on: [...]})
+                if "build-on" in b:
+                    for build_on in b.get("build-on", []):
+                        name = build_on.get("name")
+                        channel = build_on.get("channel")
+                        base_str = f"{name}@{channel}"
+                        if parsed := craft_platforms.parse_base_and_name(base_str)[0]:
+                            bases.add((parsed.distribution, parsed.series))
+                        else:
+                            bases.add((name, channel))
+                elif "name" in b and "channel" in b:
+                    name = b["name"]
+                    channel = b["channel"]
+                    base_str = f"{name}@{channel}"
+                    if parsed := craft_platforms.parse_base_and_name(base_str)[0]:
+                        bases.add((parsed.distribution, parsed.series))
+                    else:
+                        bases.add((name, channel))
+
+        return bases
+
     def validate(self, extension_name: str):
         """Validate that the extension can be used with the current project.
 
         :param extension_name: the name of the extension being parsed.
         :raises errors.ExtensionError: if the extension is incompatible with the project.
         """
-        # Collect all bases to validate
-        bases_to_validate: list[tuple[str, str]] = []
+        experimental_bases = []
+        unsupported_bases = []
+        for build_base in self._get_project_bases():
+            if self.is_experimental(build_base):
+                experimental_bases.append(build_base)
 
-        if base_str := self.yaml_data.get("base"):
-            name, _, channel = base_str.partition("@")
-            bases_to_validate.append((name, channel))
+            if build_base not in self.get_supported_bases():
+                unsupported_bases.append(build_base)
 
-        if bases := self.yaml_data.get("bases"):
-            for base in bases:
-                # Legacy bases support both short form ({name, channel, ...}) and long form ({build-on: [...]})
-                if "build-on" in base:
-                    for build_on in base.get("build-on", []):
-                        bases_to_validate.append((build_on["name"], build_on["channel"]))
-                elif "name" in base and "channel" in base:
-                    bases_to_validate.append((base["name"], base["channel"]))
-        for build_base in bases_to_validate:
-            if self.is_experimental(build_base) and not os.getenv(
-                const.EXPERIMENTAL_EXTENSIONS_ENV_VAR
-            ):
+        if unsupported_bases:
+            unsupported_str = ", ".join(
+                f"{n}@{c}" for n, c in sorted(unsupported_bases)
+            )
+            raise errors.ExtensionError(
+                f"Extension {extension_name!r} does not support base(s): {unsupported_str}"
+            )
+
+        if experimental_bases:
+            experimental_str = ", ".join(
+                f"{n}@{c}" for n, c in sorted(experimental_bases)
+            )
+            if not os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
                 raise errors.ExtensionError(
-                    f"Extension is experimental: {extension_name!r}",
+                    f"Extension {extension_name!r} is experimental on base(s): {experimental_str}",
                     docs_url="https://juju.is/docs/sdk/charmcraft-config",  # no docs yet
                 )
 
-            if self.is_experimental(build_base):
-                emit.progress(
-                    f"*EXPERIMENTAL* extension {extension_name!r} enabled",
-                    permanent=True,
-                )
-
-            if build_base not in self.get_supported_bases():
-                raise errors.ExtensionError(
-                    f"Extension {extension_name!r} does not support base: {build_base!r}"
-                )
+            emit.progress(
+                f"*EXPERIMENTAL* extension {extension_name!r} enabled for base(s): {experimental_str}",
+                permanent=True,
+            )
 
         invalid_parts = [
             p
@@ -130,45 +173,12 @@ class SinglePlatformExtension(Extension):
         """Validate that the extension is only used with a single base."""
         super().validate(extension_name)
 
-        if "base" in self.yaml_data:
-            return
-
-        platforms = self.yaml_data.get("platforms", {})
-        bases: set[tuple[str, str]] = set()
-        for platform_label, platform_data in platforms.items():
-            if base := craft_platforms.parse_base_and_name(platform_label)[0]:
-                bases.add((base.distribution, base.series))
-                continue
-
-            if platform_data and (build_for := platform_data.get("build-for")):
-                build_for_items = build_for if isinstance(build_for, list) else [build_for]
-                for item in build_for_items:
-                    if base := craft_platforms.parse_base_and_architecture(item)[0]:
-                        bases.add((base.distribution, base.series))
+        bases = self._get_project_bases()
         if len(bases) > 1:
+            bases_str = ", ".join(f"{n}@{c}" for n, c in sorted(bases))
             raise errors.ExtensionError(
-                f"Extension does not support multiple bases: {sorted(bases)!r}"
+                f"Extension does not support multiple bases: {bases_str}"
             )
-
-        if len(bases) == 1:
-            (build_base,) = bases
-            experimental = self.is_experimental(build_base)
-            if experimental and not os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
-                raise errors.ExtensionError(
-                    f"Extension is experimental: {extension_name!r}",
-                    docs_url="https://juju.is/docs/sdk/charmcraft-config",  # no docs yet
-                )
-
-            if experimental:
-                emit.progress(
-                    f"*EXPERIMENTAL* extension {extension_name!r} enabled",
-                    permanent=True,
-                )
-
-            if build_base not in self.get_supported_bases():
-                raise errors.ExtensionError(
-                    f"Extension {extension_name!r} does not support base: {build_base!r}"
-                )
 
 
 def get_extensions_data_dir() -> Path:

@@ -56,7 +56,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -94,7 +94,7 @@ jobs:
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
 
@@ -124,7 +124,7 @@ jobs:
 
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
 

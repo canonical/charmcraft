@@ -154,6 +154,9 @@ linkcheck_ignore = [
     "https://matrix.to",
     "https://www.npmjs.com/",
     r"^https://www.mysql.com/$",
+    # 2026-06-03: Ignore Canonical sites until filtering is resolved
+    "https://snapcraft.io",
+    "https://juju.is",
 ]
 
 # Give linkcheck multiple tries on failure

@@ -169,6 +169,7 @@ class Extension(abc.ABC):
 class SinglePlatformExtension(Extension):
     """An extension that only supports a single base."""
 
+	@override
     def validate(self, extension_name: str) -> None:
         """Validate that the extension is only used with a single base."""
         super().validate(extension_name)

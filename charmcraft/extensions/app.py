@@ -250,10 +250,12 @@ class _AppBase(Extension):
             "config": {"options": copy.deepcopy(self.options)},
             "parts": {
                 "charm": {
-                    "plugin": "charm",
+                    "plugin": "uv",
                     "source": ".",
-                    "build-snaps": ["rustup"],  # Needed to build pydantic.
-                    "override-build": "rustup default stable\ncraftctl default",
+                    "build-snaps": [
+                        "astral-uv",
+                        "rustup",
+                    ]
                 }
             },
         }

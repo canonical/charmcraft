@@ -231,9 +231,10 @@ def test_validate_with_shortform_bases_unsupported(tmp_path):
     yaml_data = {"bases": [{"name": "ubuntu", "channel": "20.04"}]}
     ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
     with pytest.raises(
-        errors.ExtensionError, match=r"does not support base: \('ubuntu', '20.04'\)"
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
     ):
         ext.validate("fake")
+
 
 def test_validate_with_unsupported_base_key(tmp_path):
     yaml_data = {"base": "ubuntu@20.04"}
@@ -318,7 +319,7 @@ def test_single_platform_extension_validation(tmp_path):
     yaml_data = {"platforms": {"ubuntu@20.04:amd64": None}}
     ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
     with pytest.raises(
-        errors.ExtensionError, match=r"does not support base: \('ubuntu', '20.04'\)"
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
     ):
         ext.validate("mock")
     # Test with different build-for

@@ -156,6 +156,8 @@ environment, such as one for charm libraries, the
 Likewise, optional dependencies under the ``pyproject.toml`` key
 ``project.optional-dependencies`` can be added with the ``uv-extras`` key.
 
+.. _howto-migrate-to-uv-include-extra-files:
+
 Include extra files
 -------------------
 

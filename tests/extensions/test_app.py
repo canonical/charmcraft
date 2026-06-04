@@ -109,10 +109,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -194,10 +196,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -269,10 +273,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -344,10 +350,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -419,10 +427,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -483,10 +493,12 @@ def make_spring_boot_input_yaml():
                 },
                 "parts": {
                     "charm": {
-                        "plugin": "charm",
+                        "plugin": "uv",
                         "source": ".",
-                        "build-snaps": ["rustup"],
-                        "override-build": "rustup default stable\ncraftctl default",
+                        "build-snaps": [
+                            "astral-uv",
+                            "rustup",
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -680,10 +692,12 @@ def test_handle_charm_part_requires_no_parts(flask_input_yaml, tmp_path):
 def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["parts"]["charm"] == {
-        "plugin": "charm",
+        "plugin": "uv",
         "source": ".",
-        "build-snaps": ["rustup"],
-        "override-build": "rustup default stable\ncraftctl default",
+        "build-snaps": [
+            "astral-uv",
+            "rustup",
+        ],
     }
 
 

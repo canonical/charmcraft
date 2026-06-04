@@ -255,7 +255,7 @@ class _AppBase(Extension):
                     "build-snaps": [
                         "astral-uv",
                         "rustup",
-                    ]
+                    ],
                 }
             },
         }

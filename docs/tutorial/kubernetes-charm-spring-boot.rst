@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-spring-boot-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Spring Boot app. In this tutorial, we use the spring-boot-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Spring Boot app
 =======================================================
 
@@ -39,7 +42,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Spring Boot app.
+#. Create a Spring Boot 3.5.10 app.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Spring Boot app on a local
@@ -382,6 +385,9 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/spring-boot-hello-world/charm
 
     juju status
 
@@ -735,12 +741,18 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/spring-boot-hello-world/charm
 
     curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
 
     Hi!
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/spring-boot-hello-world/charm
 
     curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
 

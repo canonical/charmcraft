@@ -84,6 +84,8 @@ that can find these is::
 If run from the base directory of a charm, this will show all the PYDEPS declarations
 from all loaded charmlibs.
 
+.. _howto-migrate-to-poetry-include-extra-files:
+
 Include extra files
 -------------------
 

@@ -25,6 +25,7 @@ from typing import Any, Final
 
 import craft_platforms
 from craft_cli import emit
+from typing_extensions import override
 
 from charmcraft import const, errors
 
@@ -169,7 +170,7 @@ class Extension(abc.ABC):
 class SinglePlatformExtension(Extension):
     """An extension that only supports a single base."""
 
-	@override
+    @override
     def validate(self, extension_name: str) -> None:
         """Validate that the extension is only used with a single base."""
         super().validate(extension_name)

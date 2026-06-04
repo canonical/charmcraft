@@ -68,6 +68,7 @@ CHARM_PLUGIN_BASES = frozenset(  # Bases with the 'charm' plugin.
         "ubuntu@24.04",
         "ubuntu@24.10",
         "ubuntu@25.04",
+        "ubuntu@26.10",
     )
 )
 
@@ -75,6 +76,7 @@ REACTIVE_PLUGIN_BASES = frozenset(  # Bases with the 'reactive' plugin.
     (
         *CHARM_PLUGIN_BASES,
         "ubuntu@26.04",
+        "ubuntu@26.10",
     )
 )
 
@@ -86,6 +88,7 @@ CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@25.04",
     "ubuntu@25.10",
     "ubuntu@26.04",
+    "ubuntu@26.10",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
@@ -94,6 +97,7 @@ BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 DEVEL_BASE_STRINGS = (
     "ubuntu@25.04",
     "ubuntu@25.10",
+    "ubuntu@26.10",
 )  # Bases that require a specified build base.
 
 SUPPORTED_BASE_STRINGS = frozenset(
@@ -109,6 +113,7 @@ SUPPORTED_BASE_STRINGS = frozenset(
                 "25.04",
                 "25.10",
                 "26.04",
+                "26.10",
             )
         ),
         *(("almalinux@9",)),

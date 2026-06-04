@@ -583,6 +583,12 @@ class SpringBootFramework(_AppBase):
         """Return supported bases."""
         return [("ubuntu", "24.04")]
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return False
+
     @override
     def get_image_name(self) -> str:
         """Return name of the app image."""

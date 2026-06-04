@@ -75,7 +75,7 @@ the following charms:
               optional: True
               limit: 1
 
-  * - `Valkey <https://charmhub.io/valkey-k8s>`__ charm
+  * - `Valkey <https://charmhub.io/valkey>`__ charm
     - .. code-block:: yaml
 
           requires:

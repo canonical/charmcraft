@@ -35,9 +35,6 @@ author = "Canonical"
 release = charmcraft.__version__
 if ".post" in release:
     release = "dev"
-else:
-    major, minor, *_ = release.split(".")
-    release = f"{major}.{minor}"
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 

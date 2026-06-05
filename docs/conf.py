@@ -33,9 +33,6 @@ release = os.environ.get("READTHEDOCS_VERSION", charmcraft.__version__)
 # The commit hash in the dev release version confuses the spellchecker
 if ".post" in release:
     release = "dev"
-else:
-    major, minor, *_ = release.split(".")
-    release = f"{major}.{minor}"
 
 # Sidebar documentation title; best kept reasonably short
 html_title = project + " documentation"

@@ -131,6 +131,7 @@ URIs?
 URL
 utils
 uv
+Valkey
 venv
 VM's
 VMs

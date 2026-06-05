@@ -1,0 +1,15 @@
+# Uses the built-in dictionary and filters.
+extends: spelling
+message: "The word '%s' seems to be misspelled."
+level: error
+scope:
+  - sentence
+  - list
+  - table.header
+  - table.cell
+dicpath: "config/dictionaries/"
+dictionaries:
+  - en_US
+  # - en_GB
+filters:
+  - '\w*_+\w*'

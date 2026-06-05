@@ -1,0 +1,13 @@
+extends: existence
+message: Numbers greater than 999 should have a comma separator - '%s'
+link: https://docs.ubuntu.com/styleguide/en#numbers
+scope:
+  - heading
+  - list
+  - sentence
+  - table.header
+  - table.cell
+ignorecase: true
+level: suggestion
+tokens:
+  - ([\d]{5,})

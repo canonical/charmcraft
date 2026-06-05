@@ -1,0 +1,7 @@
+extends: existence
+message: "Avoid using prompts in code blocks: %s"
+scope: raw
+nonword: true
+level: warning
+tokens:
+  - '^[ \t]*[$%]'

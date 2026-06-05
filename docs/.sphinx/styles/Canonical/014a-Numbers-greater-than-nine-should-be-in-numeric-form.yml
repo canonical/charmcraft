@@ -1,0 +1,35 @@
+extends: existence
+message: Write numbers greater than nine in numeric form - (%s)
+link: https://docs.ubuntu.com/styleguide/en#numbers
+scope:
+  - heading
+  - list
+  - sentence
+  - table.header
+  - table.cell
+ignorecase: true
+level: suggestion
+tokens:
+  - ten
+  - eleven
+  - twelve
+  - thirteen
+  - fourteen
+  - fifteen
+  - sixteen
+  - seventeen
+  - eighteen
+  - nineteen
+  - twenty
+  - thirty
+  - forty
+  - fifty
+  - sixty
+  - seventy
+  - eighty
+  - ninety
+  - hundred
+  - thousand
+  - million
+  - billion
+  - trillion

@@ -1,0 +1,26 @@
+# 06 - Contractions - Do not use these
+
+extends: substitution
+message: "Consider using '%s' instead of '%s'"
+link: https://docs.ubuntu.com/styleguide/en#contractions
+level: warning
+scope:
+  - sentence
+  - list
+  - heading
+  - table.header
+  - table.cell
+ignorecase: true
+swap:
+  ain[`']t: isn't
+  how[`']d: how did
+  how[`']ll: how will
+  I[`']d: one would
+  something[`']s: something is
+  mayn[`']t: may not
+  may[`']ve: may have
+  mightn[`']t: might not
+  might[`']ve: might have
+  gonna: going to
+  gotta: got to
+  o[`']clock: AM/PM

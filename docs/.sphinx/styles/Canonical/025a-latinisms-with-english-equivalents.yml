@@ -1,0 +1,34 @@
+# 025 - Latinisms that have English equivalents
+
+extends: substitution
+message: "Instead of '%[2]s', use %[1]s."
+link: https://docs.ubuntu.com/styleguide/en#latin-words-and-phrases
+level: suggestion
+nonword: true
+ignorecase: true
+swap:
+  \ba\spriori\b: "'self-evident', 'presupposed', 'presumed', or 'assumed'"
+  \bad\shoc\b: "'unscheduled', 'unexpected', 'improvised', 'temporary', or 'bespoke'"
+  \bad\sinfinitum\b: "'and so on', 'to the fullest extent', or 'recursively'"
+  \bcf\.?\b: "'refer to'"
+  \bcaveat\b: "'warning' or 'provision'"
+  \bcirca\b: "'around' or 'near'"
+  \bde\sfacto\b: "'current', 'actual', or 'established'"
+  \bergo\b: "'therefore' or 'hence'"
+  (?:\bet\scetera\b|\betcetera\b|\betc\.?\b|(?<!\w)\&c\b): "'and so on'"
+  \b(?:exempli\sgratia|eg\b|e\.g\.(?!\w)|e\.g(?![\.\w])): "'for example', 'as an example', or 'such as'"
+  \bgratis\b: "'free'"
+  \b(?:id\sest\b|ie\b|i\.e\.(?!\w)|i\.e(?![\.\w])): "'that is' or 'in other words'"
+  \bin\ssitu\b: "'in place'"
+  \b(?:nota\sbene\b|nb\b|n\.b\.(?!\w)|n\.b(?![\.\w])): "'note', 'notice', 'observe', 'pay attention to', or 'keep your eye on'"
+  \bper\sdiem\b: "'every day'"
+  \bper\scapita\b: "'every/each person'"
+  \bper\sse\b: "'necessarily' or 'intrinsically'"
+  \bpro\sbono\b: "'freely given' or 'volunteered'"
+  \bproviso\b: "'condition' or 'provided that'"
+  \bstanza\b: "'division', 'block', or 'paragraph'" 
+  \bstatus\squo\b: "'state' or 'state of things'"
+  \bverbatim\b: "'exact words', 'exactly'"
+  \b(?:versus|vs\.(?!\w)|vs(?![\.\w])): "'compared to/with' or 'opposed to'"
+  \bvice\sversa\b: "'the reverse' or 'the other way around'"
+  \b(viz\.(?!\w)|viz(?![\w\.])): "'specifically' or 'namely'"

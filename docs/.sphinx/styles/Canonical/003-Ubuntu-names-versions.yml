@@ -1,0 +1,72 @@
+extends: existence
+message: |
+  Please use the Ubuntu product name correctly. E.g. Ubuntu 22.04 LTS, Ubuntu
+  22.10, Ubuntu 23.04 (Lunar Lobster), Ubuntu 23.10 (Mantic), Ubuntu 24.04 LTS
+  (Noble Numbat).
+link: https://docs.ubuntu.com/styleguide/en/#ubuntu
+nonword: true
+ignorecase: true
+vocab: false
+scope: 
+  - sentence
+  - list
+  - heading
+  - table.header
+  - table.cell
+level: error
+tokens:
+  # LTS releases should be followed by "LTS" suffix.
+  - 'Ubuntu \d?[02468]\.04(?! LTS)'
+  - 'Ubuntu 6\.06(?! LTS)'
+  # Non-LTS releases should not be followed by "LTS" suffix.
+  - 'Ubuntu \d?\d\.10 LTS'
+  - 'Ubuntu \d?[13579]\.04 LTS'
+  - 'Ubuntu 6\.06 LTS'
+  # All releases should match the code name.
+  - 'Ubuntu 25\.10 \((?!(Questing|Questing Quokka)\))'
+  - 'Ubuntu 25\.04 \((?!(Plucky|Plucky Puffin)\))'
+  - 'Ubuntu 24\.10 \((?!(Oracular|Oracular Oriole)\))'
+  - 'Ubuntu 24\.04 LTS \((?!(Noble|Noble Numbat)\))'
+  - 'Ubuntu 23\.10 \((?!(Mantic|Mantic Minotaur)\))'
+  - 'Ubuntu 23\.04 \((?!(Lunar|Lunar Lobster)\))'
+  - 'Ubuntu 22\.10 \((?!(Kinetic|Kinetic Kudu)\))'
+  - 'Ubuntu 22\.04 LTS \((?!(Jammy|Jammy Jellyfish)\))'
+  - 'Ubuntu 21\.10 \((?!(Impish|Impish Indri)\))'
+  - 'Ubuntu 21\.04 \((?!(Hirsute|Hirsute Hippo)\))'
+  - 'Ubuntu 20\.10 \((?!(Groovy|Groovy Gorilla)\))'
+  - 'Ubuntu 20\.04 LTS \((?!(Focal|Focal Fossa)\))'
+  - 'Ubuntu 19\.10 \((?!(Eoan|Eoan Ermine)\))'
+  - 'Ubuntu 19\.04 \((?!(Disco|Disco Dingo)\))'
+  - 'Ubuntu 18\.10 \((?!(Cosmic|Cosmic Cuttlefish)\))'
+  - 'Ubuntu 18\.04 LTS \((?!(Bionic|Bionic Beaver)\))'
+  - 'Ubuntu 17\.10 \((?!(Artful|Artful Aardvark)\))'
+  - 'Ubuntu 17\.04 \((?!(Zesty|Zesty Zapus)\))'
+  - 'Ubuntu 16\.10 \((?!(Yakkety|Yakkety Yak)\))'
+  - 'Ubuntu 16\.04 LTS \((?!(Xenial|Xenial Xerus)\))'
+  - 'Ubuntu 15\.10 \((?!(Wily|Wily Werewolf)\))'
+  - 'Ubuntu 15\.04 \((?!(Vivid|Vivid Vervet)\))'
+  - 'Ubuntu 14\.10 \((?!(Utopic|Utopic Unicorn)\))'
+  - 'Ubuntu 14\.04 LTS \((?!(Trusty|Trusty Tahr)\))'
+  - 'Ubuntu 13\.10 \((?!(Saucy|Saucy Salamander)\))'
+  - 'Ubuntu 13\.04 \((?!(Raring|Raring Ringtail)\))'
+  - 'Ubuntu 12\.10 \((?!(Quantal|Quantal Quetzal)\))'
+  - 'Ubuntu 12\.04 LTS \((?!(Precise|Precise Pangolin)\))'
+  - 'Ubuntu 11\.10 \((?!(Oneiric|Oneiric Ocelot)\))'
+  - 'Ubuntu 11\.04 \((?!(Natty|Natty Narwhal)\))'
+  - 'Ubuntu 10\.10 \((?!(Maverick|Maverick Meerkat)\))'
+  - 'Ubuntu 10\.04 \((?!(Lucid|Lucid Lynx)\))'
+  - 'Ubuntu 10\.04 LTS \((?!(Lucid|Lucid Lynx)\))'
+  - 'Ubuntu 9\.10 \((?!(Karmic|Karmic Koala)\))'
+  - 'Ubuntu 9\.04 \((?!(Jaunty|Jaunty Jackalope)\))'
+  - 'Ubuntu 8\.10 \((?!(Intrepid|Intrepid Ibex)\))'
+  - 'Ubuntu 8\.04 LTS \((?!(Hardy|Hardy Heron)\))'
+  - 'Ubuntu 8\.04 \((?!(Hardy|Hardy Heron)\))'
+  - 'Ubuntu 7\.10 \((?!(Gutsy|Gutsy Gibbon)\))'
+  - 'Ubuntu 7\.04 \((?!(Feisty|Feisty Fawn)\))'
+  - 'Ubuntu 6\.10 \((?!(Edgy|Edgy Eft)\))'
+  - 'Ubuntu 6\.06 LTS \((?!(Dapper|Dapper Drake)\))'
+  - 'Ubuntu 6\.06 \((?!(Dapper|Dapper Drake)\))'
+  - 'Ubuntu 5\.10 \((?!(Breezy|Breezy Badger)\))'
+  - 'Ubuntu 5\.04 \((?!(Hoary|Hoary Hedgehog)\))'
+  - 'Ubuntu 4\.10 \((?!(Warty|Warty Warthog)\))'
+  

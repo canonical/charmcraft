@@ -32,18 +32,18 @@ project_dir = pathlib.Path(__file__).parents[1].resolve()
 project = "Charmcraft"
 author = "Canonical"
 # The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
+release = os.environ.get("READTHEDOCS_VERSION", charmcraft.__version__)
 if ".post" in release:
     release = "dev"
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # region Configuration for canonical-sphinx
-ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft/"
 ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
-slug = "charmcraft"
+slug = "juju/docs/charmcraft"
 
 html_context = {
     "product_page": "juju.is",
@@ -60,13 +60,10 @@ html_theme_options = {
 }
 
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
-html_baseurl = "https://documentation.ubuntu.com/charmcraft/"
+html_baseurl = f"{ogp_site_url}{release}/"
 
-if "READTHEDOCS_VERSION" in os.environ:
-    version = os.environ["READTHEDOCS_VERSION"]
-    sitemap_url_scheme = "{version}{link}"
-else:
-    sitemap_url_scheme = "latest/{link}"
+# sphinx-sitemap uses html_baseurl to generate the full URL for each page
+sitemap_url_scheme = "{link}"
 
 # Template and asset locations
 extensions = [
@@ -82,11 +79,12 @@ templates_path = ["_templates"]
 
 # Files for the cookie banner
 html_css_files = [
-    'css/cookie-banner.css'
+    "css/cookie-banner.css",
 ]
 
 html_js_files = [
-    'js/bundle.js',
+    "js/bundle.js",
+    "js/overwrite-links.js",
 ]
 
 # endregion

@@ -1,0 +1,21 @@
+# 09 - Heading - Headings should not contain links
+
+extends: existence
+message: "Headings should not contain links"
+link: https://docs.ubuntu.com/styleguide/en/#other-considerations
+nonword: true
+level: warning
+scope: raw
+tokens:
+  - '[\#]+ [ \w]+\[[\w]+[ \w]*\]\([.\w]+\)'
+  - '[ \w]+\[[\w]+[ \w]*\]\([.\w]+\)[^\n]*\n[=-]{2,}\n'
+  - '[\#]+ [ \w]+<http[^\n]+>'
+  - '[ \w]+<http[^\n]+>[^\n]*\n[=-]{2,}\n'
+  - '[ \w]+`[ \w]*<[\.a-zA-Z0-9\/]+>`_[ \w]*\n(.)\1{3,}\n'
+  - '[ \w]+[ \w]*<[:\.a-zA-Z0-9\/]+>[ \w]*\n(.)\2{3,}\n'
+  - '[ \w]+\:ref\:`[^\n]+`[ \w]*\n(.)\3{3,}\n'
+  - '[ \w]+\:doc\:`[^\n]+`[ \w]*\n(.)\4{3,}\n'
+  - '[ \w]+\{ref\}`[^\n]+`[ \w]*\n(.)\5{3,}\n'
+  - '[ \w]+\{doc\}`[^\n]+`[ \w]*\n(.)\6{3,}\n'
+  - '[^\n]*https?:\/\/[^\n]*\n(.)\7{3,}\n'
+  - '[^\n]*www\.[^\n]*\n(.)\8{3,}\n'

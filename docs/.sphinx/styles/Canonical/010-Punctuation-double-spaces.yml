@@ -1,0 +1,16 @@
+# 10 - Punctuation - No double space after '.', `?`, or `!`
+
+extends: existence
+message: "'%s' should have one space."
+link: 
+level: warning
+scope:
+  - raw
+nonword: true
+tokens:
+  - '[.?!] {2,}$'
+
+# Reasoning:
+# We appreciate that you may have been taught to put two spaces after a 
+# full point/period/full stop. There is no need to and very little
+# point. Most documentation parsers remove double-spaces anyway. 

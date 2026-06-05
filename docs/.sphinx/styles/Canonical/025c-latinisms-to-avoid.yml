@@ -1,0 +1,20 @@
+# 025 - Latinisms that have no place in documentation
+
+extends: existence
+message: "Don't use academic Latin terms like 'a posteriori', 'et al', and 'stet'."
+link: https://docs.ubuntu.com/styleguide/en#latin-words-and-phrases
+level: suggestion
+scope:
+  - sentence
+  - list
+  - heading
+  - table.header
+  - table.cell
+ignorecase: true
+tokens:
+  - 'a\sposteriori'
+  - 'ad\snauseum'
+  - 'et\sal'
+  - 'ibid(um)?'
+  - 'sic'
+  - 'stet'

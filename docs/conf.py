@@ -28,9 +28,8 @@ import charmcraft
 project = "Charmcraft"
 author = "Canonical"
 
-# Sidebar documentation title; best kept reasonably short
 # The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
+release = os.environ.get("READTHEDOCS_VERSION", charmcraft.__version__)
 # The commit hash in the dev release version confuses the spellchecker
 if ".post" in release:
     release = "dev"
@@ -38,13 +37,14 @@ else:
     major, minor, *_ = release.split(".")
     release = f"{major}.{minor}"
 
+# Sidebar documentation title; best kept reasonably short
 html_title = project + " documentation"
 
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # Documentation website URL
-ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft/"
 
 # Preview name of the documentation website
 ogp_site_name = project
@@ -90,7 +90,7 @@ html_context = {
 # }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-# slug = ''
+slug = "juju/docs/charmcraft"
 
 
 #########################
@@ -98,19 +98,19 @@ html_context = {
 #########################
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = f"{ogp_site_url}{release}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
-sitemap_url_scheme = '{link}'
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 # sitemap_show_lastmod = True
 
 # Exclude generated pages from the sitemap:
 sitemap_excludes = [
-    '404/',
-    'genindex/',
-    'search/',
+    "404/",
+    "genindex/",
+    "search/",
 ]
 
 
@@ -251,12 +251,13 @@ exclude_patterns = [
 
 # Adds custom CSS files, located under 'html_static_path'
 html_css_files = [
-    'css/cookie-banner.css'
+    "css/cookie-banner.css"
 ]
 
 # Adds custom JavaScript files, located under 'html_static_path'
 html_js_files = [
-    'js/bundle.js',
+    "js/bundle.js",
+    "js/overwrite-links.js",
 ]
 
 # Specifies a reST snippet to be appended to each .rst file

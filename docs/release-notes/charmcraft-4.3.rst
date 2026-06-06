@@ -88,6 +88,20 @@ test scaffolding:
 - Integration test templates for machine and Kubernetes profiles have improved comments
   pointing to the canonical guide on writing integration tests.
 
+Treat pytest warnings as errors in init templates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``machine`` and ``kubernetes`` init templates now set
+``filterwarnings = ["error"]`` in the generated ``pyproject.toml`` under
+``[tool.pytest.ini_options]``. New charms created with ``charmcraft init`` will
+fail their unit tests on any Python warning by default, surfacing deprecated-API
+use and resource-cleanup bugs (for example, ``ExecProcess`` handles that are
+garbage-collected without a ``wait()`` call) before they reach production.
+
+To opt out for a specific warning, add an ``ignore`` entry to
+``filterwarnings`` — see the pytest
+`warning capture documentation <https://docs.pytest.org/en/stable/how-to/capture-warnings.html>`__.
+
 COS directory structure validation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

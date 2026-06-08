@@ -49,7 +49,7 @@ What you'll do
 #. Create a Django app using the following version of Django:
 
     .. include:: code/django/requirements.txt
-        :start-after: Django== 
+        :start-after: Django==
         :end-before: psycopg2-binary==
 
 #. Use that to create a rock with Rockcraft.

@@ -115,6 +115,13 @@ def make_spring_boot_input_yaml():
                             "astral-uv",
                             "rustup",
                         ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -202,6 +209,13 @@ def make_spring_boot_input_yaml():
                             "astral-uv",
                             "rustup",
                         ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -278,6 +292,13 @@ def make_spring_boot_input_yaml():
                         "build-snaps": [
                             "astral-uv",
                             "rustup",
+                        ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
                         ],
                     }
                 },
@@ -356,6 +377,13 @@ def make_spring_boot_input_yaml():
                             "astral-uv",
                             "rustup",
                         ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -433,6 +461,13 @@ def make_spring_boot_input_yaml():
                             "astral-uv",
                             "rustup",
                         ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
+                        ],
                     }
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
@@ -498,6 +533,13 @@ def make_spring_boot_input_yaml():
                         "build-snaps": [
                             "astral-uv",
                             "rustup",
+                        ],
+                    },
+                    "config": {
+                        "plugin": "dump",
+                        "source": ".",
+                        "stage": [
+                            "paas-config.yaml"
                         ],
                     }
                 },

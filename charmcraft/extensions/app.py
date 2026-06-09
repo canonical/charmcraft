@@ -256,6 +256,13 @@ class _AppBase(Extension):
                         "astral-uv",
                         "rustup",
                     ],
+                },
+                "config": {
+                    "plugin": "dump",
+                    "source": ".",
+                    "stage": [
+                        "paas-config.yaml"
+                    ],
                 }
             },
         }

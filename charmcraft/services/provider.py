@@ -30,8 +30,9 @@ import craft_application
 import craft_platforms
 import craft_providers
 from craft_application import services
-from craft_cli import emit
+from craft_cli import CraftError, emit
 from craft_providers import bases
+from packaging.version import InvalidVersion
 from typing_extensions import override
 
 from charmcraft import env
@@ -114,7 +115,7 @@ class ProviderService(services.ProviderService):
         **kwargs: bool | str | None,
     ) -> Generator[craft_providers.Executor, None, None]:
         """Instance override for Charmcraft."""
-        with super().instance(
+        ctx = super().instance(
             build_info,
             work_dir=work_dir,
             allow_unstable=allow_unstable,
@@ -122,23 +123,35 @@ class ProviderService(services.ProviderService):
             prepare_instance=prepare_instance,
             project_name=project_name,
             **kwargs,  # type: ignore[arg-type]
-        ) as instance:
-            try:
-                instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])
-                # Use /root/.cache even if we're in the snap.
-                instance.execute_run(
-                    ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True
-                )
-                instance.execute_run(["mkdir", "-p", "/root/.cache"], check=True)
-                instance.execute_run(
-                    ["ln", "-s", "/root/.cache", "/root/snap/charmcraft/common/cache"],
-                    check=True,
-                )
-                yield instance
-            finally:
-                if self._lock:
-                    fcntl.flock(self._lock, fcntl.LOCK_UN)
-                    self._lock.close()
+        )
+        try:
+            with ctx as instance:
+                try:
+                    instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])
+                    # Use /root/.cache even if we're in the snap.
+                    instance.execute_run(
+                        ["rm", "-rf", "/root/snap/charmcraft/common/cache"], check=True
+                    )
+                    instance.execute_run(["mkdir", "-p", "/root/.cache"], check=True)
+                    instance.execute_run(
+                        [
+                            "ln",
+                            "-s",
+                            "/root/.cache",
+                            "/root/snap/charmcraft/common/cache",
+                        ],
+                        check=True,
+                    )
+                    yield instance
+                finally:
+                    if self._lock:
+                        fcntl.flock(self._lock, fcntl.LOCK_UN)
+                        self._lock.close()
+        except InvalidVersion as exc:
+            raise CraftError(
+                f"Invalid version for Multipass: {exc}. "
+                "Please install a stable release of Multipass."
+            ) from exc
 
 
 def _maybe_lock_cache(path: pathlib.Path) -> io.TextIOBase | None:

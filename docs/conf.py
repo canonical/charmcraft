@@ -349,10 +349,10 @@ link_common_docs("craft-application")
 # Source 12-factor versions from Spread test materials and inject into docs
 # define path to requirements.txt file
 req_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), 
-    "tutorial", 
-    "code", 
-    "django", 
+    os.path.dirname(__file__),
+    "tutorial",
+    "code",
+    "django",
     "requirements.txt"
 ))
 

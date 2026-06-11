@@ -46,12 +46,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a Django app using the following version of Django:
-
-    .. include:: code/django/requirements.txt
-        :start-after: Django==
-        :end-before: psycopg2-binary==
-
+#. Create a Django app using the following version of Django |django_version|.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Django app on a local

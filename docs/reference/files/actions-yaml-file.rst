@@ -109,10 +109,12 @@ charm.
 **Structure:**
 
 *Name:* The name of the key (``<action name>``) is defined by the charm
-author. It must be a valid Python :external+python:ref:`identifier <identifiers>`
-that does not collide with Python :external+python:ref:`keywords <keywords>`
-except that it may contain hyphens (which will be mapped to underscores in the Python
-event handler).
+author. It must match the regular expression
+``^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$`` (lowercase ASCII letters and digits,
+with internal hyphens permitted) and must not collide with a Python
+:external+python:ref:`keyword <keywords>`. Underscores are not permitted;
+hyphens in the action name are mapped to underscores in the Python event
+handler.
 
 *Type:* Map.
 

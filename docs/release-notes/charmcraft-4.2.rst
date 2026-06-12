@@ -99,6 +99,8 @@ The following issues have been resolved in Charmcraft 4.2.2:
 
 - `#2598 <https://github.com/canonical/charmcraft/issues/2598>`__ Remote build fails
 when getting project name
+- `#TODO <https://github.com/canonical/charmcraft/pull/TODO>`__ Match Juju's
+  action name validation rules
 
 Contributors
 ------------

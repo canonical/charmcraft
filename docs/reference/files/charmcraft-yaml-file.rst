@@ -1,5 +1,8 @@
 .. _charmcraft-yaml-file:
 
+.. _meta::
+    :description: Reference for the ``charmcraft.yaml`` project file, covering every supported top-level key, nested structures, and the inline charm metadata, actions, and configuration that Charmcraft consumes when packing a charm.
+
 ``charmcraft.yaml`` file
 ========================
 

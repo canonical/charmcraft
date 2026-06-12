@@ -1,5 +1,8 @@
 .. _actions-yaml-file:
 
+.. _meta::
+    :description: Reference for the ``actions.yaml`` file, including the structure, keys, and naming rules for declaring Juju actions that a charm exposes to operators.
+
 ``actions.yaml`` file
 =====================
 

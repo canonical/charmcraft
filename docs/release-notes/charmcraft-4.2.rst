@@ -1,5 +1,8 @@
 .. _release-4.2:
 
+.. _meta::
+    :description: Release notes for Charmcraft 4.2, listing the new features, behavioural changes, deprecations, and bug fixes shipped in the 4.2.x patch series.
+
 Charmcraft 4.2 release notes
 ============================
 

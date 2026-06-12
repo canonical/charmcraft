@@ -18,12 +18,12 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.app import (
-    DjangoFramework,
-    FastAPIFramework,
-    FlaskFramework,
-    GoFramework,
-    ExpressJSFramework,
-    SpringBootFramework,
+    django_framework_factory,
+    expressjs_framework_factory,
+    fastapi_framework_factory,
+    flask_framework_factory,
+    go_framework_factory,
+    springboot_framework_factory,
 )
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.registry import (
@@ -46,9 +46,9 @@ __all__ = [
     "unregister",
 ]
 
-register("flask-framework", FlaskFramework)
-register("django-framework", DjangoFramework)
-register("go-framework", GoFramework)
-register("fastapi-framework", FastAPIFramework)
-register("expressjs-framework", ExpressJSFramework)
-register("spring-boot-framework", SpringBootFramework)
+register("flask-framework", flask_framework_factory)
+register("django-framework", django_framework_factory)
+register("go-framework", go_framework_factory)
+register("fastapi-framework", fastapi_framework_factory)
+register("expressjs-framework", expressjs_framework_factory)
+register("spring-boot-framework", springboot_framework_factory)

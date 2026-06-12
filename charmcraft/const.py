@@ -68,6 +68,7 @@ CHARM_PLUGIN_BASES = frozenset(  # Bases with the 'charm' plugin.
         "ubuntu@24.04",
         "ubuntu@24.10",
         "ubuntu@25.04",
+        "ubuntu@26.04",
         "ubuntu@26.10",
     )
 )

@@ -130,12 +130,6 @@ def test_load_invalid_charm(in_project_path: pathlib.Path, charm_dir: pathlib.Pa
             id="multibase-questing-charm-plugin-reactive",
         ),
         pytest.param(
-            "multibase-resolute-charm-plugin",
-            "charm",
-            "plugin not registered: 'charm'",
-            id="multibase-resolute-charm-plugin-charm",
-        ),
-        pytest.param(
             "questing-charm-plugin",
             "charm",
             "plugin not registered: 'charm'",
@@ -158,12 +152,6 @@ def test_load_invalid_charm(in_project_path: pathlib.Path, charm_dir: pathlib.Pa
             "reactive",
             "plugin not registered: 'reactive'",
             id="questing-reactive-plugin-reactive",
-        ),
-        pytest.param(
-            "resolute-charm-plugin",
-            "charm",
-            "plugin not registered: 'charm'",
-            id="resolute-charm-plugin-charm",
         ),
     ],
 )

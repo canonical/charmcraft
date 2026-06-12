@@ -692,6 +692,20 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
+@pytest.mark.parametrize("name", ["snake_case", "Uppercase", "-leading-hyphen"])
+def test_invalid_action_name_rejected_at_project_level(name: str):
+    values = {
+        "type": "charm",
+        "name": "test-charm",
+        "summary": "A test charm",
+        "description": "A test charm with an invalid action name.",
+        "bases": [SIMPLE_BASE_CONFIG_DICT],
+        "actions": {name: {"description": "x"}},
+    }
+    with pytest.raises(pydantic.ValidationError, match="is not a valid action name"):
+        project.BasesCharm(**values)
+
+
 @pytest.mark.parametrize("base", const.SUPPORTED_BASE_STRINGS)
 def test_supported_base_works_with_its_own_build_base(base: str):
     project.PlatformCharm.unmarshal(

@@ -68,6 +68,11 @@ CHARM_PLUGIN_BASES = frozenset(  # Bases with the 'charm' plugin.
         "ubuntu@24.04",
         "ubuntu@24.10",
         "ubuntu@25.04",
+    )
+)
+
+CHARM_PLUGIN_EXPERIMENTAL_BASES = frozenset(  # Experimental bases with the 'charm' plugin.
+    (
         "ubuntu@26.04",
         "ubuntu@26.10",
     )
@@ -76,6 +81,11 @@ CHARM_PLUGIN_BASES = frozenset(  # Bases with the 'charm' plugin.
 REACTIVE_PLUGIN_BASES = frozenset(  # Bases with the 'reactive' plugin.
     (
         *CHARM_PLUGIN_BASES,
+    )
+)
+
+REACTIVE_PLUGIN_EXPERIMENTAL_BASES = frozenset(  # Experimental bases with the 'reactive' plugin.
+    (
         "ubuntu@26.04",
         "ubuntu@26.10",
     )

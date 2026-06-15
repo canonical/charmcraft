@@ -740,7 +740,8 @@ def test_resolute_base_does_not_need_build_base():
     )
 
 
-def test_resolute_base_supports_reactive_plugin():
+def test_resolute_base_supports_reactive_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
     project.PlatformCharm.unmarshal(
         {
             "type": "charm",
@@ -754,7 +755,8 @@ def test_resolute_base_supports_reactive_plugin():
     )
 
 
-def test_resolute_base_supports_charm_plugin():
+def test_resolute_base_supports_charm_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
     project.PlatformCharm.unmarshal(
         {
             "type": "charm",

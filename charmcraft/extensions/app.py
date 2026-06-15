@@ -78,6 +78,8 @@ class _FrameworkFactory:
 
     Instances are callable and expose get_supported_bases and is_experimental
     so they can be registered and introspected like an Extension subclass.
+
+    The V2 classes will always supersedes V1 if the base is supported by V2 class.
     """
 
     def __init__(self, v1_cls: type[Extension], v2_cls: type[Extension]) -> None:
@@ -444,6 +446,12 @@ class _AppBaseV2(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return True
 
 
 GUNICORN_WEBSERVER_OPTIONS = {

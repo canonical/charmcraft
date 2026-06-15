@@ -790,7 +790,7 @@ class PyDeps(Linter):
         spec_matched = False
         for match in MIN_VERSION_REGEX.finditer(dep_spec):
             spec_matched = True
-            if version >= cls.get_version_tuple(match.group(1)):  # type: ignore
+            if version >= cls.get_version_tuple(match.group(1)):  # ty: ignore[unsupported-operator]
                 return True
         for match in EXACT_VERSION_REGEX.finditer(dep_spec):
             spec_matched = True

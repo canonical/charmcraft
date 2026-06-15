@@ -96,7 +96,7 @@ class ProviderService(services.ProviderService):
             base_name,
             instance_name=instance_name,
             # craft-application annotation is incorrect
-            **kwargs,  # type: ignore[arg-type]
+            **kwargs,
         )
 
     @override
@@ -121,7 +121,7 @@ class ProviderService(services.ProviderService):
             clean_existing=clean_existing,
             prepare_instance=prepare_instance,
             project_name=project_name,
-            **kwargs,  # type: ignore
+            **kwargs,  # ty: ignore[invalid-argument-type]
         ) as instance:
             try:
                 instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])

@@ -64,3 +64,14 @@ def test_invalid_action_names_rejected(name):
 def test_python_keyword_action_names_rejected(name):
     with pytest.raises(ValueError, match="reserved keyword"):
         JujuActions(actions=_actions(name))
+
+
+@pytest.mark.parametrize("body", ["a string", 42, None, ["a", "list"]])
+def test_non_mapping_action_body_rejected(body):
+    with pytest.raises(ValueError, match="valid dictionary"):
+        JujuActions(actions={"do-thing": body})
+
+
+def test_action_body_missing_description_rejected():
+    with pytest.raises(ValueError, match="missing a description"):
+        JujuActions(actions={"do-thing": {}})

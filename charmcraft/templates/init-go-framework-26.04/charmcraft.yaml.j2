@@ -6,7 +6,7 @@ name: {{ name }}
 
 type: charm
 
-base: ubuntu@24.04
+base: ubuntu@26.04
 
 # the platforms this charm should be built on and run on.
 # you can check your architecture with `dpkg --print-architecture`
@@ -17,14 +17,14 @@ platforms:
   # s390x:
 
 # (Required)
-summary: A very short one-line summary of the Flask application.
+summary: A very short one-line summary of the Go application.
 
 # (Required)
 description: |
-  A comprehensive overview of your Flask application.
+  A comprehensive overview of your Go application.
 
 extensions:
-  - flask-framework
+  - go-framework
 
 # Uncomment the integrations used by your application
 # Integrations set to "optional: false" will block the charm

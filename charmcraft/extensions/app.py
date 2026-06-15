@@ -97,7 +97,7 @@ class _FrameworkFactory:
         :return: an Extension instance from the appropriate version.
         """
         bases = get_project_bases(yaml_data)
-        if ("ubuntu", "26.04") in bases:
+        if any(base in self._v2_cls.get_supported_bases() for base in bases):
             return self._v2_cls(project_root=project_root, yaml_data=yaml_data)
         return self._v1_cls(project_root=project_root, yaml_data=yaml_data)
 
@@ -121,20 +121,6 @@ class _FrameworkFactory:
         if base in self._v2_cls.get_supported_bases():
             return self._v2_cls.is_experimental(base)
         return self._v1_cls.is_experimental(base)
-
-
-def _make_framework_factory(v1_cls: type[Extension], v2_cls: type[Extension]):
-    """Create a factory that routes to V1 or V2 based on target base.
-
-    Routes to V2 if ubuntu@26.04 is in the project bases, otherwise to V1.
-    Merges supported bases from both versions (deduped) and delegates experimental
-    status checks to the appropriate class.
-
-    :param v1_cls: the V1 extension class.
-    :param v2_cls: the V2 extension class.
-    :return: a factory callable with get_supported_bases and is_experimental methods.
-    """
-    return _FrameworkFactory(v1_cls, v2_cls)
 
 
 class _AppBase(Extension):
@@ -389,25 +375,8 @@ class _AppBase(Extension):
         return f"{self.framework}-app-image"
 
 
-class _AppBaseV2(Extension):
-    """A base class for 12-factor applications."""
-
-    _CHARM_LIBS = [
-        {"lib": "traefik_k8s.ingress", "version": "2"},
-        {"lib": "observability_libs.juju_topology", "version": "0"},
-        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "1"},
-        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
-        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-        {"lib": "redis_k8s.redis", "version": "0"},
-        {"lib": "data_platform_libs.s3", "version": "0"},
-        {"lib": "saml_integrator.saml", "version": "0"},
-        {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
-        {"lib": "smtp_integrator.smtp", "version": "0"},
-        {"lib": "openfga_k8s.openfga", "version": "1"},
-        {"lib": "hydra.oauth", "version": "0"},
-        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
-    ]
+class _AppBaseV2(_AppBase):
+    """V2 base class for 12-factor applications using uv."""
 
     @staticmethod
     @override
@@ -415,132 +384,9 @@ class _AppBaseV2(Extension):
         """Return supported bases."""
         return [("ubuntu", "26.04")]
 
-    @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return True
-
-    framework: str
-    actions: dict = {
-        "rotate-secret-key": {
-            "description": "Rotate the secret key. Users will be forced to log in again. This might be useful if a security breach occurs."
-        }
-    }
-
-    options: dict
-
-    endpoint_dynamic_options: dict[str, dict[str, Any]] = {
-        "oauth": OAUTH_DYNAMIC_OPTIONS
-    }
-
-    def _get_nested(self, obj: dict, path: str) -> dict:
-        """Get a nested object using a path (a dot-separated list of keys)."""
-        for key in path.split("."):
-            obj = obj.get(key, {})
-        return obj
-
-    def _check_input(self) -> None:
-        """Check if the extension is applicable for user input charmcraft project file."""
-        charm_type = self.yaml_data.get("type")
-        if charm_type != "charm":
-            raise ExtensionError(
-                f"the '{self.framework}-framework' extension is incompatible with "
-                f"type {charm_type!r}"
-            )
-        self._validate_cos_custom_dir()
-        parts = self.yaml_data.get("parts")
-        if parts and "charm" in parts:
-            raise ExtensionError(
-                f"the '{self.framework}-framework' extension is incompatible with "
-                f"customized charm part"
-            )
-        incompatible_fields = {
-            "devices",
-            "extra-bindings",
-            "storage",
-        } & self.yaml_data.keys()
-        if incompatible_fields:
-            raise ExtensionError(
-                f"the '{self.framework}-framework' extension is incompatible with the provided "
-                f"field(s): {', '.join(sorted(incompatible_fields))}"
-            )
-        root_snippet = self._get_root_snippet()
-        for protected in ("assumes", "containers", "resources", "peers"):
-            if (
-                protected in self.yaml_data
-                and self.yaml_data[protected] != root_snippet[protected]
-            ):
-                raise ExtensionError(
-                    f"{protected!r} in charmcraft.yaml conflicts with a reserved field "
-                    f"in the {self.framework}-framework extension, please remove it."
-                )
-        for merging in ("actions", "requires", "provides", "config.options"):
-            user_provided: dict[str, Any] = self._get_nested(self.yaml_data, merging)
-            if not user_provided:
-                continue
-            overlap = (
-                user_provided.keys() & self._get_nested(root_snippet, merging).keys()
-            )
-            if overlap:
-                raise ExtensionError(
-                    f"overlapping keys {overlap} in {merging} of charmcraft.yaml "
-                    f"which conflict with the {self.framework}-framework extension, "
-                    "please rename or remove it"
-                )
-        invalid_non_optionals = []
-        for config in self._get_nested(self.yaml_data, "config.options"):
-            for reserved_config_prefix in ("webserver-", f"{self.framework}-"):
-                if config.startswith(reserved_config_prefix):
-                    raise ExtensionError(
-                        f"config.options {config!r} starts with {self.framework}-framework"
-                        f" reserved configuration prefix {reserved_config_prefix!r}, "
-                        "please rename or remove it"
-                    )
-            config_option_dict = self._get_nested(
-                self.yaml_data, f"config.options.{config}"
-            )
-            if config_option_dict.get("optional") is False and config_option_dict.get(
-                "default"
-            ):
-                invalid_non_optionals.append(config)
-
-        if invalid_non_optionals:
-            raise ExtensionError(
-                "Non-optional configuration options can not have default values.\n"
-                f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
-            )
-
-    def _validate_cos_custom_dir(self) -> None:
-        """Validate the custom COS directory if present."""
-        custom_dir = Path(self.project_root) / "cos_custom"
-        if not custom_dir.is_dir():
-            return
-        root_files: list[str] = []
-        invalid_dirs: list[str] = []
-
-        for entry in custom_dir.iterdir():
-            if entry.is_file():
-                root_files.append(entry.name)
-            elif entry.is_dir() and entry.name not in COS_SUBDIRS:
-                invalid_dirs.append(entry.name)
-
-        if root_files or invalid_dirs:
-            details: list[str] = []
-            if root_files:
-                details.append("root files: " + ", ".join(root_files))
-            if invalid_dirs:
-                details.append("invalid subdirectories: " + ", ".join(invalid_dirs))
-            raise ExtensionError(
-                "custom COS directory must only contain the following subdirectories: "
-                f"{COS_SUBDIRS}. Found {'; '.join(details)}"
-            )
-
     def _get_root_snippet(self) -> dict[str, Any]:
-        """Return the root snippet to be merged into the user charmcraft.yaml.
-
-        This method differs from get_root_snippet because it doesn't perform any check.
-        """
+        """Return the root snippet to be merged into the user charmcraft.yaml."""
         return {
             "assumes": ["k8s-api"],
             "containers": {
@@ -568,8 +414,8 @@ class _AppBaseV2(Extension):
                 "charm": {
                     "plugin": "uv",
                     "source": ".",
-                    "build-snaps": ["astral-uv", "rustup"],  # Needed to build pydantic.
-                    "override-build": ["rustup default stable", "craftctl default"],
+                    "build-snaps": ["astral-uv", "rustup"],
+                    "override-build": ["rustup default stable\ncraftctl default"],
                     "uv-groups": ["charmlibs-pydeps"],
                 },
                 **self.get_config_part(),
@@ -590,67 +436,11 @@ class _AppBaseV2(Extension):
         }
 
     @override
-    def get_root_snippet(self) -> dict[str, Any]:
-        """Return the root snippet to be merged into the user charmcraft.yaml."""
-        self._check_input()
-        root_snippet = self._get_root_snippet()
-        for interface_name, config_options in self.endpoint_dynamic_options.items():
-            dynamic_config_options = self._get_dynamic_config_options(
-                root_snippet, interface_name, config_options
-            )
-            root_snippet["config"]["options"].update(dynamic_config_options)
-        return root_snippet
-
-    def _get_dynamic_config_options(
-        self,
-        root_snippet: dict[str, Any],
-        interface_name: str,
-        config_options: dict[str, Any],
-    ) -> dict[str, Any]:
-        dynamic_endpoint_names = []
-        requires = self._get_nested(self.yaml_data, "requires")
-        for endpoint_name, require in requires.items():
-            current_interface_name = require.get("interface")
-            if current_interface_name == interface_name:
-                dynamic_endpoint_names.append(endpoint_name)
-
-        dynamic_config_options = {}
-        for endpoint_name in dynamic_endpoint_names:
-            updated_config_options = self._get_updated_dynamic_config_options(
-                endpoint_name, config_options
-            )
-            dynamic_config_options.update(updated_config_options)
-        return dynamic_config_options
-
-    def _get_updated_dynamic_config_options(
-        self, endpoint_name: str, config_options: dict[str, dict[str, Any]]
-    ) -> dict[str, dict[str, Any]]:
-        updated_config_options = {}
-        for option, value in config_options.items():
-            updated_option = option.format(endpoint_name=endpoint_name)
-            updated_value = copy.deepcopy(value)
-            for value_key, value_item in value.items():
-                if isinstance(value_item, str):
-                    updated_value[value_key] = value_item.format(
-                        endpoint_name=endpoint_name
-                    )
-            updated_config_options[updated_option] = updated_value
-        return updated_config_options
-
-    @override
-    def get_part_snippet(self) -> dict[str, Any]:
-        """Return the part snippet to apply to existing parts."""
-        return {}
-
-    @override
-    def get_parts_snippet(self) -> dict[str, Any]:
-        """Return the parts to add to parts."""
-        return {}
-
     def get_image_name(self) -> str:
         """Return name of the app image."""
         return "app-image"
 
+    @override
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
@@ -738,7 +528,7 @@ class FlaskFrameworkV2(_AppBaseV2):
     options = FlaskFramework.options
 
 
-flask_framework_factory = _make_framework_factory(FlaskFramework, FlaskFrameworkV2)
+flask_framework_factory = _FrameworkFactory(FlaskFramework, FlaskFrameworkV2)
 
 
 class DjangoFramework(_AppBase):
@@ -792,7 +582,7 @@ class DjangoFrameworkV2(_AppBaseV2):
     options = DjangoFramework.options
 
 
-django_framework_factory = _make_framework_factory(DjangoFramework, DjangoFrameworkV2)
+django_framework_factory = _FrameworkFactory(DjangoFramework, DjangoFrameworkV2)
 
 
 class GoFramework(_AppBase):
@@ -833,7 +623,7 @@ class GoFrameworkV2(_AppBaseV2):
     }
 
 
-go_framework_factory = _make_framework_factory(GoFramework, GoFrameworkV2)
+go_framework_factory = _FrameworkFactory(GoFramework, GoFrameworkV2)
 
 
 class FastAPIFramework(_AppBase):
@@ -884,9 +674,7 @@ class FastAPIFrameworkV2(_AppBaseV2):
     options = FastAPIFramework.options
 
 
-fastapi_framework_factory = _make_framework_factory(
-    FastAPIFramework, FastAPIFrameworkV2
-)
+fastapi_framework_factory = _FrameworkFactory(FastAPIFramework, FastAPIFrameworkV2)
 
 
 class ExpressJSFramework(_AppBase):
@@ -923,7 +711,7 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     options = ExpressJSFramework.options
 
 
-expressjs_framework_factory = _make_framework_factory(
+expressjs_framework_factory = _FrameworkFactory(
     ExpressJSFramework, ExpressJSFrameworkV2
 )
 
@@ -998,6 +786,6 @@ class SpringBootFrameworkV2(_AppBaseV2):
     endpoint_dynamic_options = SpringBootFramework.endpoint_dynamic_options
 
 
-springboot_framework_factory = _make_framework_factory(
+springboot_framework_factory = _FrameworkFactory(
     SpringBootFramework, SpringBootFrameworkV2
 )

@@ -549,7 +549,7 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -579,7 +579,7 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -609,7 +609,7 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -639,7 +639,7 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -669,7 +669,7 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -699,7 +699,7 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable", "craftctl default"],
+        "override-build": ["rustup default stable\ncraftctl default"],
         "uv-groups": ["charmlibs-pydeps"],
     }
 

@@ -35,7 +35,7 @@ class FakeExtension(Extension):
         return cls.bases
 
     @staticmethod
-    def is_experimental(_base: tuple[str, str] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
         return False
 
@@ -59,7 +59,7 @@ class ExperimentalExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: tuple[str, str] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         return True
 
 
@@ -249,10 +249,10 @@ def test_validate_overridden(tmp_path):
     called = False
 
     class OverriddenExtension(FakeExtension):
-        def validate(self, name):
+        def validate(self, extension_name: str):
             nonlocal called
             called = True
-            super().validate(name)
+            super().validate(extension_name)
 
     yaml_data = {"base": "ubuntu@22.04"}
     ext = OverriddenExtension(project_root=tmp_path, yaml_data=yaml_data)

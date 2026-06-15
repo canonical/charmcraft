@@ -75,6 +75,15 @@ the following charms:
               optional: True
               limit: 1
 
+  * - `Valkey <https://charmhub.io/valkey>`__ charm
+    - .. code-block:: yaml
+
+          requires:
+            valkey:
+              interface: valkey_client
+              optional: True
+              limit: 1
+
   * - `SAML <https://charmhub.io/saml-integrator>`__ charm
     - .. code-block:: yaml
 

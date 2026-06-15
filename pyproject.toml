@@ -509,3 +509,8 @@ explicit = true
 
 [tool.uv.sources]
 python-apt = { index = "python-apt-wheels" }
+
+[tool.ty.src]
+exclude = [
+    "tests/spread",
+]

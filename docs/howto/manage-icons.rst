@@ -1,5 +1,8 @@
 .. _manage-icons:
 
+.. meta::
+    :description: How to create, validate, and add an icon to a charm's Charmhub page. Includes a demo of using Inkscape to draw the icon.
+
 Manage icons
 ============
 
@@ -78,8 +81,16 @@ page checks the most basic issues that prevent icons working.
 Add an icon to its charm's Charmhub page
 ----------------------------------------
 
-To add the icon to the charm's Charmhub page, save it as ``icon.svg``, place it
-in the root directory of the charm, and then :ref:`publish the charm to a channel <publish-a-charm>`
+To add the icon to the charm's Charmhub page, first save the icon as ``icon.svg`` in
+the root directory of the charm.
+
+If the charm uses the Charm plugin, the icon will be included in it.
+Otherwise, use the Dump plugin to include the icon. See guidance
+for the :ref:`Poetry plugin <howto-migrate-to-poetry-include-extra-files>`,
+:ref:`Python plugin <howto-migrate-to-python-include-extra-files>`, or
+:ref:`uv plugin <howto-migrate-to-uv-include-extra-files>`.
+
+Next, :ref:`publish the charm to a channel <publish-a-charm>`
 of the form ``<track>/stable`` (e.g., ``latest/stable``). Note that the
 track that you publish the icon to needs to be the default track for the
 icon to be displayed on Charmhub. Please raise a

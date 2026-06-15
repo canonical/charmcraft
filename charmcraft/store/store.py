@@ -22,7 +22,7 @@ import platform
 import time
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
 import craft_store
 from craft_cli import CraftError, emit
@@ -180,6 +180,7 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self, charmhub_config, ephemeral=False, needs_auth=True):
+        self._client: Client
         if needs_auth:
             try:
                 self._client = Client(
@@ -190,8 +191,9 @@ class Store:
             except craft_store.errors.NoKeyringError as error:
                 raise CraftError(str(error)) from error
         else:
-            self._client = AnonymousClient(
-                charmhub_config.api_url, charmhub_config.storage_url
+            self._client = cast(
+                Client,
+                AnonymousClient(charmhub_config.api_url, charmhub_config.storage_url),
             )
 
     def login(

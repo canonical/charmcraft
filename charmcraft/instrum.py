@@ -17,6 +17,7 @@
 """Provide utilities to measure performance in different parts of the app."""
 
 import json
+import pathlib
 import uuid
 from time import time
 from typing import Any
@@ -64,7 +65,7 @@ class _Measurements:
         self.measurements[measurement_id]["tend"] = time()
         self.parents.pop()
 
-    def dump(self, filename: str) -> None:
+    def dump(self, filename: str | pathlib.Path) -> None:
         """Dump the ongoing measurements to the specified file in a JSON format."""
         measurements = self.measurements.copy()
         for m in measurements.values():
@@ -74,7 +75,7 @@ class _Measurements:
         with open(filename, "w") as fh:
             json.dump(measurements, fh, indent=4)
 
-    def merge_from(self, filename: str) -> None:
+    def merge_from(self, filename: str | pathlib.Path) -> None:
         """Merge measurements from a file to the current ongoing structure."""
         with open(filename) as fh:
             to_merge = json.load(fh)
@@ -126,7 +127,7 @@ class Timer:
             ...
     """
 
-    def __init__(self, msg: str, **extra_info: dict[str, Any]):
+    def __init__(self, msg: str, **extra_info: Any):
         self.msg = msg
         self.extra_info = extra_info
         self.measurement_id = None

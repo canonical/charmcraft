@@ -549,7 +549,7 @@ class _AppBaseV2(Extension):
             "resources": {
                 self.get_image_name(): {
                     "type": "oci-image",
-                    "description": f"{self.framework} application image for COS v2.",
+                    "description": f"{self.framework} application image.",
                 },
             },
             "charm-libs": self._CHARM_LIBS,

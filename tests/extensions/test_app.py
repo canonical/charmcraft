@@ -542,7 +542,7 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "go application image for COS v2.",
+            "description": "go application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -572,7 +572,7 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "flask application image for COS v2.",
+            "description": "flask application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -602,7 +602,7 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "django application image for COS v2.",
+            "description": "django application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -632,7 +632,7 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "fastapi application image for COS v2.",
+            "description": "fastapi application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -662,7 +662,7 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "expressjs application image for COS v2.",
+            "description": "expressjs application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -692,7 +692,7 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     assert applied["resources"] == {
         "app-image": {
             "type": "oci-image",
-            "description": "spring-boot application image for COS v2.",
+            "description": "spring-boot application image.",
         }
     }
     assert applied["parts"]["charm"] == {
@@ -720,10 +720,6 @@ def test_go_framework_platforms_only_routes_to_v2(monkeypatch, tmp_path):
 
     # V2 uses uv plugin and different image name
     assert applied["parts"]["charm"]["plugin"] == "uv"
-    assert (
-        applied["resources"]["app-image"]["description"]
-        == "go application image for COS v2."
-    )
 
 
 def test_go_framework_24_04_still_routes_to_v1(monkeypatch, tmp_path):
@@ -743,7 +739,6 @@ def test_go_framework_24_04_still_routes_to_v1(monkeypatch, tmp_path):
 
     # V1 uses charm plugin
     assert applied["parts"]["charm"]["plugin"] == "charm"
-    assert applied["resources"]["app-image"]["description"] == "go application image."
 
 
 def test_v2_extension_experimental_gating_enforced(monkeypatch, tmp_path):

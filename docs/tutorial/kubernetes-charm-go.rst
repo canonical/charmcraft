@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-go-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Go app. In this tutorial, we use the go-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Go app
 ==============================================
 
@@ -389,6 +392,9 @@ the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
 
     juju status
 
@@ -604,7 +610,7 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :dedent: 2
 
 For the migrations to work, we need the ``postgresql-client`` package
-installed in the rock. By default, the ``go-framework`` uses the ``base``
+installed in the rock. By default, the ``go-framework`` uses the ``bare``
 base, so we will also need to install a shell interpreter. Let's do it as a
 slice, so that the rock doesn't include unnecessary files. Open the
 ``rockcraft.yaml`` file using a text editor and add the following to the
@@ -733,12 +739,18 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
 
     curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
     Hi!
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
 
     curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
 

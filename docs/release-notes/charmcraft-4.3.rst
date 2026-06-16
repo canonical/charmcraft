@@ -1,3 +1,6 @@
+.. meta::
+    :description: Learn about the new features, changes, and fixes introduced in Charmcraft 4.3.
+
 .. _release-4.3:
 
 Charmcraft 4.3 release notes

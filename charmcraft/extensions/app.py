@@ -438,6 +438,12 @@ class DjangoFramework(_AppBase):
 
     @staticmethod
     @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
+
+    @staticmethod
+    @override
     def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False

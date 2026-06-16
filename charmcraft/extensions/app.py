@@ -399,6 +399,12 @@ class FlaskFramework(_AppBase):
         """Check if the extension is in an experimental state."""
         return False
 
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
+
 
 class DjangoFramework(_AppBase):
     """Extension for 12-factor Django applications."""

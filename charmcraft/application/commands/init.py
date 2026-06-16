@@ -33,6 +33,10 @@ except ImportError:
     pwd = None  # type: ignore[assignment]
 
 # the available profiles and in which directory the template can be found
+# NOTE: init-<framework>-framework-26.04 template dirs exist but are intentionally
+# not wired into PROFILES yet. They are staged for when ubuntu@26.04 + the V2
+# (uv-based) 12-factor extensions become the default. Wiring them in will also
+# require handling the experimental-extensions gating during `init`/`tox` tests.
 PROFILES = {
     "kubernetes": "init-kubernetes",
     "machine": "init-machine",

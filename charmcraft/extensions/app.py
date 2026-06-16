@@ -23,7 +23,7 @@ from typing import Any
 from overrides import override
 
 from ..errors import ExtensionError
-from .extension import Extension, get_project_bases
+from .extension import Extension, SinglePlatformExtension, get_project_bases
 
 APP_PORT_OPTION = {
     "app-port": {
@@ -125,7 +125,7 @@ class _FrameworkFactory:
         return self._v1_cls.is_experimental(base)
 
 
-class _AppBase(Extension):
+class _AppBase(SinglePlatformExtension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
@@ -153,9 +153,9 @@ class _AppBase(Extension):
 
     @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
-        return True
+        return False
 
     framework: str
     actions: dict = {
@@ -389,40 +389,18 @@ class _AppBaseV2(_AppBase):
     @override
     def _get_root_snippet(self) -> dict[str, Any]:
         """Return the root snippet to be merged into the user charmcraft.yaml."""
-        return {
-            "assumes": ["k8s-api"],
-            "containers": {
-                self.get_container_name(): {"resource": self.get_image_name()},
+        snippet = super()._get_root_snippet()
+        snippet["parts"] = {
+            "charm": {
+                "plugin": "uv",
+                "source": ".",
+                "build-snaps": ["astral-uv", "rustup"],
+                "override-build": "rustup default stable\ncraftctl default",
+                "uv-groups": ["charmlibs-pydeps"],
             },
-            "resources": {
-                self.get_image_name(): {
-                    "type": "oci-image",
-                    "description": f"{self.framework} application image.",
-                },
-            },
-            "charm-libs": self._CHARM_LIBS,
-            "peers": {"secret-storage": {"interface": "secret-storage"}},
-            "actions": self.actions,
-            "requires": {
-                "logging": {"interface": "loki_push_api"},
-                "ingress": {"interface": "ingress", "limit": 1},
-            },
-            "provides": {
-                "metrics-endpoint": {"interface": "prometheus_scrape"},
-                "grafana-dashboard": {"interface": "grafana_dashboard"},
-            },
-            "config": {"options": copy.deepcopy(self.options)},
-            "parts": {
-                "charm": {
-                    "plugin": "uv",
-                    "source": ".",
-                    "build-snaps": ["astral-uv", "rustup"],
-                    "override-build": ["rustup default stable\ncraftctl default"],
-                    "uv-groups": ["charmlibs-pydeps"],
-                },
-                **self.get_config_part(),
-            },
+            **self.get_config_part(),
         }
+        return snippet
 
     def get_config_part(self) -> dict[str, Any]:
         """Get config part if paas-config.yaml is present."""
@@ -449,8 +427,8 @@ class _AppBaseV2(_AppBase):
 
     @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is_experimental is always True for V2."""
         return True
 
 
@@ -522,12 +500,6 @@ class FlaskFramework(_AppBase):
         },
     }
 
-    @staticmethod
-    @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return False
-
 
 class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
@@ -574,12 +546,6 @@ class DjangoFramework(_AppBase):
             "description": "A comma-separated list of host/domain names that this Django site can serve. This configuration will set the DJANGO_ALLOWED_HOSTS environment variable with its content being a JSON encoded list.",
         },
     }
-
-    @staticmethod
-    @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return False
 
 
 class DjangoFrameworkV2(_AppBaseV2):
@@ -768,12 +734,6 @@ class SpringBootFramework(_AppBase):
     def get_supported_bases() -> list[tuple[str, str]]:
         """Return supported bases."""
         return [("ubuntu", "24.04")]
-
-    @staticmethod
-    @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return False
 
     @override
     def get_image_name(self) -> str:

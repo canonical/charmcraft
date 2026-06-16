@@ -164,7 +164,7 @@ def test_real_framework_factories_experimental_status_correct():
             "go",
             go_framework_factory,
             [
-                (("ubuntu", "24.04"), True),  # V1: experimental
+                (("ubuntu", "24.04"), False),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
             ],
         ),
@@ -174,8 +174,8 @@ def test_real_framework_factories_experimental_status_correct():
             [
                 (
                     ("ubuntu", "24.04"),
-                    True,
-                ),  # V1: experimental (NOT regressed to stable)
+                    False,
+                ),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
             ],
         ),
@@ -185,8 +185,8 @@ def test_real_framework_factories_experimental_status_correct():
             [
                 (
                     ("ubuntu", "24.04"),
-                    True,
-                ),  # V1: experimental (NOT regressed to stable)
+                    False,
+                ),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
             ],
         ),

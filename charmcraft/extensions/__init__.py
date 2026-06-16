@@ -35,9 +35,7 @@ from charmcraft.extensions.registry import (
 )
 
 __all__ = [
-    "DjangoFramework",
     "Extension",
-    "FlaskFramework",
     "get_extension_class",
     "get_extension_names",
     "get_extensions",
@@ -46,9 +44,11 @@ __all__ = [
     "unregister",
 ]
 
-register("flask-framework", flask_framework_factory)
-register("django-framework", django_framework_factory)
-register("go-framework", go_framework_factory)
-register("fastapi-framework", fastapi_framework_factory)
-register("expressjs-framework", expressjs_framework_factory)
-register("spring-boot-framework", springboot_framework_factory)
+# Factory instances are registered in place of Extension subclasses for the
+# 12-factor app extensions only, until craft-wide extensions land (CRAFT-5152).
+register("flask-framework", flask_framework_factory)  # type: ignore[arg-type]
+register("django-framework", django_framework_factory)  # type: ignore[arg-type]
+register("go-framework", go_framework_factory)  # type: ignore[arg-type]
+register("fastapi-framework", fastapi_framework_factory)  # type: ignore[arg-type]
+register("expressjs-framework", expressjs_framework_factory)  # type: ignore[arg-type]
+register("spring-boot-framework", springboot_framework_factory)  # type: ignore[arg-type]

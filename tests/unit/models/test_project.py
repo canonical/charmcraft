@@ -770,6 +770,64 @@ def test_resolute_base_supports_charm_plugin(monkeypatch):
     )
 
 
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_charm_plugin_is_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin_without_env_var():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
 def test_legacy_plugins_are_checked_against_build_base():
     with pytest.raises(
         pydantic.ValidationError,

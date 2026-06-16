@@ -236,7 +236,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["go-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": GoFramework.actions,
                 "assumes": ["k8s-api"],
@@ -311,7 +311,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["fastapi-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": FastAPIFramework.actions,
                 "assumes": ["k8s-api"],
@@ -386,7 +386,7 @@ def make_spring_boot_input_yaml():
                 "extensions": ["expressjs-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
                 "actions": ExpressJSFramework.actions,
                 "assumes": ["k8s-api"],
@@ -549,7 +549,7 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -579,7 +579,7 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -609,7 +609,7 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -639,7 +639,7 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -669,7 +669,7 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -699,7 +699,7 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "plugin": "uv",
         "source": ".",
         "build-snaps": ["astral-uv", "rustup"],
-        "override-build": ["rustup default stable\ncraftctl default"],
+        "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
 
@@ -739,6 +739,26 @@ def test_go_framework_24_04_still_routes_to_v1(monkeypatch, tmp_path):
 
     # V1 uses charm plugin
     assert applied["parts"]["charm"]["plugin"] == "charm"
+
+
+def test_12factor_extension_rejects_multi_base(monkeypatch, tmp_path):
+    """Test that 12-factor extensions reject projects with multiple bases."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-multibase",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {"ubuntu@26.04:amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match="does not support multiple bases",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
 
 
 def test_v2_extension_experimental_gating_enforced(monkeypatch, tmp_path):
@@ -789,22 +809,22 @@ def test_flask_framework_factory_get_supported_bases_no_duplicates():
 
 def test_go_framework_factory_is_experimental_correct(monkeypatch):
     """Test that go factory is_experimental delegates to correct class per base (defect 2 fix)."""
-    # Go V1 on 24.04 should still be experimental
-    assert go_framework_factory.is_experimental(("ubuntu", "24.04")) is True
+    # Go V1 on 24.04 is now stable (not experimental)
+    assert go_framework_factory.is_experimental(("ubuntu", "24.04")) is False
     # Go V2 on 26.04 should be experimental
     assert go_framework_factory.is_experimental(("ubuntu", "26.04")) is True
 
 
 def test_fastapi_framework_factory_is_experimental_24_04(monkeypatch):
-    """Test that fastapi on 24.04 is experimental (defect 2: not regressed to stable)."""
-    # FastAPI V1 on 24.04 should still be experimental (not regressed to stable)
-    assert fastapi_framework_factory.is_experimental(("ubuntu", "24.04")) is True
+    """Test that fastapi on 24.04 is stable (was experimental, now GA)."""
+    # FastAPI V1 on 24.04 is now stable
+    assert fastapi_framework_factory.is_experimental(("ubuntu", "24.04")) is False
 
 
 def test_expressjs_framework_factory_is_experimental_24_04(monkeypatch):
-    """Test that expressjs on 24.04 is experimental (defect 2: not regressed to stable)."""
-    # ExpressJS V1 on 24.04 should still be experimental (not regressed to stable)
-    assert expressjs_framework_factory.is_experimental(("ubuntu", "24.04")) is True
+    """Test that expressjs on 24.04 is stable (was experimental, now GA)."""
+    # ExpressJS V1 on 24.04 is now stable
+    assert expressjs_framework_factory.is_experimental(("ubuntu", "24.04")) is False
 
 
 def test_v2_check_input_rejects_non_charm_type(monkeypatch, tmp_path):

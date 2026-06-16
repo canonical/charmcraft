@@ -185,14 +185,14 @@ class SinglePlatformExtension(Extension):
     @override
     def validate(self, extension_name: str) -> None:
         """Validate that the extension is only used with a single base."""
-        super().validate(extension_name)
-
         bases = self._get_project_bases()
         if len(bases) > 1:
             bases_str = ", ".join(f"{n}@{c}" for n, c in sorted(bases))
             raise errors.ExtensionError(
                 f"Extension does not support multiple bases: {bases_str}"
             )
+
+        super().validate(extension_name)
 
 
 def get_extensions_data_dir() -> Path:

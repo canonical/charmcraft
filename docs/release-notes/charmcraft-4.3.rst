@@ -41,7 +41,7 @@ Charmcraft 4.3 brings the following new features.
 Ubuntu 26.04 LTS support for the reactive plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`craft_parts_reactive_plugin` now supports Ubuntu 26.04 LTS (Resolute Raccoon)
+The :ref:`reactive plugin <reference-charmcraft-yaml-reactive-plugin>` now supports Ubuntu 26.04 LTS (Resolute Raccoon)
 as a base. This allows you to build reactive charms targeting the latest Ubuntu LTS
 release. The plugin also now adds the ``universe`` APT repository automatically, as
 Python 3 virtual environments require the python3-venv package found there.
@@ -72,8 +72,7 @@ The following environment variables are made available to your app when the
 - ``VALKEY_USERNAME``
 - ``VALKEY_PASSWORD``
 
-See :doc:`/reuse/reference/extensions/integrations` and
-:doc:`/reuse/reference/extensions/environment_variables` for details.
+See :ref:`extensions` for details.
 
 Updated charm init templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

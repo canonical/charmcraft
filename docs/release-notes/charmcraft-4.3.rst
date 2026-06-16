@@ -20,7 +20,7 @@ All versions of Charmcraft require the following software:
 - `snapd`_
 - Either `LXD`_ or `Multipass`_
 
-We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`_. It
+We recommend you install the `Charmcraft snap <https://snapcraft.io/charmcraft>`__. It
 comes bundled with all its dependencies.
 
 Non-snap installations of Charmcraft have the following dependencies:
@@ -35,13 +35,13 @@ What's new
 
 Charmcraft 4.3 brings the following new features.
 
-Ubuntu 26.04 support for the reactive plugin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ubuntu 26.04 LTS support for the reactive plugin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :ref:`craft_parts_reactive_plugin` now supports Ubuntu 26.04 LTS (Resolute Raccoon)
 as a base. This allows you to build reactive charms targeting the latest Ubuntu LTS
-release. The plugin also now adds the ``universe`` apt repository automatically, as
-Python 3 virtual environments require the ``python3-venv`` package found there.
+release. The plugin also now adds the ``universe`` APT repository automatically, as
+Python 3 virtual environments require the python3-venv package found there.
 
 See :doc:`/howto/migrate-bases/change-to-ubuntu-2604` for guidance on migrating your
 charm to Ubuntu 26.04 LTS.
@@ -51,7 +51,7 @@ Strict validation of part names
 
 Part names specified in ``charmcraft.yaml`` under ``parts`` are now validated more
 strictly and cannot contain forward slashes (``/``) when targeting the ``ubuntu@26.04``
-base and newer.
+base or higher.
 
 Valkey support in 12-factor app init templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,9 +59,9 @@ Valkey support in 12-factor app init templates
 The init templates for 12-factor app frameworks (Django, Flask, FastAPI, Express.js,
 Go, and Spring Boot) now include a commented-out ``valkey_client`` relation. If you
 declare this optional interface in your charm's ``requires``, Charmcraft automatically
-injects the necessary ``dpcharmlibs-interfaces`` charm Python package.
+injects the necessary dpcharmlibs-interfaces charm Python package.
 
-The following environment variables are made available to your application when the
+The following environment variables are made available to your app when the
 ``valkey_client`` relation is active:
 
 - ``VALKEY_HOSTNAME``
@@ -79,8 +79,8 @@ New charms created with ``charmcraft init`` benefit from several improvements to
 generated project templates:
 
 - Templates now use `pytest-jubilant
-  <https://pytest-jubilant.readthedocs.io/en/stable/>`_ as the test runner for
-  integration tests, replacing the previous ad-hoc helpers. The
+  <https://pytest-jubilant.readthedocs.io/en/stable/>`__ as the test runner for
+  integration tests, replacing the previous custom helpers. The
   ``@pytest.mark.juju_setup`` marker is included in integration test scaffolding for
   machine and Kubernetes profiles.
 - Integration test templates for machine and Kubernetes profiles have improved comments

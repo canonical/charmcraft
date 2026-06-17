@@ -106,7 +106,7 @@ class RemoteBuild(ExtensibleCommand):
                 return 77  # permission denied from sysexits.h
 
         builder = self._services.remote_build
-        project = cast(models.Charm, self._services.project)
+        project = cast(models.Charm, self._services.project.get())
         config = cast(dict[str, Any], self.config)
         project_dir = (
             pathlib.Path(config.get("global_args", {}).get("project_dir") or ".")

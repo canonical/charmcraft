@@ -345,29 +345,3 @@ def link_common_docs(library_name: str) -> None:
 
 link_common_docs("craft-parts")
 link_common_docs("craft-application")
-
-# Source 12-factor versions from Spread test materials and inject into docs
-# define path to requirements.txt file
-req_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__),
-    "tutorial",
-    "code",
-    "django",
-    "requirements.txt"
-))
-
-# include placeholder in case the extraction fails
-extracted_number = "unknown"
-
-# extract the number
-if os.path.exists(req_path):
-    with open(req_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-        match = re.search(r"Django==([\d.]+)", content)
-        if match:
-            extracted_number = match.group(1)
-
-# Dynamically append or create the global substitution variable
-rst_epilog = rst_epilog if 'rst_epilog' in locals() else ""
-rst_epilog += f"\n.. |django_version| replace:: {extracted_number}"

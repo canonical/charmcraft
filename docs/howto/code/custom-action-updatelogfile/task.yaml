@@ -124,7 +124,7 @@ execute: |
 
   # refresh the deployment
   juju refresh flask-hello-world \
-    --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --path=./flask-hello-world_$(dpkg --print-architecture).charm \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.1
 
   # wait for the Flask app to come back to active idle

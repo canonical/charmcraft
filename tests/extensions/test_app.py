@@ -27,10 +27,10 @@ from charmcraft.extensions.app import (
     FlaskFramework,
     GoFramework,
     SpringBootFramework,
-    expressjs_framework_factory,
-    fastapi_framework_factory,
-    flask_framework_factory,
-    go_framework_factory,
+    ExpressJSFrameworkFactory,
+    FastAPIFrameworkFactory,
+    FlaskFrameworkFactory,
+    GoFrameworkFactory,
 )
 
 NON_OPTIONAL_OPTIONS = {
@@ -802,7 +802,7 @@ def test_v2_extension_experimental_gating_passes_with_env(monkeypatch, tmp_path)
 
 def test_flask_framework_factory_get_supported_bases_no_duplicates():
     """Test that flask factory supported bases are deduped (defect 1 fix)."""
-    bases = flask_framework_factory.get_supported_bases()
+    bases = FlaskFrameworkFactory.get_supported_bases()
     assert bases == [("ubuntu", "22.04"), ("ubuntu", "26.04")]
     assert len(bases) == len(set(bases)), "Supported bases should not have duplicates"
 
@@ -810,21 +810,21 @@ def test_flask_framework_factory_get_supported_bases_no_duplicates():
 def test_go_framework_factory_is_experimental_correct(monkeypatch):
     """Test that go factory is_experimental delegates to correct class per base (defect 2 fix)."""
     # Go V1 on 24.04 is now stable (not experimental)
-    assert go_framework_factory.is_experimental(("ubuntu", "24.04")) is False
+    assert GoFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
     # Go V2 on 26.04 should be experimental
-    assert go_framework_factory.is_experimental(("ubuntu", "26.04")) is True
+    assert GoFrameworkFactory.is_experimental(("ubuntu", "26.04")) is True
 
 
 def test_fastapi_framework_factory_is_experimental_24_04(monkeypatch):
     """Test that fastapi on 24.04 is stable (was experimental, now GA)."""
     # FastAPI V1 on 24.04 is now stable
-    assert fastapi_framework_factory.is_experimental(("ubuntu", "24.04")) is False
+    assert FastAPIFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
 
 
 def test_expressjs_framework_factory_is_experimental_24_04(monkeypatch):
     """Test that expressjs on 24.04 is stable (was experimental, now GA)."""
     # ExpressJS V1 on 24.04 is now stable
-    assert expressjs_framework_factory.is_experimental(("ubuntu", "24.04")) is False
+    assert ExpressJSFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
 
 
 def test_v2_check_input_rejects_non_charm_type(monkeypatch, tmp_path):

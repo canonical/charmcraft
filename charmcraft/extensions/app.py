@@ -508,7 +508,7 @@ class FlaskFrameworkV2(_AppBaseV2):
     options = FlaskFramework.options
 
 
-flask_framework_factory = _FrameworkFactory(FlaskFramework, FlaskFrameworkV2)
+FlaskFrameworkFactory = _FrameworkFactory(FlaskFramework, FlaskFrameworkV2)
 
 
 class DjangoFramework(_AppBase):
@@ -556,7 +556,7 @@ class DjangoFrameworkV2(_AppBaseV2):
     options = DjangoFramework.options
 
 
-django_framework_factory = _FrameworkFactory(DjangoFramework, DjangoFrameworkV2)
+DjangoFrameworkFactory = _FrameworkFactory(DjangoFramework, DjangoFrameworkV2)
 
 
 class GoFramework(_AppBase):
@@ -597,7 +597,7 @@ class GoFrameworkV2(_AppBaseV2):
     }
 
 
-go_framework_factory = _FrameworkFactory(GoFramework, GoFrameworkV2)
+GoFrameworkFactory = _FrameworkFactory(GoFramework, GoFrameworkV2)
 
 
 class FastAPIFramework(_AppBase):
@@ -648,7 +648,7 @@ class FastAPIFrameworkV2(_AppBaseV2):
     options = FastAPIFramework.options
 
 
-fastapi_framework_factory = _FrameworkFactory(FastAPIFramework, FastAPIFrameworkV2)
+FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFramework, FastAPIFrameworkV2)
 
 
 class ExpressJSFramework(_AppBase):
@@ -685,7 +685,7 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     options = ExpressJSFramework.options
 
 
-expressjs_framework_factory = _FrameworkFactory(
+ExpressJSFrameworkFactory = _FrameworkFactory(
     ExpressJSFramework, ExpressJSFrameworkV2
 )
 
@@ -754,6 +754,6 @@ class SpringBootFrameworkV2(_AppBaseV2):
     endpoint_dynamic_options = SpringBootFramework.endpoint_dynamic_options
 
 
-springboot_framework_factory = _FrameworkFactory(
+SpringBootFrameworkFactory = _FrameworkFactory(
     SpringBootFramework, SpringBootFrameworkV2
 )

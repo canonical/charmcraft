@@ -19,12 +19,12 @@ import pytest
 
 from charmcraft import errors, extensions
 from charmcraft.extensions.app import (
-    django_framework_factory,
-    expressjs_framework_factory,
-    fastapi_framework_factory,
-    flask_framework_factory,
-    go_framework_factory,
-    springboot_framework_factory,
+    DjangoFrameworkFactory,
+    ExpressJSFrameworkFactory,
+    FastAPIFrameworkFactory,
+    FlaskFrameworkFactory,
+    GoFrameworkFactory,
+    SpringBootFrameworkFactory,
 )
 from charmcraft.extensions.extension import Extension
 
@@ -124,12 +124,12 @@ def test_real_framework_factories_no_duplicate_experimental_bases():
     """Verify real framework factories have no duplicate experimental_bases (defect 1 fix)."""
     # Import the actual factories directly
     factories = [
-        ("flask-framework", flask_framework_factory),
-        ("django-framework", django_framework_factory),
-        ("go-framework", go_framework_factory),
-        ("fastapi-framework", fastapi_framework_factory),
-        ("expressjs-framework", expressjs_framework_factory),
-        ("spring-boot-framework", springboot_framework_factory),
+        ("flask-framework", FlaskFrameworkFactory),
+        ("django-framework", DjangoFrameworkFactory),
+        ("go-framework", GoFrameworkFactory),
+        ("fastapi-framework", FastAPIFrameworkFactory),
+        ("expressjs-framework", ExpressJSFrameworkFactory),
+        ("spring-boot-framework", SpringBootFrameworkFactory),
     ]
 
     for name, factory in factories:
@@ -146,7 +146,7 @@ def test_real_framework_factories_experimental_status_correct():
     test_cases = [
         (
             "flask",
-            flask_framework_factory,
+            FlaskFrameworkFactory,
             [
                 (("ubuntu", "22.04"), False),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
@@ -154,7 +154,7 @@ def test_real_framework_factories_experimental_status_correct():
         ),
         (
             "django",
-            django_framework_factory,
+            DjangoFrameworkFactory,
             [
                 (("ubuntu", "22.04"), False),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
@@ -162,7 +162,7 @@ def test_real_framework_factories_experimental_status_correct():
         ),
         (
             "go",
-            go_framework_factory,
+            GoFrameworkFactory,
             [
                 (("ubuntu", "24.04"), False),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental
@@ -170,7 +170,7 @@ def test_real_framework_factories_experimental_status_correct():
         ),
         (
             "fastapi",
-            fastapi_framework_factory,
+            FastAPIFrameworkFactory,
             [
                 (
                     ("ubuntu", "24.04"),
@@ -181,7 +181,7 @@ def test_real_framework_factories_experimental_status_correct():
         ),
         (
             "expressjs",
-            expressjs_framework_factory,
+            ExpressJSFrameworkFactory,
             [
                 (
                     ("ubuntu", "24.04"),
@@ -192,7 +192,7 @@ def test_real_framework_factories_experimental_status_correct():
         ),
         (
             "spring-boot",
-            springboot_framework_factory,
+            SpringBootFrameworkFactory,
             [
                 (("ubuntu", "24.04"), False),  # V1: stable
                 (("ubuntu", "26.04"), True),  # V2: experimental

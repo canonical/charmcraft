@@ -28,15 +28,10 @@ import charmcraft
 project = "Charmcraft"
 author = "Canonical"
 
-# Sidebar documentation title; best kept reasonably short
-# The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
 # The commit hash in the dev release version confuses the spellchecker
+release = os.environ.get("READTHEDOCS_VERSION", charmcraft.__version__)
 if ".post" in release:
     release = "dev"
-else:
-    major, minor, *_ = release.split(".")
-    release = f"{major}.{minor}"
 
 html_title = project + " documentation"
 

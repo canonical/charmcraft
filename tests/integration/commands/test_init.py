@@ -29,6 +29,7 @@ import pytest
 import pytest_check
 
 import charmcraft
+import charmcraft.application
 from charmcraft import errors
 from charmcraft.application.commands import init
 from charmcraft.utils import S_IXALL

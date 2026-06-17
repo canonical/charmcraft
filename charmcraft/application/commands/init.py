@@ -27,11 +27,6 @@ from craft_cli import CraftError, emit
 from charmcraft.application.commands import base
 from charmcraft.utils import get_templates_environment, make_executable
 
-try:
-    import pwd
-except ImportError:
-    pwd = None  # type: ignore[assignment]
-
 # the available profiles and in which directory the template can be found
 PROFILES = {
     "kubernetes": "init-kubernetes",
@@ -158,6 +153,10 @@ def _make_workload_module_name(charm_name: str) -> str:
 def _get_users_full_name_gecos() -> str | None:
     """Get user's full name from Gecos (/etc/passwd)."""
     try:
+        import pwd  # noqa: PLC0415
+    except ImportError:
+        return None
+    try:
         return pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
     except KeyError:
         return None
@@ -210,7 +209,7 @@ class InitCommand(base.CharmcraftCommand):
             raise CraftError(tpl.format(str(init_dirpath)))
         emit.debug(f"Using project directory {str(init_dirpath)!r}")
 
-        if parsed_args.author is None and pwd is not None:
+        if parsed_args.author is None:
             parsed_args.author = _get_users_full_name_gecos()
 
         if not parsed_args.author:

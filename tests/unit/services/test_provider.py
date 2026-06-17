@@ -122,7 +122,7 @@ def test_get_base_no_cache_if_locked(
     # Can't use the fixture as pyfakefs doesn't handle locks.
     provider_service = ProviderService(
         app=APP_METADATA,
-        services=None,  # pyright: ignore[reportArgumentType]
+        services=None,  # ty: ignore[invalid-argument-type]
         work_dir=tmp_path,
     )
 

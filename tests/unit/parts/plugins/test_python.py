@@ -59,7 +59,7 @@ def test_get_package_install_commands(
         "python-packages": packages,
     }
     python_plugin._options = plugins.PythonPluginProperties.unmarshal(spec)
-    python_plugin._get_pip = lambda: "/python -m pip"
+    python_plugin._get_pip = lambda: "/python -m pip"  # ty: ignore[invalid-assignment]
     copy_src_cmd = (
         f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
     )

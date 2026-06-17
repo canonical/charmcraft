@@ -9,8 +9,6 @@ import craft_application_docs
 
 import charmcraft
 
-import re
-
 # Configuration for the Sphinx documentation builder.
 # All configuration specific to your project should be done in this file.
 #

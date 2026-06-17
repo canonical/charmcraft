@@ -96,6 +96,13 @@ class PartsLifecycle:
                         self._lcm.clean(Step.BUILD, part_names=["charm"])
                         self._lcm.reload_state()
 
+            # Workaround for https://github.com/canonical/craft-parts/issues/851:
+            # craft-parts' local source update copies new/modified files but does
+            # not remove files deleted from the source directory. Clean the pull
+            # step for any affected part so stale files are not included in the
+            # repacked charm archive.
+            self._clean_stale_parts()
+
             emit.debug(f"Executing parts lifecycle in {str(self._project_dir)!r}")
             actions = self._lcm.plan(target_step)
             emit.debug(f"Parts actions: {actions}")
@@ -126,6 +133,63 @@ class PartsLifecycle:
             raise CraftError(f"Parts processing error: {err}") from err
         finally:
             os.chdir(previous_dir)
+
+    def _clean_stale_parts(self) -> None:
+        """Clean parts whose local source has had files deleted since the last pull.
+
+        Craft-parts' local source ``update()`` copies new/modified files but does
+        not remove files from the part src directory that have been deleted from
+        the original source. This method detects such deletions and triggers a
+        clean pull for the affected parts so stale files are not included in the
+        repacked charm archive.
+
+        Workaround for https://github.com/canonical/craft-parts/issues/851.
+        """
+        parts_dir = self._lcm.project_info.dirs.parts_dir
+        parts_to_clean: list[str] = []
+
+        for part_name, part_spec in self._all_parts.items():
+            source = part_spec.get("source", "")
+            if not source:
+                continue
+
+            source_path = pathlib.Path(source)
+            if not source_path.is_absolute():
+                source_path = self._project_dir / source_path
+
+            source_subdir = part_spec.get("source-subdir", "")
+            if source_subdir:
+                source_path = source_path / source_subdir
+
+            if not source_path.is_dir():
+                continue
+
+            part_src_dir = parts_dir / part_name / "src"
+            if not part_src_dir.exists():
+                continue
+
+            src_files = {
+                f.relative_to(part_src_dir)
+                for f in part_src_dir.rglob("*")
+                if f.is_file()
+            }
+            source_files = {
+                f.relative_to(source_path)
+                for f in source_path.rglob("*")
+                if f.is_file()
+            }
+
+            if src_files - source_files:
+                emit.debug(
+                    f"Source files deleted from part {part_name!r}; "
+                    "cleaning to remove stale files from stage and prime."
+                )
+                parts_to_clean.append(part_name)
+
+        if parts_to_clean:
+            for part_name in parts_to_clean:
+                self._lcm.clean(Step.PULL, part_names=[part_name])
+            self._lcm.reload_state()
 
 
 def _get_dispatch_entrypoint(dirname: pathlib.Path) -> str:

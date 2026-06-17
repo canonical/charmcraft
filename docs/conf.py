@@ -29,13 +29,13 @@ project = "Charmcraft"
 author = "Canonical"
 
 # Version string in sidebar
-if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") != "external":
-    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
-    release = rtd_version if rtd_version != "latest" else "dev"
-else:
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
     # Because of Autotools, we can safely assume the version starts with `n.n`
-    major, minor, *_ = charmcraft.__version__.split(".")
+    major, minor, *_ = snapcraft.__version__.split(".")
     release = f"{major}.{minor}"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 html_title = project + " documentation"
 

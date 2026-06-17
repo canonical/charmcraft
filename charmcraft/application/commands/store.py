@@ -214,17 +214,16 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
+        store = cast(StoreService, self._services.get("store"))
         if parsed_args.export:
-            credentials = self._services.store.get_credentials(
-                packages=packages, **kwargs
-            )
+            credentials = store.get_credentials(packages=packages, **kwargs)
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            store.login(packages=packages, **kwargs)
+            username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -248,8 +247,9 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        store = cast(StoreService, self._services.get("store"))
         try:
-            self._services.store.logout()
+            store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -1467,7 +1467,7 @@ class PublishLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in analysis:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,

@@ -226,7 +226,7 @@ def test_fetchlib_store_is_old(
                 "error_message": error_message,
             },
         ]
-        emitter.assert_json_output(  # pyright: ignore[reportAttributeAccessIssue]
+        emitter.assert_json_output(  # ty: ignore[unresolved-attribute]
             expected
         )
     else:

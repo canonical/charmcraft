@@ -610,7 +610,7 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :dedent: 2
 
 For the migrations to work, we need the ``postgresql-client`` package
-installed in the rock. By default, the ``go-framework`` uses the ``base``
+installed in the rock. By default, the ``go-framework`` uses the ``bare``
 base, so we will also need to install a shell interpreter. Let's do it as a
 slice, so that the rock doesn't include unnecessary files. Open the
 ``rockcraft.yaml`` file using a text editor and add the following to the

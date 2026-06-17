@@ -372,7 +372,7 @@ class StoreService(BaseStoreService):
             # Type ignore here because error_list is supposed to have string keys, but
             # for whatever reason the store returns a null code for this one.
             # https://bugs.launchpad.net/snapstore-server/+bug/1925065
-            if exc.error_list[None]["message"] == (  # type: ignore[index]
+            if exc.error_list[None]["message"] == (  # ty: ignore[invalid-argument-type]
                 "Items need to include 'library_id' or 'package_id'"
             ):
                 raise errors.LibraryError(

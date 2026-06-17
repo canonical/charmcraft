@@ -74,7 +74,7 @@ class FakeResponse(requests.Response):
     def ok(self):
         return self.status_code == 200
 
-    def json(self):
+    def json(self):  # ty: ignore[invalid-method-override]
         try:
             return json.loads(self._content)  # type: ignore
         except json.JSONDecodeError as exc:

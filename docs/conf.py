@@ -369,4 +369,4 @@ if os.path.exists(req_path):
 
 # Dynamically append or create the global substitution variable
 rst_epilog = rst_epilog if 'rst_epilog' in locals() else ""
-rst_epilog += f"\n.. |django_version| replace:: {extracted_number}"
+rst_epilog += f"\n.. |conf_django_version| replace:: {extracted_number}"

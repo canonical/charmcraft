@@ -55,7 +55,7 @@ def test_fetchlib_simple_downloaded(
     )
     FetchLibCommand(config).run(args)
 
-    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+    emitter.assert_warning(CHARMLIBS_DEPRECATION_WARNING)
     assert saved_file.exists()
 
     message = emitter.interactions[-1].args[1]

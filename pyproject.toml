@@ -94,7 +94,6 @@ lint = [
     { include-group = "types" },
 ]
 types = [
-    "mypy[reports]~=1.11",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests",
@@ -507,3 +506,8 @@ explicit = true
 
 [tool.uv.sources]
 python-apt = { index = "python-apt-wheels" }
+
+[tool.ty.src]
+exclude = [
+    "tests/spread",
+]

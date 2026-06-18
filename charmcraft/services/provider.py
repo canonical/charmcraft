@@ -30,6 +30,7 @@ import craft_application
 import craft_platforms
 import craft_providers
 from craft_application import services
+from craft_application.util import ProServices
 from craft_cli import emit
 from craft_providers import bases
 from typing_extensions import override
@@ -48,6 +49,7 @@ class ProviderService(services.ProviderService):
         work_dir: pathlib.Path,
         provider_name: str | None = None,
         install_snap: bool = True,
+        pro_services: ProServices | None = None,
     ) -> None:
         super().__init__(
             app,
@@ -55,6 +57,7 @@ class ProviderService(services.ProviderService):
             work_dir=work_dir,
             provider_name=provider_name,
             install_snap=install_snap,
+            pro_services=pro_services,
         )
         self._cache_path: pathlib.Path | None = None
         self._lock: io.TextIOBase | None = None

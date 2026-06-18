@@ -31,7 +31,7 @@ class FakeExtension1(Extension):
         return [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: tuple[str, str] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         return False
 
 

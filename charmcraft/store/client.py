@@ -20,7 +20,7 @@ import os
 import platform
 from collections.abc import Sequence
 from json.decoder import JSONDecodeError
-from typing import Any
+from typing import Any, NoReturn
 
 import craft_store
 import requests
@@ -130,6 +130,30 @@ class AnonymousClient:
         converted_response = [Library.from_dict(lib) for lib in response["libraries"]]
         emit.trace(f"Store response: {converted_response}")
         return converted_response
+
+    def login(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support login."""
+        raise NotImplementedError("This operation requires authentication.")
+
+    def logout(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support logout."""
+        raise NotImplementedError("This operation requires authentication.")
+
+    def whoami(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support whoami."""
+        raise NotImplementedError("This operation requires authentication.")
+
+    def unregister_name(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support unregister_name."""
+        raise NotImplementedError("This operation requires authentication.")
+
+    def push_file(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support push_file."""
+        raise NotImplementedError("This operation requires authentication.")
+
+    def list_resource_revisions(self, *args: Any, **kwargs: Any) -> NoReturn:
+        """Raise NotImplementedError because AnonymousClient does not support list_resource_revisions."""
+        raise NotImplementedError("This operation requires authentication.")
 
 
 class Client(craft_store.StoreClient):

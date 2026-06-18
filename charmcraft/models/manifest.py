@@ -41,3 +41,4 @@ class Manifest(models.BaseMetadata):
     bases: list[Base] | None
     analysis: dict[Literal["attributes"], list[Attribute]] = {"attributes": []}
     image_info: Any | None = None
+    charmtool_version: str | None = None

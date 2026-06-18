@@ -22,6 +22,7 @@ import json
 import os
 import pathlib
 import shutil
+import subprocess
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
@@ -123,6 +124,9 @@ class PackageService(services.PackageService):
 
         bases = self.get_manifest_bases()
 
+        # Get charmtool version if reactive plugin is used
+        charmtool_version = self._get_charmtool_version()
+
         return Manifest(
             charmcraft_version=charmcraft.__version__,
             charmcraft_started_at=str(
@@ -131,7 +135,58 @@ class PackageService(services.PackageService):
             analysis={"attributes": attributes},
             image_info=image_info,
             bases=bases,
+            charmtool_version=charmtool_version,
         )
+
+    def _get_charmtool_version(self) -> str | None:
+        """Get the charm tools version if reactive plugin is used.
+
+        :return: The charm tools version string, or None if not using reactive plugin.
+        """
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
+
+        # Check if reactive plugin is explicitly used
+        plugins = {
+            part.get("plugin")
+            for name, part in project.parts.items()
+            if part.get("plugin") is not None
+        }
+        if "reactive" not in plugins:
+            return None
+
+        # Try to get charm tools version
+        try:
+            result = subprocess.run(
+                ["charm", "version", "--format", "json"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10,
+            )
+            version_data = json.loads(result.stdout)
+
+            tool_name = "charm-tools"
+            if (
+                tool_name in version_data
+                and "version" in version_data[tool_name]
+                and "git" in version_data[tool_name]
+            ):
+                return (
+                    f"{tool_name} {version_data[tool_name]['version']} "
+                    f"({version_data[tool_name]['git']})"
+                )
+        except subprocess.CalledProcessError as exc:
+            emit.debug(f"Charm command failed: {exc}")
+        except subprocess.TimeoutExpired as exc:
+            emit.debug(f"Charm command timed out: {exc}")
+        except FileNotFoundError as exc:
+            emit.debug(f"Charm command not found: {exc}")
+        except (json.JSONDecodeError, KeyError) as exc:
+            emit.debug(f"Could not parse charm tools version: {exc}")
+
+        return None
 
     def get_manifest_bases(self) -> list[models.Base]:
         """Get the bases used for a charm manifest from the project."""

@@ -1,0 +1,9 @@
+[project]
+name = "testcharm2"
+version = "0.1.0"
+description = "a test charm for cache testing"
+requires-python = "~=3.12.0"
+dependencies = ["ops"]
+
+[tool.uv]
+no-binary = ["ops"]

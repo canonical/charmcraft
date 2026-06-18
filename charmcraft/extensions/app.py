@@ -685,9 +685,7 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     options = ExpressJSFramework.options
 
 
-ExpressJSFrameworkFactory = _FrameworkFactory(
-    ExpressJSFramework, ExpressJSFrameworkV2
-)
+ExpressJSFrameworkFactory = _FrameworkFactory(ExpressJSFramework, ExpressJSFrameworkV2)
 
 
 class SpringBootFramework(_AppBase):

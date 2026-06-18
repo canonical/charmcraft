@@ -23,14 +23,14 @@ from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
     DjangoFramework,
     ExpressJSFramework,
-    FastAPIFramework,
-    FlaskFramework,
-    GoFramework,
-    SpringBootFramework,
     ExpressJSFrameworkFactory,
+    FastAPIFramework,
     FastAPIFrameworkFactory,
+    FlaskFramework,
     FlaskFrameworkFactory,
+    GoFramework,
     GoFrameworkFactory,
+    SpringBootFramework,
 )
 
 NON_OPTIONAL_OPTIONS = {

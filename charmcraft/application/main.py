@@ -140,7 +140,7 @@ class Charmcraft(craft_application.Application):
         if any(base not in effective_charm_bases for base in bases):
             plugins.pop("charm", None)
         effective_reactive_bases = const.REACTIVE_PLUGIN_BASES
-        if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+        if util.strtobool(str(os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR))):
             effective_reactive_bases = (
                 effective_reactive_bases | const.REACTIVE_PLUGIN_EXPERIMENTAL_BASES
             )

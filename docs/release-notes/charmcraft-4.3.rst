@@ -41,19 +41,19 @@ Charmcraft 4.3 brings the following new features.
 Ubuntu 26.04 LTS support for the reactive plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`reactive plugin <reference-charmcraft-yaml-reactive-plugin>` now supports Ubuntu 26.04 LTS (Resolute Raccoon)
-as a base. This allows you to build reactive charms targeting the latest Ubuntu LTS
-release. The plugin also now adds the ``universe`` APT repository automatically, as
-Python 3 virtual environments require the python3-venv package found there.
+The :ref:`reactive plugin <reference-charmcraft-yaml-reactive-plugin>` can now build
+charms on the Ubuntu 26.04 LTS base. The plugin also now adds the ``universe`` APT
+repository automatically, as Python 3 virtual environments require the python3-venv
+package, which is in the ``universe`` repository on Ubuntu 26.04 LTS.
 
-See :doc:`/howto/migrate-bases/change-to-ubuntu-2604` for guidance on migrating your
+See :ref:`howto-change-to-ubuntu-26-04` for guidance on migrating your
 charm to Ubuntu 26.04 LTS.
 
-Strict validation of part names
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Part naming constraints
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Part names specified in ``charmcraft.yaml`` under ``parts`` are now validated more
-strictly and cannot contain forward slashes (``/``) when targeting the ``ubuntu@26.04``
+Part names are now validated more
+strictly and cannot contain forward slashes (``/``) in charms built on the ``ubuntu@26.04``
 base or higher.
 
 Valkey support in 12-factor app init templates
@@ -64,8 +64,8 @@ Go, and Spring Boot) now include a commented-out ``valkey_client`` relation. If 
 declare this optional interface in your charm's ``requires``, Charmcraft automatically
 injects the necessary dpcharmlibs-interfaces charm Python package.
 
-The following environment variables are made available to your app when the
-``valkey_client`` relation is active:
+If the ``valkey_client`` relation is declared, your can make use of the following
+environment variables in your app:
 
 - ``VALKEY_HOSTNAME``
 - ``VALKEY_PORT``
@@ -74,11 +74,11 @@ The following environment variables are made available to your app when the
 
 See :ref:`extensions` for details.
 
-Updated charm init templates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Improved test scaffolding
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-New charms created with ``charmcraft init`` benefit from several improvements to the
-generated project templates:
+The ``charmcraft init`` command now generates charm project files with improved
+test scaffolding:
 
 - Templates now use `pytest-jubilant
   <https://pytest-jubilant.readthedocs.io/en/stable/>`__ as the test runner for
@@ -93,8 +93,9 @@ COS directory structure validation
 
 When packing a 12-factor app charm, Charmcraft now validates the structure of any
 custom COS (Canonical Observability Stack) directory. If the directory layout is
-incorrect, Charmcraft reports an error at pack time rather than letting an invalid
-structure be discovered only at runtime.
+incorrect, Charmcraft reports an error when packing instead of letting an invalid
+structure cause errors at runtime.
+
 
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

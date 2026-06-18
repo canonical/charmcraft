@@ -1,0 +1,16 @@
+# 027 - Flag non-descriptive link text
+
+# Copilot assisted.
+
+extends: existence
+message: "Use descriptive link text instead of '%s' to improve accessibility."
+link: https://docs.ubuntu.com/styleguide/en
+scope: raw
+nonword: true
+ignorecase: true
+level: warning
+tokens:
+  - '\[[^\]]*\b(here|these|this|more|link)\b[^\]]*\]\([^\)]+\)'
+  - '`[^`<]*\b(here|these|this|more|link)\b[^`<]*<[^>]+>`_'
+  - ':([^\s\n:]+:)*(doc|ref|any|download|class|func):`[^`]*\b(here|these|this|more|link)\b[^`]*`'
+  - '\{([^\}\s\n]+:)*(doc|ref|any|download|class|func)\}`[^`]*\b(here|these|this|more|link)\b[^`]*`' 

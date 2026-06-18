@@ -1,0 +1,13 @@
+# 026 - Hint and tip blocks
+
+extends: existence
+message: "Avoid 'hint' and 'tip' admonitions. Instead, use a regular paragraph or the 'admonition' directive with a descriptive title."
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+scope: raw
+nonword: true
+level: suggestion
+tokens:
+  - '.. hint::'
+  - '.. tip::'
+  - '(````*|::::*) *?{hint}'
+  - '(````*|::::*) *?{tip}'

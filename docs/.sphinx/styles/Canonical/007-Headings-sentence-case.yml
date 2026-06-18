@@ -1,0 +1,7 @@
+extends: capitalization
+# Fork of Google style guide rule
+message: "'%s' should use sentence-style capitalisation."
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+level: warning
+scope: heading
+match: $sentence

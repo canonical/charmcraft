@@ -1,0 +1,15 @@
+# 01 - Heading - Do not end with '.'
+
+extends: existence
+message: "Don't use punctuation in headings."
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+nonword: true
+level: suggestion
+scope: heading
+action:
+  name: edit
+  params:
+    - remove
+    - '[.!?,]'
+tokens:
+  - '[.!?,](?:\s|$)'

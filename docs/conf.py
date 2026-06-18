@@ -31,10 +31,15 @@ project_dir = pathlib.Path(__file__).parents[1].resolve()
 
 project = "Charmcraft"
 author = "Canonical"
-# The full version, including alpha/beta/rc tags
-release = os.environ.get("READTHEDOCS_VERSION", charmcraft.__version__)
-if ".post" in release:
-    release = "dev"
+# Version string in sidebar
+
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
+    # Because of Autotools, we can safely assume the version starts with `n.n`
+    major, minor, *_ = charmcraft.__version__.split(".")
+    release = f"{major}.{minor}"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 

@@ -1,0 +1,39 @@
+extends: substitution
+message: "Use '%[1]s' instead of '%[2]s'"
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+level: error
+scope:
+  - sentence & ~blockquote
+  - list
+  - heading
+  - table.header
+  - table.cell
+ignorecase: true
+nonword: true
+swap:
+  "(?<=Anbox )Cloud": "Cloud" # Because Anbox is a dictionary term, multi-word capture does not work
+  (?<!<)Anbox(?!>): Anbox
+  (?<!<)Kubeflow(?!>): "Kubeflow"
+  "Charmed(?= kubeflow)": "Charmed"
+  Canononical Observability Stack: Canonical Observability Stack
+  (?<!<)Juju(?!>|\.is): Juju
+  (?<!<)Landscape(?!>)(?! environment| layout): Landscape
+  (?<!<)Launchpad(?!>): Launchpad
+  (?<!<)LXD(?!>): LXD
+  (?<!<)MAAS(?!>): MAAS
+  (?<!<)MicroCeph(?!>): MicroCeph
+  (?<!<)MicroCloud(?!>): MicroCloud
+  (?<!<)MicroK8s(?!>): MicroK8s
+  (?<!<)MicroOVN(?!>): MicroOVN
+  (?<!<)MicroStack(?!>): MicroStack
+  (?<!<)Multipass(?!>): Multipass
+  (?<=Canonical )Observability Stack: Observability Stack
+  (?<!<)Snapcraft(?!>|\.io): Snapcraft
+  (?<!<)snapd(?!>): snapd # Vale seems to allow normal capitalisation, may need specific existence rule for Snapd
+  Ubuntu Core: Ubuntu Core
+  # \b ensures only "Ubuntu Pro" matches, not "Ubuntu project", "Ubuntu provides", etc.
+  (?<=Ubuntu )Pro\b: Pro
+  Ubuntu Server: Ubuntu Server
+
+# Not working with multi-word terms that have the first word in the accept list
+# Workaround is to positive lookbehind for the term

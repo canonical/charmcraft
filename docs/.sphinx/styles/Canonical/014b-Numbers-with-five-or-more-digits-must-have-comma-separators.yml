@@ -1,0 +1,13 @@
+extends: existence
+message: Numbers greater than 999 should have a comma separator - '%s'
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+scope:
+  - heading
+  - list
+  - sentence
+  - table.header
+  - table.cell
+ignorecase: true
+level: suggestion
+tokens:
+  - ([\d]{5,})

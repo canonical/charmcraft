@@ -1,0 +1,16 @@
+# 19 - No external images
+
+extends: existence
+message: "Don't use images from Google Drive or the asset manager. Store images in the repository."
+link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
+scope: raw
+nonword: true
+level: error
+tokens:
+  - '!\[[^\n]*\]\([\w\.:\/\-=\? \"]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=\? \"]+\)'
+  - '<[\w\.:\/-=? "]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=? "]+>'
+  - '{image}[\w\.:\/\-=? "]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=? "]+'
+  - '{figure}[\w\.:\/\-=? "]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=? "]+'
+  - '\.\. image::[\w\.:\/\-=? "]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=? "]+'
+  - '\.\. figure::[\w\.:\/\-=? "]+(drive.google|drive.usercontent.google|assets.ubuntu)[\w\.:\/\-=? "]+'
+  

@@ -47,7 +47,7 @@ def store(service_factory, mock_store_anonymous_client) -> StoreService:
 
 @pytest.fixture(scope="module")
 def reusable_store():
-    store = StoreService(app=application.APP_METADATA, services=None)
+    store = StoreService(app=application.APP_METADATA, services=None)  # ty: ignore[invalid-argument-type]
     store.client = mock.Mock(spec_set=craft_store.StoreClient)
     store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     return store

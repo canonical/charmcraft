@@ -44,7 +44,7 @@ else:  # Branch build
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # region Configuration for canonical-sphinx
-ogp_site_url = "https://canonical.com/juju/docs/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
 ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
@@ -65,7 +65,7 @@ html_theme_options = {
 }
 
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
-html_baseurl = f"{ogp_site_url}{release}/"
+html_baseurl = f"{ogp_site_url}/{release}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page
 sitemap_url_scheme = "{link}"

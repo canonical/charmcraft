@@ -44,7 +44,7 @@ html_title = project + " documentation"
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # Documentation website URL
-ogp_site_url = "https://canonical.com/juju/docs/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
 
 # Preview name of the documentation website
 ogp_site_name = project
@@ -98,7 +98,7 @@ slug = "juju/docs/charmcraft"
 #########################
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
-html_baseurl = f"{ogp_site_url}{release}/"
+html_baseurl = f"{ogp_site_url}/{release}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 sitemap_url_scheme = "{link}"

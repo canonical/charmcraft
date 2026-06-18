@@ -358,7 +358,7 @@ req_path = os.path.abspath(os.path.join(
 ))
 
 # include placeholder in case the extraction fails
-extracted_number = "unknown"
+extracted_number = "framework"
 
 # extract the number
 if os.path.exists(req_path):

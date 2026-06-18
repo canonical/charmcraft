@@ -223,8 +223,7 @@ Add the custom action to the project file:
     :language: yaml
     :caption: charmcraft.yaml
 
-Add ``requests`` to the ``charm/requirements.txt`` file, and
-add ``import requests`` to the start of ``src/charm.py``. Finally, define
+Add ``import requests`` to the start of ``src/charm.py``, then define
 your custom action as part of the class and provide the function definition:
 
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py

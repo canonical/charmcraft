@@ -10,7 +10,7 @@ summary: Getting started with Django tutorial
 kill-timeout: 50m
 
 restore: |
-  rm -rf $HOME/tmp $HOME/django-hello-world
+  rm -rf $HOME/tmp $HOME/django-tutorial
   juju destroy-model django-hello-world \
   --destroy-storage --no-prompt --force || true
 
@@ -28,8 +28,8 @@ execute: |
   unset CHARMCRAFT_REGISTRY_URL
 
   # Create working dir and cd
-  mkdir django-hello-world
-  cd django-hello-world
+  mkdir django-tutorial
+  cd django-tutorial
 
   # [docs:create-venv]
   sudo apt update && sudo apt install python3-venv -y
@@ -37,7 +37,7 @@ execute: |
   source .venv/bin/activate
   # [docs:create-venv-end]
 
-  mv $HOME/tmp/requirements.txt $HOME/django-hello-world/
+  mv $HOME/tmp/requirements.txt $HOME/django-tutorial/
   # [docs:install-requirements]
   pip install -r requirements.txt
   # [docs:install-requirements-end]
@@ -50,7 +50,7 @@ execute: |
   cd django_hello_world
 
   # Update settings.py file
-  cat $HOME/tmp/settings_local_run.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/tmp/settings_local_run.py > $HOME/django-tutorial/django_hello_world/django_hello_world/settings.py
 
   # Run Django app locally
   ./manage.py runserver 0.0.0.0:8000 &
@@ -61,17 +61,17 @@ execute: |
   curl localhost:8000 | grep Congratulations
 
   kill $!
-  cd $HOME/django-hello-world
+  cd $HOME/django-tutorial
 
   # [docs:create-rockcraft-yaml]
-  rockcraft init --profile django-framework
+  rockcraft init --name django-hello-world --profile django-framework
   # [docs:create-rockcraft-yaml-end]
 
   sed -i "s/name: .*/name: django-hello-world/g" rockcraft.yaml
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # Update settings.py file
-  cat $HOME/tmp/settings_init_rock.py > $HOME/django-hello-world/django_hello_world/django_hello_world/settings.py
+  cat $HOME/tmp/settings_init_rock.py > $HOME/django-tutorial/django_hello_world/django_hello_world/settings.py
 
   # [docs:pack]
   rockcraft pack

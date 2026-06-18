@@ -243,7 +243,7 @@ For a complete list of commits, see the `2.7.2`_ release on GitHub.
 ------------------
 
 We have some fixes to the 3.1 series, as well as the features below.
-The most notable under-the-hood work is that Charmcraft now uses pydantic 2.
+The most notable under-the-hood work is that Charmcraft now uses Pydantic 2.
 
 Core
 ====

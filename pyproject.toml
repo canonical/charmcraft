@@ -4,17 +4,16 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=6.0",
-    "craft-cli>=2.15.0",
+    "craft-application~=7.0",
+    "craft-cli~=3.4",
     "craft-grammar>=2.0.0",
     "craft-parts~=2.20",
-    "craft-providers~=3.1",
+    "craft-providers>=3.4.0,<4.0",
     "craft-platforms~=0.10",
     "craft-store~=3.2",
     "distro>=1.7.0",
     "docker>=7.0.0",
     "humanize>=2.6.0",
-    "jsonschema~=4.0",
     "jinja2",
     "pydantic~=2.0",
     "python-dateutil",
@@ -58,24 +57,43 @@ dev = [
     "responses>=0.25.3",
 ]
 docs = [
-    "canonical-sphinx[full]~=0.2",
-    "pyspelling",
-    "sphinx-autobuild~=2024.2",
-    "sphinx-sitemap>=2.6.0",
-    "sphinx-substitution-extensions",
-    "sphinx-toolbox~=4.0",
+    "pydantic-kitbash~=1.0",
     "sphinx-lint~=1.0",
-    "sphinxcontrib-details-directive",
-    "sphinxext-rediraffe==0.2.7",
-    "matplotlib",
-    "pydantic-kitbash==0.0.8",
+    "sphinxext-rediraffe==0.3.0",
+    "sphinx-substitution-extensions",
+    {include-group = "docs-starter-pack"},
+]
+# We disable the unused but default SP dependencies slated for removal
+# https://warthogs.atlassian.net/browse/DOCPR-2387
+docs-starter-pack = [
+    "canonical-sphinx~=0.6",
+    "myst-parser>=4.0.1",
+    "packaging>=25.0",
+    "rst2html>=2020.7.4",
+    "sphinx-autobuild>=2024.10.3",
+    # "sphinx-config-options>=0.1.0",
+    # "sphinx-contributor-listing>=0.1.0",
+    "sphinx-design>=0.6.1",
+    # "sphinx-filtered-toctree>=0.1.0",
+    # "sphinx-last-updated-by-git>=0.3.8",
+    "sphinx-notfound-page>=1.1.0",
+    "sphinx-related-links>=0.1.2",
+    "sphinx-roles>=0.1.0",
+    "sphinx-sitemap==2.6.0",
+    # "sphinx-tabs>=3.4.5",
+    "sphinx-terminal>=1.0.2",
+    # "sphinx-ubuntu-images>=0.1.0",
+    # "sphinx-youtube-links>=0.1.0",
+    "sphinxcontrib-jquery>=4.1",
+    # "sphinxcontrib-svg2pdfconverter[cairosvg]>=2.0.0",
+    "sphinxext-opengraph>=0.13.0",
+    "vale>=3.13.0.0",
 ]
 lint = [
     "codespell[toml]",
     { include-group = "types" },
 ]
 types = [
-    "mypy[reports]~=1.11",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests",
@@ -88,6 +106,7 @@ dev-noble = ["python-apt~=2.7.0;sys_platform=='linux'"]
 dev-plucky = ["python-apt~=2.9.0;sys_platform=='linux'"]
 dev-questing = ["python-apt~=3.0.0;sys_platform=='linux'"]
 dev-resolute = ["python-apt~=3.0.0;sys_platform=='linux'"]
+dev-stonking = ["python-apt~=3.0.0;sys_platform=='linux'"]
 tics = ["flake8", "pylint"]
 
 [tool.uv]
@@ -106,6 +125,7 @@ constraint-dependencies = [
     "markupsafe>=2.0",
     "regex>=2021.11.10",
     "sphinx-basic-ng>=1.0.0b1",
+    "starlette>=1.0.1",
     "tornado>=4.0",
     "webencodings>=0.4.0",
     "launchpadlib>=1.11",
@@ -131,6 +151,16 @@ constraint-dependencies = [
     # version of rpds that uses Rust 2024 edition. For now, just constrain us until
     # we can get a newer version of rust.
     "rpds-py<0.25;python_version<'3.13' and platform_system=='Linux'",
+
+    # Constrain libgit2 for the core24 Ubuntu base.
+    # Ubuntu 24.04 contains libgit2 1.7, which for pygit2 requires 1.13 or 1.14.
+    # https://www.pygit2.org/install.html#version-numbers
+    "pygit2>=1.13,<1.15; python_version~='3.12.0'",
+    "pygit2>=1.17,<1.20; python_version~='3.14.0'",  # 26.04
+
+    # protobuf 6.33.x+ segfaults on s390x
+    # this issue might be the cause: https://github.com/protocolbuffers/protobuf/issues/24103
+    "protobuf<6.33",
 ]
 conflicts = [
     [
@@ -139,7 +169,10 @@ conflicts = [
         { group = "dev-plucky" },
         { group = "dev-questing" },
         { group = "dev-resolute" },
+        { group = "dev-stonking" },
     ]
+]
+build-constraint-dependencies = [
 ]
 
 [build-system]
@@ -473,3 +506,8 @@ explicit = true
 
 [tool.uv.sources]
 python-apt = { index = "python-apt-wheels" }
+
+[tool.ty.src]
+exclude = [
+    "tests/spread",
+]

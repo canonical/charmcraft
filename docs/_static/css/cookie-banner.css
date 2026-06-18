@@ -17,7 +17,7 @@ dialog.cookie-policy {
 }
 
 header.p-modal__header {
-    margin-bottom: .5rem;
+    margin-bottom: 0.5rem;
 }
 
 header.p-modal__header::after {
@@ -45,7 +45,7 @@ h2#cookie-policy-title.p-modal__title {
     font-size: 1rem;
     line-height: 1.5rem;
     margin-top: 0;
-    padding-top: .4rem;
+    padding-top: 0.4rem;
 }
 
 .cookie-policy p a {
@@ -61,17 +61,17 @@ h2#cookie-policy-title.p-modal__title {
     font-weight: 400;
     justify-content: center;
     line-height: 1.5rem;
-    padding: calc(.4rem - 1px) 1rem;
+    padding: calc(0.4rem - 1px) 1rem;
     text-align: center;
     text-decoration: none;
-    transition-duration: .1s;
-    transition-property: background-color,border-color;
-    transition-timing-function: cubic-bezier(0.55,0.055,0.675,0.19);
+    transition-duration: 0.1s;
+    transition-property: background-color, border-color;
+    transition-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
 .cookie-policy button {
     background-color: #fff;
-    border-color: rgba(0,0,0,0.56);
+    border-color: rgba(0, 0, 0, 0.56);
     color: #000;
 }
 

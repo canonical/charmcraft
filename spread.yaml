@@ -43,15 +43,16 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
-      # https://github.com/canonical/charmcraft/issues/2480
-      # - ubuntu-25.10-64:
-      #     workers: 6
-      #     memory: 8G
-      #     storage: 40G
-      # - ubuntu-26.04-64:
-      #     workers: 6
-      #     memory: 8G
-      #     storage: 40G
+      - ubuntu-25.10-64:
+          image: ubuntu-os-cloud/ubuntu-2510-amd64
+          workers: 6
+          memory: 8G
+          storage: 40G
+      - ubuntu-26.04-64:
+          image: ubuntu-os-cloud-devel/ubuntu-2604-lts-amd64
+          workers: 6
+          memory: 8G
+          storage: 40G
   ci:
     type: adhoc
     systems:
@@ -130,6 +131,13 @@ prepare: |
   fi
 
   if os.query is-ubuntu; then
+    if [[ "${SPREAD_SYSTEM:-}" == ubuntu-26.04-* ]]; then
+      ubuntu_sources=/etc/apt/sources.list.d/ubuntu.sources
+      if [[ -f "$ubuntu_sources" ]]; then
+        sed -i -E '/^Components:/ { /(^| )universe( |$)/! s/$/ universe/ }' "$ubuntu_sources"
+      fi
+    fi
+
     tempfile="$(mktemp)"
     if ! apt-get update > "$tempfile" 2>&1; then
         cat "$tempfile"
@@ -227,7 +235,7 @@ suites:
   tests/spread/charms/:
     summary: real charm building tests
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable
       snap install microk8s --channel=1.28-strict/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
@@ -259,7 +267,7 @@ suites:
     kill-timeout: 60m # Setting up Juju can take a while.
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory

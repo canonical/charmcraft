@@ -142,7 +142,7 @@ from PyPI in the usual way (subject to the user's system configuration) and whic
 supports all dependency formats (just the package name, a link to a Github project,
 etc.).
 
-.. collapse:: Examples
+.. dropdown:: Examples
 
     .. code-block:: python
 

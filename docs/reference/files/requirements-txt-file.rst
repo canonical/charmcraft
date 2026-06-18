@@ -5,8 +5,8 @@
 =========================
 
 The ``requirements.txt`` file is a standard Python `requirements file
-<https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format>`_
-that declares and pins the Python packages that the charm needs.
+<https://pip.pypa.io/en/stable/reference/requirements-file-format>`__ that declares and
+pins the Python packages that the charm needs.
 
 Charmcraft doesn't create this file for the Kubernetes and machine profiles. They use a
 :ref:`pyproject-toml-file` instead.

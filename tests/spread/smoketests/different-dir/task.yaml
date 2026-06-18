@@ -8,9 +8,17 @@ restore: |
   charmcraft clean
   popd
 
-  rm -rf charm
+  rm -rf charm output
 
 execute: |
   charmcraft pack --verbose --project-dir=charm
   test ! -f charm/charm*.charm
   test -f charm*.charm
+
+  rm -f charm*.charm
+
+  mkdir -p output
+  charmcraft pack --verbose --project-dir=charm -o output
+  test ! -f charm/charm*.charm
+  test ! -f charm*.charm
+  test -f output/charm*.charm

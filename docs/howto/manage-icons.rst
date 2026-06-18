@@ -1,12 +1,19 @@
 .. _manage-icons:
 
+.. meta::
+    :description: How to create, validate, and add an icon to a charm's Charmhub page. Includes a demo of using Inkscape to draw the icon.
+
 Manage icons
 ============
+
+This guide shows how to create, validate, and add an icon to your charm's
+Charmhub page.
 
 Learn about icon requirements and best practices
 ------------------------------------------------
 
-  See more: :ref:`icon-svg-file`
+You can learn about icon requirements and best practices from the
+:ref:`icon SVG file <icon-svg-file>` reference.
 
 Create an icon
 --------------
@@ -59,7 +66,7 @@ file and delete the bitmap.
 .. figure:: https://assets.ubuntu.com/v1/2ef5c7f5-manage-icons-create-3.png
    :alt: Draw something
 
-*Cloud icon: “Cloud by unlimicon from the Noun Project” [CC BY]*
+*Cloud icon: “Cloud by :vale-ignore:`unlimicon` from the Noun Project” [CC BY]*
 
 Validate an icon
 ----------------
@@ -74,11 +81,19 @@ page checks the most basic issues that prevent icons working.
 Add an icon to its charm's Charmhub page
 ----------------------------------------
 
-To add the icon to the charm's Charmhub page, save it as ``icon.svg``, place it
-in the root directory of the charm, and then publish the charm to a channel of the
-form ``<track>/stable`` (e.g., ``latest/stable``). Note that the track that you publish
-the icon to needs to be the default track for the icon to be displayed on Charmhub.
-Please raise a
+To add the icon to the charm's Charmhub page, first save the icon as ``icon.svg`` in
+the root directory of the charm.
+
+If the charm uses the Charm plugin, the icon will be included in it.
+Otherwise, use the Dump plugin to include the icon. See guidance
+for the :ref:`Poetry plugin <howto-migrate-to-poetry-include-extra-files>`,
+:ref:`Python plugin <howto-migrate-to-python-include-extra-files>`, or
+:ref:`uv plugin <howto-migrate-to-uv-include-extra-files>`.
+
+Next, :ref:`publish the charm to a channel <publish-a-charm>`
+of the form ``<track>/stable`` (e.g., ``latest/stable``). Note that the
+track that you publish the icon to needs to be the default track for the
+icon to be displayed on Charmhub. Please raise a
 `CharmHub request <https://discourse.charmhub.io/c/charmhub-requests/46>`_
 on Discourse to set a track as the default track.
 
@@ -88,7 +103,3 @@ on Discourse to set a track as the default track.
    <https://snapcraft.io/blog/better-snap-metadata-handling-coming-your-way-soon>`_).
    So either release the revision with the icon to a ``stable`` channel and then
    roll it back, or wait until your charm is ready for a "stable" ``stable`` release.
-
-..
-
-   See more: :ref:`publish-a-charm`

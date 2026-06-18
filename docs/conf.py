@@ -348,25 +348,18 @@ link_common_docs("craft-parts")
 link_common_docs("craft-application")
 
 # Source 12-factor versions from Spread test materials and inject into docs
-# define path to requirements.txt file
-req_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__),
-    "tutorial",
-    "code",
-    "django",
-    "requirements.txt"
-))
+def inject_version_into_prolog(req_path: str, package_prefix: str, rst_var_name: str) -> None:
+    global rst_prolog
+    version = "framework"
+    if os.path.exists(req_path):
+        with open(req_path, "r", encoding="utf-8") as f:
+            match = re.search(rf"{re.escape(package_prefix)}([\d.]+)", f.read())
+            if match:
+                version = match.group(1)
+    rst_prolog += f"\n.. |{rst_var_name}| replace:: {version}"
 
-# include placeholder in case the extraction fails
-extracted_number = "framework"
-
-# extract the number
-if os.path.exists(req_path):
-    with open(req_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-        match = re.search(r"Django==([\d.]+)", content)
-        if match:
-            extracted_number = match.group(1)
-
-rst_prolog += f"\n.. |conf_django_version| replace:: {extracted_number}"
+inject_version_into_prolog(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "django", "requirements.txt")),
+    "Django==",
+    "conf_django_version",
+)

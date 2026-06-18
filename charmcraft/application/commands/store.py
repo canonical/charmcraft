@@ -2344,3 +2344,159 @@ class CreateTrack(CharmcraftCommand):
             for track in output_tracks
         ]
         emit.message(tabulate(data, headers="keys"))
+
+
+class GetCollaborators(CharmcraftCommand):
+    """List collaborators for a charm."""
+
+    name = "get-collaborators"
+    help_msg = "Get collaborators for the given package."
+    overview = "Get collaborators for the given package."
+    format_option = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("charm", help="The charm to list collaborators for.")
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = Store(env.get_store_config())
+        response = store.get_collaborators(parsed_args.charm)
+        collaborators = response.get("collaborators")
+        if not collaborators:
+            emit.message("No collaborators found.")
+            return
+        data = [
+            {
+                "DisplayName": c.get("account", {}).get("display-name"),
+                "Email": c.get("account", {}).get("email"),
+                "InvitedBy": c.get("created-by", {}).get("email"),
+                "Permissions": ", ".join(c.get("permissions", [])),
+            }
+            for c in collaborators
+        ]
+        emit.message(tabulate(data, headers="keys"))
+
+
+class InviteCollaborator(CharmcraftCommand):
+    """Invite a collaborator to a charm."""
+
+    name = "invite-collaborator"
+    help_msg = "Invite a collaborator for a package."
+    overview = textwrap.dedent(
+        """\
+        Invite a collaborator for a package.
+
+        Sends the specified collaborator an invitation for the specified package.
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("charm", help="The charm to invite the collaborator for.")
+        parser.add_argument("collaborator", help="The collaborator to invite.")
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = Store(env.get_store_config())
+        response = store.invite_collaborator(
+            parsed_args.charm,
+            parsed_args.collaborator,
+        )
+        tokens = response.get("tokens")
+        if not tokens:
+            emit.message("Something went wrong.")
+            return
+        table = [
+            {
+                "Email": t.get("email"),
+                "Token": t.get("token"),
+            }
+            for t in tokens
+        ]
+        emit.message(tabulate(table, headers="keys"))
+
+
+class GetCollaboratorInvites(CharmcraftCommand):
+    """List collaborator invites for a charm."""
+
+    name = "get-collaborator-invites"
+    help_msg = "Get all collaborator invites for the given package."
+    overview = "Get all collaborator invites for the given package."
+    format_option = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("charm", help="The charm to list invites for.")
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = Store(env.get_store_config())
+        response = store.get_collaborator_invites(parsed_args.charm)
+        invites = response.get("invites")
+        if not invites:
+            emit.message("No invites found.")
+        invites = [
+            {
+                "Recipient": i.get("email"),
+                "ExpiresAt": i.get("expires-at"),
+                "CreatedBy": i.get("created-by", {}).get("email"),
+                "CreatedAt": i.get("created-at"),
+                "AcceptedAt": i.get("accepted-at"),
+                "RevokedAt": i.get("revoked-at"),
+            }
+            for i in invites
+        ]
+        emit.message(tabulate(invites, headers="keys"))
+
+
+class RevokeInvite(CharmcraftCommand):
+    """Revoke a collaborator invite for a charm."""
+
+    name = "revoke-invite"
+    help_msg = "Revoke a collaborator invitation."
+    overview = "Revoke a collaborator invitation."
+    format_option = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("charm", help="The charm to revoke an invite for.")
+        parser.add_argument(
+            "collaborator", help="The email associated with the invitation to revoke."
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = Store(env.get_store_config())
+        store.revoke_invite(parsed_args.charm, parsed_args.collaborator)
+        emit.message("Invitation revoked.")
+
+
+class AcceptInvite(CharmcraftCommand):
+    """Accept a collaborator invite for a charm."""
+
+    name = "accept-invite"
+    help_msg = "Accept a collaborator invitation."
+    overview = textwrap.dedent(
+        """\
+        Accept a collaborator invitation.
+
+        Requires the invitation token that is created during the
+        'invite-collaborator' command.
+        """
+    )
+    format_option = True
+
+    def fill_parser(self, parser):
+        """Add own parameters to the general parser."""
+        parser.add_argument("charm", help="The charm to accept an invite for.")
+        parser.add_argument(
+            "token", help="The token associated with the invitation to revoke."
+        )
+
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Run the command."""
+        store = Store(env.get_store_config())
+        store.accept_invite(parsed_args.charm, parsed_args.token)
+        emit.message("Invitation accepted.")

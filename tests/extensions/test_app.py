@@ -21,16 +21,16 @@ import pytest
 from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
-    DjangoFramework,
-    ExpressJSFramework,
+    DjangoFrameworkV1,
     ExpressJSFrameworkFactory,
-    FastAPIFramework,
+    ExpressJSFrameworkV1,
     FastAPIFrameworkFactory,
-    FlaskFramework,
+    FastAPIFrameworkV1,
     FlaskFrameworkFactory,
-    GoFramework,
+    FlaskFrameworkV1,
     GoFrameworkFactory,
-    SpringBootFramework,
+    GoFrameworkV1,
+    SpringBootFrameworkV1,
 )
 
 NON_OPTIONAL_OPTIONS = {
@@ -81,7 +81,7 @@ def make_spring_boot_input_yaml():
             make_flask_input_yaml(),
             False,
             {
-                "actions": FlaskFramework.actions,
+                "actions": FlaskFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "bases": [{"channel": "22.04", "name": "ubuntu"}],
                 "containers": {
@@ -107,7 +107,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **FlaskFramework.options,
+                        **FlaskFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -158,7 +158,7 @@ def make_spring_boot_input_yaml():
             },
             False,
             {
-                "actions": DjangoFramework.actions,
+                "actions": DjangoFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@22.04",
                 "platforms": {
@@ -192,7 +192,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **DjangoFramework.options,
+                        **DjangoFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -238,7 +238,7 @@ def make_spring_boot_input_yaml():
             },
             False,
             {
-                "actions": GoFramework.actions,
+                "actions": GoFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -267,7 +267,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **GoFramework.options,
+                        **GoFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -313,7 +313,7 @@ def make_spring_boot_input_yaml():
             },
             False,
             {
-                "actions": FastAPIFramework.actions,
+                "actions": FastAPIFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -342,7 +342,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **FastAPIFramework.options,
+                        **FastAPIFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -388,7 +388,7 @@ def make_spring_boot_input_yaml():
             },
             False,
             {
-                "actions": ExpressJSFramework.actions,
+                "actions": ExpressJSFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -417,7 +417,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **ExpressJSFramework.options,
+                        **ExpressJSFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -452,7 +452,7 @@ def make_spring_boot_input_yaml():
             make_spring_boot_input_yaml(),
             True,
             {
-                "actions": SpringBootFramework.actions,
+                "actions": SpringBootFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -481,7 +481,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **SpringBootFramework.options,
+                        **SpringBootFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -934,7 +934,7 @@ def test_flask_merge_options(flask_input_yaml, tmp_path):
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["config"] == {
         "options": {
-            **FlaskFramework.options,
+            **FlaskFrameworkV1.options,
             **added_options,
         }
     }
@@ -944,7 +944,7 @@ def test_flask_merge_action(flask_input_yaml, tmp_path):
     added_actions = {"foobar": {}}
     flask_input_yaml["actions"] = added_actions
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["actions"] == {**FlaskFramework.actions, **added_actions}
+    assert applied["actions"] == {**FlaskFrameworkV1.actions, **added_actions}
 
 
 def test_flask_merge_relation(flask_input_yaml, tmp_path):
@@ -969,7 +969,7 @@ def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):
     added_charm_libs = [{"lib": "smtp_integrator.smtp", "version": "0"}]
     flask_input_yaml["charm-libs"] = added_charm_libs
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["charm-libs"] == [*FlaskFramework._CHARM_LIBS, *added_charm_libs]
+    assert applied["charm-libs"] == [*FlaskFrameworkV1._CHARM_LIBS, *added_charm_libs]
 
 
 INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
@@ -1087,7 +1087,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
             make_flask_input_yaml(),
             {"oidc-foobar": {"interface": "oauth"}},
             {
-                **FlaskFramework.options,
+                **FlaskFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",
@@ -1106,7 +1106,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
             make_spring_boot_input_yaml(),
             {"oidc-foobar": {"interface": "oauth"}},
             {
-                **SpringBootFramework.options,
+                **SpringBootFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",
@@ -1134,7 +1134,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
                 "other-oidc": {"interface": "oauth"},
             },
             {
-                **FlaskFramework.options,
+                **FlaskFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",

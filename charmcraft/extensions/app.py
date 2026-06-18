@@ -99,9 +99,9 @@ class _FrameworkFactory:
         :return: an Extension instance from the appropriate version.
         """
         bases = get_project_bases(yaml_data)
-        if any(base in self._v2_cls.get_supported_bases() for base in bases):
-            return self._v2_cls(project_root=project_root, yaml_data=yaml_data)
-        return self._v1_cls(project_root=project_root, yaml_data=yaml_data)
+        if any(base in self._v1_cls.get_supported_bases() for base in bases):
+            return self._v1_cls(project_root=project_root, yaml_data=yaml_data)
+        return self._v2_cls(project_root=project_root, yaml_data=yaml_data)
 
     def get_supported_bases(self) -> list[tuple[str, str]]:
         """Return merged supported bases from both V1 and V2, deduped and ordered.
@@ -120,9 +120,9 @@ class _FrameworkFactory:
         :param base: the target base tuple or None.
         :return: True if the base is experimental, False otherwise.
         """
-        if base in self._v2_cls.get_supported_bases():
-            return self._v2_cls.is_experimental(base)
-        return self._v1_cls.is_experimental(base)
+        if base in self._v1_cls.get_supported_bases():
+            return self._v1_cls.is_experimental(base)
+        return self._v2_cls.is_experimental(base)
 
 
 class _AppBase(SinglePlatformExtension):
@@ -456,7 +456,7 @@ GUNICORN_WEBSERVER_OPTIONS = {
 }
 
 
-class FlaskFramework(_AppBase):
+class FlaskFrameworkV1(_AppBase):
     """Extension for 12-factor Flask applications."""
 
     framework = "flask"
@@ -505,13 +505,13 @@ class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
 
     framework = "flask"
-    options = FlaskFramework.options
+    options = FlaskFrameworkV1.options
 
 
-FlaskFrameworkFactory = _FrameworkFactory(FlaskFramework, FlaskFrameworkV2)
+FlaskFrameworkFactory = _FrameworkFactory(FlaskFrameworkV1, FlaskFrameworkV2)
 
 
-class DjangoFramework(_AppBase):
+class DjangoFrameworkV1(_AppBase):
     """Extension for 12-factor Django applications."""
 
     framework = "django"
@@ -552,14 +552,14 @@ class DjangoFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Django applications."""
 
     framework = "django"
-    actions = {**DjangoFramework.actions}
-    options = DjangoFramework.options
+    actions = {**DjangoFrameworkV1.actions}
+    options = DjangoFrameworkV1.options
 
 
-DjangoFrameworkFactory = _FrameworkFactory(DjangoFramework, DjangoFrameworkV2)
+DjangoFrameworkFactory = _FrameworkFactory(DjangoFrameworkV1, DjangoFrameworkV2)
 
 
-class GoFramework(_AppBase):
+class GoFrameworkV1(_AppBase):
     """Extension for 12-factor Go applications."""
 
     framework = "go"
@@ -597,10 +597,10 @@ class GoFrameworkV2(_AppBaseV2):
     }
 
 
-GoFrameworkFactory = _FrameworkFactory(GoFramework, GoFrameworkV2)
+GoFrameworkFactory = _FrameworkFactory(GoFrameworkV1, GoFrameworkV2)
 
 
-class FastAPIFramework(_AppBase):
+class FastAPIFrameworkV1(_AppBase):
     """Extension for 12-factor FastAPI applications."""
 
     framework = "fastapi"
@@ -645,13 +645,13 @@ class FastAPIFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor FastAPI applications."""
 
     framework = "fastapi"
-    options = FastAPIFramework.options
+    options = FastAPIFrameworkV1.options
 
 
-FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFramework, FastAPIFrameworkV2)
+FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFrameworkV1, FastAPIFrameworkV2)
 
 
-class ExpressJSFramework(_AppBase):
+class ExpressJSFrameworkV1(_AppBase):
     """Extension for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
@@ -682,13 +682,15 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = ExpressJSFramework.options
+    options = ExpressJSFrameworkV1.options
 
 
-ExpressJSFrameworkFactory = _FrameworkFactory(ExpressJSFramework, ExpressJSFrameworkV2)
+ExpressJSFrameworkFactory = _FrameworkFactory(
+    ExpressJSFrameworkV1, ExpressJSFrameworkV2
+)
 
 
-class SpringBootFramework(_AppBase):
+class SpringBootFrameworkV1(_AppBase):
     """Extension for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
@@ -748,10 +750,10 @@ class SpringBootFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
-    options = SpringBootFramework.options
-    endpoint_dynamic_options = SpringBootFramework.endpoint_dynamic_options
+    options = SpringBootFrameworkV1.options
+    endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options
 
 
 SpringBootFrameworkFactory = _FrameworkFactory(
-    SpringBootFramework, SpringBootFrameworkV2
+    SpringBootFrameworkV1, SpringBootFrameworkV2
 )

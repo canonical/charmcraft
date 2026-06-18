@@ -1,8 +1,0 @@
-extends: existence
-message: "Avoid using prompts in code blocks: %s"
-link: https://canonical-documentation-style-guide.readthedocs-hosted.com/
-scope: raw
-nonword: true
-level: warning
-tokens:
-  - '^[ \t]*[$%] [^\s]+'

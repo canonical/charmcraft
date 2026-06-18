@@ -18,6 +18,14 @@ import contextlib
 import pytest
 
 from charmcraft import errors, extensions
+from charmcraft.extensions.app import (
+    DjangoFrameworkFactory,
+    ExpressJSFrameworkFactory,
+    FastAPIFrameworkFactory,
+    FlaskFrameworkFactory,
+    GoFrameworkFactory,
+    SpringBootFrameworkFactory,
+)
 from charmcraft.extensions.extension import Extension
 
 
@@ -31,7 +39,7 @@ class FakeExtension1(Extension):
         return [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: tuple[str, str] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         return False
 
 
@@ -110,3 +118,91 @@ def test_unregister(fake_extensions):
     extensions.unregister(FakeExtension1.name)
     with pytest.raises(errors.ExtensionError):
         extensions.get_extension_class(FakeExtension1.name)
+
+
+def test_real_framework_factories_no_duplicate_experimental_bases():
+    """Verify real framework factories have no duplicate experimental_bases (defect 1 fix)."""
+    # Import the actual factories directly
+    factories = [
+        ("flask-framework", FlaskFrameworkFactory),
+        ("django-framework", DjangoFrameworkFactory),
+        ("go-framework", GoFrameworkFactory),
+        ("fastapi-framework", FastAPIFrameworkFactory),
+        ("expressjs-framework", ExpressJSFrameworkFactory),
+        ("spring-boot-framework", SpringBootFrameworkFactory),
+    ]
+
+    for name, factory in factories:
+        bases = factory.get_supported_bases()
+        # Verify no duplicates
+        assert len(bases) == len(set(bases)), (
+            f"{name} has duplicate supported_bases: {bases}"
+        )
+
+
+def test_real_framework_factories_experimental_status_correct():
+    """Verify experimental status matches framework requirements (defect 2 fix)."""
+    # Map factories to expected experimental status per base
+    test_cases = [
+        (
+            "flask",
+            FlaskFrameworkFactory,
+            [
+                (("ubuntu", "22.04"), False),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+        (
+            "django",
+            DjangoFrameworkFactory,
+            [
+                (("ubuntu", "22.04"), False),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+        (
+            "go",
+            GoFrameworkFactory,
+            [
+                (("ubuntu", "24.04"), False),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+        (
+            "fastapi",
+            FastAPIFrameworkFactory,
+            [
+                (
+                    ("ubuntu", "24.04"),
+                    False,
+                ),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+        (
+            "expressjs",
+            ExpressJSFrameworkFactory,
+            [
+                (
+                    ("ubuntu", "24.04"),
+                    False,
+                ),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+        (
+            "spring-boot",
+            SpringBootFrameworkFactory,
+            [
+                (("ubuntu", "24.04"), False),  # V1: stable
+                (("ubuntu", "26.04"), True),  # V2: experimental
+            ],
+        ),
+    ]
+
+    for name, factory, assertions in test_cases:
+        for base, expected_experimental in assertions:
+            actual = factory.is_experimental(base)
+            assert actual == expected_experimental, (
+                f"{name} on {base}: expected is_experimental={expected_experimental}, got {actual}"
+            )

@@ -22,7 +22,7 @@ directory of the charm. The only requirements are that the file have the executa
 bit set in its file mode and that it be executable on the platform where the charm
 will be deployed.
 
-.. collapse:: Example charm with an overridden dispatch script
+.. dropdown:: Example charm with an overridden dispatch script
 
     The following :ref:`part` section added to any charm will replace the dispatch
     script with a script that does nothing (but successfully) upon any event.

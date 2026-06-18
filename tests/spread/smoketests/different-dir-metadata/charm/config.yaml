@@ -1,0 +1,13 @@
+# Copyright 2022 pietro
+# See LICENSE file for licensing details.
+
+options:
+  port:
+    description: port at which the webserver should run
+    type: int
+    default: 3000
+
+  host:
+    description: host at which the webserver should run
+    type: string
+    default: 0.0.0.0

@@ -19,6 +19,7 @@
 import enum
 from typing import Literal
 
+from craft_platforms import DistroBase
 from craft_providers.bases import BaseName
 
 # region Environment variables
@@ -68,7 +69,7 @@ CHARMHUB_ALLOWED_BASES = frozenset(  # Bases that allow the deprecated 'charmhub
     )
 )
 
-CHARM_OR_REACTIVE_BASES = frozenset(  # Bases with the 'charm' & 'reactive' plugins.
+CHARM_PLUGIN_BASES = frozenset(  # Bases with the 'charm' plugin.
     (
         *LEGACY_BASES,
         "ubuntu@24.04",
@@ -77,36 +78,71 @@ CHARM_OR_REACTIVE_BASES = frozenset(  # Bases with the 'charm' & 'reactive' plug
     )
 )
 
+CHARM_PLUGIN_EXPERIMENTAL_BASES = (
+    frozenset(  # Experimental bases with the 'charm' plugin.
+        (
+            "ubuntu@26.04",
+            "ubuntu@26.10",
+        )
+    )
+)
+
+REACTIVE_PLUGIN_BASES = frozenset(  # Bases with the 'reactive' plugin.
+    (*CHARM_PLUGIN_BASES,)
+)
+
+REACTIVE_PLUGIN_EXPERIMENTAL_BASES = (
+    frozenset(  # Experimental bases with the 'reactive' plugin.
+        (
+            "ubuntu@26.04",
+            "ubuntu@26.10",
+        )
+    )
+)
+
 CommonBaseStr = Literal[  # Bases supported as both build bases and run bases
     "ubuntu@18.04",
     "ubuntu@20.04",
     "ubuntu@22.04",
     "ubuntu@24.04",
-    "ubuntu@24.10",
     "ubuntu@25.04",
     "ubuntu@25.10",
     "ubuntu@26.04",
+    "ubuntu@26.10",
     "almalinux@9",
 ]
 BaseStr = CommonBaseStr
 BuildBaseStr = CommonBaseStr | Literal["ubuntu@devel"]
 
 DEVEL_BASE_STRINGS = (
-    "ubuntu@24.10",
     "ubuntu@25.04",
     "ubuntu@25.10",
-    "ubuntu@26.04",
+    "ubuntu@26.10",
 )  # Bases that require a specified build base.
 
-SUPPORTED_BASES = frozenset(
+SUPPORTED_BASE_STRINGS = frozenset(
+    # Bases that do not need a specific "devel" build base.
     (
-        BaseName("ubuntu", "18.04"),
-        BaseName("ubuntu", "20.04"),
-        BaseName("ubuntu", "22.04"),
-        BaseName("ubuntu", "24.04"),
-        BaseName("ubuntu", "25.10"),
-        BaseName("almalinux", "9"),
+        *(
+            f"ubuntu@{series}"
+            for series in (
+                "18.04",
+                "20.04",
+                "22.04",
+                "24.04",
+                "25.04",
+                "25.10",
+                "26.04",
+                "26.10",
+            )
+        ),
+        *(("almalinux@9",)),
     )
+)
+
+SUPPORTED_BASES = frozenset(
+    BaseName(base.distribution, base.series)
+    for base in (DistroBase.from_str(base_str) for base_str in SUPPORTED_BASE_STRINGS)
 )
 
 SUPPORTED_OSES = frozenset(base.name for base in SUPPORTED_BASES)

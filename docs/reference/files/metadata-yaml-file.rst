@@ -71,7 +71,7 @@ to keep track of other choices a charmer might make.
           super-app-helper:
               bases:
                 - name: ubuntu
-                  channel: ubuntu/24.04
+                  channel: ubuntu/26.04
                   architectures:
                     - amd64
                     - arm64

@@ -853,10 +853,10 @@
 								"ubuntu@20.04",
 								"ubuntu@22.04",
 								"ubuntu@24.04",
-								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
 								"ubuntu@26.04",
+								"ubuntu@26.10",
 								"almalinux@9"
 							],
 							"type": "string"
@@ -876,10 +876,10 @@
 								"ubuntu@20.04",
 								"ubuntu@22.04",
 								"ubuntu@24.04",
-								"ubuntu@24.10",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
 								"ubuntu@26.04",
+								"ubuntu@26.10",
 								"almalinux@9"
 							],
 							"type": "string"

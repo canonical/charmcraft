@@ -1,5 +1,8 @@
 .. _manage-charms:
 
+.. meta::
+    :description: How to manage the full life cycle of a Juju charm with Charmcraft. This guide covers initializing, configuring, packing, publishing to Charmhub, and managing channel revisions.
+
 Manage charms
 =============
 
@@ -27,7 +30,7 @@ with useful content.
 
     charmcraft init --profile <profile>
 
-.. collapse:: Example session
+.. dropdown:: Example session
 
     .. code-block:: bash
 
@@ -66,10 +69,12 @@ in, a charm name different from the name of the root directory, etc.
 
     See more: :ref:`manage-extensions`
 
-.. _add-charm-project-metadata-an-icon-docs:
 
-Add charm project metadata, an icon, docs
------------------------------------------
+.. _add-charm-project-metadata-an-icon-docs:
+.. _configure-package-information:
+
+Configure package information
+-----------------------------
 
 
 Specify that the project is a charm
@@ -232,15 +237,18 @@ If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
-To add content to the **Description** tab,
-create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
-in your charm's project file under the
-:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
+Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
+and externally-hosted documentation sites. With an externally-hosted site,
+Charmhub displays a **Read documentation** button that redirects users to the specified URL,
+while the **Description** tab displays your charm's basic metadata summary.
+
+To provide your main user documentation, include its URL in your charm's project file
+under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. E.g.,
 
 .. code-block:: yaml
 
     links:
-      documentation: https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778
+      documentation: https://documentation.ubuntu.com/traefik-k8s-charm
 
 ..
 
@@ -262,7 +270,7 @@ a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description*
 .. admonition:: Examples of good documentation in small charms
 
     * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
-    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
+    * `Repository policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
 .. admonition:: Examples of good documentation in big charms
 
@@ -344,6 +352,8 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
     # The run time base, the base format is <os-name>@<os-release>,
     # accepted bases are:
     # - ubuntu@24.04
+    # - ubuntu@25.10
+    # - ubuntu@26.04
     base: <base>
     # The build time base, if not defined the base is also the build time
     # base, in addition to valid bases, the build-base can be "devel"
@@ -500,7 +510,7 @@ project file, specify the ``config`` key with the ``type`` subkey set to
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-parts`
+    See more: :ref:`parts`
 
 .. _pack-a-charm:
 
@@ -518,7 +528,7 @@ compile any modules, check that all the key files are in place, and produce a
 compressed archive with the extension ``.charm``. As you can verify, this archive
 is just a zip file with metadata and the operator code itself.
 
-.. collapse:: Example session for a charm called microsample-vm
+.. dropdown:: Example session for a charm called microsample-vm
 
     Pack the charm:
 
@@ -598,8 +608,8 @@ to pack, whether to force pack if there are linting errors, etc.
 
 .. _publish-a-charm:
 
-Publish a charm on Charmhub
----------------------------
+Publish a charm
+---------------
 
 1. Log in to Charmhub:
 
@@ -629,7 +639,7 @@ Publish a charm on Charmhub
    See more: :ref:`manage-channels`.
 
 3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
-   your charm's filepath. E.g., if you are in the charm's root directory,
+   your charm's path. E.g., if you are in the charm's root directory,
 
    .. code-block:: bash
 

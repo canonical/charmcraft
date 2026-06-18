@@ -1,7 +1,7 @@
 .. _tutorial:
 
-Tutorial
-========
+Tutorials
+=========
 
 The tutorials are guided lessons that help you develop skills by using Charmcraft. Each
 is self-contained and delivers a working result that marks a learning milestone and is
@@ -12,9 +12,9 @@ best way to start.
 12-factor app extensions
 ------------------------
 
-Charmcraft's extensions enable you to build Django, FastAPI, Flask, and Go applications
-with just a few modifications to the YAML template content. To familiarize yourself
-with one of these workflows, start with its tutorial:
+With Charmcraft extensions, you can charm 12-factor web applications with just a few
+modifications to the YAML template content. To get started, check out the tutorial for
+your desired web framework:
 
 - :ref:`write-your-first-kubernetes-charm-for-a-django-app`
 - :ref:`write-your-first-kubernetes-charm-for-a-expressjs-app`

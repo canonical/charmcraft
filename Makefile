@@ -4,7 +4,7 @@ PROJECT=charmcraft
 # COVERAGE_SOURCE="starcraft"
 UV_TEST_GROUPS := "--group=dev"
 UV_DOCS_GROUPS := "--group=docs"
-UV_LINT_GROUPS := "--group=lint" "--group=types"
+UV_LINT_GROUPS := "--group=lint" "--group=types" "--group=docs"
 UV_TICS_GROUPS := "--group=tics"
 
 # If you have dev dependencies that depend on your distro version, uncomment these:
@@ -23,11 +23,14 @@ include common.mk
 # common.mk globs too much, such as test expectations
 PRETTIER_FILES="tests/spread/**/task.yaml" "*.yaml" "*.md" "snap/snapcraft.yaml" ".github/**/*.{yml,yaml}"
 
+# Instructions and skills are imported from canonical/copilot-collections.
+PRETTIER_FILES += "!.github/instructions/**" "!.github/skills/**"
+
 .PHONY: format
 format: format-ruff format-codespell format-prettier  ## Run all automatic formatters
 
 .PHONY: lint
-lint: lint-ruff lint-codespell lint-mypy lint-pyright lint-shellcheck lint-prettier lint-docs lint-twine  ## Run all linters
+lint: lint-ruff lint-codespell lint-ty lint-shellcheck lint-prettier lint-docs lint-twine  ## Run all linters
 
 .PHONY: pack
 pack: pack-pip  ## Build all packages
@@ -130,6 +133,8 @@ else
 	# Work around installation conflict in GH CI.
 	if [ "${CI:-nope}" != "nope" ]; then sudo rm -f /usr/local/bin/idle* /usr/local/bin/pip* /usr/local/bin/py* ; fi
 	brew install skopeo
+	brew install gnutls
+	brew postinstall gnutls
 	brew install libgit2@1.7  # For building pygit2
 	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
 endif

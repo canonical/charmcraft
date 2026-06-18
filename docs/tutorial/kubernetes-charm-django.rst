@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-django-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Django app. In this tutorial, we use the django-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Django app
 ==================================================
 
@@ -43,7 +46,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a Django app.
+#. Create a Django app with Django |conf_django_version|.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Django app on a local
@@ -67,8 +70,15 @@ Let's create a new directory for this tutorial and enter into it:
 
 .. code-block:: bash
 
-    mkdir django-hello-world
-    cd django-hello-world
+    mkdir django-tutorial
+    cd django-tutorial
+
+
+We'll name the outer workspace directory ``~/django-tutorial/`` so we can
+distinguish it from the Django project (``django_hello_world``) and
+the charm/rock artifacts (``django-hello-world``). Rockcraft and Charmcraft
+will generate projects named ``django-hello-world`` when we pass
+the name explicitly during the project initialisation.
 
 Finally, install ``python3-venv`` and create a virtual environment:
 
@@ -89,7 +99,8 @@ Create a new requirements file with ``nano requirements.txt``.
 Then, copy the following text into it, and save:
 
 .. literalinclude:: code/django/requirements.txt
-    :caption: ~/django-hello-world/requirements.txt
+    :caption: ~/django-tutorial/requirements.txt
+    :lines: 2-
 
 .. note::
 
@@ -119,13 +130,13 @@ Run the Django app locally
 We will test the Django app by visiting the app in a web
 browser.
 
-Change into the ``~/django_hello_world`` directory.
+Change into the ``~/django-tutorial/django_hello_world`` directory.
 Open the settings file of the app located at
-``~/django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
+``./django_hello_world/settings.py``. Update the ``ALLOWED_HOSTS`` setting
 to allow all traffic:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/django_hello_world/settings.py
 
     ALLOWED_HOSTS = ['*']
 
@@ -142,7 +153,7 @@ Now, run the Django app to verify that it works:
     Specifying ``0.0.0.0:8000`` allows for traffic outside of the Multipass VM.
 
     When you run the command for the first time, you'll see a warning about
-    unapplied migrations. We can ignore this warning for now, as we aren't
+    migrations. We can ignore this warning for now, as we aren't
     currently performing any database operations. We'll set up the database later.
 
 Now we need the private IP address of the Multipass VM. Outside of the
@@ -181,15 +192,17 @@ pre-defined extension in Rockcraft with the ``--profile`` flag that caters
 initial rock files for specific web app frameworks. Using the
 ``django-framework`` profile, Rockcraft automates the creation of
 ``rockcraft.yaml`` and tailors the file for a Django app. Change
-back into the ``~/django-hello-world`` directory and initialize the rock:
+back into the ``~/django-tutorial`` directory and initialize the rock:
 
 .. code-block:: bash
 
     cd ..
-    rockcraft init --profile django-framework
+    rockcraft init --name django-hello-world --profile django-framework
 
-The ``rockcraft.yaml`` file will automatically be created and set the
-name based on your working directory, ``~/django-hello-world``.
+The ``rockcraft.yaml`` file will automatically be created using the name
+provided via ``--name``, keeping the generated metadata aligned with the
+``django-hello-world`` charm even though the workspace folder is called
+``django-tutorial``.
 
 Let's verify that the project file is compatible with your host machine.
 Check the architecture of your system:
@@ -207,7 +220,7 @@ Check out the contents of ``rockcraft.yaml``:
 The top of the file should look similar to the following snippet:
 
 .. code-block:: yaml
-    :caption: ~/django-hello-world/rockcraft.yaml
+    :caption: ~/django-tutorial/rockcraft.yaml
 
     name: django-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
@@ -233,7 +246,7 @@ Verify that the ``name`` is ``django-hello-world``.
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Django apps require a database. Django will use a sqlite
+Django apps require a database. Django will use a SQLite
 database by default. This won't work on Kubernetes because the database
 would disappear every time the pod is restarted -- e.g., to perform an
 upgrade -- and this database wouldn't be shared by all containers as the
@@ -245,7 +258,7 @@ imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/settings.py
     :emphasize-lines: 15,16,17
 
     """
@@ -271,7 +284,7 @@ Near the top of the ``settings.py`` file, change the ``SECRET_KEY``,
 ``DEBUG`` and ``ALLOWED_HOSTS`` variables to:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/settings.py
     :emphasize-lines: 2,5,7
 
     # SECURITY WARNING: keep the secret key used in production secret!
@@ -287,7 +300,7 @@ We will also use PostgreSQL as the database for our Django app. In
 ``DATABASES`` variable to:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/settings.py
     :emphasize-lines: 3-8
 
     DATABASES = {
@@ -304,20 +317,12 @@ We will also use PostgreSQL as the database for our Django app. In
 Save and close the ``settings.py`` file. The app will no longer run locally
 due to these changes, and we can't test the app until we've deployed
 it and connected it to the PostgreSQL database.
+:ref:`About the migrate.sh file <django-migrate-sh>` describes how to
+use the ``migrate.sh`` file to run CLI tools for `database migrations
+<https://docs.djangoproject.com/en/5.2/topics/migrations/>`__. This script
+runs before the app is initialized.
 
-.. tip::
-
-    You can use the ``migrate.sh`` file to run cli tools for database migration.
-    This script runs before the app is initialized.
-
-    See more:
-    :ref:`Django framework extension | Regarding the migrate.sh file <django-migrate-sh>`.
-
-    See more:
-    `Django database migration tooling
-    <https://docs.djangoproject.com/en/5.2/topics/migrations/>`__
-
-Now let's pack the rock:
+Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -328,10 +333,6 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several minutes to
 finish.
 
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
-
 Once Rockcraft has finished packing the Django rock, the
 terminal will respond with something similar to
 ``Packed django-hello-world_0.1_<architecture>.rock``. The file name
@@ -339,7 +340,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/django/task.yaml
@@ -357,16 +358,11 @@ This command contains the following pieces:
 - ``oci-archive``: specifies the rock we created for our Django app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
 
-.. seealso::
-
-    See more: `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
-
 
 Create the charm
 ----------------
 
-From the ``~/django-hello-world`` directory, create a new directory for
+From the ``~/django-tutorial`` directory, create a new directory for
 the charm and change inside it:
 
 .. literalinclude:: code/django/task.yaml
@@ -397,16 +393,16 @@ which means we must declare a requirement in the charm project file.
 Edit the project file by adding the following section to the end:
 
 .. literalinclude:: code/django/postgres_requires_charmcraft.yaml
-    :caption: ~/django-hello-world/charm/charmcraft.yaml
+    :caption: ~/django-tutorial/charm/charmcraft.yaml
     :language: yaml
 
 .. tip::
 
     Want to learn more about all the configurations in the
     ``django-framework`` profile? Run ``charmcraft expand-extensions``
-    from the ``~/django-hello-world/charm/`` directory.
+    from the ``~/django-tutorial/charm/`` directory.
 
-Now let's pack the charm:
+Now let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -422,10 +418,6 @@ respond with something similar to
 ``Packed django-hello-world_ubuntu-22.04-<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
 
 Deploy the Django app
 ---------------------
@@ -481,8 +473,9 @@ Integrate PostgreSQL with the Django app:
     :end-before: [docs:integrate-postgres-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Django app. You can
-monitor its progress with:
+It will take a few minutes to deploy the Django app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor
+its progress:
 
 .. code-block:: bash
 
@@ -496,21 +489,19 @@ waits to become integrated with the PostgreSQL database. Due to the
 start until the database is ready.
 
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To monitor your deployment, keep a
+``juju status`` session active in a second terminal.
 
 The Django app should now be running. We can see the status of
 the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/django-tutorial/charm
+
+    juju status
 
     Model               Controller      Cloud/Region        Version  SLA          Timestamp
     django-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  16:47:01+10:00
@@ -591,7 +582,7 @@ In this iteration, we'll add a greeting app that returns a ``Hello, world!`` gre
 
 The generated Django project doesn't come with an app, which is why
 we had to initially enable debug mode for testing.  We will need to go back
-out to the ``~/django-hello-world`` directory where the rock is and enter
+out to the ``~/django-tutorial`` directory where the rock is and enter
 into the ``./django_hello_world`` directory where the Django app
 is. Let's add a new Django app:
 
@@ -604,20 +595,20 @@ is. Let's add a new Django app:
 Open the ``greeting/views.py`` file and replace the content with:
 
 .. literalinclude:: code/django/views_greeting.py
-    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
+    :caption: ~/django-tutorial/django_hello_world/greeting/views.py
     :language: python
 
 Create the ``greeting/urls.py`` file with the following contents:
 
 .. literalinclude:: code/django/urls_greeting.py
-    :caption: ~/django-hello-world/django_hello_world/greeting/urls.py
+    :caption: ~/django-tutorial/django_hello_world/greeting/urls.py
     :language: python
 
 Open the ``django_hello_world/urls.py`` file and edit the imports for
 ``django.urls`` and the value of ``urlpatterns`` like in the following example:
 
 .. code-block:: python
-    :caption: ~/django-hello-world/django_hello_world/urls.py
+    :caption: ~/django-tutorial/django_hello_world/urls.py
     :emphasize-lines: 2,5
 
     from django.contrib import admin
@@ -633,12 +624,12 @@ Update the rock
 ~~~~~~~~~~~~~~~
 
 Since we're changing the app we should update the version of the
-rock. Go back to the ``~/django-hello-world`` directory where the rock is
+rock. Go back to the ``~/django-tutorial`` directory where the rock is
 and change the ``version`` in ``rockcraft.yaml`` to ``0.2``. The top of
 the ``rockcraft.yaml`` file should look similar to the following:
 
 .. code-block:: yaml
-    :caption: ~/django-hello-world/rockcraft.yaml
+    :caption: ~/django-tutorial/rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world
@@ -709,12 +700,12 @@ To demonstrate how to provide a configuration to the Django app,
 we will make the greeting configurable. We will expect this
 configuration option to be available in the Django app configuration under the
 keyword ``DJANGO_GREETING``. Return to the rock
-directory ``~/django-hello-world``. From there, open the
+directory ``~/django-tutorial``. From there, open the
 ``./django_hello_world/greeting/views.py`` file and replace the content
 with:
 
 .. literalinclude:: code/django/views_greeting_configuration.py
-    :caption: ~/django-hello-world/django_hello_world/greeting/views.py
+    :caption: ~/django-tutorial/django_hello_world/greeting/views.py
     :language: python
 
 
@@ -725,7 +716,7 @@ Increment the ``version`` in ``rockcraft.yaml`` to ``0.3`` such that the
 top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
-    :caption: ~/django-hello-world/rockcraft.yaml
+    :caption: ~/django-tutorial/rockcraft.yaml
     :emphasize-lines: 5
 
     name: django-hello-world
@@ -767,7 +758,7 @@ environment variables to the Django app. Add the following to
 the end of the ``charmcraft.yaml`` file:
 
 .. literalinclude:: code/django/greeting_charmcraft.yaml
-    :caption: ~/django-hello-world/charm/charmcraft.yaml
+    :caption: ~/django-tutorial/charm/charmcraft.yaml
     :language: yaml
 
 .. note::
@@ -833,7 +824,7 @@ And then you can proceed with its deletion:
     multipass purge
 
 If you'd like to manually reset your working environment, you can run the
-following in the project directory ``~/django-hello-world`` for the tutorial:
+following in the project directory ``~/django-tutorial`` for the tutorial:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -854,7 +845,7 @@ development process, including:
 - Deploying the app locally
 - Packaging the app using Rockcraft
 - Building the app with Ops code using Charmcraft
-- Deplyoing the app using Juju
+- Deploying the app using Juju
 - Integrating the app with PostgreSQL to be production ready
 - Exposing the app using an ingress
 - Adding an initial app and configuring the app

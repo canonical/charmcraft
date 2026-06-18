@@ -88,11 +88,12 @@ def test_pack_update_charm_libs_empty(
     mock_store_anonymous_client.get_library.return_value = store_lib
 
     libs_service = cast("CharmLibsService", service_factory.get("charm_libs"))
-    libs_service.write = mock.Mock(wraps=libs_service.write)
+    mock_write = mock.Mock(wraps=libs_service.write)
+    libs_service.write = mock_write
 
     pack._update_charm_libs()
 
-    libs_service.write.assert_called_once_with(store_lib)
+    mock_write.assert_called_once_with(store_lib)
 
     with check():
         emitter.assert_debug(repr(store_lib))
@@ -147,3 +148,173 @@ def test_pack_update_charm_libs_needs_update(
         emitter.assert_debug(repr(store_lib))
 
     assert path.read_text() != "Lib contents"
+
+
+class TestPackMoveArtifacts:
+    """Tests for the artifact moving logic in PackCommand._run."""
+
+    def test_managed_mode_overrides_output(
+        self,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+    ):
+        """In managed mode, parsed_args.output is overridden to Path()."""
+        parsed_args = argparse.Namespace(
+            output=pathlib.Path("/some/host/path"),
+            project_dir=None,
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=True,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+            ),
+        ):
+            pack._run(parsed_args)
+
+        assert parsed_args.output == pathlib.Path()
+
+    def test_move_artifacts_to_output_dir(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+    ):
+        """Artifacts are moved from project_dir to output_dir."""
+        project_dir = fake_project_dir
+        output_dir = pathlib.Path("/root/output")
+        output_dir.mkdir(parents=True)
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        state_service.set("artifact", "test-platform", value=artifact_name)
+
+        parsed_args = argparse.Namespace(
+            output=output_dir,
+            project_dir=project_dir,
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+            ),
+        ):
+            pack._run(parsed_args)
+
+        assert (output_dir / artifact_name).read_text() == "charm content"
+        assert not (project_dir / artifact_name).exists()
+
+    def test_move_artifacts_creates_output_dir(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+    ):
+        """Output directory is created if it doesn't exist."""
+        project_dir = fake_project_dir
+        output_dir = pathlib.Path("/root/nonexistent/output")
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        state_service.set("artifact", "test-platform", value=artifact_name)
+
+        parsed_args = argparse.Namespace(
+            output=output_dir,
+            project_dir=project_dir,
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+            ),
+        ):
+            pack._run(parsed_args)
+
+        assert (output_dir / artifact_name).read_text() == "charm content"
+
+    def test_no_move_when_project_dir_equals_output_dir(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+    ):
+        """Regression test for https://github.com/canonical/charmcraft/issues/2361."""
+        project_dir = fake_project_dir
+        output_dir = fake_project_dir  # Same as project_dir
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        # The artifact exists in the project dir (as it would after a real managed build).
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        state_service.set("artifact", "test-platform", value=artifact_name)
+
+        parsed_args = argparse.Namespace(
+            output=output_dir,
+            project_dir=project_dir,
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+            ),
+        ):
+            pack._run(parsed_args)
+
+        # Artifact should still be in project_dir (no move since dirs are the same)
+        assert (project_dir / artifact_name).read_text() == "charm content"

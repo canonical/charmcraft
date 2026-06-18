@@ -1,3 +1,8 @@
+[project]
+name = "my-charm"
+dynamic = ["version"]
+requires-python = "~=3.14.0"  # For a smaller lock file.
+
 # Testing tools configuration
 [tool.coverage.run]
 branch = true

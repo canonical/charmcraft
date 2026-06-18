@@ -795,22 +795,159 @@ def test_instantiate_bases_charm_error(
         project.BasesCharm(**values)
 
 
-@pytest.mark.parametrize("base", ["ubuntu@18.04", "ubuntu@22.04"])
-def test_devel_bases(monkeypatch, base):
-    monkeypatch.setattr(const, "DEVEL_BASE_STRINGS", [base])
+@pytest.mark.parametrize("base", const.SUPPORTED_BASE_STRINGS)
+def test_supported_base_works_with_its_own_build_base(base: str):
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": base,
+            "build-base": base,
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "nil"}},
+        }
+    )
 
+
+@pytest.mark.parametrize("base", const.DEVEL_BASE_STRINGS)
+def test_devel_base_needs_build_base(base: str):
     with pytest.raises(
         pydantic.ValidationError,
-        match=r"requires a build-base \(recommended: 'build-base: ubuntu@devel'\)",
+        match=r"requires a build-base \(recommended: 'build-base: ubuntu@(devel|\d\d\.\d\d)'\)",
     ):
-        project.PlatformCharm(
-            type="charm",
-            name="test-charm",
-            summary="",
-            description="",
-            base=base,
-            platforms={"amd64": None},
-            parts={"charm": {"plugin": "charm"}},
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": base,
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "nil"}},
+            }
+        )
+
+
+def test_resolute_base_does_not_need_build_base():
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "nil"}},
+        }
+    )
+
+
+def test_resolute_base_supports_reactive_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "reactive"}},
+        }
+    )
+
+
+def test_resolute_base_supports_charm_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "charm"}},
+        }
+    )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_charm_plugin_is_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin_without_env_var():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+def test_legacy_plugins_are_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@25.10'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@25.10",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "reactive"}},
+            }
         )
 
 
@@ -899,11 +1036,10 @@ def test_read_charm_from_yaml_file_error(filename, errors):
         ({"name": "ubuntu", "channel": "24.04"}, False),
         ({"name": "ubuntu", "channel": "24.10"}, False),
         ({"name": "ubuntu", "channel": "25.04"}, False),
+        ({"name": "ubuntu", "channel": "25.10"}, False),
+        ({"name": "ubuntu", "channel": "26.04"}, False),
         ({"name": "almalinux", "channel": "9"}, True),
     ],
 )
 def test_check_legacy_bases(base, expected):
     assert project._check_base_is_legacy(base) == expected
-
-
-# endregion

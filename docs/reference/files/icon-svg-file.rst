@@ -47,7 +47,7 @@ Including the file
 If your file is not in your project directory but not included in the charm, you can
 use the :ref:`craft_parts_dump_plugin` to include this file in your charm.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     This example is the :ref:`charmcraft-yaml-key-parts` key of a project file that uses
     the :ref:`craft_parts_poetry_plugin` to build a charm, augmented to add the charm's

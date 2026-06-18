@@ -5,11 +5,36 @@ priority: 100
 environment:
   CHARM_SNAP_CHANNEL/stable: stable
   CHARM_SNAP_CHANNEL/two: 2.x/stable
+  CHARM_SNAP_CHANNEL/resolute: latest/candidate
+  BASE_CHANNEL/stable,two: "22.04"
+  BASE_CHANNEL/resolute: "26.04"
 
 prepare: |
   cd reactivecharm
 
-  sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
+  if [ "$BASE_CHANNEL" = "26.04" ]; then
+    cat > charmcraft.yaml <<EOF
+  type: "charm"
+  base: ubuntu@26.04
+  platforms:
+    amd64:
+  parts:
+    charm:
+      source: .
+      plugin: reactive
+      reactive-charm-build-arguments:
+        - -v
+        - --binary-wheels-from-source
+        - --upgrade-buildvenv-core-deps
+        - --ignore-requires-python
+      build-snaps:
+        - charm/$CHARM_SNAP_CHANNEL
+      build-packages: [python3-dev]
+  EOF
+  else
+    sed -i "s|BASE_CHANNEL|$BASE_CHANNEL|" charmcraft.yaml
+    sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
+  fi
 
   git init
   git config --global --add safe.directory $PWD

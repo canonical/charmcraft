@@ -419,9 +419,9 @@ def _process_run(cmd: list[str]) -> None:
     except Exception as exc:
         raise RuntimeError(f"Subprocess command {cmd} execution crashed: {exc!r}")
 
-    # https://github.com/microsoft/pylance-release/issues/2385
-    for line in proc.stdout:  # pyright: ignore[reportOptionalIterable]
-        print(f"   :: {line.rstrip()}")
+    if proc.stdout is not None:
+        for line in proc.stdout:
+            print(f"   :: {line.rstrip()}")
     retcode = proc.wait()
 
     if retcode:

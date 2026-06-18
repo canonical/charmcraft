@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 from typing import Any
 
 import craft_application
@@ -130,12 +131,22 @@ class Charmcraft(craft_application.Application):
             )
         except ProjectFileMissingError:
             return plugins
-        bases = {build_info.build_base for build_info in full_build_plan}
-        for base in bases:
-            if str(base) not in const.CHARM_OR_REACTIVE_BASES:
-                plugins.pop("charm")
-                plugins.pop("reactive")
-                break
+        bases = {str(build_info.build_base) for build_info in full_build_plan}
+        effective_charm_bases = const.CHARM_PLUGIN_BASES
+        if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+            effective_charm_bases = (
+                effective_charm_bases | const.CHARM_PLUGIN_EXPERIMENTAL_BASES
+            )
+        if any(base not in effective_charm_bases for base in bases):
+            plugins.pop("charm", None)
+        effective_reactive_bases = const.REACTIVE_PLUGIN_BASES
+        experimental_env = os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR)
+        if experimental_env and util.strtobool(str(experimental_env)):
+            effective_reactive_bases = (
+                effective_reactive_bases | const.REACTIVE_PLUGIN_EXPERIMENTAL_BASES
+            )
+        if any(base not in effective_reactive_bases for base in bases):
+            plugins.pop("reactive", None)
 
         return plugins
 
@@ -147,15 +158,21 @@ class Charmcraft(craft_application.Application):
             dispatcher = self._get_dispatcher()
             dispatcher.load_command(self.app_config)
             parsed_args = dispatcher.parsed_args()
-            self.project_dir = (
+            new_project_dir = (
                 getattr(parsed_args, "project_dir", self.project_dir)
                 .expanduser()
                 .resolve()
             )
-            self.services.update_kwargs(
-                "project",
-                project_dir=self.project_dir,
-            )
+            if new_project_dir != self.project_dir:
+                self.project_dir = new_project_dir
+                self.services.update_kwargs(
+                    "project",
+                    project_dir=self.project_dir,
+                )
+                # The project service may have been cached during plugin loading
+                # with the wrong project_dir (CWD instead of the -p argument).
+                # Evict it so it gets re-created with the correct project_dir.
+                self.services._services.pop("project", None)
         return super()._run_inner()
 
 

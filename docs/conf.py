@@ -361,3 +361,15 @@ inject_version_into_prolog(
     "Django==",
     "conf_django_version",
 )
+
+inject_version_into_prolog(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "fastapi", "requirements.txt")),
+    "fastapi[standard]==",
+    "conf_fastapi_version",
+)
+
+inject_version_into_prolog(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "flask", "requirements.txt")),
+    "Flask==",
+    "conf_flask_version",
+)

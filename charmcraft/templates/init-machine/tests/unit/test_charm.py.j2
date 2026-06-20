@@ -6,7 +6,7 @@
 import pytest
 from ops import testing
 
-from charm import {{ class_name }}
+from charm import APP_SECRET_LABEL, {{ class_name }}
 
 
 def mock_get_version():
@@ -24,3 +24,129 @@ def test_start(monkeypatch: pytest.MonkeyPatch):
     # Assert:
     assert state_out.workload_version is not None
     assert state_out.unit_status == testing.ActiveStatus()
+
+
+def test_start_creates_app_secret(monkeypatch: pytest.MonkeyPatch):
+    """Test that the charm creates an app-managed workload secret on start (leader)."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    monkeypatch.setattr("charm.{{ workload_module }}.get_version", mock_get_version)
+    state_in = testing.State(leader=True)
+
+    # Act:
+    state_out = ctx.run(ctx.on.start(), state_in)
+
+    # Assert — the app-owned secret should appear in the output state with a 'password' key:
+    app_secrets = [s for s in state_out.secrets if s.label == APP_SECRET_LABEL]
+    assert len(app_secrets) == 1
+    assert app_secrets[0].latest_content is not None
+    assert "password" in app_secrets[0].latest_content
+
+
+def test_start_app_secret_already_exists(monkeypatch: pytest.MonkeyPatch):
+    """Test that start is idempotent when the app secret already exists."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    monkeypatch.setattr("charm.{{ workload_module }}.get_version", mock_get_version)
+    existing_secret = testing.Secret(
+        tracked_content={"password": "existing-password"},
+        label=APP_SECRET_LABEL,
+        owner="app",
+    )
+    state_in = testing.State(leader=True, secrets={existing_secret})
+
+    # Act:
+    state_out = ctx.run(ctx.on.start(), state_in)
+
+    # Assert — the existing secret is still present; no extra secret was created:
+    app_secrets = [s for s in state_out.secrets if s.label == APP_SECRET_LABEL]
+    assert len(app_secrets) == 1
+
+
+def test_config_changed_with_api_token():
+    """Test that config-changed resolves a user-provided secret and goes active."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"token": "my-secret-api-token"},
+        id="secret:abcdef123456",
+        owner=None,  # user-owned secret (not app- or unit-owned)
+    )
+    state_in = testing.State(
+        secrets={secret},
+        config={"api-token": secret.id},
+    )
+
+    # Act:
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert:
+    assert state_out.unit_status == testing.ActiveStatus()
+
+
+def test_config_changed_api_token_not_found():
+    """Test that config-changed blocks when the secret URI is not accessible."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    state_in = testing.State(
+        config={"api-token": "secret:doesnotexist"},
+        # No matching secret in state — simulates the secret not being granted.
+    )
+
+    # Act:
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert:
+    assert isinstance(state_out.unit_status, testing.BlockedStatus)
+
+
+def test_config_changed_no_token():
+    """Test that config-changed without api-token set does nothing."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    state_in = testing.State()
+
+    # Act:
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert — status unchanged (charm hasn't done anything yet):
+    assert not isinstance(state_out.unit_status, testing.BlockedStatus)
+
+
+def test_secret_rotate():
+    """Test that secret-rotate generates a new revision of the workload password."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"password": "old-password"},
+        label=APP_SECRET_LABEL,
+        owner="app",
+    )
+    state_in = testing.State(secrets={secret}, leader=True)
+
+    # Act:
+    state_out = ctx.run(ctx.on.secret_rotate(secret), state_in)
+
+    # Assert — a new revision with a different password should have been added:
+    out_secret = state_out.get_secret(label=APP_SECRET_LABEL)
+    assert out_secret.latest_content is not None
+    assert "password" in out_secret.latest_content
+    assert out_secret.latest_content["password"] != "old-password"
+
+
+def test_secret_expired():
+    """Test that secret-expired removes the expired revision without error."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"password": "current-password"},
+        label=APP_SECRET_LABEL,
+        owner="app",
+    )
+    state_in = testing.State(secrets={secret}, leader=True)
+
+    # Act — simulate the tracked revision expiring:
+    state_out = ctx.run(ctx.on.secret_expired(secret, revision=1), state_in)
+
+    # Assert — the charm should not have errored or blocked:
+    assert not isinstance(state_out.unit_status, testing.BlockedStatus)

@@ -5,7 +5,9 @@
 """Charm the application."""
 
 import logging
+import secrets
 import time
+from datetime import timedelta
 
 import ops
 
@@ -15,6 +17,7 @@ import {{ workload_module }}
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "some-service"  # Name of Pebble service that runs in the workload container.
+APP_SECRET_LABEL = "workload-password"  # Label for the app-managed workload secret.
 
 
 class {{ class_name }}(ops.CharmBase):
@@ -23,6 +26,9 @@ class {{ class_name }}(ops.CharmBase):
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
         framework.observe(self.on["some_container"].pebble_ready, self._on_pebble_ready)
+        framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.secret_rotate, self._on_secret_rotate)
+        framework.observe(self.on.secret_expired, self._on_secret_expired)
         self.container = self.unit.get_container("some-container")
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
@@ -49,7 +55,49 @@ class {{ class_name }}(ops.CharmBase):
         version = {{ workload_module }}.get_version()
         if version is not None:
             self.unit.set_workload_version(version)
+        # Create the app-managed workload secret on first start (leader only).
+        if self.unit.is_leader():
+            self._ensure_app_secret()
         self.unit.status = ops.ActiveStatus()
+
+    def _on_config_changed(self, event: ops.ConfigChangedEvent):
+        """Handle config-changed event — resolve the user-provided api-token secret."""
+        api_token_id = self.config.get("api-token")
+        if not api_token_id:
+            return
+        try:
+            secret = self.model.get_secret(id=api_token_id)
+            content = secret.get_content(refresh=True)
+            token = content.get("token", "")
+            # Use 'token' to configure your workload, for example:
+            # {{ workload_module }}.configure(api_token=token)
+            logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))
+        except ops.SecretNotFoundError:
+            self.unit.status = ops.BlockedStatus("api-token secret not found or not granted")
+            return
+        self.unit.status = ops.ActiveStatus()
+
+    def _ensure_app_secret(self) -> ops.Secret:
+        """Get or create the app-managed workload password (idempotent, leader only)."""
+        try:
+            return self.model.get_secret(label=APP_SECRET_LABEL)
+        except ops.SecretNotFoundError:
+            return self.app.add_secret(
+                {"password": secrets.token_hex(32)},
+                label=APP_SECRET_LABEL,
+                rotate=ops.SecretRotate.MONTHLY,
+                expire=timedelta(days=90),
+            )
+
+    def _on_secret_rotate(self, event: ops.SecretRotateEvent):
+        """Handle secret-rotate event — generate a fresh workload password."""
+        if event.secret.label == APP_SECRET_LABEL:
+            event.secret.set_content({"password": secrets.token_hex(32)})
+
+    def _on_secret_expired(self, event: ops.SecretExpiredEvent):
+        """Handle secret-expired event — remove the expired revision."""
+        if event.secret.label == APP_SECRET_LABEL:
+            event.secret.remove_revision(event.revision)
 
     def is_ready(self) -> bool:
         """Check whether the workload is ready to use."""

@@ -64,6 +64,8 @@ class RemoteBuildService(remotebuild.RemoteBuildService):
         **_: Any,
     ) -> launchpad.models.Recipe:
         """Create a new recipe."""
+        if self._lp_project is None:
+            raise RuntimeError("_lp_project must be set before calling _new_recipe.")
         try:
             return launchpad.models.CharmRecipe.new(
                 self.lp,

@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-django-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Django app. In this tutorial, we use the django-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Django app
 ==================================================
 
@@ -494,6 +497,9 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/django-tutorial/charm
 
     juju status
 

@@ -28,17 +28,14 @@ import charmcraft
 project = "Charmcraft"
 author = "Canonical"
 
-# Sidebar documentation title; best kept reasonably short
-# The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
-# The commit hash in the dev release version confuses the spellchecker
-if ".post" in release:
-    release = "dev"
-else:
-    major, minor, *_ = release.split(".")
+# Version string in sidebar
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
+    # Because of Autotools, we can safely assume the version starts with `n.n`
+    major, minor, *_ = charmcraft.__version__.split(".")
     release = f"{major}.{minor}"
-
-html_title = project + " documentation"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
@@ -137,23 +134,23 @@ rediraffe_redirects = "redirects.txt"
 linkcheck_anchors_ignore = [
     "#",
     ":",
-    r"https://github\.com/.*",
 ]
 linkcheck_ignore = [
-    # Ignore releases, since we'll include the next release before it exists.
-    r"^https://github.com/canonical/[a-z]*craft[a-z-]*/releases/.*",
     # Entire domains to ignore due to flakiness or issues
+    "https://github.com",
     r"^https://www.gnu.org/",
     r"^https://crates.io/",
     r"^https://([\w-]*\.)?npmjs.org",
     r"^https://rsync.samba.org",
     r"^https://ubuntu.com",
-    r"https://github.com/.*#",
     "http://django-hello-world",
     "http://www.inkscape.org",
     "https://matrix.to",
     "https://www.npmjs.com/",
     r"^https://www.mysql.com/$",
+    # 2026-06-03: Ignore Canonical sites until filtering is resolved
+    "https://snapcraft.io",
+    "https://juju.is",
 ]
 
 # Give linkcheck multiple tries on failure
@@ -217,6 +214,7 @@ exclude_patterns = [
     "common/craft-parts/reference/step_output_directories.rst",
     "common/craft-parts/reference/plugins/ant_plugin.rst",
     "common/craft-parts/reference/plugins/autotools_plugin.rst",
+    "common/craft-parts/reference/plugins/bazel_plugin.rst",
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/colcon_plugin.rst",
@@ -224,12 +222,14 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
     "common/craft-parts/reference/plugins/gradle_plugin.rst",
+    "common/craft-parts/reference/plugins/gradle_use_plugin.rst",
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
     "common/craft-parts/reference/plugins/maven_use_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
     "common/craft-parts/reference/plugins/npm_plugin.rst",
+    "common/craft-parts/reference/plugins/npm_use_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",
     "common/craft-parts/reference/plugins/python_plugin.rst",
     "common/craft-parts/reference/plugins/python_v2_plugin.rst",

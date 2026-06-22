@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-flask-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Flask app. In this tutorial, we use the flask-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Flask app
 =================================================
 
@@ -352,6 +355,9 @@ the deployment using ``juju status`` which should be similar to the
 following output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/flask-hello-world/charm
 
     juju status
 
@@ -657,12 +663,18 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/flask-hello-world/charm
 
     curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
 
     Hi!
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/flask-hello-world/charm
 
     curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
 

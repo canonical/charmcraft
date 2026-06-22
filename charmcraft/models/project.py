@@ -184,6 +184,18 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     in order to preserve field order. It's registered as a virtual child class below.
     """
 
+    @classmethod
+    def _providers_base(cls, base: str) -> Any:  # noqa: ANN401
+        """Get a BaseAlias from the Project base.
+
+        This overrides the base implementation to return None if the base is unknown,
+        preventing validation errors on build-base for new or experimental bases.
+        """
+        try:
+            return super()._providers_base(base)
+        except ValueError:
+            return None
+
     type: Literal["charm"]
     title: models.ProjectTitle | None = None
     summary: CharmcraftSummaryStr | None = None

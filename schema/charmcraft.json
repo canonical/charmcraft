@@ -900,12 +900,10 @@
 								"ubuntu@24.04",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
+								"ubuntu@26.04",
+								"ubuntu@26.10",
 								"almalinux@9"
 							],
-							"type": "string"
-						},
-						{
-							"const": "ubuntu@26.04",
 							"type": "string"
 						},
 						{
@@ -925,6 +923,8 @@
 								"ubuntu@24.04",
 								"ubuntu@25.04",
 								"ubuntu@25.10",
+								"ubuntu@26.04",
+								"ubuntu@26.10",
 								"almalinux@9"
 							],
 							"type": "string"

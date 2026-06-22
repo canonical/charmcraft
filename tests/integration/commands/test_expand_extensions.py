@@ -27,7 +27,12 @@ class MyFakeExtension(FakeExtension):
     """A fake test Extension that has complete behavior"""
 
     name = "test-extension"
-    bases = [("ubuntu", "22.04")]
+    bases = [
+        ("ubuntu", "22.04"),
+        ("ubuntu", "24.04"),
+        ("ubuntu", "26.04"),
+        ("ubuntu", "26.10"),
+    ]
 
     @override
     def get_root_snippet(self) -> dict[str, Any]:

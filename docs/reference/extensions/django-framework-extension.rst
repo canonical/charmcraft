@@ -168,6 +168,12 @@ The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
+The configuration option ``django-secret-key-id`` is automatically added by the
+``django-framework`` extension. The secret must contain a single key ``value``,
+which holds the actual Django secret key and is exposed as the
+``DJANGO_SECRET_KEY`` environment variable. If this configuration option is not set,
+``DJANGO_SECRET_KEY`` is automatically assigned a random value.
+
    See more: :external+juju:ref:`Juju | Secret <secret>`
 
 .. _django-grafana-graphs:

@@ -45,12 +45,17 @@ def _repr_str(dumper: yaml.SafeDumper, data: str) -> yaml.ScalarNode:
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 
+def _repr_anyurl(dumper: yaml.SafeDumper, data: pydantic.AnyUrl) -> yaml.ScalarNode:
+    """Represent AnyUrl as a string."""
+    return _repr_str(dumper, str(data))
+
+
 def dump_yaml(data: Any) -> str:  # noqa: ANN401 - yaml.dump takes anything, so why can't we?
     """Dump a craft model to a YAML string."""
     yaml.add_representer(str, _repr_str, Dumper=yaml.SafeDumper)
     yaml.add_representer(
         pydantic.AnyUrl,
-        _repr_str,  # type: ignore[arg-type]
+        _repr_anyurl,
         Dumper=yaml.SafeDumper,
     )
     yaml.add_representer(

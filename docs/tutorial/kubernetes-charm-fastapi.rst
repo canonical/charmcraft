@@ -1,5 +1,7 @@
 .. _write-your-first-kubernetes-charm-for-a-fastapi-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a FastAPI app. In this tutorial, we use the fastapi-framework extension to package and orchestrate the app.
 
 Write your first Kubernetes charm for a FastAPI app
 ===================================================
@@ -44,7 +46,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 ~~~~~~~~~~~~~~
 
-#. Create a FastAPI app.
+#. Create a FastAPI app with FastAPI 0.136.1.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your FastAPI app on a local
@@ -91,6 +93,7 @@ Then, copy the following text into it, and save:
 
 .. literalinclude:: code/fastapi/requirements.txt
     :caption: ~/fastapi-hello-world/requirements.txt
+    :lines: 2-
 
 .. note::
 
@@ -401,6 +404,9 @@ the deployment using ``juju status``, which should be similar to the following
 output:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/fastapi-hello-world/charm
 
     juju status
 
@@ -711,12 +717,18 @@ be incremented each time the root endpoint is requested. If we repeat
 this process, the output should be as follows:
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/fastapi-hello-world/charm
 
     curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
 
     {"message":"Hi!"}
 
 .. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/fastapi-hello-world/charm
 
     curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
 

@@ -37,6 +37,7 @@ execute: |
   sudo apt update && sudo apt install -y openjdk-21-jdk
   # [docs:install-devpack-for-spring-end]
 
+  # Make sure to update the version in the tutorial if you update boot-version here.
   # [docs:init-spring-boot]
   devpack-for-spring boot start \
     --path spring-boot-hello-world \

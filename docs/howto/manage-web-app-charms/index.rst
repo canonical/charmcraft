@@ -11,10 +11,11 @@ web app frameworks. While the overall basic logic is the same as
 :ref:`managing a charm <manage-charms>`, the following guides are about
 the 12-factor app charm workflow.
 
-Initialization
---------------
 
 .. _init-12-factor-charms:
+
+Initialization
+--------------
 
 You will need a rock for your 12-factor app charm.
 :external+rockcraft:ref:`Prepare a 12-factor app rock <set-up-web-app-rock>`
@@ -22,39 +23,39 @@ with Rockcraft.
 
 Once you have a rock, use ``charmcraft init`` and specify the relevant profile:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: Django
+    .. tab-item:: Django
 
         .. code-block:: bash
 
             charmcraft init --profile django-framework
 
-    .. group-tab:: Express
+    .. tab-item:: Express
 
         .. code-block:: bash
 
             charmcraft init --profile expressjs-framework
 
-    .. group-tab:: FastAPI
+    .. tab-item:: FastAPI
 
         .. code-block:: bash
 
             charmcraft init --profile fastapi-framework
 
-    .. group-tab:: Flask
+    .. tab-item:: Flask
 
         .. code-block:: bash
 
             charmcraft init --profile flask-framework
 
-    .. group-tab:: Go
+    .. tab-item:: Go
 
         .. code-block:: bash
 
             charmcraft init --profile go-framework
 
-    .. group-tab:: Spring Boot
+    .. tab-item:: Spring Boot
 
         .. code-block:: bash
 

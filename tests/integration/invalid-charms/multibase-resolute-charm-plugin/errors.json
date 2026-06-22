@@ -4,7 +4,7 @@
     "loc": [
       "parts"
     ],
-    "msg": "Value error, Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@26.04'",
+    "msg": "Value error, Cannot use 'charm' plugin with base 'ubuntu@26.04'",
     "input": {
       "my-part": {
         "plugin": "charm",
@@ -12,7 +12,7 @@
       }
     },
     "ctx": {
-      "error": "Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@26.04'"
+      "error": "Cannot use 'charm' plugin with base 'ubuntu@26.04'"
     }
   }
 ]

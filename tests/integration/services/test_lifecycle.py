@@ -37,7 +37,7 @@ def test_lifecycle_build_for_invalid(
             craft_platforms.BuildInfo(
                 platform="something",
                 build_on=craft_platforms.DebianArchitecture.from_host(),
-                build_for="invalid",  # pyright: ignore[reportArgumentType]
+                build_for="invalid",  # ty: ignore[invalid-argument-type]
                 build_base=craft_platforms.DistroBase(distro.id(), distro.version()),
             )
         ],
@@ -85,7 +85,7 @@ def test_lifecycle_build_for_multi(
             craft_platforms.BuildInfo(
                 platform="something",
                 build_on=host_arch,
-                build_for=f"{foreign_arch}-{host_arch}",  # pyright: ignore[reportArgumentType]
+                build_for=f"{foreign_arch}-{host_arch}",  # ty: ignore[invalid-argument-type]
                 build_base=craft_platforms.DistroBase(distro.id(), distro.version()),
             )
         ],

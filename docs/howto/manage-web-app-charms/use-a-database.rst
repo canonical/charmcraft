@@ -249,9 +249,11 @@ the Alembic related files and packages needed to run the database migrations.
 
 Pack the rock and upload it to the local container registry:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: MicroK8s
+    .. tab-item:: MicroK8s
+        :sync: microk8s
+
         .. code-block:: bash
 
             rockcraft pack
@@ -262,7 +264,9 @@ Pack the rock and upload it to the local container registry:
             oci-archive:fastapi-hello-world_0.2_$(dpkg --print-architecture).rock \
             docker://localhost:32000/fastapi-hello-world:0.2
 
-    .. group-tab:: Canonical K8s
+    .. tab-item:: Canonical K8s
+        :sync: canonical-k8s
+
         .. code-block:: bash
 
             rockcraft pack
@@ -292,15 +296,19 @@ Deploy the app
 
 Deploy the app with Juju:
 
-.. tabs::
+.. tab-set::
 
-    .. group-tab:: MicroK8s
+    .. tab-item:: MicroK8s
+        :sync: microk8s
+
         .. code-block:: bash
 
             juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
             --resource app-image=localhost:32000/fastapi-hello-world:0.2
 
-    .. group-tab:: Canonical K8s
+    .. tab-item:: Canonical K8s
+        :sync: canonical-k8s
+
         .. code-block:: bash
 
             juju deploy ./charm/fastapi-hello-world_$(dpkg --print-architecture).charm \
@@ -357,4 +365,3 @@ Send a GET request:
 
 If successful, the API returns the JSON object of the created user,
 confirming that the app can write to the persistent MySQL storage.
-

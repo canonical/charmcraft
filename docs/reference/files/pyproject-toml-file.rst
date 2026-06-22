@@ -7,9 +7,10 @@
 The ``pyproject.toml`` file in your charm's root directory is a typical
 Python ``pyproject.toml`` file.
 
-    See more: `pip |
-    pyproject.toml
-    <https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/>`_
+.. seealso::
+
+    `pyproject.toml <https://pip.pypa.io/en/stable/reference/build-system>`__ in the pip
+    documentation.
 
 When a charm is initialized with the Kubernetes or machine profile, Charmcraft creates
 this file with the following contents:

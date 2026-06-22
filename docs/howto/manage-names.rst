@@ -30,7 +30,7 @@ To view the names you've registered on Charmhub, run
 Unregister a name
 -----------------
 
-To deregister a name, run :ref:`charmcraft unregister <ref_commands_unregister>`
+To unregister a name, run :ref:`charmcraft unregister <ref_commands_unregister>`
 followed by the name.
 
 .. caution::

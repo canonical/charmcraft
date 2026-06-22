@@ -7,11 +7,10 @@ References describe the structure and function of the individual components in
 Charmcraft.
 
 
-Command-line reference
-----------------------
+Commands
+--------
 
-The following pages document all of Charmcraft's commands, including their usage,
-options, and arguments:
+Charmcraft is operated from the command line, with a command for each function.
 
 - :ref:`reference-lifecycle-commands`
 - :ref:`reference-store-commands`
@@ -25,37 +24,52 @@ options, and arguments:
 Files
 -----
 
-In the context of Charmcraft, a *file* refers to any file in a project that can be
-initialized or packed. The files are documented in the following pages:
+The following files are initialized and packed in a Charmcraft project:
 
-- :ref:`actions-yaml-file`
+Project file
+~~~~~~~~~~~~
+
 - :ref:`charmcraft-yaml-file`
-- :ref:`config-yaml-file`
-- :ref:`contributing-md-file`
-- :ref:`dispatch-file`
-- :ref:`icon-svg-file`
-- :ref:`libname-py-file`
+
+
+Project information
+~~~~~~~~~~~~~~~~~~~
+
 - :ref:`license-file`
-- :ref:`lxd-profile-yaml-file`
-- :ref:`manifest-yaml-file`
-- :ref:`metadata-yaml-file`
-- :ref:`pyproject-toml-file`
 - :ref:`readme-md-file`
-- :ref:`requirements-txt-file`
+- :ref:`contributing-md-file`
+- :ref:`icon-svg-file`
+
+
+Python modules
+~~~~~~~~~~~~~~
+
 - :ref:`src-charm-py-file`
 - :ref:`src-workload-py-file`
+- :ref:`libname-py-file`
+
+
+Dependency management
+~~~~~~~~~~~~~~~~~~~~~
+
+- :ref:`pyproject-toml-file`
+- :ref:`requirements-txt-file`
+- :ref:`uv-lock-file`
+
+
+Testing
+~~~~~~~
+
+- :ref:`tests-integration-conftest-py-file`
 - :ref:`tests-integration-test-charm-py-file`
 - :ref:`tests-unit-test-charm-py-file`
-- :ref:`tox-ini-file`
-- :ref:`uv-lock-file`
 
 
 Plugins and extensions
 ----------------------
 
-Extensions help initialize your project with template YAML and Ops-powered Python to
-remove the boilerplate steps of crafting charms for Django, FastAPI, Flask, and Go
-applications.
+Extensions initialize your project with YAML and Ops catered to supported web
+frameworks.
 
 - :ref:`profile`
 - :ref:`extensions`

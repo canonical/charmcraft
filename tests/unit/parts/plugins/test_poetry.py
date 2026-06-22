@@ -37,7 +37,7 @@ def test_get_venv_directory(
 
 
 def test_get_pip_install_commands(poetry_plugin: plugins.PoetryPlugin):
-    poetry_plugin._get_pip = lambda: "/python -m pip"
+    poetry_plugin._get_pip = lambda: "/python -m pip"  # ty: ignore[invalid-assignment]
 
     assert poetry_plugin._get_pip_install_commands(
         pathlib.Path("/my dir/reqs.txt")

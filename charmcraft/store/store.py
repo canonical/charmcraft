@@ -180,6 +180,7 @@ class Store:
     """The main interface to the Store's API."""
 
     def __init__(self, charmhub_config, ephemeral=False, needs_auth=True):
+        self._client: Client | AnonymousClient
         if needs_auth:
             try:
                 self._client = Client(
@@ -191,7 +192,8 @@ class Store:
                 raise CraftError(str(error)) from error
         else:
             self._client = AnonymousClient(
-                charmhub_config.api_url, charmhub_config.storage_url
+                charmhub_config.api_url,
+                charmhub_config.storage_url,
             )
 
     def login(

@@ -116,7 +116,10 @@ class PackCommand(lifecycle.PackCommand):
         project = cast(models.Charm, self._services.project)
 
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(project.bases)
+        if isinstance(project, models.BasesCharm):
+            len_configured_bases = len(project.bases)
+        else:
+            len_configured_bases = 0
         for bases_index in bases_indices:
             if bases_index < 0:
                 raise CraftError(msg.format(bases_index))

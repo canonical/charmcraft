@@ -2,13 +2,16 @@ name: Spread tests for docs
 on:
   pull_request:
     paths:
+      - .github/workflow/spread-docs.yaml
       - spread.yaml
+      - .readthedocs.yaml
       - docs/**/code/**
   push:
     branches:
       - main
     paths:
       - spread.yaml
+      - .readthedocs.yaml
       - docs/**/code/**
   schedule:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
@@ -25,7 +28,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
@@ -78,14 +81,14 @@ jobs:
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
 
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: 1.26
 
       - name: Install spread
         run: |

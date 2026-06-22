@@ -29,7 +29,7 @@ an extension (currently, ``flask-framework``), and your
 ``rockcraft.yaml`` / ``charmcraft.yaml > extensions`` lists this
 extension.
 
-.. collapse:: Example
+.. dropdown:: Example
 
    .. code-block:: bash
 
@@ -101,7 +101,7 @@ To view details about what that extension is adding to your charm, set the
 ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,
 then run  ``charmcraft expand-extensions``. For example:
 
-.. collapse:: Expanding an extension
+.. dropdown:: Expanding an extension
 
    .. code-block:: bash
 

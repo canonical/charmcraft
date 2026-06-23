@@ -81,7 +81,7 @@ The ``charmcraft init`` command now generates charm project files with improved
 test scaffolding:
 
 - Templates now use `pytest-jubilant
-  <https://pytest-jubilant.readthedocs.io/en/stable/>`__ as the test runner for
+  <https://documentation.ubuntu.com/jubilant/>`__ as the test runner for
   integration tests, replacing the previous custom helpers. The
   ``@pytest.mark.juju_setup`` marker is included in integration test scaffolding for
   machine and Kubernetes profiles.

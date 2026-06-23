@@ -37,8 +37,6 @@ else:  # Branch build
     rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
     release = "dev" if rtd_version == "latest" else rtd_version
 
-html_title = project + " documentation"
-
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 

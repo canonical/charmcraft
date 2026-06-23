@@ -28,17 +28,14 @@ import charmcraft
 project = "Charmcraft"
 author = "Canonical"
 
-# Sidebar documentation title; best kept reasonably short
-# The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
-# The commit hash in the dev release version confuses the spellchecker
-if ".post" in release:
-    release = "dev"
-else:
-    major, minor, *_ = release.split(".")
+# Version string in sidebar
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
+    # Because of Autotools, we can safely assume the version starts with `n.n`
+    major, minor, *_ = charmcraft.__version__.split(".")
     release = f"{major}.{minor}"
-
-html_title = project + " documentation"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
@@ -197,6 +194,7 @@ extensions = [
 
 # Excludes files or directories from processing
 exclude_patterns = [
+    "release-notes/charmcraft-4.4.rst",
     "README.md",  # Docs README
     "reuse",
     "common/craft-parts/explanation/lifecycle.rst",
@@ -217,6 +215,7 @@ exclude_patterns = [
     "common/craft-parts/reference/step_output_directories.rst",
     "common/craft-parts/reference/plugins/ant_plugin.rst",
     "common/craft-parts/reference/plugins/autotools_plugin.rst",
+    "common/craft-parts/reference/plugins/bazel_plugin.rst",
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/colcon_plugin.rst",
@@ -224,12 +223,14 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
     "common/craft-parts/reference/plugins/gradle_plugin.rst",
+    "common/craft-parts/reference/plugins/gradle_use_plugin.rst",
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
     "common/craft-parts/reference/plugins/maven_use_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
     "common/craft-parts/reference/plugins/npm_plugin.rst",
+    "common/craft-parts/reference/plugins/npm_use_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",
     "common/craft-parts/reference/plugins/python_plugin.rst",
     "common/craft-parts/reference/plugins/python_v2_plugin.rst",

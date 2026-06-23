@@ -200,7 +200,7 @@ def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path, emitter) 
         == 0
     )
 
-    emitter.assert_warning(CHARMLIBS_DEPRECATION_WARNING)
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 def test_create_lib_warns_deprecation(

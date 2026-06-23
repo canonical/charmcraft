@@ -43,7 +43,7 @@ Ubuntu 26.04 LTS support for the reactive plugin
 
 The :ref:`reactive plugin <reference-charmcraft-yaml-reactive-plugin>` can now build
 charms on the Ubuntu 26.04 LTS base. Because the python3-venv package was moved
-to the `universe` APT repository on Ubuntu 26.04 LTS, the plugin now adds this
+to the ``universe`` APT repository on Ubuntu 26.04 LTS, the plugin now adds this
 repository automatically.
 
 See :ref:`howto-change-to-ubuntu-26-04` for guidance on migrating your

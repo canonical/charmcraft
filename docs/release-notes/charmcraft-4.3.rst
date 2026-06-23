@@ -42,9 +42,9 @@ Ubuntu 26.04 LTS support for the reactive plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :ref:`reactive plugin <reference-charmcraft-yaml-reactive-plugin>` can now build
-charms on the Ubuntu 26.04 LTS base. The plugin also now adds the ``universe`` APT
-repository automatically, as Python 3 virtual environments require the python3-venv
-package, which is in the ``universe`` repository on Ubuntu 26.04 LTS.
+charms on the Ubuntu 26.04 LTS base. Because the python3-venv package was moved
+to the `universe` APT repository on Ubuntu 26.04 LTS, the plugin now adds this
+repository automatically.
 
 See :ref:`howto-change-to-ubuntu-26-04` for guidance on migrating your
 charm to Ubuntu 26.04 LTS.
@@ -64,7 +64,7 @@ Go, and Spring Boot) now include a commented-out ``valkey_client`` relation. If 
 declare this optional interface in your charm's ``requires``, Charmcraft automatically
 injects the necessary dpcharmlibs-interfaces charm Python package.
 
-If the ``valkey_client`` relation is declared, your can make use of the following
+If the ``valkey_client`` relation is declared, you can make use of the following
 environment variables in your app:
 
 - ``VALKEY_HOSTNAME``

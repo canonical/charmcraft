@@ -89,7 +89,7 @@ def test_pack_update_charm_libs_empty(
 
     libs_service = cast("CharmLibsService", service_factory.get("charm_libs"))
     mock_write = mock.Mock(wraps=libs_service.write)
-    libs_service.write = mock_write  # ty: ignore[invalid-assignment]
+    libs_service.write = mock_write
 
     pack._update_charm_libs()
 

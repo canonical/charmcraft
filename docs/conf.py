@@ -194,6 +194,7 @@ extensions = [
 
 # Excludes files or directories from processing
 exclude_patterns = [
+    "release-notes/charmcraft-4.4.rst",
     "README.md",  # Docs README
     "reuse",
     "common/craft-parts/explanation/lifecycle.rst",

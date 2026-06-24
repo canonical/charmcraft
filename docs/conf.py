@@ -292,13 +292,13 @@ if "discourse_prefix" not in html_context and "discourse" in html_context:
 # Add configuration for intersphinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/latest/", None),
-    "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
-    "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
-    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
-    "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
-    "charmlibs": ("https://documentation.ubuntu.com/charmlibs/", None),
-    "multipass": ("https://documentation.ubuntu.com/multipass/latest/", None),
+    "craft-parts": ("https://documentation.ubuntu.com/craft-parts/latest", None),
+    "juju": ("https://canonical.com/juju/docs/juju-cli/3.6", None),
+    "ops": ("https://canonical.com/juju/docs/ops/latest", None),
+    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable", None),
+    "12-factor": ("https://canonical.com/juju/docs/12-factor/latest", None),
+    "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
+    "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
 }
 
 

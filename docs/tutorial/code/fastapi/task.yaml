@@ -78,7 +78,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
 
   # [docs:charm-pack]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   # [docs:charm-pack-end]
 
   # [docs:add-juju-model]
@@ -133,7 +133,7 @@ execute: |
   cd charm
 
   # [docs:refresh-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh fastapi-hello-world \
     --path=./fastapi-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/fastapi-hello-world:0.2
@@ -171,7 +171,7 @@ execute: |
   cd charm
 
   # [docs:refresh-2nd-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh fastapi-hello-world \
     --path=./fastapi-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/fastapi-hello-world:0.3
@@ -201,7 +201,7 @@ execute: |
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
-  CHARMCRAFTCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
+  charmcraft clean
   # Back out to main directory for cleanup
   cd ..
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean

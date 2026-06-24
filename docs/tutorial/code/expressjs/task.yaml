@@ -34,7 +34,6 @@ execute: |
 
   # [docs:export-experimental-env-vars]
   export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
-  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   # [docs:export-experimental-env-vars-end]
 
   cd $HOME/tmp

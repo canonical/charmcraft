@@ -76,6 +76,14 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_WARNING = (
+    "WARNING: Charmhub-hosted charm libraries are deprecated. "
+    "Go to https://ubu.link/charmhub-libraries-deprecation for more information."
+)
+
+
+def _emit_charmlibs_deprecation_warning() -> None:
+    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 class LoginCommand(CharmcraftCommand):
@@ -1255,6 +1263,7 @@ class CreateLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         lib_name = parsed_args.name
         valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
@@ -1349,6 +1358,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         charm_name = (
             self._services.get("project").get().name or utils.get_name_from_yaml()
         )
@@ -1515,6 +1525,7 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
@@ -1666,6 +1677,7 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
+        _emit_charmlibs_deprecation_warning()
         store = cast("StoreService", self._services.get("store"))
         project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
@@ -1774,6 +1786,7 @@ class ListLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.name:
             charm_name = parsed_args.name
         else:

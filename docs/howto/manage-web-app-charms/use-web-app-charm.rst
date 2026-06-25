@@ -411,7 +411,7 @@ name of the web app with the ``-c`` option.
 
    - `MicroK8s | Troubleshooting <https://microk8s.io/docs/troubleshooting>`_
    - `Canonical Kubernetes | Troubleshoot
-     <https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/troubleshooting/>`_
+     <https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/howto/troubleshooting/>`_
 
 Check Juju logs
 ~~~~~~~~~~~~~~~

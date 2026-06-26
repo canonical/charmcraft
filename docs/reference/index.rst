@@ -86,4 +86,5 @@ frameworks.
     parts/index
     platforms
     profile
+    remote-builds
     changelog

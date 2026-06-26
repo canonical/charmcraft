@@ -244,24 +244,48 @@ of the container, for instance, ``/django/app``.
    <https://documentation.ubuntu.com/juju/latest/user/reference/
    juju-cli/list-of-juju-cli-commands/ssh/>`_
 
-Check MicroK8s pod services and logs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Check Kubernetes pod services and logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Check the currently deployed Kubernetes resources in the
 ``<model-namespace>``, which is the same as the Juju model name:
 
-.. code::
+.. tab-set::
 
-   microk8s.kubectl get all -n <model-namespace>
+    .. tab-item:: MicroK8s
+        :sync: microk8s
 
-This command outputs a list of all the MicroK8s resources in the web app's
+        .. code-block:: bash
+
+            microk8s.kubectl get all -n <model-namespace>
+
+    .. tab-item:: Canonical K8s
+        :sync: canonical-k8s
+
+        .. code-block:: bash
+
+            sudo k8s kubectl get all -n <model-namespace>
+
+This command outputs a list of all the Kubernetes resources in the web app's
 Juju model.
 
-Check the logs for a specific MicroK8s pod:
+Check the logs for a specific Kubernetes pod:
 
-.. code::
+.. tab-set::
 
-   microk8s kubectl logs <pod-name> -n <model-namespace>
+    .. tab-item:: MicroK8s
+        :sync: microk8s
+
+        .. code-block:: bash
+
+            microk8s kubectl logs <pod-name> -n <model-namespace>
+
+    .. tab-item:: Canonical K8s
+        :sync: canonical-k8s
+
+        .. code-block:: bash
+
+            sudo k8s kubectl logs <pod-name> -n <model-namespace>
 
 This command outputs the logs of the sidecar container pod. To fetch logs
 specific to the workload of the web app, you need to specify the container
@@ -272,48 +296,122 @@ name of the web app with the ``-c`` option.
     .. tab-item:: Django
         :sync: django
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c django-app
 
     .. tab-item:: Express
         :sync: express
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
     .. tab-item:: FastAPI
         :sync: fastapi
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
     .. tab-item:: Flask
         :sync: flask
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. tab-item:: Go
         :sync: go
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
     .. tab-item:: Spring Boot
         :sync: spring-boot
 
-        .. code-block:: bash
+        .. tab-set::
 
-            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+            .. tab-item:: MicroK8s
+                :sync: microk8s
+
+                .. code-block:: bash
+
+                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+
+            .. tab-item:: Canonical K8s
+                :sync: canonical-k8s
+
+                .. code-block:: bash
+
+                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
 .. seealso::
 
-   `MicroK8s | Troubleshooting <https://microk8s.io/docs/troubleshooting>`_
+   - `MicroK8s | Troubleshooting <https://microk8s.io/docs/troubleshooting>`_
+   - `Canonical Kubernetes | Troubleshoot
+     <https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/howto/troubleshooting/>`_
 
 Check Juju logs
 ~~~~~~~~~~~~~~~

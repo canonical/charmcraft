@@ -1,5 +1,5 @@
 // Replace oldDomain with newDomain
-const oldDomain = 'documentation.ubuntu.com/charmcraft';
+const oldDomain = 'canonical-charmcraft-staging.readthedocs-hosted.com';
 const newDomain = 'canonical.com/juju/docs/charmcraft';
 
 function escapeRegExp(value) {

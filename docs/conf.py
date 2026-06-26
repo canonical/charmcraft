@@ -346,31 +346,20 @@ def link_common_docs(library_name: str) -> None:
 link_common_docs("craft-parts")
 link_common_docs("craft-application")
 
-# Source 12-factor versions from Spread test materials and inject into docs
-def inject_version_into_prolog(req_path: str, package_prefix: str, rst_var_name: str) -> None:
-    global rst_prolog
-    version = "framework"
-    if os.path.exists(req_path):
-        with open(req_path, "r", encoding="utf-8") as f:
-            match = re.search(rf"{re.escape(package_prefix)}([\d.]+)", f.read())
-            if match:
-                version = match.group(1)
-    rst_prolog += f"\n.. |{rst_var_name}| replace:: {version}"
+# Source 12-factor framework versions from Spread test materials and inject into docs
+def sub_12f_version(prolog: str, path: str, package: str, variable: str) -> str:
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
 
-inject_version_into_prolog(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "django", "requirements.txt")),
-    "Django==",
-    "conf_django_version",
-)
+    with open(path, encoding="utf-8") as f:
+        match = re.search(rf"{re.escape(package)}([\d.]+)", f.read())
+        if match:
+            version = match.group(1)
+            prolog += f"\n.. |{variable}| replace:: {version}"
 
-inject_version_into_prolog(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "fastapi", "requirements.txt")),
-    "fastapi[standard]==",
-    "conf_fastapi_version",
-)
+    return prolog
 
-inject_version_into_prolog(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "tutorial", "code", "flask", "requirements.txt")),
-    "Flask==",
-    "conf_flask_version",
-)
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/django/requirements.txt", "Django==", "conf_django_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/fastapi/requirements.txt", "fastapi[standard]==", "conf_fastapi_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/flask/requirements.txt", "Flask==", "conf_flask_version")

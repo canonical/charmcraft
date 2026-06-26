@@ -245,7 +245,7 @@ of the container, for instance, ``/django/app``.
    juju-cli/list-of-juju-cli-commands/ssh/>`_
 
 Check Kubernetes pod services and logs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Check the currently deployed Kubernetes resources in the
 ``<model-namespace>``, which is the same as the Juju model name:

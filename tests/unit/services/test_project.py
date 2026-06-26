@@ -31,7 +31,7 @@ CURRENT_ARCH = craft_platforms.DebianArchitecture.from_host()
 
 @pytest.fixture
 def service(project_path):
-    return ProjectService(app=APP_METADATA, services=None, project_dir=project_path)
+    return ProjectService(app=APP_METADATA, services=None, project_dir=project_path)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(
@@ -179,6 +179,44 @@ def test_get_platforms_correct(
                 "summary": "a summary",
                 "description": "a description",
                 "parts": {"something": {"plugin": "nil"}},
+                "platforms": platforms,
+            }
+        )
+    )
+
+    assert service.get_platforms() == expected
+    # Check that it renders.
+    service.configure(platform=None, build_for=None)
+    service.get()
+    assert service.get().marshal()["platforms"] == expected
+
+
+@pytest.mark.parametrize(
+    ("platforms", "expected"),
+    [
+        pytest.param(
+            {
+                "ubuntu@20.04:amd64": None,
+            },
+            {
+                "ubuntu@20.04:amd64": {
+                    "build-on": ["ubuntu@20.04:amd64"],
+                    "build-for": ["ubuntu@20.04:amd64"],
+                },
+            },
+            id="short-charm-plugin",
+        ),
+    ],
+)
+def test_platforms_short_charm_plugin(project_path, service, platforms, expected):
+    (project_path / "charmcraft.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "name": "platforms-test",
+                "type": "charm",
+                "summary": "a summary",
+                "description": "a description",
+                "parts": {"something": {"plugin": "charm", "source": "."}},
                 "platforms": platforms,
             }
         )

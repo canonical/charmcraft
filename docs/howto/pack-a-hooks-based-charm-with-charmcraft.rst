@@ -1,7 +1,7 @@
 .. _pack-a-hooks-based-charm-with-charmcraft:
 
-How to pack a hooks-based charm with Charmcraft
-===============================================
+Pack a hooks-based charm
+========================
 
     Introduced in Charmcraft 1.4
 

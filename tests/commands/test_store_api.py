@@ -1625,13 +1625,13 @@ def test_get_tips_simple(anonymous_client_mock, charmhub_config):
     ]
     expected = {
         (test_lib_id, test_api): Library(
-            api=test_api,
+            api=test_api,  # ty: ignore[invalid-argument-type]
             content=test_content,
             content_hash=test_hash,
             lib_id=test_lib_id,
             lib_name=test_lib_name,
             charm_name=test_charm_name,
-            patch=test_patch,
+            patch=test_patch,  # ty: ignore[invalid-argument-type]
         ),
     }
     assert result == expected
@@ -1715,22 +1715,22 @@ def test_get_tips_several(anonymous_client_mock, charmhub_config):
     ]
     expected = {
         (test_lib_id_1, test_api_1): Library(
-            api=test_api_1,
+            api=test_api_1,  # ty: ignore[invalid-argument-type]
             content=test_content_1,
             content_hash=test_hash_1,
             lib_id=test_lib_id_1,
             lib_name=test_lib_name_1,
             charm_name=test_charm_name_1,
-            patch=test_patch_1,
+            patch=test_patch_1,  # ty: ignore[invalid-argument-type]
         ),
         (test_lib_id_2, test_api_2): Library(
-            api=test_api_2,
+            api=test_api_2,  # ty: ignore[invalid-argument-type]
             content=test_content_2,
             content_hash=test_hash_2,
             lib_id=test_lib_id_2,
             lib_name=test_lib_name_2,
             charm_name=test_charm_name_2,
-            patch=test_patch_2,
+            patch=test_patch_2,  # ty: ignore[invalid-argument-type]
         ),
     }
     assert result == expected

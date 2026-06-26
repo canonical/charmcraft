@@ -1,15 +1,11 @@
-type: charm
-name: test-charm
+name: invalid-charm
 summary: An invalid charm based on Ubuntu Resolute (26.04 LTS) with the charm plugin.
-description: test-charm
-
+description: |
+  Charm plugin is not supported on Ubuntu 26.04 LTS.
+type: charm
 base: ubuntu@26.04
-build-base: ubuntu@devel
 platforms:
   amd64:
-  arm64:
-  riscv64:
-
 parts:
   my-part:
     plugin: charm

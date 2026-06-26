@@ -2,7 +2,13 @@
 # https://github.com/canonical/starbase
 
 SOURCES=$(wildcard *.py) $(PROJECT) tests
-DOCS=docs
+
+# Env vars for the docs Sphinx Stack. They must be exported so make can pass them to the
+# docs Makefile.
+export DOCS_BUILDDIR ?= _build
+export DOCS_VENVDIR ?= ../.venv
+export VALE_DIR ?= $(DOCS_VENVDIR)/lib/python*/site-packages/vale
+export SPHINX_AUTOBUILD_OPTS ?= --ignore "$(DOCS_VENVDIR)/*" --ignore "reference/commands/*" -D=llms_txt_enabled=0
 
 ifneq ($(OS),Windows_NT)
 	OS := $(shell uname)
@@ -13,7 +19,7 @@ else
 	APT := apt-get
 endif
 
-PRETTIER=npm exec --package=prettier -- prettier --log-level warn
+PRETTIER=npm exec --package=prettier@3.6.0 -- prettier --log-level warn # renovate: datasource=npm
 PRETTIER_FILES="**/*.{yaml,yml,json,json5,css,md}"
 
 # Cutoff (in seconds) before a test is considered slow by pytest
@@ -30,32 +36,26 @@ export UV_FROZEN := true
 
 .PHONY: help
 help: ## Show this help.
-	@printf "\e[1m%-30s\e[0m | \e[1m%s\e[0m\n" "Target" "Description"
-	printf "\e[2m%-30s + %-41s\e[0m\n" "------------------------------" "------------------------------------------------"
-	egrep '^[^:]+\: [^#]*##' $$(echo $(MAKEFILE_LIST) | tac --separator=' ') | sed -e 's/^[^:]*://' -e 's/:[^#]*/ /' | sort -V| awk -F '[: ]*' \
-	'{
-		if ($$2 == "##")
-		{
-			$$1=sprintf(" %-28s", $$1);
-			$$2=" | ";
-			print $$0;
-		}
-		else
-		{
-			$$1=sprintf("  └ %-25s", $$1);
-			$$2=" | ";
-			$$3=sprintf(" └ %s", $$3);
-			print $$0;
-		}
-	}' | uniq
+	@printf "\033[1m%-30s\033[0m | \033[1m%s\033[0m\n" "Target" "Description"
+	@printf "\033[2m%-30s + %-41s\033[0m\n" "------------------------------" "------------------------------------------------"
+	@cat $$(echo $(MAKEFILE_LIST) | tac --separator=' ' 2>/dev/null || echo $(MAKEFILE_LIST)) | grep -E '^[^[:space:]][^:]*\:[^#]*##' | \
+	sed -e 's/:[^#]*/ /' | sort -V | \
+	awk -F '[: ]+' '{ if ($$2 == "##") { $$1=sprintf(" %-28s", $$1); $$2=" | "; print $$0; } else { $$1=sprintf("  └ %-25s", $$1); $$2=" | "; $$3=sprintf(" └ %s", $$3); print $$0; } }' | \
+	uniq
 
 .PHONY: setup
 setup: install-uv _setup-docs _setup-lint _setup-tests setup-precommit install-build-deps  ## Set up a development environment
 	uv sync $(UV_TEST_GROUPS) $(UV_LINT_GROUPS) $(UV_DOCS_GROUPS)
 
 .PHONY: setup-docs
-setup-docs: _setup-docs  ##- Set up a documentation-only environment
+setup-docs: _setup-docs  ##- Set up the documentation environment
+ifneq ($(CI),)
+	@echo ::group::$@
+endif
 	uv sync --no-dev $(UV_DOCS_GROUPS)
+ifneq ($(CI),)
+	@echo ::endgroup::
+endif
 
 .PHONY: _setup-docs
 _setup-docs: install-uv
@@ -65,7 +65,7 @@ setup-lint: _setup-lint  ##- Set up a linting-only environment
 	uv sync $(UV_LINT_GROUPS)
 
 .PHONY: _setup-lint
-_setup-lint: install-uv install-shellcheck install-pyright install-lint-build-deps
+_setup-lint: install-uv install-shellcheck install-pyright install-lint-build-deps install-actionlint
 
 .PHONY: setup-tests
 setup-tests: _setup-tests ##- Set up a testing environment without linters
@@ -93,7 +93,7 @@ endif
 .PHONY: clean
 clean:  ## Clean up the development environment
 	uv tool run pyclean .
-	rm -rf dist/ build/ docs/_build/ *.snap .coverage*
+	rm -rf dist build docs/_build docs/_linkcheck docs/reference/gen *.snap .coverage* .venv
 
 .PHONY: autoformat
 autoformat: format  # Hidden alias for 'format'
@@ -108,6 +108,10 @@ format-ruff: install-ruff  ##- Automatically format with ruff
 .PHONY: format-codespell
 format-codespell:  ##- Fix spelling issues with codespell
 	uv run codespell --toml pyproject.toml --write-changes $(SOURCES)
+
+.PHONY: format-pre-commit
+format-pre-commit:  ##- Format the entire repository using pre-commit
+	uv tool run pre-commit run
 
 .PHONY: format-prettier
 format-prettier: install-npm  ##- Format files with prettier
@@ -158,12 +162,29 @@ ifneq ($(CI),)
 	@echo ::endgroup::
 endif
 
+.PHONY: lint-ty
+lint-ty: install-ty  ##- Check types with Astral ty
+ifneq ($(CI),)
+	@echo ::group::$@
+endif
+	ty check --python .venv $(SOURCES)
+ifneq ($(CI),)
+	@echo ::endgroup::
+endif
+
+.PHONY: lint-uv-lockfile
+lint-uv-lockfile: install-uv  ##- Check that uv.lock matches expectations from pyproject.toml
+	unset UV_FROZEN
+	uv lock --check
+
 .PHONY: lint-shellcheck
 lint-shellcheck:  ##- Lint shell scripts
 ifneq ($(CI),)
 	@echo ::group::$@
 endif
-	git ls-files | file --mime-type -Nnf- | grep shellscript | cut -f1 -d: | xargs -r shellcheck
+	@# jinja2 shell script templates are mistakenly counted as "true" shell scripts due to their shebang,
+	@# so explicitly filter them out
+	git ls-files | grep -vE "\.sh\.j2$$" | file --mime-type -Nnf- | grep shellscript | cut -f1 -d: | xargs -r shellcheck
 ifneq ($(CI),)
 	@echo ::endgroup::
 endif
@@ -178,15 +199,19 @@ ifneq ($(CI),)
 	@echo ::endgroup::
 endif
 
-.PHONY: lint-docs
-lint-docs:  ##- Lint the documentation
+.PHONY: lint-actions
+lint-actions: install-actionlint  ##- Lint GitHub actions with actionlint
 ifneq ($(CI),)
 	@echo ::group::$@
 endif
-	uv run $(UV_DOCS_GROUPS) sphinx-lint --ignore docs/reference/commands --ignore docs/_build --enable all $(DOCS) -d line-too-long,missing-underscore-after-hyperlink,missing-space-in-hyperlink
+	actionlint
 ifneq ($(CI),)
 	@echo ::endgroup::
 endif
+
+# Legacy alias for linting docs
+.PHONY: lint-docs
+lint-docs: docs-lint  ##- Lint the documentation
 
 .PHONY: lint-twine
 lint-twine: pack-pip  ##- Lint Python packages with twine
@@ -211,7 +236,7 @@ test-slow:  ##- Run slow tests
 	uv run pytest -m 'slow'
 
 .PHONY: test-coverage
-test-coverage:  ## Generate coverage report
+test-coverage:  ##- Generate coverage report
 ifeq ($(COVERAGE_SOURCE),)
 	uv run coverage run --source $(PROJECT),tests -m pytest
 else
@@ -228,13 +253,86 @@ endif
 test-find-slow:  ##- Identify slow tests. Set cutoff time in seconds with SLOW_CUTOFF_TIME
 	uv run pytest --durations 0 --durations-min $(SLOW_CUTOFF_TIME)
 
+# Alias for `html` target in docs project. We want to use our own `.venv`, so we
+# replace it.
 .PHONY: docs
-docs:  ## Build documentation
-	uv run $(UV_DOCS_GROUPS) sphinx-build -b dirhtml -W $(DOCS) $(DOCS)/_build
+docs: docs-install  ## Render the documentation to disk
+ifneq ($(CI),)
+	@echo ::group::$@
+endif
+	$(MAKE) -C docs html --no-print-directory
+ifneq ($(CI),)
+	@echo ::endgroup::
+endif
 
+# Alias for `serve` target in docs project
 .PHONY: docs-auto
-docs-auto:  ## Build and host docs with sphinx-autobuild
-	uv run --group docs sphinx-autobuild -b dirhtml --open-browser --port=8080 --watch $(PROJECT) -W $(DOCS) $(DOCS)/_build
+docs-auto: docs-install  ##- Render the documentation in a live session
+	$(MAKE) -C docs run --no-print-directory
+
+# Override for `install` target in docs project. We still need the Vale setup, so we
+# run that after the parent docs setup.
+.PHONY: docs-install
+docs-install: _setup-docs  ##- Set up documentation packages
+ifneq ($(CI),)
+	@echo ::group::$@
+endif
+	$(MAKE) -C docs vale-install --no-print-directory
+ifneq ($(CI),)
+	@echo ::endgroup::
+endif
+
+# Alias for `setup-docs`
+.PHONY: docs-setup
+docs-setup: setup-docs
+
+# Override for `clean` target in docs project. We don't want to touch `.venv`, so
+# we pass a null dir instead.
+.PHONY: docs-clean
+docs-clean:  ##- Clean the temporary files used in documentation
+	VENVDIR=$(mktemp)
+	$(MAKE) -C docs clean --no-print-directory
+
+# Override for `help` target in docs project
+.PHONY: docs-help
+docs-help:  ##- List the individual commands in the documentation subproject.
+	@echo "Commands in the documentation subproject:"
+	$(MAKE) -C docs help --no-print-directory
+	@echo "Run these commands from inside the 'docs/' directory."
+
+# Override for `pymarkdownlnt-install` target in docs project. Make it a noop.
+.PHONY: docs-pymarkdownlnt-install
+docs-pymarkdownlnt-install:
+	@echo "Cannot run 'docs-pymarkdownlnt'. This project doesn't use Markdown."
+
+# Override for `lint-md` target in docs project. Make it a noop.
+.PHONY: docs-lint-md
+docs-lint-md:
+	@echo "Cannot run 'docs-lint-md'. This project doesn't use Markdown."
+
+# Passthrough for the rest of the targets in docs project
+.PHONY: docs-%
+docs-%: docs-install
+	$(MAKE) -C docs $(@:docs-%=%) --no-print-directory
+
+# Run our own docs linting, then pass to the docs
+.PHONY: docs-lint
+docs-lint: docs-install  ##- Lint the documentation
+ifneq ($(CI),)
+	@echo ::group::$@
+endif
+	uv run $(UV_DOCS_GROUPS) sphinx-lint docs \
+	--ignore docs/_dev \
+	--ignore docs/_build \
+	--ignore docs/reference/commands \
+	--enable all \
+	-d line-too-long,missing-underscore-after-hyperlink,missing-space-in-hyperlink
+	$(MAKE) -C docs spelling --no-print-directory
+	$(MAKE) -C docs woke --no-print-directory
+	$(MAKE) -C docs linkcheck --no-print-directory
+ifneq ($(CI),)
+	@echo ::endgroup::
+endif
 
 .PHONY: pack-pip
 pack-pip:  ##- Build packages for pip (sdist, wheel)
@@ -260,6 +358,17 @@ else ifeq ($(OS),Windows_NT)
 	pwsh -c "irm https://astral.sh/uv/install.ps1 | iex"
 else
 	curl -LsSf https://astral.sh/uv/install.sh | sh
+endif
+
+.PHONY: install-actionlint
+install-actionlint:
+ifneq ($(shell which actionlint),)
+else ifneq ($(shell which snap),)
+	sudo snap install actionlint
+else ifneq ($(shell which brew),)
+	brew install actionlint
+else
+	$(warning Actionlint not installed. Please install it yourself.)
 endif
 
 .PHONY: install-codespell
@@ -304,6 +413,17 @@ else ifneq ($(shell which brew),)
 	brew install shellcheck
 else
 	$(warning Shellcheck not installed. Please install it yourself.)
+endif
+
+.PHONY: install-ty
+install-ty:
+ifneq ($(shell which ty),)
+else ifneq ($(shell which snap),)
+	sudo snap install --beta astral-ty
+	sudo snap alias astral-ty.ty ty
+else
+	make install-uv
+	uv tool install ty
 endif
 
 .PHONY: install-npm

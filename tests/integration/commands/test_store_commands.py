@@ -28,7 +28,10 @@ from craft_store import publisher
 
 from charmcraft import errors, utils
 from charmcraft.application.commands import FetchLibCommand
-from charmcraft.application.commands.store import CreateTrack
+from charmcraft.application.commands.store import (
+    CHARMLIBS_DEPRECATION_WARNING,
+    CreateTrack,
+)
 from tests import factory
 
 OPERATOR_LIBS_LINUX_APT_ID = "7c3dbc9c2ad44a47bd6fcb25caa270e5"
@@ -52,6 +55,7 @@ def test_fetchlib_simple_downloaded(
     )
     FetchLibCommand(config).run(args)
 
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
     assert saved_file.exists()
 
     message = emitter.interactions[-1].args[1]
@@ -222,7 +226,7 @@ def test_fetchlib_store_is_old(
                 "error_message": error_message,
             },
         ]
-        emitter.assert_json_output(  # pyright: ignore[reportAttributeAccessIssue]
+        emitter.assert_json_output(  # ty: ignore[unresolved-attribute]
             expected
         )
     else:

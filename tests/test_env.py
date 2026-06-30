@@ -79,3 +79,15 @@ def test_is_charmcraft_running_in_managed_mode(monkeypatch, managed, result):
         monkeypatch.setenv(const.MANAGED_MODE_ENV_VAR, managed)
 
     assert env.is_charmcraft_running_in_managed_mode() == result
+
+
+def test_get_store_config_sso_url_default(monkeypatch):
+    monkeypatch.delenv(const.STORE_SSO_URL_ENV_VAR, raising=False)
+    config = env.get_store_config()
+    assert config.login_url == "https://login.ubuntu.com"
+
+
+def test_get_store_config_sso_url(monkeypatch):
+    monkeypatch.setenv(const.STORE_SSO_URL_ENV_VAR, "https://login.staging.ubuntu.com")
+    config = env.get_store_config()
+    assert config.login_url == "https://login.staging.ubuntu.com"

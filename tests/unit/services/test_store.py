@@ -41,6 +41,8 @@ from tests import get_fake_revision
 def store(service_factory, mock_store_anonymous_client) -> StoreService:
     store = StoreService(app=application.APP_METADATA, services=service_factory)
     store.client = mock.Mock(spec_set=client.Client)
+    store._auth = mock.Mock(spec=craft_store.Auth)
+    store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     store.anonymous_client = mock_store_anonymous_client
     return store
 
@@ -48,7 +50,7 @@ def store(service_factory, mock_store_anonymous_client) -> StoreService:
 @pytest.fixture(scope="module")
 def reusable_store():
     store = StoreService(app=application.APP_METADATA, services=None)  # ty: ignore[invalid-argument-type]
-    store.client = mock.Mock(spec_set=craft_store.StoreClient)
+    store._auth = mock.Mock(spec=craft_store.Auth)
     store._publisher = mock.Mock(spec_set=craft_store.PublisherGateway)
     return store
 
@@ -102,14 +104,21 @@ def test_ua_system_info_linux(
     )
 
 
-def test_setup_with_error(emitter: RecordingEmitter, store):
-    store.ClientClass = mock.Mock(
-        side_effect=[craft_store.errors.NoKeyringError, "I am a store!"]
-    )
+def test_setup_with_error(mocker, emitter: RecordingEmitter, store):
+    call_count = 0
 
+    def fake_setup_auth(*, ephemeral=False):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise craft_store.errors.NoKeyringError
+        store._auth = mock.Mock(spec=craft_store.Auth)
+
+    mocker.patch.object(store, "_setup_auth", side_effect=fake_setup_auth)
+    mocker.patch.object(type(store), "_publisher", create=True)
     store.setup()
 
-    assert store.client == "I am a store!"
+    assert call_count == 2
     emitter.assert_progress(
         "WARNING: Cannot get a keyring. Every store interaction that requires "
         "authentication will require you to log in again.",
@@ -123,52 +132,46 @@ def test_get_description_default(monkeypatch, store):
     assert store._get_description() == "charmcraft@my-hostname"
 
 
-@given(text=strategies.text())
-def test_get_description_override(reusable_store, text):
-    assert reusable_store._get_description(text) == text
-
-
 @given(
     permissions=strategies.lists(strategies.text()),
-    description=strategies.text(),
     ttl=strategies.integers(min_value=1),
     channels=strategies.lists(strategies.text()),
 )
-def test_login(reusable_store, permissions, description, ttl, channels):
-    client = cast(mock.Mock, reusable_store.client)
-    client.reset_mock(return_value=True, side_effect=True)
+def test_login(reusable_store, permissions, ttl, channels):
+    with mock.patch(
+        "charmcraft.services.store.UbuntuOneLogin.login_with"
+    ) as mock_login:
+        reusable_store.login(
+            email="user@example.com",
+            password="pw123",
+            permissions=permissions,
+            ttl=ttl,
+            channels=channels,
+        )
 
-    reusable_store.login(
-        permissions=permissions, description=description, ttl=ttl, channels=channels
-    )
-
-    client.login.assert_called_once_with(
-        permissions=permissions,
-        description=description,
-        ttl=ttl,
-        packages=None,
-        channels=channels,
-    )
+    mock_login.assert_called_once()
+    kwargs = mock_login.call_args[1]
+    assert kwargs["email"] == "user@example.com"
+    assert kwargs["password"] == "pw123"
+    assert kwargs["permissions"] == permissions
+    assert kwargs["ttl"] == ttl
+    assert kwargs["channels"] == channels
 
 
 def test_login_failure(store):
-    client = cast(mock.Mock, store.client)
-    client.login.side_effect = craft_store.errors.CredentialsAlreadyAvailable(
-        "charmcraft", "host"
+    store._auth.ensure_no_credentials.side_effect = (
+        craft_store.errors.CredentialsAlreadyAvailable("charmcraft", "host")
     )
-
     with pytest.raises(
         errors.CraftError, match="Cannot login because credentials were found"
     ):
-        store.login()
+        store.login(email="user@example.com", password="pw123")
 
 
 def test_logout(store):
-    client = cast(mock.Mock, store.client)
-
     store.logout()
 
-    client.logout.assert_called_once_with()
+    store._auth.del_credentials.assert_called_once_with()
 
 
 def test_create_tracks(reusable_store: StoreService):
@@ -290,29 +293,31 @@ def test_set_resource_revisions_architectures_response_form(
     assert actual == expected
 
 
-def test_get_credentials(monkeypatch, store):
-    mock_client_class = mock.Mock(spec_set=craft_store.StoreClient)
-    mock_client = mock_client_class.return_value
-    monkeypatch.setattr(craft_store, "StoreClient", mock_client_class)
+def test_get_credentials(mocker, store):
+    """get_credentials() uses UbuntuOneLogin with ephemeral auth."""
+    mock_creds = '{"t":"u1-macaroon","v":{"r":"root","d":"discharge"}}'
+    mock_encoded = "base64encodedcreds"
 
-    store.get_credentials()
+    mock_login = mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
+    mock_auth_cls = mocker.patch("charmcraft.services.store.craft_store.Auth")
+    mock_auth_instance = mock.Mock()
+    mock_auth_instance.get_credentials.return_value = mock_creds
+    mock_auth_instance.encode_credentials.return_value = mock_encoded
+    mock_auth_cls.return_value = mock_auth_instance
 
-    mock_client_class.assert_called_once_with(
-        application_name="charmcraft",
-        base_url=mock.ANY,
-        storage_base_url=mock.ANY,
-        endpoints=mock.ANY,
-        environment_auth=None,
-        user_agent=store._user_agent,
-        ephemeral=True,
-    )
-    mock_client.login.assert_called_once_with(
-        permissions=mock.ANY,
-        description=store._get_description(),
-        ttl=mock.ANY,
-        packages=None,
-        channels=None,
-    )
+    result = store.get_credentials(email="user@example.com", password="pw123")
+
+    mock_login.assert_called_once()
+    login_kwargs = mock_login.call_args[1]
+    assert login_kwargs["email"] == "user@example.com"
+    assert login_kwargs["password"] == "pw123"
+    assert login_kwargs["store_auth"] is mock_auth_instance
+
+    mock_auth_cls.assert_called_once()
+    auth_kwargs = mock_auth_cls.call_args[1]
+    assert auth_kwargs.get("ephemeral") is True
+
+    assert result == mock_encoded
 
 
 @given(name=strategies.text())

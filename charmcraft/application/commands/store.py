@@ -36,7 +36,7 @@ from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_store import attenuations, models, publisher
-from craft_store.errors import CredentialsUnavailable
+from craft_store.errors import CredentialsUnavailable, UbuntuOneOtpRequiredError
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
@@ -95,9 +95,9 @@ class LoginCommand(CharmcraftCommand):
         """
         Login to Charmhub.
 
-        Charmcraft will provide a URL for the Charmhub login. When you have
-        successfully logged in, Charmcraft will store a token for ongoing
-        access to Charmhub at the CLI (if `--export` option was not used
+        Charmcraft will prompt for your Ubuntu One email address and password.
+        When you have successfully logged in, Charmcraft will store a token for
+        ongoing access to Charmhub at the CLI (if `--export` option was not used
         otherwise it will only save the credentials in the indicated file).
 
         If `--export <file>` option is used, a secret credentials file will
@@ -214,15 +214,41 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
+        email = emit.prompt("Email address: ")
+        password = emit.prompt("Password: ", hide=True)
+
         store = cast(StoreService, self._services.get("store"))
         if parsed_args.export:
-            credentials = store.get_credentials(packages=packages, **kwargs)
+            try:
+                credentials = store.get_credentials(
+                    email=email, password=password, packages=packages, **kwargs
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                credentials = store.get_credentials(
+                    email=email, password=password, otp=otp, packages=packages, **kwargs
+                )
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            store.login(packages=packages, **kwargs)
+            try:
+                store.login(
+                    email=email,
+                    password=password,
+                    packages=packages,
+                    **kwargs,
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                store.login(
+                    email=email,
+                    password=password,
+                    otp=otp,
+                    packages=packages,
+                    **kwargs,
+                )
             username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
@@ -273,7 +299,7 @@ class WhoamiCommand(CharmcraftCommand):
         """Run the command."""
         store = cast("StoreService", self._services.get("store"))
         try:
-            macaroon_info = store.client.whoami()
+            macaroon_info = store.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}

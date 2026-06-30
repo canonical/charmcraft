@@ -14,11 +14,12 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. admonition:: Best practice
-    :class: hint
+Before you initialise a charm project, decide what to call your charm.
 
-    If you're setting up a ``git`` repository: name it using the pattern
-    ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
+A charm's name is typically based on the name of the charm's workload. If you're setting
+up a Git repository, name the repository ``<charm name>-operator``. Use a different
+naming convention if your charm doesn't operate a workload. For detailed guidance, see
+:external+ops:ref:`Ops | How to initialise your project <init-charm>`.
 
 To initialise a charm project, create a directory for your charm, enter it, then run
 ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for

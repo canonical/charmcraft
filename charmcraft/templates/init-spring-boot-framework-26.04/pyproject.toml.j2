@@ -1,0 +1,70 @@
+# Copyright {{ year }} {{ author }}
+# See LICENSE file for licensing details.
+
+[project]
+name = "{{ name }}"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+# Dependencies of the charm code
+# You should list the dependencies of the code in src/, including any charm libraries from PyPI.
+# We recommend using uv to maintain this list. For example, 'uv add charmlibs-pathops'.
+# If your code uses any libraries from Charmhub, don't list those libraries here. Instead, add a
+# 'charm-libs' block in charmcraft.yaml, run `charmcraft fetch-libs` to download the libraries,
+# then inspect the libraries for dependencies specified in PYDEPS. List those dependencies here.
+dependencies = [
+    "dpcharmlibs-interfaces==1.0.2",
+    "jinja2==3.1.6",
+    "jsonschema==4.26",
+    "ops==3.7.1",
+    "paas-charm>=1.0",
+]
+[dependency-groups]
+# PYDEPS from libraries that the charm uses.
+charmlibs-pydeps = [
+    "cosl==1.9.1",
+    "pydantic==2.13.3",
+]
+
+
+# Testing tools configuration
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_cli_level = "INFO"
+
+# Linting tools configuration
+[tool.ruff]
+line-length = 99
+lint.select = ["E", "W", "F", "C", "N", "D", "I001"]
+lint.extend-ignore = [
+    "D105",
+    "D107",
+    "D203",
+    "D204",
+    "D213",
+    "D215",
+    "D400",
+    "D404",
+    "D406",
+    "D407",
+    "D408",
+    "D409",
+    "D413",
+]
+extend-exclude = ["__pycache__", "*.egg_info"]
+lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.codespell]
+skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
+
+[tool.pyright]
+include = ["src/**.py"]

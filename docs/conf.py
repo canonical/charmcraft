@@ -30,21 +30,26 @@ project_dir = pathlib.Path(__file__).parents[1].resolve()
 
 project = "Charmcraft"
 author = "Canonical"
-release = charmcraft.__version__
-if ".post" in release:
-    # The commit hash in the dev release version confuses the spellchecker
-    release = "dev"
+
+# Version string in sidebar
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
+    # Because of Autotools, we can safely assume the version starts with `n.n`
+    major, minor, *_ = charmcraft.__version__.split(".")
+    release = f"{major}.{minor}"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # region Configuration for canonical-sphinx
-ogp_site_url = "https://canonical-charmcraft.readthedocs-hosted.com/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
 ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg"
 
 html_context = {
     "product_page": "juju.is",
-    "product_tag": "_static/juju-logo-no-text.png",
+    "product_tag": "_static/assets/juju-logo-no-text.png",
     "github_url": "https://github.com/canonical/charmcraft",
     "github_issues": "https://github.com/canonical/charmcraft/issues",
     "discourse": "https://discourse.charmhub.io",
@@ -57,13 +62,9 @@ html_theme_options = {
 }
 
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
-html_baseurl = "https://canonical-charmcraft.readthedocs-hosted.com/"
+html_baseurl = f"{ogp_site_url}/{release}/"
 
-if "READTHEDOCS_VERSION" in os.environ:
-    version = os.environ["READTHEDOCS_VERSION"]
-    sitemap_url_scheme = "{version}{link}"
-else:
-    sitemap_url_scheme = "latest/{link}"
+sitemap_url_scheme = "{link}"
 
 # Template and asset locations
 extensions = [
@@ -73,7 +74,11 @@ extensions = [
 
 # Copy extra files to the _static dir during build
 html_static_path = [
-    "_static/assets"
+    "_static",
+]
+
+html_js_files = [
+    "js/overwrite-links.js",
 ]
 
 # endregion

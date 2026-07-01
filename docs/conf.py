@@ -30,7 +30,7 @@ author = "Canonical"
 
 # Version string in sidebar
 if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
-    # Because of Autotools, we can safely assume the version starts with `n.n`
+    # Because of setuptools, we can safely assume the version starts with `n.n`
     major, minor, *_ = charmcraft.__version__.split(".")
     release = f"{major}.{minor}"
 else:  # Branch build
@@ -41,7 +41,7 @@ else:  # Branch build
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # Documentation website URL
-ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
 
 # Preview name of the documentation website
 ogp_site_name = project
@@ -87,7 +87,7 @@ html_context = {
 # }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-# slug = ''
+slug = 'juju/docs/charmcraft'
 
 
 #########################
@@ -95,19 +95,19 @@ html_context = {
 #########################
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = f"{ogp_site_url}/{release}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
-sitemap_url_scheme = '{link}'
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 # sitemap_show_lastmod = True
 
 # Exclude generated pages from the sitemap:
 sitemap_excludes = [
-    '404/',
-    'genindex/',
-    'search/',
+    "404/",
+    "genindex/",
+    "search/",
 ]
 
 
@@ -117,6 +117,16 @@ sitemap_excludes = [
 
 html_static_path = ["_static"]
 templates_path = ["_templates"]
+
+# Files for the cookie banner
+html_css_files = [
+    "css/cookie-banner.css",
+]
+
+html_js_files = [
+    "js/bundle.js",
+    "js/overwrite-links.js",
+]
 
 
 #############
@@ -248,16 +258,6 @@ exclude_patterns = [
     "common/craft-application/reference/remote-builds.rst",
     # Snippets that are incorporated into existing pages.
     "common/craft-application/reference/strict-platform-names.rst",
-]
-
-# Adds custom CSS files, located under 'html_static_path'
-html_css_files = [
-    'css/cookie-banner.css'
-]
-
-# Adds custom JavaScript files, located under 'html_static_path'
-html_js_files = [
-    'js/bundle.js',
 ]
 
 # Specifies a reST snippet to be appended to each .rst file

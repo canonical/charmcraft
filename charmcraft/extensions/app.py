@@ -532,7 +532,6 @@ class FlaskFrameworkV1(_AppBase):
     }
 
 
-
 class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
 

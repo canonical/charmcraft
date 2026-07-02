@@ -635,28 +635,16 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
 
     name: <name>
 
+**Value:** Slug-oriented (ASCII lowercase letters, numbers, and hyphens) following the
+pattern ``<workload name>[<function>][-k8s]``.
+For example, ``argo-server-k8s``. Use a different pattern if the charm doesn't
+operate a workload. See :external+ops:ref:`Ops | Decide your charm's name <decide-your-charms-name>`.
+
 **Example:**
 
 .. literalinclude:: charmcraft-sample-charm.yaml
         :start-at: name:
         :end-before: parts:
-
-.. admonition:: Best practice
-    :class: hint
-
-    The charm name should be slug-oriented (ASCII lowercase letters, numbers, and
-    hyphens) and follow the pattern ``<workload name in full>[<function>][-k8s]``.
-    For example, ``argo-server-k8s``.
-
-    Include the ``-k8s`` suffix on all charms that run on a Kubernetes cloud,
-    unless the charm has no workload or you know that there will never be
-    a machine version of the charm.
-
-    Don't include an organization or publisher in the name.
-
-    Don't add an ``operator`` or ``charm`` prefix or suffix. For naming a
-    repository, see :ref:`initialise-a-charm`.
-
 
 .. _charmcraft-yaml-key-parts:
 

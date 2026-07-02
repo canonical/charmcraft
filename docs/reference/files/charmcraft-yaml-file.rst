@@ -1,5 +1,8 @@
 .. _charmcraft-yaml-file:
 
+.. meta::
+    :description: Reference for the Charmcraft project file, with descriptions and examples of each of its keys.
+
 ``charmcraft.yaml`` file
 ========================
 
@@ -57,10 +60,8 @@ The value of this key is the contents of :ref:`actions-yaml-file`.
 .. admonition:: Best practice
     :class: hint
 
-    Prefer lowercase alphanumeric action names, and use hyphens (-) to separate words.
-    For charms that have already standardised on underscores, it is not necessary to
-    change them, and it is better to be consistent within a charm then to have
-    some action names be dashed and some be underscored.
+    Prefer lowercase alphanumeric action names, and use hyphens (-) to separate
+    words. Juju does not permit underscores in action names.
 
 .. admonition:: Best practice
     :class: hint

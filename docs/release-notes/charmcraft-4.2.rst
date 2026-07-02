@@ -1,5 +1,8 @@
 .. _release-4.2:
 
+.. _meta::
+    :description: Release notes for Charmcraft 4.2, listing the new features, behavioural changes, deprecations, and bug fixes shipped in the 4.2.x patch series.
+
 Charmcraft 4.2 release notes
 ============================
 
@@ -99,6 +102,8 @@ The following issues have been resolved in Charmcraft 4.2.2:
 
 - `#2598 <https://github.com/canonical/charmcraft/issues/2598>`__ Remote build fails
 when getting project name
+- `#2723 <https://github.com/canonical/charmcraft/pull/2723>`__ Match Juju's
+  action name validation rules
 
 Contributors
 ------------

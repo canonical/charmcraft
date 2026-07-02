@@ -46,6 +46,7 @@ from charmcraft.const import (
     BuildBaseStr,
 )
 from charmcraft.models import charmcraft
+from charmcraft.models.actions import validate_action_names_and_bodies
 from charmcraft.models.charmcraft import (
     AnalysisConfig,
     BasesConfiguration,
@@ -792,6 +793,15 @@ class CharmProject(CharmcraftProject):
             },
         ],
     )
+
+    @pydantic.field_validator("actions", mode="after")
+    @classmethod
+    def _validate_actions(cls, actions: dict[str, Any] | None) -> dict[str, Any] | None:
+        """Validate action names and bodies against Juju's rules."""
+        if actions is None:
+            return actions
+        validate_action_names_and_bodies(actions)
+        return actions
 
 
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:

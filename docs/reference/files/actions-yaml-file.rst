@@ -1,5 +1,8 @@
 .. _actions-yaml-file:
 
+.. meta::
+    :description: Reference for the ``actions.yaml`` file, with descriptions for each of the keys used to declare a charm's supported actions.
+
 ``actions.yaml`` file
 =====================
 
@@ -109,10 +112,9 @@ charm.
 **Structure:**
 
 *Name:* The name of the key (``<action name>``) is defined by the charm
-author. It must be a valid Python :external+python:ref:`identifier <identifiers>`
-that does not collide with Python :external+python:ref:`keywords <keywords>`
-except that it may contain hyphens (which will be mapped to underscores in the Python
-event handler).
+author. It must consist only of lowercase ASCII letters, numbers, and hyphens (-).
+A hyphen can't be the first or last character. It must not consist entirely of a
+:external+python:ref:`Python keyword <keywords`.
 
 *Type:* Map.
 

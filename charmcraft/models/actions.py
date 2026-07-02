@@ -18,9 +18,36 @@
 
 import keyword
 import re
+from typing import Any
 
 import pydantic
 from craft_application.models import CraftBaseModel
+
+# Must match the action name regex in Juju's charm library:
+# https://github.com/juju/charm/blob/6b348d6033da7feecfc7272c6eb752b2e8df2e1e/actions.go#L20
+# Action names must be lowercase, may contain digits and internal hyphens,
+# and may not contain underscores.
+_ACTION_NAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
+
+
+def validate_action_names_and_bodies(actions: dict[str, Any]) -> None:
+    """Validate Juju action names and bodies.
+
+    Raises ValueError or TypeError if any action is invalid.
+    """
+    if not isinstance(actions, dict):
+        raise TypeError("actions.yaml is not a valid actions configuration")
+    for name, body in actions.items():
+        if keyword.iskeyword(name):
+            raise ValueError(
+                f"'{name}' is a reserved keyword and cannot be used as an action name"
+            )
+        if _ACTION_NAME_REGEX.match(name) is None:
+            raise ValueError(f"'{name}' is not a valid action name")
+        if not isinstance(body, dict):
+            raise TypeError(f"action '{name}' must be a mapping")
+        if "description" not in body:
+            raise ValueError(f"action '{name}' is missing a description")
 
 
 class JujuActions(CraftBaseModel):
@@ -29,31 +56,10 @@ class JujuActions(CraftBaseModel):
     See also: https://juju.is/docs/sdk/actions
     """
 
-    _action_name_regex = re.compile(r"^[a-zA-Z_][a-zA-Z0-9-_]*$")
     actions: dict[str, dict] | None
 
     @pydantic.field_validator("actions", mode="after")
     def validate_actions(cls, actions):
         """Verify actions names and descriptions."""
-        if not isinstance(actions, dict):
-            raise TypeError("actions.yaml is not a valid actions configuration")
-        for action in actions:
-            if keyword.iskeyword(action):
-                raise ValueError(
-                    f"'{action}' is a reserved keyword and cannot be used as an action name"
-                )
-            if cls._action_name_regex.match(action) is None:
-                raise ValueError(f"'{action}' is not a valid action name")
-
+        validate_action_names_and_bodies(actions)
         return actions
-
-    @pydantic.field_validator("actions", mode="after")
-    def _validate_actions(cls, action):
-        """Verify actions names and descriptions."""
-        if not isinstance(action, dict):
-            raise TypeError(f"'{action}' is not a dictionary")
-
-        if "description" not in action:
-            raise ValueError(f"'{action}' is missing a description")
-
-        return action

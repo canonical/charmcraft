@@ -610,11 +610,32 @@ def test_from_yaml_file_exception(
         ),
     ],
 )
-def test_charmhub_allowed_with_legacy_bases(cls, content):
+def test_charmhub_allowed_with_legacy_bases(cls, content, monkeypatch):
     """Test that charmhub is allowed with legacy bases (ubuntu@24.04 and below)."""
-    # Should not raise any errors
-    result = cls.model_validate(content)
-    assert result.charmhub is not None
+    progress_calls: list[tuple[str, bool]] = []
+
+    def _record_progress(message: str, permanent: bool = False) -> None:
+        progress_calls.append((message, permanent))
+
+    monkeypatch.setattr(project.emit, "progress", _record_progress)
+
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"The 'charmhub' field is deprecated and no longer used\.",
+    ):
+        result = cls.model_validate(content)
+
+    assert result.__dict__["charmhub"] is not None
+
+    assert progress_calls == [
+        (
+            "WARNING: The 'charmhub' field is deprecated and no longer used. "
+            "It will be removed in a future release. Use the "
+            "$CHARMCRAFT_STORE_API_URL, $CHARMCRAFT_UPLOAD_URL and "
+            "$CHARMCRAFT_REGISTRY_URL environment variables instead.",
+            True,
+        )
+    ]
 
 
 @pytest.mark.parametrize(
@@ -642,13 +663,20 @@ def test_charmhub_allowed_with_legacy_bases(cls, content):
                 "name": "blah",
                 "summary": "",
                 "description": "",
-                "base": "ubuntu@24.10",
-                "build_base": "ubuntu@devel",
-                "platforms": {"amd64": None},
+                "platforms": {
+                    "noble": {
+                        "build-on": ["ubuntu@24.04:amd64"],
+                        "build-for": ["ubuntu@24.04:amd64"],
+                    },
+                    "questing": {
+                        "build-on": ["ubuntu@25.10:amd64"],
+                        "build-for": ["ubuntu@25.10:amd64"],
+                    },
+                },
                 "parts": {"my-part": {"plugin": "nil"}},
                 "charmhub": {"api_url": "http://charmhub.io"},
             },
-            "ubuntu@24.10",
+            "ubuntu@25.10",
         ),
         (
             project.PlatformCharm,

@@ -201,7 +201,7 @@ execute: |
   curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 2
 
   # [docs:clean-environment]
-  CHARMCRAFTCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
   # Back out to main directory for cleanup
   cd ..
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean

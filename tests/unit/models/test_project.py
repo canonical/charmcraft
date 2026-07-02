@@ -756,6 +756,42 @@ def test_charmhub_without_charmhub_field():
     assert result.charmhub is None
 
 
+def test_charmhub_allowed_with_multibase_platforms_all_legacy():
+    """Charmhub should be allowed when all platform bases are legacy/allowed."""
+    content = {
+        "type": "charm",
+        "name": "blah",
+        "summary": "",
+        "description": "",
+        "platforms": {"ubuntu@22.04:amd64": None, "ubuntu@24.04:amd64": None},
+        "parts": {"my-part": {"plugin": "nil"}},
+        "charmhub": {"api_url": "http://charmhub.io"},
+    }
+    result = project.PlatformCharm.model_validate(content)
+    assert result.charmhub is not None
+
+
+def test_charmhub_disallowed_with_multibase_platforms_includes_new_base():
+    """Charmhub should be rejected if any platform base is newer than ubuntu@24.04."""
+    content = {
+        "type": "charm",
+        "name": "blah",
+        "summary": "",
+        "description": "",
+        "platforms": {"ubuntu@24.04:amd64": None, "ubuntu@25.04:amd64": None},
+        "parts": {"my-part": {"plugin": "nil"}},
+        "charmhub": {"api_url": "http://charmhub.io"},
+    }
+
+    with pytest.raises(pydantic.ValidationError) as exc_info:
+        project.PlatformCharm.model_validate(content)
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert "charmhub" in errors[0]["msg"]
+    assert "ubuntu@25.04" in errors[0]["msg"]
+
+
 # endregion
 # region Charm tests
 @pytest.mark.parametrize(

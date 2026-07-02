@@ -16,16 +16,16 @@ Initialise a charm
 
 Before you initialise a charm project, decide what to call your charm.
 
-A charm's name is typically based on the name of the charm's workload. If you're setting
-up a Git repository, name the repository ``<charm name>-operator``. Use a different
+A charm's name is typically based on the name of the charm's workload. Use a different
 naming convention if your charm doesn't operate a workload. For detailed guidance, see
-:external+ops:ref:`Ops | How to initialise your project <init-charm>`.
+:external+ops:ref:`Ops | How to initialise your project <init-charm>`. The Ops guidance
+also explains how to name your charm's Git repository.
 
-To initialise a charm project, create a repository or directory for your charm, enter it,
-then run ``charmcraft init`` with the ``--profile`` flag followed by a suitable profile
-name: For a machine charm, ``machine``. For a Kubernetes charm, ``kubernetes`` or a
-12-factor app profile such as ``flask-framework``. This will create all the necessary
-files and even prepopulate them with useful content.
+To initialise a charm project, enter your working directory (likely your charm's
+repository), then run ``charmcraft init`` with the ``--profile`` flag followed by a
+suitable profile name: For a machine charm, ``machine``. For a Kubernetes charm,
+``kubernetes`` or a 12-factor app profile such as ``flask-framework``. This will create
+all the necessary files and even prepopulate them with useful content.
 
 .. code-block:: bash
 

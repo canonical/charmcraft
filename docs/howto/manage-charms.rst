@@ -31,8 +31,7 @@ files and even prepopulate them with useful content.
 
     charmcraft init --name <charm name> --profile <profile>
 
-It's important to specify ``--name`` if the name of the repository or directory ends
-with ``-operator``. Otherwise, your charm's name will end with ``-operator`` too.
+It's important to specify ``--name`` if the directory name and charm name are different.
 
 .. dropdown:: Example session
 

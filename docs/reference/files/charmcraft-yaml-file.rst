@@ -636,7 +636,7 @@ determines the name administrators will ultimately use to deploy the charm. E.g.
     name: <name>
 
 **Value:** Slug-oriented (ASCII lowercase letters, numbers, and hyphens) following the
-pattern ``<workload name in full>[<function>][-k8s]``.
+pattern ``<workload name>[<function>][-k8s]``.
 For example, ``argo-server-k8s``. Use a different pattern if the charm doesn't
 operate a workload. See :external+ops:ref:`Ops | Decide your charm's name <decide-your-charms-name>`.
 

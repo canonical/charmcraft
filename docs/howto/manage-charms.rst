@@ -56,7 +56,7 @@ with ``-operator``. Otherwise, your charm's name will end with ``-operator`` too
         ls -R
 
         .:
-        charmcraft.yaml  pyproject.toml  requirements.txt  src  tox.ini
+        charmcraft.yaml  pyproject.toml  src  tox.ini
 
         ./src:
         charm.py

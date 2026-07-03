@@ -500,8 +500,8 @@ Manage secrets
 
 Charms can interact with Juju secrets in three ways:
 
-- **Charm owns a secret**: the charm creates and manages the secret (e.g., a
-  database credential shared with a related app via relation data).
+- **Charm owns a secret**: the charm creates and manages the secret, such as a
+  database credential shared with a related app via relation data.
 - **Charm observes a charm-owned secret**: the charm reads a secret created by
   another charm, with the secret ID passed via relation data.
 - **Charm observes a user secret**: the charm reads a secret created by a Juju

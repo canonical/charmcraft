@@ -42,7 +42,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Flask app with Flask 3.1.3.
+#. Create a Flask app with Flask |conf_flask_version|.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Flask app on a local

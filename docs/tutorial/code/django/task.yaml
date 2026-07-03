@@ -112,7 +112,7 @@ execute: |
 
   # [docs:deploy-django-app]
   juju deploy \
-    ./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    ./django-hello-world_$(dpkg --print-architecture).charm \
     django-hello-world --resource \
     django-app-image=localhost:32000/django-hello-world:0.1
   # [docs:deploy-django-app-end]
@@ -184,7 +184,7 @@ execute: |
   # [docs:refresh-deployment]
   cd charm
   juju refresh django-hello-world \
-      --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+      --path=./django-hello-world_$(dpkg --print-architecture).charm \
       --resource django-app-image=localhost:32000/django-hello-world:0.2
   # [docs:refresh-deployment-end]
 
@@ -219,7 +219,7 @@ execute: |
   # [docs:repack-refresh-2nd-deployment]
   charmcraft pack
   juju refresh django-hello-world \
-    --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --path=./django-hello-world_$(dpkg --print-architecture).charm \
     --resource django-app-image=localhost:32000/django-hello-world:0.3
   # [docs:repack-refresh-2nd-deployment-end]
 

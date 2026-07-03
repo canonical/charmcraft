@@ -4,8 +4,8 @@ dynamic = ["version"]
 description = "The main tool to build, upload, and develop in general the Juju charms."
 readme = "README.md"
 dependencies = [
-    "craft-application~=6.0",
-    "craft-cli>=2.15.0",
+    "craft-application~=7.0",
+    "craft-cli~=3.4",
     "craft-grammar>=2.0.0",
     "craft-parts~=2.20",
     "craft-providers>=3.4.0,<4.0",
@@ -94,7 +94,6 @@ lint = [
     { include-group = "types" },
 ]
 types = [
-    "mypy[reports]~=1.11",
     "types-python-dateutil",
     "types-PyYAML",
     "types-requests",
@@ -126,6 +125,7 @@ constraint-dependencies = [
     "markupsafe>=2.0",
     "regex>=2021.11.10",
     "sphinx-basic-ng>=1.0.0b1",
+    "starlette>=1.0.1",
     "tornado>=4.0",
     "webencodings>=0.4.0",
     "launchpadlib>=1.11",
@@ -173,8 +173,6 @@ conflicts = [
     ]
 ]
 build-constraint-dependencies = [
-    # needed until we have rustc >= 1.78
-    "maturin<1.10.0 ; python_version < '3.14'",
 ]
 
 [build-system]
@@ -508,3 +506,8 @@ explicit = true
 
 [tool.uv.sources]
 python-apt = { index = "python-apt-wheels" }
+
+[tool.ty.src]
+exclude = [
+    "tests/spread",
+]

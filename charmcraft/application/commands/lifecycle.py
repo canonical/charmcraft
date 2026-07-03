@@ -62,10 +62,10 @@ class PackCommand(lifecycle.PackCommand):
         upload it to Charmhub with `charmcraft upload`.
 
         For the charm you must be inside a charm directory with a valid
-        `metadata.yaml`, `requirements.txt` including the `ops` package
-        for the Python operator framework, and an operator entrypoint,
-        usually `src/charm.py`.  See `charmcraft init` to create a
-        template charm directory structure.
+        `charmcraft.yaml` containing the charm metadata, a `requirements.txt`
+        including the `ops` package for the Python operator framework, and an
+        operator entrypoint, usually `src/charm.py`.  See `charmcraft help init`
+        to create a template charm directory structure.
         """
     )
 
@@ -116,7 +116,10 @@ class PackCommand(lifecycle.PackCommand):
         project = cast(models.Charm, self._services.project)
 
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(project.bases)
+        if isinstance(project, models.BasesCharm):
+            len_configured_bases = len(project.bases)
+        else:
+            len_configured_bases = 0
         for bases_index in bases_indices:
             if bases_index < 0:
                 raise CraftError(msg.format(bases_index))

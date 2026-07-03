@@ -3,6 +3,7 @@ import importlib
 import os
 import pathlib
 import sys
+import re
 
 import craft_parts_docs
 import craft_application_docs
@@ -28,23 +29,20 @@ import charmcraft
 project = "Charmcraft"
 author = "Canonical"
 
-# Sidebar documentation title; best kept reasonably short
-# The full version, including alpha/beta/rc tags
-release = charmcraft.__version__
-# The commit hash in the dev release version confuses the spellchecker
-if ".post" in release:
-    release = "dev"
-else:
-    major, minor, *_ = release.split(".")
+# Version string in sidebar
+if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
+    # Because of Autotools, we can safely assume the version starts with `n.n`
+    major, minor, *_ = charmcraft.__version__.split(".")
     release = f"{major}.{minor}"
-
-html_title = project + " documentation"
+else:  # Branch build
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    release = "dev" if rtd_version == "latest" else rtd_version
 
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)
 
 # Documentation website URL
-ogp_site_url = "https://documentation.ubuntu.com/charmcraft/"
+ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
 
 # Preview name of the documentation website
 ogp_site_name = project
@@ -90,7 +88,7 @@ html_context = {
 # }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-# slug = ''
+slug = "juju/docs/charmcraft"
 
 
 #########################
@@ -98,19 +96,19 @@ html_context = {
 #########################
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = f"{ogp_site_url}/{release}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
-sitemap_url_scheme = '{link}'
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 # sitemap_show_lastmod = True
 
 # Exclude generated pages from the sitemap:
 sitemap_excludes = [
-    '404/',
-    'genindex/',
-    'search/',
+    "404/",
+    "genindex/",
+    "search/",
 ]
 
 
@@ -137,23 +135,23 @@ rediraffe_redirects = "redirects.txt"
 linkcheck_anchors_ignore = [
     "#",
     ":",
-    r"https://github\.com/.*",
 ]
 linkcheck_ignore = [
-    # Ignore releases, since we'll include the next release before it exists.
-    r"^https://github.com/canonical/[a-z]*craft[a-z-]*/releases/.*",
     # Entire domains to ignore due to flakiness or issues
+    "https://github.com",
     r"^https://www.gnu.org/",
     r"^https://crates.io/",
     r"^https://([\w-]*\.)?npmjs.org",
     r"^https://rsync.samba.org",
     r"^https://ubuntu.com",
-    r"https://github.com/.*#",
     "http://django-hello-world",
     "http://www.inkscape.org",
     "https://matrix.to",
     "https://www.npmjs.com/",
     r"^https://www.mysql.com/$",
+    # 2026-06-03: Ignore Canonical sites until filtering is resolved
+    "https://snapcraft.io",
+    "https://juju.is",
 ]
 
 # Give linkcheck multiple tries on failure
@@ -197,6 +195,7 @@ extensions = [
 
 # Excludes files or directories from processing
 exclude_patterns = [
+    "release-notes/charmcraft-4.4.rst",
     "README.md",  # Docs README
     "reuse",
     "common/craft-parts/explanation/lifecycle.rst",
@@ -217,6 +216,7 @@ exclude_patterns = [
     "common/craft-parts/reference/step_output_directories.rst",
     "common/craft-parts/reference/plugins/ant_plugin.rst",
     "common/craft-parts/reference/plugins/autotools_plugin.rst",
+    "common/craft-parts/reference/plugins/bazel_plugin.rst",
     "common/craft-parts/reference/plugins/cargo_use_plugin.rst",
     "common/craft-parts/reference/plugins/cmake_plugin.rst",
     "common/craft-parts/reference/plugins/colcon_plugin.rst",
@@ -224,12 +224,14 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/dotnet_v2_plugin.rst",
     "common/craft-parts/reference/plugins/go_plugin.rst",
     "common/craft-parts/reference/plugins/gradle_plugin.rst",
+    "common/craft-parts/reference/plugins/gradle_use_plugin.rst",
     "common/craft-parts/reference/plugins/jlink_plugin.rst",
     "common/craft-parts/reference/plugins/make_plugin.rst",
     "common/craft-parts/reference/plugins/maven_plugin.rst",
     "common/craft-parts/reference/plugins/maven_use_plugin.rst",
     "common/craft-parts/reference/plugins/meson_plugin.rst",
     "common/craft-parts/reference/plugins/npm_plugin.rst",
+    "common/craft-parts/reference/plugins/npm_use_plugin.rst",
     "common/craft-parts/reference/plugins/poetry_plugin.rst",
     "common/craft-parts/reference/plugins/python_plugin.rst",
     "common/craft-parts/reference/plugins/python_v2_plugin.rst",
@@ -251,12 +253,13 @@ exclude_patterns = [
 
 # Adds custom CSS files, located under 'html_static_path'
 html_css_files = [
-    'css/cookie-banner.css'
+    "css/cookie-banner.css"
 ]
 
 # Adds custom JavaScript files, located under 'html_static_path'
 html_js_files = [
-    'js/bundle.js',
+    "js/bundle.js",
+    "js/overwrite-links.js",
 ]
 
 # Specifies a reST snippet to be appended to each .rst file
@@ -292,13 +295,13 @@ if "discourse_prefix" not in html_context and "discourse" in html_context:
 # Add configuration for intersphinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "craft-parts": ("https://canonical-craft-parts.readthedocs-hosted.com/latest/", None),
-    "juju": ("https://documentation.ubuntu.com/juju/3.6/", None),
-    "ops": ("https://documentation.ubuntu.com/ops/latest/", None),
-    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable/", None),
-    "12-factor": ("https://canonical-12-factor-app-support.readthedocs-hosted.com/latest/", None),
-    "charmlibs": ("https://documentation.ubuntu.com/charmlibs/", None),
-    "multipass": ("https://documentation.ubuntu.com/multipass/latest/", None),
+    "craft-parts": ("https://documentation.ubuntu.com/craft-parts/latest", None),
+    "juju": ("https://canonical.com/juju/docs/juju-cli/3.6", None),
+    "ops": ("https://canonical.com/juju/docs/ops/latest", None),
+    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable", None),
+    "12-factor": ("https://canonical.com/juju/docs/12-factor/latest", None),
+    "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
+    "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
 }
 
 
@@ -343,3 +346,21 @@ def link_common_docs(library_name: str) -> None:
 
 link_common_docs("craft-parts")
 link_common_docs("craft-application")
+
+# Source 12-factor framework versions from Spread test materials and inject into docs
+def sub_12f_version(prolog: str, path: str, package: str, variable: str) -> str:
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+
+    with open(path, encoding="utf-8") as f:
+        match = re.search(rf"{re.escape(package)}([\d.]+)", f.read())
+        if match:
+            version = match.group(1)
+            prolog += f"\n.. |{variable}| replace:: {version}"
+
+    return prolog
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/django/requirements.txt", "Django==", "conf_django_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/fastapi/requirements.txt", "fastapi[standard]==", "conf_fastapi_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/flask/requirements.txt", "Flask==", "conf_flask_version")

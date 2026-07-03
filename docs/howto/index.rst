@@ -36,6 +36,7 @@ Publish and release
 When you're ready to distribute your charm, Charmcraft provides commands to register it,
 publish it to Charmhub, and manage its releases.
 
+- :ref:`how-to-build-remotely`
 - :ref:`manage-the-current-charmhub-user`
 - :ref:`manage-names`
 - :ref:`manage-icons`
@@ -74,6 +75,7 @@ update a charm to the new base:
     manage-extensions
     manage-resources
     manage-libraries
+    build-remotely
     shared-cache
     pack-a-hooks-based-charm-with-charmcraft
     pack-a-reactive-charm-with-charmcraft

@@ -76,6 +76,14 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_WARNING = (
+    "WARNING: Charmhub-hosted charm libraries are deprecated. "
+    "Go to https://ubu.link/charmhub-libraries-deprecation for more information."
+)
+
+
+def _emit_charmlibs_deprecation_warning() -> None:
+    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 class LoginCommand(CharmcraftCommand):
@@ -206,17 +214,16 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
+        store = cast(StoreService, self._services.get("store"))
         if parsed_args.export:
-            credentials = self._services.store.get_credentials(
-                packages=packages, **kwargs
-            )
+            credentials = store.get_credentials(packages=packages, **kwargs)
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            store.login(packages=packages, **kwargs)
+            username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -240,8 +247,9 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        store = cast(StoreService, self._services.get("store"))
         try:
-            self._services.store.logout()
+            store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -1255,6 +1263,7 @@ class CreateLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         lib_name = parsed_args.name
         valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
@@ -1349,6 +1358,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         charm_name = (
             self._services.get("project").get().name or utils.get_name_from_yaml()
         )
@@ -1457,7 +1467,7 @@ class PublishLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in analysis:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,
@@ -1515,6 +1525,7 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
@@ -1666,6 +1677,7 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
+        _emit_charmlibs_deprecation_warning()
         store = cast("StoreService", self._services.get("store"))
         project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
@@ -1774,6 +1786,7 @@ class ListLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.name:
             charm_name = parsed_args.name
         else:

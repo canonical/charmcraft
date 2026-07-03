@@ -88,7 +88,7 @@ execute: |
 
   # [docs:deploy-flask-app]
   juju deploy \
-    ./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    ./flask-hello-world_$(dpkg --print-architecture).charm \
     flask-hello-world --resource \
     flask-app-image=localhost:32000/flask-hello-world:0.1
   # [docs:deploy-flask-app-end]
@@ -131,7 +131,7 @@ execute: |
   # [docs:refresh-deployment]
   charmcraft pack
   juju refresh flask-hello-world \
-    --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --path=./flask-hello-world_$(dpkg --print-architecture).charm \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.2
   # [docs:refresh-deployment-end]
 
@@ -169,7 +169,7 @@ execute: |
   # [docs:refresh-2nd-deployment]
   charmcraft pack
   juju refresh flask-hello-world \
-    --path=./flask-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --path=./flask-hello-world_$(dpkg --print-architecture).charm \
     --resource flask-app-image=localhost:32000/flask-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 

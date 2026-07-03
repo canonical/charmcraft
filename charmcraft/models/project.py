@@ -17,6 +17,7 @@
 
 import abc
 import datetime
+import os
 import pathlib
 import re
 import textwrap
@@ -183,6 +184,18 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     This inherits from CraftBaseModel rather than from the base craft-application Project
     in order to preserve field order. It's registered as a virtual child class below.
     """
+
+    @classmethod
+    def _providers_base(cls, base: str) -> Any:  # noqa: ANN401
+        """Get a BaseAlias from the Project base.
+
+        This overrides the base implementation to return None if the base is unknown,
+        preventing validation errors on build-base for new or experimental bases.
+        """
+        try:
+            return super()._providers_base(base)
+        except ValueError:
+            return None
 
     type: Literal["charm"]
     title: models.ProjectTitle | None = None
@@ -953,7 +966,12 @@ class PlatformCharm(CharmProject):
                 )
             }
 
-        if invalid_bases := build_bases - const.REACTIVE_PLUGIN_BASES:
+        effective_reactive_bases = const.REACTIVE_PLUGIN_BASES
+        if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+            effective_reactive_bases = (
+                effective_reactive_bases | const.REACTIVE_PLUGIN_EXPERIMENTAL_BASES
+            )
+        if invalid_bases := build_bases - effective_reactive_bases:
             if len(invalid_bases) == 1:
                 raise ValueError(
                     f"Cannot use 'charm' or 'reactive' plugins with base {invalid_bases.pop()!r}"
@@ -964,7 +982,12 @@ class PlatformCharm(CharmProject):
             )
 
         if "charm" in legacy_plugins:
-            if invalid_bases := build_bases - const.CHARM_PLUGIN_BASES:
+            effective_charm_bases = const.CHARM_PLUGIN_BASES
+            if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+                effective_charm_bases = (
+                    effective_charm_bases | const.CHARM_PLUGIN_EXPERIMENTAL_BASES
+                )
+            if invalid_bases := build_bases - effective_charm_bases:
                 if len(invalid_bases) == 1:
                     raise ValueError(
                         f"Cannot use 'charm' plugin with base {invalid_bases.pop()!r}"

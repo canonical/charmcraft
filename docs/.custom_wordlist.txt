@@ -10,6 +10,7 @@ Autotools
 backend
 backends
 backported
+Bazel
 boolean
 bugfix(es)?
 Bundler
@@ -88,12 +89,14 @@ pymarkdown
 pymysql
 QEMU
 qmake
+rackup
 Read the Docs
 readthedocs
 reStructuredText
 retrigger(ing)?
 Rockcraft
 rst
+rustc
 sandboxed
 SCons
 scriptlets?
@@ -120,7 +123,7 @@ texlive
 thedb
 TOC
 toctree
-toolchain
+toolchain(s)?
 touchpoint
 txt
 unbuilt
@@ -131,6 +134,7 @@ URIs?
 URL
 utils
 uv
+Valkey
 venv
 VM's
 VMs

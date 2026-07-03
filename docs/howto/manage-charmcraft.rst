@@ -108,7 +108,7 @@ In an isolated environment
 Another way to install Charmcraft is via `Multipass`_. This is a good way to install it
 on any platform, as it will give you an isolated development environment.
 
-First, `install Multipass <https://multipass.run/docs/how-to-install-multipass>`_.
+First, `install Multipass <https://documentation.ubuntu.com/multipass/latest/how-to-guides/install-multipass/>`_.
 
 Second, use Multipass to provision a virtual machine. The following command will launch
 a fresh new VM with 4 cores, 8GB RAM and a 20GB disk and the name ‘charm-dev':

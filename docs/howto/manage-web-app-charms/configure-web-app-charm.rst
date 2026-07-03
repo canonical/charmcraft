@@ -223,7 +223,8 @@ Add the custom action to the project file:
     :language: yaml
     :caption: charmcraft.yaml
 
-Add ``import requests`` to the start of ``src/charm.py``, then define
+Add ``requests`` to the ``charm/requirements.txt`` file, and
+add ``import requests`` to the start of ``src/charm.py``. Finally, define
 your custom action as part of the class and provide the function definition:
 
 .. literalinclude:: ../code/custom-action-updatelogfile/updatelogfile_action_charm.py
@@ -308,8 +309,17 @@ Add the Juju secret ID to the application:
         - ``DJANGO_API_TOKEN_VALUE: "1234"``
         - ``DJANGO_API_TOKEN_OTHERVALUE: "5678"``
 
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
+        The ``DJANGO_SECRET_KEY`` environment variable is initialized to a
+        random value. You can override it using the built-in configuration option
+        ``django-secret-key-id``, which accepts a Juju secret whose ``value`` key
+        is exposed as the ``DJANGO_SECRET_KEY`` environment variable.
+        For example:
+
+        .. code-block:: bash
+
+            juju add-secret my-django-secret-key value=<secret-string>
+            juju grant-secret my-django-secret-key <app name>
+            juju config <app name> django-secret-key-id=secret:<secret id>
 
     .. tab-item:: Express
         :sync: express
@@ -319,9 +329,6 @@ Add the Juju secret ID to the application:
         - ``APP_API_TOKEN_VALUE: "1234"``
         - ``APP_API_TOKEN_OTHERVALUE: "5678"``
 
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
-
     .. tab-item:: FastAPI
         :sync: fastapi
 
@@ -329,9 +336,6 @@ Add the Juju secret ID to the application:
 
         - ``APP_API_TOKEN_VALUE: "1234"``
         - ``APP_API_TOKEN_OTHERVALUE: "5678"``
-
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
 
     .. tab-item:: Flask
         :sync: flask
@@ -341,9 +345,6 @@ Add the Juju secret ID to the application:
         - ``APP_API_TOKEN_VALUE: "1234"``
         - ``APP_API_TOKEN_OTHERVALUE: "5678"``
 
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
-
     .. tab-item:: Go
         :sync: go
 
@@ -351,9 +352,6 @@ Add the Juju secret ID to the application:
 
         - ``APP_API_TOKEN_VALUE: "1234"``
         - ``APP_API_TOKEN_OTHERVALUE: "5678"``
-
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
 
     .. tab-item:: Spring Boot
         :sync: spring-boot
@@ -363,8 +361,8 @@ Add the Juju secret ID to the application:
         - ``APP_API_TOKEN_VALUE: "1234"``
         - ``APP_API_TOKEN_OTHERVALUE: "5678"``
 
-            See also: `How to manage secrets
-            <https://juju.is/docs/juju/manage-secrets>`_
+.. seealso::
+   `How to manage secrets <https://juju.is/docs/juju/manage-secrets>`_
 
 .. _configure-12-factor-charms-async-flask:
 

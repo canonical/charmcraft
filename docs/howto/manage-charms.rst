@@ -498,9 +498,22 @@ Manage secrets
     See first: :external+juju:ref:`Juju | Manage secrets <manage-secrets>`,
     :external+juju:ref:`Juju | Secret <secret>`
 
-To make your charm capable of accepting a user secret, in your charm's
-project file, specify the ``config`` key with the ``type`` subkey set to
-``secret``.
+Charms can interact with Juju secrets in three ways:
+
+- **Charm owns a secret**: the charm creates and manages the secret, such as a
+  database credential shared with a related app via relation data.
+- **Charm observes a charm-owned secret**: the charm reads a secret created by
+  another charm, with the secret ID passed via relation data.
+- **Charm observes a user secret**: the charm reads a secret created by a Juju
+  user (``juju add-secret``), with the secret URI passed via a configuration
+  option of ``type: secret``.
+
+    See more: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`,
+    :external+juju:ref:`Juju | Secret <secret>`
+
+The third case — **user secrets** — is the one that requires a Charmcraft
+declaration. To allow a Juju user to provide a secret to your charm, declare a
+configuration option of ``type: secret`` in your charm's project file:
 
     See more: :ref:`charmcraft-yaml-key-config`
 

@@ -10,11 +10,13 @@ environment:
 
 prepare: |
   snap install --classic --no-wait astral-uv
+  snap watch --last=install
   rm -rf my-application
   charmcraft init --project-dir=my-application --profile=${PROFILE}
+  cd my-application
+  uv lock
 
-  # The templates use tox's uv runner, so install tox with the tox-uv plugin.
-  snap watch --last=install
+  # Our templates use tox's uv runner.
   uv tool install --force --with tox-uv tox
 
 execute: |

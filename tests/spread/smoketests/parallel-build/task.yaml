@@ -8,9 +8,14 @@ include:
 
 prepare: |
   tests.pkgs install unzip
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm1
   charmcraft init --project-dir=charm2
   charmcraft init --project-dir=charm3
+  pushd charm1 && uv lock && popd
+  pushd charm2 && uv lock && popd
+  pushd charm3 && uv lock && popd
 
 restore: |
   pushd charm1

@@ -5,8 +5,11 @@ include:
 
 prepare: |
   tests.pkgs install jq
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME --profile=machine
   cd charm
+  uv lock
 
   cat <<- EOF >> charmcraft.yaml
   charmhub:

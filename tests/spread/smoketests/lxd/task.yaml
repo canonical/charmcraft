@@ -10,11 +10,6 @@ prepare: |
   cd charm
   uv lock
 
-  # The charm itself doesn't matter, so replace the dependencies with something
-  # simple and small so we don't have to build pyyaml.
-  # NOTE: We still do need at least one dependency here so we can trigger the cache.
-  echo "distro" > requirements.txt
-
   # delete charmcraft instances
   ALL_INSTANCES="$(lxc list --project=charmcraft --format=csv --columns="n")"
   if [ -n "$ALL_INSTANCES" ]; then

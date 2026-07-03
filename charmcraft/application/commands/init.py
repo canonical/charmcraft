@@ -123,12 +123,12 @@ README.md
 To manage your charm's dependencies, use uv.
 
 To migrate from the Charm plugin to the uv plugin, see:
-https://documentation.ubuntu.com/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
 
 Next steps:
  1. Run 'uv lock'
- 2. Commit the project files to source control, including uv.lock
- 3. Edit the project files to provide metadata and write your charm code
+ 2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
+ 3. Write your charm code and tests
 """
 
 

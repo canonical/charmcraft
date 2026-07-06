@@ -514,116 +514,116 @@ name of the web app with the ``-c`` option.
             .. tab-item:: Django
                 :sync: django
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c django-app
 
             .. tab-item:: Express
                 :sync: express
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
             .. tab-item:: FastAPI
                 :sync: fastapi
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
             .. tab-item:: Flask
                 :sync: flask
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
             .. tab-item:: Go
                 :sync: go
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
             .. tab-item:: Spring Boot
                 :sync: spring-boot
 
-        .. tab-set::
+                .. tab-set::
 
-            .. tab-item:: MicroK8s
-                :sync: microk8s
+                    .. tab-item:: MicroK8s
+                        :sync: microk8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-            .. tab-item:: Canonical K8s
-                :sync: canonical-k8s
+                    .. tab-item:: Canonical K8s
+                        :sync: canonical-k8s
 
-                .. code-block:: bash
+                        .. code-block:: bash
 
-                    sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
 .. seealso::
 

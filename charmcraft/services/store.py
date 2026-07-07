@@ -198,6 +198,7 @@ class BaseStoreService(craft_application.AppService):
             application_name=self._app.name,
             host=str(parse.urlparse(self._base_url).netloc),
             ephemeral=True,
+            environment_auth=None,
         )
         UbuntuOneLogin.login_with(
             email=email,

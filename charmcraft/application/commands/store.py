@@ -214,6 +214,12 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
+        if not parsed_args.export and os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
+            raise CraftError(
+                f"Cannot login when using alternative auth through "
+                f"{const.ALTERNATE_AUTH_ENV_VAR} environment variable."
+            )
+
         email = emit.prompt("Email address: ")
         password = emit.prompt("Password: ", hide=True)
 

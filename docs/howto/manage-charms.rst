@@ -22,7 +22,7 @@ naming convention if your charm doesn't operate a workload. For detailed guidanc
 also explains how to name your charm's Git repository.
 
 To initialise a charm project, enter the directory that will contain your charm (likely
-your charm's repository), then run ``charmcraft init``:
+in your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 

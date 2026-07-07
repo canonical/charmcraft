@@ -21,17 +21,21 @@ naming convention if your charm doesn't operate a workload. For detailed guidanc
 :external+ops:ref:`Ops | How to initialise your project <init-charm>`. The Ops guidance
 also explains how to name your charm's Git repository.
 
-To initialise a charm project, enter your working directory (likely your charm's
-repository), then run ``charmcraft init`` with the ``--profile`` flag followed by a
-suitable profile name: For a machine charm, ``machine``. For a Kubernetes charm,
-``kubernetes`` or a 12-factor app profile such as ``flask-framework``. This will create
-all the necessary files and even prepopulate them with useful content.
+To initialise a charm project, enter the directory that will contain your charm (likely
+your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 
     charmcraft init --name <charm name> --profile <profile>
 
-It's important to specify ``--name`` if the directory name and charm name are different.
+This will create all the necessary files and even prepopulate them with useful content.
+
+If the charm name you want is different from the current directory name, don't skip the
+``--name`` argument. Otherwise the charm name will match the directory name.
+
+``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
+charm, or a 12-factor app profile such as ``flask-framework``. If you don't specify a
+profile, you get the ``kubernetes`` profile.
 
 .. dropdown:: Example session
 
@@ -59,9 +63,6 @@ It's important to specify ``--name`` if the directory name and charm name are di
 
         ./src:
         charm.py
-
-The command also allows you to not specify any profile. In that case you get the
-``kubernetes`` profile -- a minimal profile with scaffolding for a Kubernetes charm.
 
     See more: :ref:`ref_commands_init`, :ref:`profile`, :ref:`files`
 

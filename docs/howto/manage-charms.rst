@@ -28,7 +28,7 @@ your charm's repository), then run ``charmcraft init``:
 
     charmcraft init --name <charm name> --profile <profile>
 
-This will create all the necessary files and even prepopulate them with useful content.
+This will create all the necessary files and populate them with useful content.
 
 If the charm name you want is different from the current directory name, don't skip the
 ``--name`` argument. Otherwise the charm name will match the directory name.

@@ -138,8 +138,11 @@ class BaseStoreService(craft_application.AppService):
         channels: Sequence[str] | None = None,
     ) -> None:
         """Login to the store."""
-        package_names = (
-            [p.package_name for p in packages] if packages is not None else None
+        # packages need to be serialized
+        package_dicts = (
+            [{"type": p.package_type, "name": p.package_name} for p in packages]
+            if packages is not None
+            else None
         )
 
         try:
@@ -153,7 +156,7 @@ class BaseStoreService(craft_application.AppService):
                 application_name=self._app.name,
                 permissions=permissions,
                 ttl=ttl,
-                packages=package_names,
+                packages=package_dicts,  # ty: ignore[invalid-argument-type]
                 channels=channels,
             )
         except craft_store.errors.CredentialsAlreadyAvailable as exc:
@@ -191,8 +194,11 @@ class BaseStoreService(craft_application.AppService):
         This logs in independent of any credentials currently stored for the application and
         returns the resulting macaroon as a string.
         """
-        package_names = (
-            [p.package_name for p in packages] if packages is not None else None
+        # packages need to be serialized
+        package_dicts = (
+            [{"type": p.package_type, "name": p.package_name} for p in packages]
+            if packages is not None
+            else None
         )
         ephemeral_auth = craft_store.Auth(
             application_name=self._app.name,
@@ -210,7 +216,7 @@ class BaseStoreService(craft_application.AppService):
             store_auth=ephemeral_auth,
             permissions=permissions,
             ttl=ttl,
-            packages=package_names,
+            packages=package_dicts,  # ty: ignore[invalid-argument-type]
             channels=channels,
         )
         raw_creds = ephemeral_auth.get_credentials()

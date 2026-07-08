@@ -13,8 +13,6 @@ parts:
     reactive-charm-build-arguments:
       - -v
       - --binary-wheels-from-source
-      - --upgrade-buildvenv-core-deps
-      - --ignore-requires-python
     build-snaps:
       - charm/CHARM_SNAP_CHANNEL
     build-packages: [python3-dev]

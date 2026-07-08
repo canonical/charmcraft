@@ -48,6 +48,9 @@ APP_METADATA = craft_application.AppMetadata(
     docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
     mandatory_adoptable_fields=[],  # Version field is not mandatory.
+    use_git_build_root=util.strtobool(
+        os.getenv(const.EXPERIMENTAL_MONOREPO_ENV_VAR, "false")
+    ),
 )
 
 PRIME_BEHAVIOUR_CHANGE_MESSAGE = (

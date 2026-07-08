@@ -3,6 +3,19 @@
 Use a 12-factor app charm
 =========================
 
+.. important::
+
+   There are two versions of the ``paas-charm`` library used to build 12-factor
+   app charms:
+
+   - **V1** supports Ubuntu 22.04 (Jammy) and 24.04 (Noble) bases.
+   - **V2** supports Ubuntu 26.04 (Questing) bases and introduces improvements
+     that align configuration and behaviour across all supported frameworks.
+
+   If you are targeting Ubuntu 26.04, you must use the V2 charm templates (the
+   ``-26.04`` variants). The guides on this page apply to both versions unless
+   noted otherwise.
+
 .. _use-12-factor-charms-admin-user-django:
 
 Create an admin user for a Django app charm
@@ -521,14 +534,14 @@ name of the web app with the ``-c`` option.
 
                         .. code-block:: bash
 
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
                     .. tab-item:: Canonical K8s
                         :sync: canonical-k8s
 
                         .. code-block:: bash
 
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
             .. tab-item:: Express
                 :sync: express
@@ -578,14 +591,14 @@ name of the web app with the ``-c`` option.
 
                         .. code-block:: bash
 
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
                     .. tab-item:: Canonical K8s
                         :sync: canonical-k8s
 
                         .. code-block:: bash
 
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
+                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
             .. tab-item:: Go
                 :sync: go

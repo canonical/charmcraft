@@ -3,6 +3,19 @@
 Manage extensions
 =================
 
+.. important::
+
+   There are two versions of the ``paas-charm`` library used to build 12-factor
+   app charms:
+
+   - **V1** supports Ubuntu 22.04 (Jammy) and 24.04 (Noble) bases.
+   - **V2** supports Ubuntu 26.04 (Questing) bases and introduces improvements
+     that align configuration and behaviour across all supported frameworks.
+
+   If you are targeting Ubuntu 26.04, you must use the V2 charm templates (the
+   ``-26.04`` variants). The guides on this page apply to both versions unless
+   noted otherwise.
+
 This guide shows how to view available :ref:`extensions <extensions>`
 and view details about extensions in use.
 

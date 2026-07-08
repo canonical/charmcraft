@@ -1,0 +1,4 @@
+[[PackageOverrides]]
+name = "python-apt"
+ignore = true
+reason = "System package"

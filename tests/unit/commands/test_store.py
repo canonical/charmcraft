@@ -103,11 +103,12 @@ def test_login_export(
     fake_encoded = "base64encodedcreds=="
 
     mock_auth = mock.Mock()
-    mock_auth.get_credentials.return_value = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
     mock_auth.encode_credentials.return_value = fake_encoded
 
     mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
     mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
     cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(
@@ -136,7 +137,7 @@ def test_login_export_otp(
     fake_encoded = "base64encodedcreds=="
 
     mock_auth = mock.Mock()
-    mock_auth.get_credentials.return_value = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
     mock_auth.encode_credentials.return_value = fake_encoded
 
     mocker.patch(
@@ -144,6 +145,7 @@ def test_login_export_otp(
         side_effect=[UbuntuOneOtpRequiredError(), None],
     )
     mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
     cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(

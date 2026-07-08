@@ -294,16 +294,22 @@ def test_set_resource_revisions_architectures_response_form(
 
 
 def test_get_credentials(mocker, store):
-    """get_credentials() uses UbuntuOneLogin with ephemeral auth."""
-    mock_creds = '{"t":"u1-macaroon","v":{"r":"root","d":"discharge"}}'
+    """get_credentials() uses UbuntuOneLogin with ephemeral auth and exchanges macaroons."""
+    mock_store_token = "exchanged-store-token"
     mock_encoded = "base64encodedcreds"
 
     mock_login = mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
     mock_auth_cls = mocker.patch("charmcraft.services.store.craft_store.Auth")
     mock_auth_instance = mock.Mock()
-    mock_auth_instance.get_credentials.return_value = mock_creds
+    mock_auth_instance.get_credentials.return_value = mock_store_token
     mock_auth_instance.encode_credentials.return_value = mock_encoded
     mock_auth_cls.return_value = mock_auth_instance
+
+    mock_u1_auth_cls = mocker.patch(
+        "charmcraft.services.store.craft_store.UbuntuOneAuth"
+    )
+    mock_u1_auth_instance = mock.Mock()
+    mock_u1_auth_cls.return_value = mock_u1_auth_instance
 
     result = store.get_credentials(email="user@example.com", password="pw123")
 
@@ -316,6 +322,14 @@ def test_get_credentials(mocker, store):
     mock_auth_cls.assert_called_once()
     auth_kwargs = mock_auth_cls.call_args[1]
     assert auth_kwargs.get("ephemeral") is True
+
+    # Verify the exchange is triggered so the exported credential is a store token
+    mock_u1_auth_cls.assert_called_once_with(
+        auth=mock_auth_instance,
+        api_base_url=store._base_url,
+        client_description=store._get_description(),
+    )
+    mock_u1_auth_instance.get_token_from_keyring.assert_called_once()
 
     assert result == mock_encoded
 

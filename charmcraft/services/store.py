@@ -219,6 +219,14 @@ class BaseStoreService(craft_application.AppService):
             packages=package_dicts,  # ty: ignore[invalid-argument-type]
             channels=channels,
         )
+
+        # Exchange the raw macaroons for a store token.
+        craft_store.UbuntuOneAuth(
+            auth=ephemeral_auth,
+            api_base_url=self._base_url,
+            client_description=self._get_description(),
+        ).get_token_from_keyring()
+
         raw_creds = ephemeral_auth.get_credentials()
         return ephemeral_auth.encode_credentials(raw_creds)
 

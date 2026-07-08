@@ -1,1 +1,2 @@
 pytest-time==0.3.1  # missing pytest
+pygments>=2.20.0

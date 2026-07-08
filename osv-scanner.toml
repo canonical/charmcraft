@@ -2,3 +2,8 @@
 name = "python-apt"
 ignore = true
 reason = "System package"
+
+[[PackageOverrides]]
+name = "protobuf"
+ignore = true
+reason = "Pinned <6.33 due to s390x segfault"

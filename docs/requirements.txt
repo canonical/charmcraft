@@ -30,3 +30,6 @@ sphinx-sitemap
 # Vale dependencies
 rst2html
 vale
+gitpython>=3.1.50
+h11>=0.16.0
+idna>=3.15

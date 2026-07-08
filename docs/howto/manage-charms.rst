@@ -1,5 +1,8 @@
 .. _manage-charms:
 
+.. meta::
+    :description: How to manage the full life cycle of a Juju charm with Charmcraft. This guide covers initializing, configuring, packing, publishing to Charmhub, and managing channel revisions.
+
 Manage charms
 =============
 
@@ -234,15 +237,18 @@ If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
-To add content to the **Description** tab,
-create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
-in your charm's project file under the
-:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
+Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
+and externally-hosted documentation sites. With an externally-hosted site,
+Charmhub displays a **Read documentation** button that redirects users to the specified URL,
+while the **Description** tab displays your charm's basic metadata summary.
+
+To provide your main user documentation, include its URL in your charm's project file
+under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. E.g.,
 
 .. code-block:: yaml
 
     links:
-      documentation: https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778
+      documentation: https://documentation.ubuntu.com/traefik-k8s-charm
 
 ..
 
@@ -492,9 +498,22 @@ Manage secrets
     See first: :external+juju:ref:`Juju | Manage secrets <manage-secrets>`,
     :external+juju:ref:`Juju | Secret <secret>`
 
-To make your charm capable of accepting a user secret, in your charm's
-project file, specify the ``config`` key with the ``type`` subkey set to
-``secret``.
+Charms can interact with Juju secrets in three ways:
+
+- **Charm owns a secret**: the charm creates and manages the secret, such as a
+  database credential shared with a related app via relation data.
+- **Charm observes a charm-owned secret**: the charm reads a secret created by
+  another charm, with the secret ID passed via relation data.
+- **Charm observes a user secret**: the charm reads a secret created by a Juju
+  user (``juju add-secret``), with the secret URI passed via a configuration
+  option of ``type: secret``.
+
+    See more: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`,
+    :external+juju:ref:`Juju | Secret <secret>`
+
+The third case — **user secrets** — is the one that requires a Charmcraft
+declaration. To allow a Juju user to provide a secret to your charm, declare a
+configuration option of ``type: secret`` in your charm's project file:
 
     See more: :ref:`charmcraft-yaml-key-config`
 
@@ -504,7 +523,7 @@ project file, specify the ``config`` key with the ``type`` subkey set to
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-parts`
+    See more: :ref:`parts`
 
 .. _pack-a-charm:
 

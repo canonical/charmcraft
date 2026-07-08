@@ -397,45 +397,6 @@ with access to sudo to elevate its privileges.
     :end-before: config:
 
 
-.. _charmcraft-yaml-key-charmhub:
-
-``charmhub``
-------------
-
-.. caution::
-
-    This key is only meaningful in Charmcraft 2. Use the environment variables
-    ``CHARMCRAFT_STORE_API_URL``, ``CHARMCRAFT_UPLOAD_URL`` and
-    ``CHARMCRAFT_REGISTRY_URL`` for newer versions of Charmcraft.
-
-
-**Status:** Deprecated and nonfunctional in Charmcraft 3.
-
-**Purpose:** Configures Charmcraft's interaction with store servers.
-
-**Structure:** This key allows for the configuration of three values---the base
-URL for the Charmhub API, the base URL to push binaries to Charmhub and the URL
-of the container registry for OCI image uploads. These keys are also optional.
-
-.. code-block:: yaml
-
-    charmhub:
-      api-url: <api url>
-      storage-url: <storage url>
-      registry-url: <registry url>
-
-The key is used mostly in the context of "private" charm stores, defaulting to
-the standard Canonical services to operate with charms.
-
-.. dropdown:: Example
-
-    .. code-block:: yaml
-
-        charmhub:
-          api-url: https://api.staging.charmhub.io
-          storage-url: https://storage.staging.snapcraftcontent.com
-
-
 .. _charmcraft-yaml-key-config:
 
 ``config``

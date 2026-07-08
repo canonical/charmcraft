@@ -19,6 +19,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+from typing import Any
 
 import craft_application
 import pytest
@@ -46,7 +47,7 @@ def test_lock_cache(
         ["bash", "-c", f"flock -n {lock_file} true"] if shutil.which("flock") else None
     )
     provider = service_factory.provider
-    provider_kwargs = {
+    provider_kwargs: dict[str, Any] = {
         "build_info": default_build_info,
         "work_dir": tmp_path,
         "cache_path": cache_path,
@@ -92,7 +93,7 @@ def test_locked_cache_no_cache(
             subprocess.run(bash_lock_cmd, check=True)
 
     provider = service_factory.provider
-    provider_kwargs = {
+    provider_kwargs: dict[str, Any] = {
         "build_info": default_build_info,
         "work_dir": tmp_path,
         "cache_path": cache_path,
@@ -126,7 +127,7 @@ def test_cache_symlink(
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
     provider = service_factory.provider
-    provider_kwargs = {
+    provider_kwargs: dict[str, Any] = {
         "build_info": default_build_info,
         "work_dir": tmp_path,
         "cache_path": cache_path,

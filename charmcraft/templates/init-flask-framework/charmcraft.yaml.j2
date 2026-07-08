@@ -1,5 +1,5 @@
 # This file configures Charmcraft.
-# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+# See https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/ for guidance.
 # For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
 
 name: {{ name }}
@@ -45,6 +45,10 @@ extensions:
 #   redis:
 #     interface: redis
 #     optional: false
+#     limit: 1
+#   valkey:
+#     interface: valkey_client
+#     optional: true
 #     limit: 1
 #   s3:
 #     interface: s3

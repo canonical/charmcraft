@@ -10,8 +10,7 @@ The project's ``platforms`` key determines where charms are
 built and where they run.
 
 For more information on how to build charms for specific bases and
-architectures, see the :doc:`Platforms how-to </howto/build-guides/select-platforms>`
-page.
+architectures, refer to :ref:`select-platforms`.
 
 Standard notation
 ~~~~~~~~~~~~~~~~~

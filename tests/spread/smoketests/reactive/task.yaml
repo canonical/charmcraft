@@ -10,6 +10,7 @@ environment:
   BASE_CHANNEL/resolute: "26.04"
 
 prepare: |
+  tests.pkgs install unzip
   cd reactivecharm
 
   if [ "$BASE_CHANNEL" = "26.04" ]; then
@@ -54,3 +55,6 @@ execute: |
   cd reactivecharm
   charmcraft pack
   test -f reactive-test*.charm
+
+  # Verify that .build.manifest file is present in the charm
+  unzip -l reactive-test*.charm | MATCH ".build.manifest"

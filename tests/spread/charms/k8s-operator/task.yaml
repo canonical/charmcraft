@@ -31,6 +31,14 @@ environment:
   JUJU_MODEL: k8s-operator-test
 
 prepare: |
+  snap install microk8s --channel=1.28-strict/stable
+  microk8s enable hostpath-storage
+  microk8s enable dns
+  snap alias microk8s.kubectl kubectl
+  if ! juju controllers | grep -q k8s; then
+    juju bootstrap microk8s k8s
+  fi
+
   git clone --depth=1 "${CHARM}" charm
 
 restore: |

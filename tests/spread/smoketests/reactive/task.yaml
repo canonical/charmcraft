@@ -5,9 +5,10 @@ priority: 100
 environment:
   CHARM_SNAP_CHANNEL/stable: stable
   CHARM_SNAP_CHANNEL/two: 2.x/stable
-  CHARM_SNAP_CHANNEL/resolute: latest/candidate
+  CHARM_SNAP_CHANNEL/resolute: latest/stable
   BASE_CHANNEL/stable,two: "22.04"
   BASE_CHANNEL/resolute: "26.04"
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS/resolute: "1"
 
 prepare: |
   cd reactivecharm
@@ -25,8 +26,6 @@ prepare: |
       reactive-charm-build-arguments:
         - -v
         - --binary-wheels-from-source
-        - --upgrade-buildvenv-core-deps
-        - --ignore-requires-python
       build-snaps:
         - charm/$CHARM_SNAP_CHANNEL
       build-packages: [python3-dev]

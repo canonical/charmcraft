@@ -2,6 +2,7 @@ summary: test the test command as though running in CI.
 
 environment:
   CI: "1"
+  PYTHONWARNINGS: "ignore::UserWarning:pydantic"
 
 execute: |
   charmcraft test |& tee test.log

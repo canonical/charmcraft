@@ -1,0 +1,62 @@
+summary: Pack a charm from a monorepo using CHARMCRAFT_EXPERIMENTAL_MONOREPO
+
+# Ubuntu 18.04 times out during global prepare (snap installs too slow).
+systems:
+  - ubuntu-20.04-64
+  - ubuntu-22.04-64
+  - ubuntu-24.04-64
+  - ubuntu-25.10-64
+  - ubuntu-26.04-64
+
+kill-timeout: 30m
+
+environment:
+  CHARMCRAFT_EXPERIMENTAL_MONOREPO: "1"
+
+execute: |
+  . /etc/os-release
+
+  mkdir -p /tmp/monorepo/shared/mylib
+  mkdir -p /tmp/monorepo/charm
+  git -C /tmp/monorepo init
+  git -C /tmp/monorepo config user.email "test@example.com"
+  git -C /tmp/monorepo config user.name "Test"
+
+  echo "GREETING = 'hello from shared library'" > /tmp/monorepo/shared/mylib/__init__.py
+
+  cat > /tmp/monorepo/charm/charmcraft.yaml << EOF
+  name: monorepo-test-charm
+  type: charm
+  title: Monorepo test charm
+  summary: Tests git-driven build root monorepo support.
+  description: Verifies that CHARMCRAFT_EXPERIMENTAL_MONOREPO mounts the git root.
+  base: ubuntu@${VERSION_ID}
+  build-base: ubuntu@${VERSION_ID}
+  platforms:
+    amd64:
+  parts:
+    charm:
+      plugin: dump
+      source: .
+    shared-lib:
+      plugin: dump
+      source: ../shared
+      organize:
+        "*": shared/
+  EOF
+
+  cd /tmp/monorepo/charm
+  charmcraft pack
+
+  arch=$(dpkg --print-architecture)
+  artifact=/tmp/monorepo/charm/monorepo-test-charm_${arch}.charm
+  test -f "${artifact}"
+
+  mkdir /tmp/monorepo/unpacked
+  unzip -q "${artifact}" -d /tmp/monorepo/unpacked
+  test -f /tmp/monorepo/unpacked/shared/mylib/__init__.py
+  grep "GREETING" /tmp/monorepo/unpacked/shared/mylib/__init__.py
+
+restore: |
+  cd /tmp/monorepo/charm 2>/dev/null && charmcraft clean || true
+  rm -rf /tmp/monorepo

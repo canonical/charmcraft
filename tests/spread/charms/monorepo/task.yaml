@@ -1,0 +1,39 @@
+summary: Pack a charm from a monorepo using CHARMCRAFT_EXPERIMENTAL_MONOREPO
+
+systems:
+  - ubuntu-26.04-64
+
+kill-timeout: 60m
+
+environment:
+  CHARMCRAFT_EXPERIMENTAL_MONOREPO: "1"
+  REPO/mysql_operators_machines: mysql-operators
+  CHARM_SUBDIR/mysql_operators_machines: machines
+  REPO/mysql_operators_kubernetes: mysql-operators
+  CHARM_SUBDIR/mysql_operators_kubernetes: kubernetes
+  REPO/mysql_router_operators_machines: mysql-router-operators
+  CHARM_SUBDIR/mysql_router_operators_machines: machines
+  REPO/mysql_router_operators_kubernetes: mysql-router-operators
+  CHARM_SUBDIR/mysql_router_operators_kubernetes: kubernetes
+
+prepare: |
+  git clone --depth=1 https://github.com/canonical/"${REPO}".git /tmp/"${REPO}"
+  python3 - << 'EOF'
+  import os, yaml, pathlib
+  p = pathlib.Path(f'/tmp/{os.environ["REPO"]}/{os.environ["CHARM_SUBDIR"]}/charmcraft.yaml')
+  d = yaml.safe_load(p.read_text())
+  d["parts"].pop("files", None)
+  d["parts"].get("charm-poetry", {}).pop("override-build", None)
+  p.write_text(yaml.dump(d))
+  EOF
+
+restore: |
+  cd /tmp/"${REPO}"/"${CHARM_SUBDIR}" 2>/dev/null && charmcraft clean || true
+  rm -rf /tmp/"${REPO}"
+
+execute: |
+  cd /tmp/"${REPO}"/"${CHARM_SUBDIR}"
+  charmcraft pack
+  CHARM_FILE=$(ls *_ubuntu@26.04-amd64.charm | head -1)
+  unzip -l "${CHARM_FILE}" | MATCH "src/charm.py"
+  unzip -l "${CHARM_FILE}" | MATCH "venv/lib/python.*/site-packages/ops/"

@@ -505,6 +505,13 @@ url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/"
 explicit = true
 
 [tool.uv.sources]
+craft-application = { git = "https://github.com/canonical/craft-application.git", branch = "work/CHARMCRAFT-710-prototype" }
+craft-cli = { git = "https://github.com/canonical/craft-cli.git", branch = "main" }
+craft-grammar = { git = "https://github.com/canonical/craft-grammar.git", branch = "main" }
+craft-parts = { git = "https://github.com/canonical/craft-parts.git", branch = "work/CHARMCRAFT-710-prototype" }
+craft-providers = { git = "https://github.com/canonical/craft-providers.git", branch = "main" }
+craft-platforms = { git = "https://github.com/canonical/craft-platforms.git", branch = "main" }
+craft-store = { git = "https://github.com/canonical/craft-store.git", branch = "main" }
 python-apt = { index = "python-apt-wheels" }
 
 [tool.ty.src]

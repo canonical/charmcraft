@@ -91,17 +91,21 @@ test scaffolding:
 Treat pytest warnings as errors in init templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``machine`` and ``kubernetes`` init templates now set
-``filterwarnings = ["error"]`` in the generated ``pyproject.toml`` under
-``[tool.pytest.ini_options]``. New charms created with ``charmcraft init`` will
-fail their unit and integration tests on any Python warning by default, surfacing
-deprecated-API use and resource-cleanup bugs (for example, ``ExecProcess``
-handles that are garbage-collected without a ``wait()`` call) before they reach
-production.
+In charms created with the ``machine`` and ``kubernetes`` profiles, tests will now fail
+on any Python warning by default. This behavior was added to bring attention to
+deprecated API calls and garbage collection bugs before they reach production.
 
-To opt out for a specific warning, add an ``ignore`` entry to
-``filterwarnings`` — see the pytest
-`warning capture documentation <https://docs.pytest.org/en/stable/how-to/capture-warnings.html>`__.
+To ignore a warning across the project, add an ``ignore`` entry to your
+``pyproject.toml`` file, such as:
+
+.. code-block:: toml
+    :caption: pyproject.toml
+
+    [pytest]
+    filterwarnings = [
+        "error",
+        "ignore::UserWarning",
+    ]
 
 COS directory structure validation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

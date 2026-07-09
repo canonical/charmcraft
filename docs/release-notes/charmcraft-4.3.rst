@@ -118,7 +118,7 @@ The following issues have been resolved in Charmcraft 4.3.0:
 
 The following issues have been resolved in Charmcraft 4.3.1:
 
-- The poetry plugin was installing the ``python3-poetry-plugin-export`` package
+- The Poetry plugin was installing the ``python3-poetry-plugin-export`` package
   even when a ``poetry-deps`` part was included.
 
 

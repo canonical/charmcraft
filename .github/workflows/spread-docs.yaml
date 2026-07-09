@@ -2,7 +2,7 @@ name: Spread tests for docs
 on:
   pull_request:
     paths:
-      - .github/workflow/spread-docs.yaml
+      - .github/workflows/spread-docs.yaml
       - spread.yaml
       - .readthedocs.yaml
       - docs/**/code/**
@@ -92,7 +92,7 @@ jobs:
 
       - name: Install spread
         run: |
-          go install github.com/snapcore/spread/cmd/spread@latest
+          go install github.com/canonical/spread/cmd/spread@latest
 
       - name: Run spread
         run: |

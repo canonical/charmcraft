@@ -51,10 +51,10 @@ on:
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, amd64]
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Build snap

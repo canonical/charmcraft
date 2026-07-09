@@ -88,8 +88,8 @@ test scaffolding:
 - Integration test templates for machine and Kubernetes profiles have improved comments
   pointing to the canonical guide on writing integration tests.
 
-Treat pytest warnings as errors in init templates
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Treat pytest warnings as errors by default
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In charms created with the ``machine`` and ``kubernetes`` profiles, tests will now fail
 on any Python warning by default. This behavior was added to bring attention to

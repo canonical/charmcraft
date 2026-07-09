@@ -1,0 +1,20 @@
+type: "charm"
+bases:
+  - build-on:
+      - name: "ubuntu"
+        channel: "22.04"
+    run-on:
+      - name: "ubuntu"
+        channel: "22.04"
+parts:
+  charm:
+    source: .
+    plugin: reactive
+    reactive-charm-build-arguments:
+      - -v
+      - --binary-wheels-from-source
+      - --upgrade-buildvenv-core-deps
+      - --ignore-requires-python
+    build-snaps:
+      - charm/stable
+    build-packages: [python3-dev]

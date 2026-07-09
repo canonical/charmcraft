@@ -1,11 +1,7 @@
 type: "charm"
-bases:
-  - build-on:
-      - name: "ubuntu"
-        channel: "BASE_CHANNEL"
-    run-on:
-      - name: "ubuntu"
-        channel: "BASE_CHANNEL"
+base: ubuntu@26.04
+platforms:
+  amd64:
 parts:
   charm:
     source: .
@@ -13,6 +9,8 @@ parts:
     reactive-charm-build-arguments:
       - -v
       - --binary-wheels-from-source
+      - --upgrade-buildvenv-core-deps
+      - --ignore-requires-python
     build-snaps:
-      - charm/CHARM_SNAP_CHANNEL
+      - charm/latest/stable
     build-packages: [python3-dev]

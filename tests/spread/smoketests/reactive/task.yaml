@@ -14,28 +14,11 @@ prepare: |
   cd reactivecharm
 
   if [ "$BASE_CHANNEL" = "26.04" ]; then
-    cat > charmcraft.yaml <<EOF
-  type: "charm"
-  base: ubuntu@26.04
-  platforms:
-    amd64:
-  parts:
-    charm:
-      source: .
-      plugin: reactive
-      reactive-charm-build-arguments:
-        - -v
-        - --binary-wheels-from-source
-      build-snaps:
-        - charm/$CHARM_SNAP_CHANNEL
-      build-packages: [python3-dev]
-  EOF
+    cp charmcraft-26.04.yaml charmcraft.yaml
+  elif [ "$CHARM_SNAP_CHANNEL" = "2.x/stable" ]; then
+    cp charmcraft-2.x.yaml charmcraft.yaml
   else
-    sed -i "s|BASE_CHANNEL|$BASE_CHANNEL|" charmcraft.yaml
-    sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
-    if [ "$CHARM_SNAP_CHANNEL" != "2.x/stable" ]; then
-      sed -i "s/- --binary-wheels-from-source/- --binary-wheels-from-source\n        - --upgrade-buildvenv-core-deps\n        - --ignore-requires-python/" charmcraft.yaml
-    fi
+    cp charmcraft-3.x.yaml charmcraft.yaml
   fi
 
   git init

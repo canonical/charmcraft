@@ -33,6 +33,9 @@ prepare: |
   else
     sed -i "s|BASE_CHANNEL|$BASE_CHANNEL|" charmcraft.yaml
     sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
+    if [ "$CHARM_SNAP_CHANNEL" != "2.x/stable" ]; then
+      sed -i "s/- --binary-wheels-from-source/- --binary-wheels-from-source\n        - --upgrade-buildvenv-core-deps\n        - --ignore-requires-python/" charmcraft.yaml
+    fi
   fi
 
   git init

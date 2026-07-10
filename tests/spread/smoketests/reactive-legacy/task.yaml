@@ -11,6 +11,8 @@ environment:
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 
 prepare: |
+  pwd
+  ls -la
   cd reactivecharm
 
   BASE_CHANNEL=$(echo $SPREAD_SYSTEM | cut -d- -f2)

@@ -8,6 +8,7 @@ parts:
     plugin: reactive
     reactive-charm-build-arguments:
       - -v
+      # Use binary wheels to speed up the build and avoid building dependencies from source
       - --binary-wheels
     build-snaps:
       - charm/latest/stable

@@ -526,10 +526,10 @@ types = [
 
 [package.metadata]
 requires-dist = [
-    { name = "craft-application", git = "https://github.com/canonical/craft-application.git?branch=work%2FCHARMCRAFT-710-prototype" },
+    { name = "craft-application", git = "https://github.com/canonical/craft-application.git?branch=work%2FCHARMCRAFT-710-prototype-e2e" },
     { name = "craft-cli", git = "https://github.com/canonical/craft-cli.git?branch=main" },
     { name = "craft-grammar", git = "https://github.com/canonical/craft-grammar.git?branch=main" },
-    { name = "craft-parts", git = "https://github.com/canonical/craft-parts.git?branch=work%2FCHARMCRAFT-710-prototype" },
+    { name = "craft-parts", git = "https://github.com/canonical/craft-parts.git?branch=work%2FCHARMCRAFT-710-prototype-e2e" },
     { name = "craft-platforms", git = "https://github.com/canonical/craft-platforms.git?branch=main" },
     { name = "craft-providers", git = "https://github.com/canonical/craft-providers.git?branch=main" },
     { name = "craft-store", git = "https://github.com/canonical/craft-store.git?branch=main" },
@@ -908,7 +908,7 @@ toml = [
 [[package]]
 name = "craft-application"
 version = "7.0.0.post14+gb0a02d5"
-source = { git = "https://github.com/canonical/craft-application.git?branch=work%2FCHARMCRAFT-710-prototype#b0a02d5cbeb58e1740df7872b405b17e55b2463d" }
+source = { git = "https://github.com/canonical/craft-application.git?branch=work%2FCHARMCRAFT-710-prototype-e2e#b0a02d5cbeb58e1740df7872b405b17e55b2463d" }
 dependencies = [
     { name = "annotated-types" },
     { name = "craft-archives" },
@@ -971,8 +971,8 @@ dependencies = [
 
 [[package]]
 name = "craft-parts"
-version = "2.35.0.post11+g38ddeefa"
-source = { git = "https://github.com/canonical/craft-parts.git?branch=work%2FCHARMCRAFT-710-prototype#38ddeefa5aa3b3d2120d2b9ca5e635b019efb802" }
+version = "2.35.0.post20+g2e9b7fca"
+source = { git = "https://github.com/canonical/craft-parts.git?branch=work%2FCHARMCRAFT-710-prototype-e2e#2e9b7fca225f7ddbf80bacd4a30ac806b3614725" }
 dependencies = [
     { name = "lxml" },
     { name = "pydantic" },

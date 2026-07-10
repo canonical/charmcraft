@@ -32,6 +32,7 @@ environment:
 
 prepare: |
   snap install microk8s --channel=1.28-strict/stable
+  microk8s status --wait-ready
   microk8s enable hostpath-storage
   microk8s enable dns
   snap alias microk8s.kubectl kubectl

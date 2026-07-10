@@ -17,6 +17,7 @@ environment:
   CHARM_SUBDIR/mysql_router_operators_kubernetes: kubernetes
 
 prepare: |
+  apt-get install -y python3-yaml
   git clone --depth=1 https://github.com/canonical/"${REPO}".git /tmp/"${REPO}"
   python3 - << 'EOF'
   import os, yaml, pathlib
@@ -24,7 +25,7 @@ prepare: |
   d = yaml.safe_load(p.read_text())
   d["parts"].pop("files", None)
   d["parts"].get("charm-poetry", {}).pop("override-build", None)
-  p.write_text(yaml.dump(d))
+  p.write_text(yaml.safe_dump(d))
   EOF
 
 restore: |

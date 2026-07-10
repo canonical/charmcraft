@@ -5,7 +5,7 @@
 # markers for including said instructions
 # as snippets in the docs.
 ###########################################
-summary: Getting started with Django tutorial
+summary: 12-factor Django tutorial
 
 kill-timeout: 50m
 

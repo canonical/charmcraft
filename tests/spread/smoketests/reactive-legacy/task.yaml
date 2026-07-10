@@ -2,7 +2,6 @@ summary: pack a simple reactive charm on older systems
 priority: 100
 
 systems:
-  - ubuntu-18.04-64
   - ubuntu-20.04-64
   - ubuntu-22.04-64
 
@@ -11,8 +10,6 @@ environment:
   CHARM_SNAP_CHANNEL/two: 2.x/stable
 
 prepare: |
-  pwd
-  ls -la
   cd reactivecharm
 
   BASE_CHANNEL=$(echo $SPREAD_SYSTEM | cut -d- -f2)

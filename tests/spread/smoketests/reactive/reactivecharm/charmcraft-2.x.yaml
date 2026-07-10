@@ -12,7 +12,6 @@ parts:
     plugin: reactive
     reactive-charm-build-arguments:
       - -v
-      - --binary-wheels-from-source
     build-snaps:
       - charm/2.x/stable
     build-packages: [python3-dev]

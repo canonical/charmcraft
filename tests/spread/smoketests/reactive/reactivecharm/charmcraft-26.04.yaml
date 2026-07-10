@@ -8,9 +8,6 @@ parts:
     plugin: reactive
     reactive-charm-build-arguments:
       - -v
-      - --binary-wheels-from-source
-      - --upgrade-buildvenv-core-deps
-      - --ignore-requires-python
     build-snaps:
       - charm/latest/stable
     build-packages: [python3-dev]

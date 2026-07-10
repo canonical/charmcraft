@@ -803,7 +803,7 @@ def test_v2_extension_experimental_gating_passes_with_env(monkeypatch, tmp_path)
 def test_flask_framework_factory_get_supported_bases_no_duplicates():
     """Test that flask factory supported bases are deduped (defect 1 fix)."""
     bases = FlaskFrameworkFactory.get_supported_bases()
-    assert bases == [("ubuntu", "22.04"), ("ubuntu", "26.04")]
+    assert bases == [("ubuntu", "22.04"), ("ubuntu", "24.04"), ("ubuntu", "26.04")]
     assert len(bases) == len(set(bases)), "Supported bases should not have duplicates"
 
 

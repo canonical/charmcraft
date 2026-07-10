@@ -10,5 +10,5 @@ parts:
       - -v
       - --binary-wheels
     build-snaps:
-      - charm/latest/candidate
+      - charm/latest/stable
     build-packages: [python3-dev]

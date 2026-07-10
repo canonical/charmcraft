@@ -6,8 +6,8 @@ def install_reactivecharm():
     # Do your setup here.
     #
     # If your charm has other dependencies before it can install,
-    # add those as @when() clauses above., or as additional @when()
-    # decorated handlers below
+    # add those as @when() clauses above, or as additional @when()
+    # decorated handlers below.
     #
     # See the following for information about reactive charms:
     #

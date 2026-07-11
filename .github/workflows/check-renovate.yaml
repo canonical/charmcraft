@@ -24,6 +24,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
+      - name: Cache npm downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-renovate-${{ hashFiles('.github/workflows/check-renovate.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-renovate-
       - name: Install renovate
         run: npm install --global renovate
       - name: Enable ssh access

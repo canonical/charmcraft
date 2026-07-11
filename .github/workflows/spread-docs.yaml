@@ -89,10 +89,14 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 1.26
+          cache: true
 
       - name: Install spread
         run: |
-          go install github.com/canonical/spread/cmd/spread@latest
+          spread_bin="$(go env GOPATH)/bin/spread"
+          if [ ! -x "$spread_bin" ]; then
+            go install github.com/canonical/spread/cmd/spread@latest
+          fi
 
       - name: Run spread
         run: |

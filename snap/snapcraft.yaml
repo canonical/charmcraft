@@ -122,6 +122,8 @@ parts:
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
+      # Newer maturin releases require a newer Rust toolchain than core22 provides.
+      - PIP_CONSTRAINT: "$CRAFT_PROJECT_DIR/requirements-build-constraints.txt"
       - CARGO: cargo-1.85
       - RUSTC: rustc-1.85
     override-pull: |

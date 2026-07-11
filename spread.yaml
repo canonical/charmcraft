@@ -137,16 +137,10 @@ prepare: |
         sed -i -E '/^Components:/ { /(^| )universe( |$)/! s/$/ universe/ }' "$ubuntu_sources"
       fi
     fi
-
-    tempfile="$(mktemp)"
-    if ! apt-get update > "$tempfile" 2>&1; then
-        cat "$tempfile"
-        exit 1
-    fi
   fi
 
-  tests.pkgs install snapd
-  tests.pkgs install unzip
+  # tests.pkgs install runs apt-get update, so install both packages in one call.
+  tests.pkgs install snapd unzip
 
   snap wait system seed.loaded
 

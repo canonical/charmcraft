@@ -1,6 +1,5 @@
 summary: ensure that a charm with strict dependencies can build.
 
-prepare: |
 restore: |
   pushd charm
   charmcraft clean

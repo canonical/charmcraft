@@ -13,7 +13,6 @@ include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   charmcraft init --project-dir=charm
 
   # Workaround for https://github.com/canonical/craft-application/issues/248

@@ -6,7 +6,6 @@ include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   charmcraft init --project-dir=charm
   rm -f charm/metadata.yaml
   rm -f charm/config.yaml

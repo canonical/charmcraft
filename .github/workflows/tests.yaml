@@ -209,8 +209,16 @@ jobs:
           INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
           TIMESTAMP_SERVICE: http://timestamp.digicert.com
         run: |
-          $SignTool = (Get-Command signtool.exe -ErrorAction Stop).Source
-          $MakeAppx = (Get-Command makeappx.exe -ErrorAction Stop).Source
+          $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $SignTool = Get-ChildItem -Path "$kitsRoot\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $SignTool) { throw "signtool.exe not found under $kitsRoot" }
+
+          $MakeAppx = Get-ChildItem -Path "$kitsRoot\*\x64\makeappx.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $MakeAppx) { throw "makeappx.exe not found under $kitsRoot" }
 
           windows\generate-self-signed-cert.ps1
 

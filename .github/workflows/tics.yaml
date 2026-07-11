@@ -16,6 +16,10 @@ on:
       - "*.md" # Only top-level Markdown files
       - spread.yaml
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   TICS:
     uses: canonical/starflow/.github/workflows/tics.yaml@main

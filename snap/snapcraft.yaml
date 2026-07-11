@@ -126,7 +126,7 @@ parts:
       - PIP_NO_BINARY: ":all:"
       # Keep maturin on a prebuilt wheel so cryptography's build deps don't require a Rust
       # compiler name alias (`cargo`) that core22 doesn't provide by default.
-      - PIP_ONLY_BINARY: "maturin"
+      - PIP_ONLY_BINARY: "maturin,protobuf"
       # Newer maturin releases require a newer Rust toolchain than core22 provides.
       - PIP_CONSTRAINT: "$CRAFT_PROJECT_DIR/requirements-build-constraints.txt"
       - CARGO: cargo-1.85

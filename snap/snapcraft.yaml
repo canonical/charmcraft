@@ -121,9 +121,6 @@ parts:
       # CFLAGS for Python 3.10 and libyaml. Allows cryptography and pyyaml to find
       # the appropriate system libraries.
       - CFLAGS: "$(pkg-config python-3.10 yaml-0.1 --cflags)"
-      # Build all packages from source. Prevents issues like #1369.
-      # https://github.com/canonical/charmcraft/issues/1369
-      - PIP_NO_BINARY: ":all:"
       # Keep maturin on a prebuilt wheel so cryptography's build deps don't require a Rust
       # compiler name alias (`cargo`) that core22 doesn't provide by default.
       - PIP_ONLY_BINARY: "maturin,protobuf"

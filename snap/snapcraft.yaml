@@ -122,6 +122,9 @@ parts:
       # Build all packages from source. Prevents issues like #1369.
       # https://github.com/canonical/charmcraft/issues/1369
       - PIP_NO_BINARY: ":all:"
+      # Keep maturin on a prebuilt wheel so cryptography's build deps don't require a Rust
+      # compiler name alias (`cargo`) that core22 doesn't provide by default.
+      - PIP_ONLY_BINARY: "maturin"
       # Newer maturin releases require a newer Rust toolchain than core22 provides.
       - PIP_CONSTRAINT: "$CRAFT_PROJECT_DIR/requirements-build-constraints.txt"
       - CARGO: cargo-1.85

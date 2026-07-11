@@ -207,27 +207,28 @@ jobs:
       - name: Build installer(s)
         env:
           INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
-          MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
-          SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
           TIMESTAMP_SERVICE: http://timestamp.digicert.com
         run: |
+          $SignTool = (Get-Command signtool.exe -ErrorAction Stop).Source
+          $MakeAppx = (Get-Command makeappx.exe -ErrorAction Stop).Source
+
           windows\generate-self-signed-cert.ps1
 
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
           & $Env:INNOCC windows\charmcraft.iss
           copy dist\charmcraft-installer.exe dist\charmcraft-installer-self-signed.exe
           echo "Test signing charmcraft inno installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
 
           echo "Building charmcraft msix installer..."
           mkdir dist\msix
           copy dist\charmcraft.exe dist\msix\
           copy windows\charmcraft.png dist\msix\
           copy windows\AppxManifest.xml dist\msix\
-          & $Env:MAKEAPPX pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
+          & $MakeAppx pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
 
           echo "Test signing charmcraft msix installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
         uses: actions/upload-artifact@v5
         with:

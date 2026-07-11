@@ -97,6 +97,7 @@ jobs:
           if [ ! -x "$spread_bin" ]; then
             go install github.com/canonical/spread/cmd/spread@latest
           fi
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Run spread
         run: |

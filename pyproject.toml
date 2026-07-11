@@ -120,7 +120,7 @@ constraint-dependencies = [
     "pytz>=2020",
     "protobuf>=5.0",
     "overrides>=7.3",
-    "requests-unixsocket>=0.3",
+    "requests-unixsocket2>=1.0.0",
 
     # typing-extensions 4.14.0 interferes with pydantic-core builds
     # https://github.com/python/typing_extensions/issues/615

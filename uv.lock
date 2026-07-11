@@ -40,7 +40,7 @@ constraints = [
     { name = "pyxdg", specifier = ">=0.27" },
     { name = "pyyaml", specifier = ">=5.0" },
     { name = "regex", specifier = ">=2021.11.10" },
-    { name = "requests-unixsocket", specifier = ">=0.3" },
+    { name = "requests-unixsocket2", specifier = ">=1.0.0" },
     { name = "setuptools", specifier = ">=65" },
     { name = "sphinx-basic-ng", specifier = ">=1.0.0b1" },
     { name = "tabulate", specifier = ">=0.8.8" },

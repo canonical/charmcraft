@@ -70,7 +70,9 @@ grade: stable
 confinement: classic
 
 build-packages:
+  - cargo
   - cargo-1.85
+  - rustc
   - rustc-1.85
   - pkg-config
   - python3.10-dev

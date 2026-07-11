@@ -20,5 +20,9 @@ jobs:
       #    contain vulnerable versions.
       # 3. Docs contain requirements.txt files that don't specify versions.
       requirements-find-args: '! -name requirements-noble.txt ! -path "./tests/spread/*" ! -path "./docs/**"'
-      # osv-extra-args: "--config=source/osv-scanner.toml"
+      osv-extra-args: "--config=source/osv-scanner.toml"
+      osv-exclude-files: "uv.lock"
+      osv-exclude-paths: |
+        source/tests/spread
+        source/docs
       uv-export: false

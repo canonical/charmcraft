@@ -89,7 +89,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 1.26
-          cache: true
+          cache: false
 
       - name: Install spread
         run: |

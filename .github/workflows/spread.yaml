@@ -60,6 +60,12 @@ jobs:
         with:
           name: snap
 
+      - name: Ensure Docker daemon is running
+        run: |
+          sudo systemctl start docker
+          sudo systemctl is-active --quiet docker
+          docker run --rm hello-world
+
       - name: Run spread
         run: |
           spread google:${{ matrix.system }}
@@ -89,6 +95,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: snap
+
+      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        name: Ensure Docker daemon is running
+        run: |
+          sudo systemctl start docker
+          sudo systemctl is-active --quiet docker
+          docker run --rm hello-world
 
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Run spread

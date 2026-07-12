@@ -25,6 +25,6 @@ jobs:
       slow-test-platforms: '["ubuntu-24.04"]'
       slow-test-python-versions: '["3.10", "3.12"]'
       # Lowest tests run on noble to avoid an issue with old skopeo versions.
-      lowest-python-platform: ubuntu-24.04
-      lowest-python-version: "3.10"
+      lowest-python-platform: ${{ github.event_name == 'pull_request' && '' || 'ubuntu-24.04' }}
+      lowest-python-version: ${{ github.event_name == 'pull_request' && '' || '3.10' }}
       use-lxd: true

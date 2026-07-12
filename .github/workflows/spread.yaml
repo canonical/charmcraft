@@ -25,6 +25,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   snap-tests:
+    if: github.event_name != 'pull_request'
     runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
     strategy:
@@ -55,6 +56,7 @@ jobs:
           spread ${{ matrix.spread }}
 
   snap-store-tests:
+    if: github.event_name != 'pull_request'
     runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
 

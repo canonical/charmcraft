@@ -43,7 +43,12 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          systems=$(
+            spread -list ci:docs/ |
+              jq --raw-input . |
+              jq --slurp --compact-output
+          )
+          echo "systems=${systems}" | tee -a "${GITHUB_OUTPUT}"
 
   docs-tests:
     runs-on: [self-hosted, linux, amd64, noble, large]
@@ -89,7 +94,7 @@ jobs:
 
       - name: Install spread
         run: |
-          go install github.com/snapcore/spread/cmd/spread@latest
+          go install github.com/canonical/spread/cmd/spread@latest
 
       - name: Run spread
         run: |

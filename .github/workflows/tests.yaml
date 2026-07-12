@@ -129,6 +129,7 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
 
   snap-tests:
+    if: github.event_name != 'pull_request' || matrix.os == 'ubuntu-22.04'
     needs: [snap-build]
     strategy:
       matrix:

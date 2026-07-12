@@ -26,4 +26,3 @@ jobs:
         docs/howto/code
         docs/tutorial/code
         tests/spread/dependencies
-      uv-export: false

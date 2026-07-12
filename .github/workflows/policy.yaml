@@ -12,7 +12,6 @@ jobs:
     uses: canonical/starflow/.github/workflows/policy.yaml@main
   python-scans:
     name: Security scan
-    if: github.event_name != 'pull_request'
     uses: canonical/starflow/.github/workflows/scan-python.yaml@main
     with:
       packages: python-apt-dev
@@ -24,6 +23,7 @@ jobs:
       osv-extra-args: "--config=osv-scanner.toml"
       osv-exclude-files: "uv.lock"
       osv-exclude-paths: |
-        source/tests/spread
-        source/docs
+        docs/howto/code
+        docs/tutorial/code
+        tests/spread/dependencies
       uv-export: false

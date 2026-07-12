@@ -24,6 +24,10 @@ backends:
     key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'
     location: snapd-spread/us-east1-b
     halt-timeout: 3h
+    prepare: |
+      snap install docker
+      snap start docker.dockerd
+      retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
     systems:
       - ubuntu-18.04-64:
           workers: 1
@@ -264,9 +268,6 @@ suites:
     kill-timeout: 30m
   tests/spread/store/:
     prepare: |
-      snap install docker
-      # make sure docker is working
-      retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
       # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker
       # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
       iptables -P FORWARD ACCEPT

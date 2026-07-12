@@ -22,7 +22,7 @@ dependencies = [
     "requests-toolbelt~=1.0.0",
     "snap-helpers~=0.4.2",
     "tabulate~=0.9.0",
-    "pip~=25.3.0",
+    "pip~=26.1.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -99,6 +99,7 @@ constraint-dependencies = [
     "numpy>=1.22.0",
     "build>=0.1.0",
     "iniconfig>=1.1.0",
+    "pygments>=2.20.0",
     "lxml>=6.1.0",
     "jaraco-context>=6.1.0",
     "pyparsing>=3.0.0",

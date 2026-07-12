@@ -3,6 +3,7 @@ import importlib
 import os
 import pathlib
 import sys
+import re
 
 import craft_parts_docs
 import craft_application_docs
@@ -87,7 +88,7 @@ html_context = {
 # }
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-slug = 'juju/docs/charmcraft'
+slug = "juju/docs/charmcraft"
 
 
 #########################
@@ -117,16 +118,6 @@ sitemap_excludes = [
 
 html_static_path = ["_static"]
 templates_path = ["_templates"]
-
-# Files for the cookie banner
-html_css_files = [
-    "css/cookie-banner.css",
-]
-
-html_js_files = [
-    "js/bundle.js",
-    "js/overwrite-links.js",
-]
 
 
 #############
@@ -260,6 +251,17 @@ exclude_patterns = [
     "common/craft-application/reference/strict-platform-names.rst",
 ]
 
+# Adds custom CSS files, located under 'html_static_path'
+html_css_files = [
+    "css/cookie-banner.css"
+]
+
+# Adds custom JavaScript files, located under 'html_static_path'
+html_js_files = [
+    "js/bundle.js",
+    "js/overwrite-links.js",
+]
+
 # Specifies a reST snippet to be appended to each .rst file
 rst_epilog = """
 .. include:: /reuse/links.txt
@@ -344,3 +346,21 @@ def link_common_docs(library_name: str) -> None:
 
 link_common_docs("craft-parts")
 link_common_docs("craft-application")
+
+# Source 12-factor framework versions from Spread test materials and inject into docs
+def sub_12f_version(prolog: str, path: str, package: str, variable: str) -> str:
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), path))
+
+    with open(path, encoding="utf-8") as f:
+        match = re.search(rf"{re.escape(package)}([\d.]+)", f.read())
+        if match:
+            version = match.group(1)
+            prolog += f"\n.. |{variable}| replace:: {version}"
+
+    return prolog
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/django/requirements.txt", "Django==", "conf_django_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/fastapi/requirements.txt", "fastapi[standard]==", "conf_fastapi_version")
+
+rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/flask/requirements.txt", "Flask==", "conf_flask_version")

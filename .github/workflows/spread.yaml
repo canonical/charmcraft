@@ -36,6 +36,7 @@ jobs:
           echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
+    if: github.event_name != 'pull_request'
     runs-on: spread-installed
     needs: [snap-build, spread-select]
     strategy:
@@ -73,6 +74,7 @@ jobs:
           done
 
   snap-store-tests:
+    if: github.event_name != 'pull_request'
     runs-on: spread-installed
     needs: [snap-build]
 

@@ -157,6 +157,7 @@ suites:
     summary: tests howto from the docs
     systems:
       - ubuntu-24.04-64
+    kill-timeout: 60m # Juju bootstrap on CI can exceed the default timeout.
     manual: true
     prepare: |
       juju_channel=3.6/stable

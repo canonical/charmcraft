@@ -1,5 +1,5 @@
 summary: pack charm using multi-base notation
-kill-timeout: 30m # These sometimes take a while to download bases.
+kill-timeout: 60m # These can exceed 30m on CI when building source dependencies.
 priority: 50 # Because these can take a while, run them early.
 
 environment:

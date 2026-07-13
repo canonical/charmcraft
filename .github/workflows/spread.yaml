@@ -33,7 +33,15 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          systems=$(
+            sed -n '/^  google:/,/^  ci:/p' spread.yaml \
+              | grep -E '^[[:space:]]*-[[:space:]]+ubuntu-[0-9]+\.[0-9]+-64:' \
+              | sed -E 's/^[[:space:]]*-[[:space:]]+([^:]+):.*/\1/' \
+              | sort -u \
+              | jq --raw-input . \
+              | jq --slurp --compact-output
+          )
+          echo "systems=${systems}" | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
     runs-on: spread-installed

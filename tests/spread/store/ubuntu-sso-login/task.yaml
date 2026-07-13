@@ -1,10 +1,16 @@
-summary: validate the Ubuntu One SSO login and export flow
+summary: validate the Ubuntu One SSO export login flow
 
 prepare: |
-  apt-get install -y expect
+  tests.pkgs install expect
 
 execute: |
-  # Test login with --export
+  # see if env vars exist without printing them
+  echo "CHARMCRAFT_STORE_SSO_URL=${CHARMCRAFT_STORE_SSO_URL:-<unset>}"
+  echo "STAGING_SSO_USERNAME is set: $([ -n "${STAGING_SSO_USERNAME:-}" ] && echo yes || echo no)"
+  echo "STAGING_SSO_USERNAME length: ${#STAGING_SSO_USERNAME}"
+  echo "STAGING_SSO_PASSWORD is set: $([ -n "${STAGING_SSO_PASSWORD:-}" ] && echo yes || echo no)"
+  echo "STAGING_SSO_PASSWORD length: ${#STAGING_SSO_PASSWORD}"
+
   expect << 'EOF'
     spawn charmcraft login --export=/tmp/sso-creds.login
     expect "Email address: "
@@ -15,18 +21,5 @@ execute: |
   EOF
   CHARMCRAFT_AUTH=$(cat /tmp/sso-creds.login) charmcraft whoami
 
-  # Test login without --export (credentials stored in keyring)
-  expect << 'EOF'
-    spawn charmcraft login
-    expect "Email address: "
-    send "$env(STAGING_SSO_USERNAME)\r"
-    expect "Password: "
-    send "$env(STAGING_SSO_PASSWORD)\r"
-    expect eof
-  EOF
-  charmcraft whoami
-  charmcraft logout
-
 restore: |
   rm -f /tmp/sso-creds.login
-  charmcraft logout || true

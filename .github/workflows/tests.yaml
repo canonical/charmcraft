@@ -62,11 +62,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install/update pip, wheel, and setuptools on non Windows
-        if: ${{ matrix.os != 'windows-2019' && matrix.os != 'windows-2022' }}
+        if: ${{ matrix.os != 'windows-2022' }}
         run: |
           pip install -U pip wheel setuptools
       - name: Install/update pip, wheel, and setuptools on Windows
-        if: ${{ matrix.os == 'windows-2019' || matrix.os == 'windows-2022' }}
+        if: ${{ matrix.os == 'windows-2022' }}
         run: |
           pip install -U wheel setuptools
       - name: Install Ubuntu-specific dependencies
@@ -113,7 +113,7 @@ jobs:
           pytest -ra tests
 
   snap-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -173,7 +173,7 @@ jobs:
           sudo snap set charmcraft provider=lxd
 
   windows-build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -207,27 +207,36 @@ jobs:
       - name: Build installer(s)
         env:
           INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
-          MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
-          SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
           TIMESTAMP_SERVICE: http://timestamp.digicert.com
         run: |
+          $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+          $SignTool = Get-ChildItem -Path "$kitsRoot\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $SignTool) { throw "signtool.exe not found under $kitsRoot" }
+
+          $MakeAppx = Get-ChildItem -Path "$kitsRoot\*\x64\makeappx.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $MakeAppx) { throw "makeappx.exe not found under $kitsRoot" }
+
           windows\generate-self-signed-cert.ps1
 
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
           & $Env:INNOCC windows\charmcraft.iss
           copy dist\charmcraft-installer.exe dist\charmcraft-installer-self-signed.exe
           echo "Test signing charmcraft inno installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
 
           echo "Building charmcraft msix installer..."
           mkdir dist\msix
           copy dist\charmcraft.exe dist\msix\
           copy windows\charmcraft.png dist\msix\
           copy windows\AppxManifest.xml dist\msix\
-          & $Env:MAKEAPPX pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
+          & $MakeAppx pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
 
           echo "Test signing charmcraft msix installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
+          & $SignTool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
         uses: actions/upload-artifact@v5
         with:

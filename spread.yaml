@@ -24,35 +24,64 @@ exclude:
   - snap
 
 backends:
-  google:
-    key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'
-    location: snapd-spread/us-east1-b
+  openstack:
+    key: '$(HOST: echo "$OS_CREDENTIALS_AMD64_PS7")'
+    plan: shared.medium
     halt-timeout: 3h
-    systems:
+    wait-timeout: 10m
+    proxy: ingress-haproxy.ps7.canonical.com
+    cidr-port-rel: [10.151.96.0/21:5000]
+    volume-auto-delete: true
+    environment: &openstack-env
+      SNAPD_USE_PROXY: "true"
+      HTTP_PROXY: "http://egress.ps7.internal:3128"
+      http_proxy: "http://egress.ps7.internal:3128"
+      HTTPS_PROXY: "http://egress.ps7.internal:3128"
+      https_proxy: "http://egress.ps7.internal:3128"
+      no_proxy: "127.0.0.1,127.0.0.53,localhost"
+      NO_PROXY: "127.0.0.1,127.0.0.53,localhost"
+      NTP_SERVER: "ntp.ps7.internal"
+    systems: &openstack-systems
       - ubuntu-18.04-64:
+          image: snapd-spread/ubuntu-18.04-64
           workers: 1
           storage: 40G
       - ubuntu-20.04-64:
+          image: snapd-spread/ubuntu-20.04-64-hwe
           workers: 3
           storage: 40G
       - ubuntu-22.04-64:
+          image: snapd-spread/ubuntu-22.04-64
           workers: 6
           memory: 8G
           storage: 40G
       - ubuntu-24.04-64:
+          image: snapd-spread/ubuntu-24.04-64
           workers: 6
           memory: 8G
           storage: 40G
       - ubuntu-25.10-64:
-          image: ubuntu-os-cloud/ubuntu-2510-amd64
+          image: snapd-spread/ubuntu-25.10-64
           workers: 6
           memory: 8G
           storage: 40G
       - ubuntu-26.04-64:
-          image: ubuntu-os-cloud-devel/ubuntu-2604-lts-amd64
+          image: snapd-spread/ubuntu-26.04-64
           workers: 6
           memory: 8G
           storage: 40G
+  openstack-dev:
+    type: openstack
+    key: '$(HOST: echo "$OS_CREDENTIALS_STG_AMD64_PS7")'
+    plan: shared.xsmall
+    halt-timeout: 3h
+    wait-timeout: 10m
+    groups: [default]
+    proxy: ingress-haproxy.ps7.canonical.com
+    cidr-port-rel: [10.151.54.0/24:4000]
+    volume-auto-delete: true
+    environment: *openstack-env
+    systems: *openstack-systems
   ci:
     type: adhoc
     systems:
@@ -124,6 +153,15 @@ backends:
 prepare: |
   set -e
 
+  #shellcheck source=tests/spread/tools.sh
+  . "$PROJECT_PATH/tests/spread/tools.sh"
+  if [ -n "${HTTP_PROXY:-}" ]; then
+    # The snapd daemon doesn't see the environment variables, so we must modify its config
+    # to use a proxy with it. Came from:
+    # https://github.com/canonical/snapd/blob/619cc925793591348db21bb45fa4af65288d2c42/tests/lib/prepare.sh#L90
+    tools.setup_snapd_proxy
+  fi
+
   # if the 'tools' directory inside the submodule does not exist, then assume the submodule is empty
   if [[ ! -d "$SNAPD_TESTING_TOOLS" ]]; then
     echo "Cannot run spread because submodule 'snapd-testing-tools' is empty. Fetch with 'git submodule update --init' and rerun spread."
@@ -157,6 +195,10 @@ prepare: |
   [ -e /usr/bin/lxd ] && apt-get remove --purge --yes lxd lxd-client lxcfs liblxc1
   snap install lxd
 
+  if [[ "${SPREAD_SYSTEM:-}" == ubuntu-26.04-* ]]; then
+    snap refresh lxd --channel=6/stable
+  fi
+
   # Hold snap refreshes for 24h.
   snap set system refresh.hold="$(date --date=tomorrow +%Y-%m-%dT%H:%M:%S%:z)"
   if ! snap watch --last=auto-refresh?; then
@@ -168,6 +210,14 @@ prepare: |
 
   lxd waitready --timeout=30
   lxd init --auto
+
+  if [ -n "${HTTP_PROXY:-}" ]; then
+    # Lxd either can't access or doesn't fallback to the environment variables,
+    # so we must set them. This is needed to download remote images.
+    lxc config set core.proxy_http $HTTP_PROXY
+    lxc config set core.proxy_https $HTTPS_PROXY
+    lxc config set core.proxy_ignore_hosts $NO_PROXY
+  fi
 
   #shellcheck source=tests/spread/tools/prepare.sh
   . "/charmcraft/tests/spread/tools/prepare.sh"

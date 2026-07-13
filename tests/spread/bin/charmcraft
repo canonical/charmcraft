@@ -15,8 +15,8 @@ while true; do
   fi
   exit_code=$?
 
-  if grep -q "daemon is stopping to wait for socket activation" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
-    echo "Retrying charmcraft after transient snapd socket-activation race ($attempt/$_max_retries)..." >&2
+  if grep -Eq "daemon is stopping to wait for socket activation|No root device could be found" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
+    echo "Retrying charmcraft after transient provider setup failure ($attempt/$_max_retries)..." >&2
     rm -f "$output_file"
     attempt=$((attempt + 1))
     sleep "$_retry_delay_seconds"

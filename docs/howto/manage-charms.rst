@@ -14,33 +14,38 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. admonition:: Best practice
-    :class: hint
+Before you initialise a charm project, decide what to call your charm.
 
-    If you're setting up a ``git`` repository: name it using the pattern
-    ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
+A charm's name is typically based on the name of the charm's workload. Use a different
+naming convention if your charm doesn't operate a workload. For detailed guidance, see
+:external+ops:ref:`Ops | How to initialise your project <init-charm>`. The Ops guidance
+also explains how to name your charm's Git repository.
 
-To initialise a charm project, create a directory for your charm, enter it, then run
-``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
-machine charms: ``machine``; for Kubernetes charms: ``kubernetes`` or
-``flask-framework``); that will create all the necessary files and even prepopulate them
-with useful content.
+To initialise a charm project, enter the directory that will contain your charm (likely
+in your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 
-    charmcraft init --profile <profile>
+    charmcraft init --name <charm name> --profile <profile>
+
+This will create all the necessary files and populate them with useful content.
+
+If the charm name you want is different from the current directory name, don't skip the
+``--name`` argument. Otherwise the charm name will match the directory name.
+
+``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
+charm, or a 12-factor app profile such as ``flask-framework``. If you don't specify a
+profile, you get the ``kubernetes`` profile.
 
 .. dropdown:: Example session
 
-    .. code-block:: bash
-
-        mkdir my-flask-app-k8s
-        cd my-flask-app-k8s/
-        charmcraft init --profile flask-framework
-
     .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
-        Charmed operator package file and directory tree initialised
+        charmcraft init --name my-flask-app-k8s --profile flask-framework
+
+        Charmed operator package file and directory tree initialised.
+
         Now edit the following package files to provide fundamental charm metadata
         and other information:
 
@@ -48,24 +53,18 @@ with useful content.
         src/charm.py
         README.md
 
-    .. code-block:: bash
+    .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
         ls -R
 
-    .. terminal::
-
         .:
-        charmcraft.yaml  requirements.txt  src
+        charmcraft.yaml  pyproject.toml  src  tox.ini
 
         ./src:
         charm.py
 
-The command also allows you to not specify any profile (in that case you get the
-``kubernetes`` profile -- a minimal profile with scaffolding for a Kubernetes charm)
-and has flags that you can use to specify a different directory to operate
-in, a charm name different from the name of the root directory, etc.
-
-    See more: :ref:`ref_commands_revisions`, :ref:`profile`, :ref:`files`
+    See more: :ref:`ref_commands_init`, :ref:`profile`, :ref:`files`
 
     See more: :ref:`manage-extensions`
 

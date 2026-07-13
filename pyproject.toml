@@ -8,7 +8,7 @@ dependencies = [
     "craft-cli~=3.4",
     "craft-grammar>=2.0.0",
     "craft-parts~=2.20",
-    "craft-providers>=3.4.0,<4.0",
+    "craft-providers>=3.7.1,<4.0",
     "craft-platforms~=0.10",
     "craft-store @ git+https://github.com/canonical/craft-store@main",
     "distro>=1.7.0",

@@ -130,10 +130,15 @@ Charmcraft 4.3 includes the following new and updated documentation:
 Fixed bugs and issues
 ---------------------
 
-The following issues have been resolved in Charmcraft 4.3:
+The following issues have been resolved in Charmcraft 4.3.0:
 
 - `#2600 <https://github.com/canonical/charmcraft/issues/2600>`__
   ``charmcraft pack -p`` and ``-o`` arguments did not work correctly together
+
+The following issues have been resolved in Charmcraft 4.3.1:
+
+- The Poetry plugin was installing the ``python3-poetry-plugin-export`` package
+  even when a ``poetry-deps`` part was included.
 
 
 Known issues

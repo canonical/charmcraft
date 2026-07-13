@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -u
+
+readonly _real_charmcraft="/snap/bin/charmcraft"
+readonly _max_retries=3
+readonly _retry_delay_seconds=5
+
+attempt=1
+while true; do
+  output_file="$(mktemp)"
+  if "$_real_charmcraft" "$@" > >(tee "$output_file") 2> >(tee -a "$output_file" >&2); then
+    rm -f "$output_file"
+    exit 0
+  fi
+  exit_code=$?
+
+  if grep -q "daemon is stopping to wait for socket activation" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
+    echo "Retrying charmcraft after transient snapd socket-activation race ($attempt/$_max_retries)..." >&2
+    rm -f "$output_file"
+    attempt=$((attempt + 1))
+    sleep "$_retry_delay_seconds"
+    continue
+  fi
+
+  rm -f "$output_file"
+  exit "$exit_code"
+done

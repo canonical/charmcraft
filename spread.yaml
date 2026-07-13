@@ -4,7 +4,7 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
-  PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
+  PATH: $PROJECT_PATH/tests/spread/bin:/snap/bin:$PATH:$SNAPD_TESTING_TOOLS
   CRAFT_DEBUG: 1 # Show exception tracebacks.
   CRAFT_VERBOSITY_LEVEL: debug # Show debugging output when failing.
   # Use the staging store for tests:

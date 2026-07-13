@@ -3,8 +3,8 @@
 set -u
 
 readonly _real_charmcraft="/snap/bin/charmcraft"
-readonly _max_retries=3
-readonly _retry_delay_seconds=5
+readonly _max_retries=6
+readonly _retry_delay_seconds=10
 
 attempt=1
 while true; do

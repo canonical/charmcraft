@@ -25,14 +25,13 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   snap-tests:
-    if: github.event_name != 'pull_request'
     runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
     strategy:
       fail-fast: false
       matrix:
         spread:
-          - "google:"
+          - "openstack:"
 
     steps:
       - name: Cleanup job workspace
@@ -56,7 +55,6 @@ jobs:
           spread ${{ matrix.spread }}
 
   snap-store-tests:
-    if: github.event_name != 'pull_request'
     runs-on: [self-hosted, spread-installed]
     needs: [snap-build]
 
@@ -98,4 +96,4 @@ jobs:
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
           BUNDLE_DEFAULT_NAME: gh-ci-charmcraft-bundle
         run: |
-          spread google:ubuntu-22.04-64:tests/spread/store/
+          spread openstack:ubuntu-22.04-64:tests/spread/store/

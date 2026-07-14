@@ -16,7 +16,14 @@ cleanup_stale_managed_instances() {
     | grep -E '^(base-instance-charmcraft-buildd-base-v|charmcraft-test-)' \
     | while IFS= read -r instance; do
         [ -n "$instance" ] || continue
-        lxc --project=charmcraft delete "$instance" --force >/dev/null 2>&1 || true
+        lxc --project=charmcraft stop "$instance" --force >/dev/null 2>&1 || true
+        for _attempt in 1 2 3; do
+          if lxc --project=charmcraft delete "$instance" --force >/dev/null 2>&1; then
+            break
+          fi
+          lxc --project=charmcraft stop "$instance" --force >/dev/null 2>&1 || true
+          sleep 2
+        done
       done
 }
 

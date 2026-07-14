@@ -14,6 +14,10 @@ restore: |
   #shellcheck source=tests/spread/tools/prepare.sh
   . "/charmcraft/tests/spread/tools/prepare.sh"
   install_charmcraft
+  if ! lxc project show charmcraft \
+      >/dev/null 2>&1; then
+    lxc project create charmcraft
+  fi
   pushd charm
   charmcraft clean
   popd
@@ -23,7 +27,9 @@ restore: |
 execute: |
   cd charm
   charmcraft pack --verbose
-  lxc --project=charmcraft list --format=csv | grep -q "charmcraft-buildd-base" || { echo "base instance not exists"; exit 1; }
+  lxc --project=charmcraft list --format=csv \
+    | grep -q "charmcraft-buildd-base" \
+    || { echo "base instance not exists"; exit 1; }
   snap remove charmcraft
 
   if [[ ! -z "$(lxc --project=charmcraft list --format=csv)" ]]; then

@@ -22,7 +22,7 @@ dependencies = [
     "requests-toolbelt~=1.0.0",
     "snap-helpers~=0.4.2",
     "tabulate~=0.9.0",
-    "pip~=25.1.1",
+    "pip~=26.1.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -45,11 +45,11 @@ dev = [
     "coverage>=7.6.8",
     "freezegun>=1.5.1",
     "hypothesis>=6.122.1",
-    "poetry>=1.8.5",  # Needed for testing the poetry plugin.
-    "poetry-plugin-export>=1.8.0",  # Needed for testing the poetry plugin with poetry >= 2.0
+    "poetry>=2.3.4",  # Needed for testing the poetry plugin.
+    "poetry-plugin-export>=1.9.0",  # Needed for testing the poetry plugin with poetry >= 2.0
     "pyfakefs>=5.7.2",
     "pylint>=3.3.2",
-    "pytest>=8.3.4",
+    "pytest>=9.0.3",
     "pytest-check>=2.4.1",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
@@ -93,11 +93,15 @@ tics = ["flake8", "pylint"]
 constraint-dependencies = [
     "tabulate>=0.8.8",
     "matplotlib>=3.7.0",
-    "lxml>=5.0.0",
+    "cryptography>=46.0.6",
+    "idna>=3.15",
+    "lxml>=6.1.0",
     "numpy>=1.22.0",
     "build>=0.1.0",
     "iniconfig>=1.1.0",
-    "lxml>=5.0",
+    "pygments>=2.20.0",
+    "lxml>=6.1.0",
+    "jaraco-context>=6.1.0",
     "pyparsing>=3.0.0",
     "pyproject-hooks>=1.0.0",
     "pyyaml>=5.0",
@@ -106,6 +110,8 @@ constraint-dependencies = [
     "regex>=2021.11.10",
     "sphinx-basic-ng>=1.0.0b1",
     "tornado>=4.0",
+    "pynacl>=1.6.2",
+    "urllib3>=2.7.0",
     "webencodings>=0.4.0",
     "launchpadlib>=1.11",
     "lazr-uri>=1.0.6",
@@ -113,14 +119,17 @@ constraint-dependencies = [
     "oauthlib>=3.0",
     "setuptools>=65",
     "cffi>=1.15",
-    "pynacl>=1.4.0",
+    "pynacl>=1.6.2",
     "keyring>=24",
     "jaraco-classes>=3.2",
     "pyxdg>=0.27",
     "pytz>=2020",
-    "protobuf>=5.0",
+    "protobuf>=6.33.5",
+    "filelock>=3.20.3",
     "overrides>=7.3",
-    "requests-unixsocket>=0.3",
+    "requests-unixsocket2>=1.0.0",
+    "msgpack>=1.2.1",
+    "virtualenv>=20.36.1",
 
     # typing-extensions 4.14.0 interferes with pydantic-core builds
     # https://github.com/python/typing_extensions/issues/615

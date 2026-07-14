@@ -4,7 +4,7 @@ path: /charmcraft
 environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
-  PATH: /snap/bin:$PATH:$SNAPD_TESTING_TOOLS
+  PATH: $PROJECT_PATH/tests/spread/bin:/snap/bin:$PATH:$SNAPD_TESTING_TOOLS
   CRAFT_DEBUG: 1 # Show exception tracebacks.
   CRAFT_VERBOSITY_LEVEL: debug # Show debugging output when failing.
   # Use the staging store for tests:
@@ -24,15 +24,19 @@ backends:
     key: '$(HOST: echo "$SPREAD_GOOGLE_KEY")'
     location: snapd-spread/us-east1-b
     halt-timeout: 3h
+    prepare: |
+      snap install docker
+      snap start docker.dockerd
+      retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
     systems:
       - ubuntu-18.04-64:
           workers: 1
           storage: 40G
       - ubuntu-20.04-64:
-          workers: 3
+          workers: 1
           storage: 40G
       - ubuntu-22.04-64:
-          workers: 6
+          workers: 2
           memory: 8G
           storage: 40G
       - ubuntu-24.04-64:
@@ -142,6 +146,17 @@ prepare: |
 
   lxd waitready --timeout=30
   lxd init --auto
+  # Avoid dual-stack setup issues on CI workers that can make managed networking checks stall.
+  lxc network set lxdbr0 ipv6.address none || true
+
+  # Ensure the charmcraft project default profile always has a root disk.
+  if ! lxc project show charmcraft > /dev/null 2>&1; then
+    lxc project create charmcraft
+  fi
+  if ! lxc --project=charmcraft profile device show default | grep -q '^root:'; then
+    lxc --project=charmcraft profile device add default root disk \
+      path=/ pool="$(lxc storage list --format=csv | cut -d, -f1 | head -n 1)"
+  fi
 
   #shellcheck source=tests/spread/tools/prepare.sh
   . "/charmcraft/tests/spread/tools/prepare.sh"
@@ -153,6 +168,7 @@ suites:
     summary: tests howto from the docs
     systems:
       - ubuntu-24.04-64
+    kill-timeout: 60m # Juju bootstrap on CI can exceed the default timeout.
     manual: true
     prepare: |
       juju_channel=3.6/stable
@@ -203,7 +219,9 @@ suites:
   tests/spread/charms/:
     summary: real charm building tests
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable \
+      || snap install juju --channel=3/candidate \
+      || snap install juju --channel=3/edge
       snap install microk8s --channel=1.28-strict/stable
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
@@ -235,7 +253,9 @@ suites:
     kill-timeout: 60m # Setting up Juju can take a while.
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
-      snap install juju --channel=3.2/stable
+      snap install juju --channel=3/stable \
+      || snap install juju --channel=3/candidate \
+      || snap install juju --channel=3/edge
       # Set up Juju controllers for the charms
       lxc network set lxdbr0 ipv6.address none
       mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
@@ -259,14 +279,12 @@ suites:
     systems:
       - ubuntu-20.04-64
       - ubuntu-22.04-64
+    kill-timeout: 60m # Building source-only dependencies from sdists can take longer on CI.
   tests/spread/hooks/:
     summary: snap hook tests
     kill-timeout: 30m
   tests/spread/store/:
     prepare: |
-      snap install docker
-      # make sure docker is working
-      retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
       # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker
       # https://github.com/canonical/lxd-cloud/blob/f20a64a8af42485440dcbfd370faf14137d2f349/test/includes/lxd.sh#L13-L23
       iptables -P FORWARD ACCEPT

@@ -147,6 +147,15 @@ prepare: |
   lxd waitready --timeout=30
   lxd init --auto
 
+  # Ensure the charmcraft project default profile always has a root disk.
+  if ! lxc project show charmcraft > /dev/null 2>&1; then
+    lxc project create charmcraft
+  fi
+  if ! lxc --project=charmcraft profile device show default | grep -q '^root:'; then
+    lxc --project=charmcraft profile device add default root disk \
+      path=/ pool="$(lxc storage list --format=csv -c n | head -n 1)"
+  fi
+
   #shellcheck source=tests/spread/tools/prepare.sh
   . "/charmcraft/tests/spread/tools/prepare.sh"
 

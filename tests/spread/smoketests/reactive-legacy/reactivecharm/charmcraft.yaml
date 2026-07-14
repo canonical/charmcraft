@@ -2,14 +2,18 @@ type: "charm"
 bases:
   - build-on:
       - name: "ubuntu"
-        channel: "22.04"
+        channel: "BASE_CHANNEL"
     run-on:
       - name: "ubuntu"
-        channel: "22.04"
+        channel: "BASE_CHANNEL"
 parts:
   charm:
     source: .
     plugin: reactive
+    reactive-charm-build-arguments:
+      - -v
+      # Use binary wheels to speed up the build and avoid building dependencies from source
+      - --binary-wheels
     build-snaps:
       - charm/CHARM_SNAP_CHANNEL
     build-packages: [python3-dev]

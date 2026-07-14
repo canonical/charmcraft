@@ -1,15 +1,14 @@
-summary: pack a simple reactive charm
-# Run these early since they take a while.
+summary: pack a simple reactive charm on 26.04
 priority: 100
 
+systems:
+  - ubuntu-26.04-64
+
 environment:
-  CHARM_SNAP_CHANNEL/stable: stable
-  CHARM_SNAP_CHANNEL/two: 2.x/stable
+  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "1"
 
 prepare: |
   cd reactivecharm
-
-  sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|" charmcraft.yaml
 
   git init
   git config --global --add safe.directory $PWD

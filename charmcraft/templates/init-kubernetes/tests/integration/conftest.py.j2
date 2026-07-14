@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 #
 # The integration tests use the Jubilant library and the pytest-jubilant plugin.
-# See https://documentation.ubuntu.com/ops/latest/howto/write-integration-tests-for-a-charm/
+# See https://canonical.com/juju/docs/ops/latest/howto/write-integration-tests-for-a-charm/
 
 import os
 import pathlib
@@ -12,7 +12,7 @@ import pytest
 
 @pytest.fixture(scope="session")
 def charm():
-    """Return the path of the charm under test."""
+    """Return the absolute path of the charm under test."""
     charm = os.environ.get("CHARM_PATH")
     if not charm:
         charm_dir = pathlib.Path()  # Assume the current working directory is the charm root.

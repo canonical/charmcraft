@@ -146,6 +146,8 @@ prepare: |
 
   lxd waitready --timeout=30
   lxd init --auto
+  # Avoid dual-stack setup issues on CI workers that can make managed networking checks stall.
+  lxc network set lxdbr0 ipv6.address none || true
 
   # Ensure the charmcraft project default profile always has a root disk.
   if ! lxc project show charmcraft > /dev/null 2>&1; then

@@ -140,3 +140,11 @@ jobs:
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

@@ -20,6 +20,16 @@ cleanup_stale_managed_instances() {
       done
 }
 
+recover_lxd_network() {
+  if ! command -v lxd >/dev/null 2>&1; then
+    return
+  fi
+
+  snap restart lxd >/dev/null 2>&1 || true
+  lxd waitready --timeout=30 >/dev/null 2>&1 || true
+  lxc network set lxdbr0 ipv6.address none >/dev/null 2>&1 || true
+}
+
 ensure_lxd_profile_root_disk() {
   if ! command -v lxc >/dev/null 2>&1; then
     return
@@ -61,6 +71,9 @@ while true; do
 
   if grep -Eq "daemon is stopping to wait for socket activation|No root device could be found|Timed out waiting for networking to be ready" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
     echo "Retrying charmcraft after transient provider setup failure ($attempt/$_max_retries)..." >&2
+    if grep -q "Timed out waiting for networking to be ready" "$output_file"; then
+      recover_lxd_network
+    fi
     cleanup_stale_managed_instances
     rm -f "$output_file"
     attempt=$((attempt + 1))

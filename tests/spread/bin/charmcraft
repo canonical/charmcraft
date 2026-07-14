@@ -3,7 +3,7 @@
 set -u
 
 readonly _real_charmcraft="/snap/bin/charmcraft"
-readonly _max_retries=6
+readonly _max_retries=10
 readonly _retry_delay_seconds=10
 
 cleanup_stale_managed_instances() {
@@ -61,7 +61,9 @@ ensure_lxd_profile_root_disk() {
 
 attempt=1
 while true; do
+  recover_lxd_network
   ensure_lxd_profile_root_disk
+  cleanup_stale_managed_instances
   output_file="$(mktemp)"
   if "$_real_charmcraft" "$@" > >(tee "$output_file") 2> >(tee -a "$output_file" >&2); then
     rm -f "$output_file"

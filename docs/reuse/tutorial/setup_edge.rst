@@ -54,12 +54,12 @@ Initialize LXD:
     lxd init --auto
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
-Let's install MicroK8s using the ``1.31-strict/stable`` track, add the current
+Let's install MicroK8s using the ``1.34-strict/stable`` track, add the current
 user to the group, and activate the changes:
 
 .. code-block:: text
 
-    sudo snap install microk8s --channel 1.31-strict/stable
+    sudo snap install microk8s --channel 1.34-strict/stable
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
 

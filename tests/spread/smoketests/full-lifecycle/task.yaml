@@ -36,7 +36,7 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
+  charmcraft pack --verbose --destructive-mode
   ~/.local/bin/tox run
   test -f *.charm
   # Charmcraft 3.0 uses the craft-parts standard prime keyword that only

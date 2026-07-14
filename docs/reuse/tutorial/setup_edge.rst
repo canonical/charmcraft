@@ -54,7 +54,7 @@ Initialize LXD:
     lxd init --auto
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
-Let's install MicroK8s using the ``1.34-strict/stable`` track, add the current
+Let's install MicroK8s using the ``1.34-strict/stable`` channel, add the current
 user to the group, and activate the changes:
 
 .. code-block:: text
@@ -86,7 +86,7 @@ If successful, the terminal will output ``microk8s is running``
 along with a list of enabled and disabled add-ons.
 
 Juju is required to deploy the |12FactorApp| application.
-We'll install Juju using the ``3.6/stable`` track. Since the snap is
+We'll install Juju using the ``3.6/stable`` channel. Since the snap is
 sandboxed, we'll also manually create a directory to contain
 its files. Once Juju is ready, we initialize it by bootstrapping a
 development controller:

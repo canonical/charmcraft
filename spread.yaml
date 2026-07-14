@@ -153,7 +153,7 @@ prepare: |
   fi
   if ! lxc --project=charmcraft profile device show default | grep -q '^root:'; then
     lxc --project=charmcraft profile device add default root disk \
-      path=/ pool="$(lxc storage list --format=csv -c n | head -n 1)"
+      path=/ pool="$(lxc storage list --format=csv | cut -d, -f1 | head -n 1)"
   fi
 
   #shellcheck source=tests/spread/tools/prepare.sh

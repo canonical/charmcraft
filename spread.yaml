@@ -33,10 +33,10 @@ backends:
           workers: 1
           storage: 40G
       - ubuntu-20.04-64:
-          workers: 3
+          workers: 1
           storage: 40G
       - ubuntu-22.04-64:
-          workers: 6
+          workers: 2
           memory: 8G
           storage: 40G
       - ubuntu-24.04-64:

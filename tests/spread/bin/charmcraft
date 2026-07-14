@@ -6,8 +6,38 @@ readonly _real_charmcraft="/snap/bin/charmcraft"
 readonly _max_retries=6
 readonly _retry_delay_seconds=10
 
+ensure_lxd_profile_root_disk() {
+  if ! command -v lxc >/dev/null 2>&1; then
+    return
+  fi
+
+  if ! lxc project show charmcraft >/dev/null 2>&1; then
+    lxc project create charmcraft >/dev/null 2>&1 || true
+  fi
+
+  if ! lxc --project=charmcraft profile show default >/dev/null 2>&1; then
+    return
+  fi
+
+  if lxc --project=charmcraft profile show default | grep -q '^  root:' \
+    && [ -n "$(lxc --project=charmcraft profile device get default root path 2>/dev/null || true)" ] \
+    && [ -n "$(lxc --project=charmcraft profile device get default root pool 2>/dev/null || true)" ]; then
+    return
+  fi
+
+  pool="$(lxc storage list --format=csv 2>/dev/null | cut -d, -f1 | head -n 1)"
+  if [ -z "$pool" ]; then
+    return
+  fi
+
+  lxc --project=charmcraft profile device remove default root >/dev/null 2>&1 || true
+  lxc --project=charmcraft profile device add default root disk \
+    path=/ pool="$pool" >/dev/null 2>&1 || true
+}
+
 attempt=1
 while true; do
+  ensure_lxd_profile_root_disk
   output_file="$(mktemp)"
   if "$_real_charmcraft" "$@" > >(tee "$output_file") 2> >(tee -a "$output_file" >&2); then
     rm -f "$output_file"
@@ -15,7 +45,7 @@ while true; do
   fi
   exit_code=$?
 
-  if grep -Eq "daemon is stopping to wait for socket activation|No root device could be found" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
+  if grep -Eq "daemon is stopping to wait for socket activation|No root device could be found|Timed out waiting for networking to be ready" "$output_file" && [ "$attempt" -lt "$_max_retries" ]; then
     echo "Retrying charmcraft after transient provider setup failure ($attempt/$_max_retries)..." >&2
     rm -f "$output_file"
     attempt=$((attempt + 1))

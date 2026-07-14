@@ -147,6 +147,7 @@ prepare: |
 
   tests.pkgs install snapd
   tests.pkgs install unzip
+  tests.pkgs install expect
 
   snap wait system seed.loaded
 
@@ -305,6 +306,8 @@ suites:
 
       # Ensure that the reused charms are registered if necessary.
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
+        # Another system may register the charm simultaneously. If registration fails
+        # because we lost the race, verify that the charm is already registered.
         charmcraft register "${CHARM_DEFAULT_NAME}" || charmcraft status "${CHARM_DEFAULT_NAME}"
       fi
 

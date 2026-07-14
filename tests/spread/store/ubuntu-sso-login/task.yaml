@@ -1,8 +1,5 @@
 summary: validate the Ubuntu One SSO export login flow
 
-prepare: |
-  tests.pkgs install expect
-
 execute: |
   expect << 'EOF'
     spawn charmcraft login --export=/tmp/sso-creds.login

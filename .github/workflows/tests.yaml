@@ -79,7 +79,7 @@ jobs:
       - name: Get snap filename
         id: snap-name
         run: |
-          echo "snap=$(find . -type f -name '*.snap')" >> $GITHUB_OUTPUT
+          echo "snap=$(find . -type f -name '*.snap')" >> "$GITHUB_OUTPUT"
       - name: Publish feature branch to edge/pr-${{ github.event.number }}
         if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
         uses: canonical/action-publish@v1

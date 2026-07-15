@@ -356,6 +356,19 @@ suites:
   tests/spread/store/:
     prepare: |
       snap install docker
+
+      if [ -n "${HTTP_PROXY:-}" ]; then
+        mkdir -p /etc/systemd/system/snap.docker.dockerd.service.d
+        cat > /etc/systemd/system/snap.docker.dockerd.service.d/proxy.conf << EOF
+      [Service]
+      Environment="HTTP_PROXY=${HTTP_PROXY}"
+      Environment="HTTPS_PROXY=${HTTPS_PROXY}"
+      Environment="NO_PROXY=${NO_PROXY}"
+      EOF
+        systemctl daemon-reload
+        snap restart docker
+      fi
+
       # make sure docker is working
       retry -n 10 --wait 2 sh -c 'docker run --rm hello-world'
       # https://linuxcontainers.org/lxd/docs/master/howto/network_bridge_firewalld/#prevent-issues-with-lxd-and-docker

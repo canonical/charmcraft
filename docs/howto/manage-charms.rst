@@ -643,7 +643,7 @@ To clean the artefacts for specific parts only, pass the part names as arguments
 
     charmcraft clean my-part another-part
 
-   See more: :ref:`ref_commands_clean`
+See more: :ref:`ref_commands_clean`
 
 
 .. _publish-a-charm:

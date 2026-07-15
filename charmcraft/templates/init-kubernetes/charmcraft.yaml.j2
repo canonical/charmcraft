@@ -1,5 +1,5 @@
 # This file configures Charmcraft.
-# See https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/
+# See https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/ for guidance.
 type: charm
 name: {{ name }}
 title: Charm Template
@@ -13,8 +13,6 @@ description: |
 
   Finally, a paragraph that describes whom the charm is useful for.
 
-# Documentation:
-# https://documentation.ubuntu.com/charmcraft/stable/howto/build-guides/select-platforms/
 base: ubuntu@24.04
 platforms:
   amd64:
@@ -34,10 +32,6 @@ parts:
 # (Optional) Configuration options for the charm
 # This config section defines charm config options, and populates the Configure
 # tab on Charmhub.
-# More information on this section at:
-# https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/#config
-# General configuration documentation:
-# https://documentation.ubuntu.com/juju/3.6/reference/configuration/#application-configuration
 config:
   options:
     # An example config option to customise the log level of the workload
@@ -50,13 +44,11 @@ config:
       type: string
 
 # Your workload's containers.
-# https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/#containers
 containers:
   some-container:
     resource: some-container-image
 
 # This field populates the Resources tab on Charmhub.
-# https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/#resources
 resources:
   # An OCI image resource for each container listed above.
   # You may remove this if your charm will run without a workload sidecar container.

@@ -68,6 +68,10 @@ VALID_AUTHORS = [
     pytest.param("Author McAuthorFace", id="ascii-author"),
     pytest.param("فلانة الفلانية", id="non-ascii-author"),
 ]
+CHARMCRAFT_YAML_DOCS_URL = (
+    "https://documentation.ubuntu.com/charmcraft/stable/reference/files/"
+    "charmcraft-yaml-file/"
+)
 
 
 @pytest.fixture
@@ -144,6 +148,15 @@ def test_files_created_correct(
     pytest_check.equal(actual_files, expected_files)
     pytest_check.is_true(
         re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
+    )
+    pytest_check.equal(charmcraft_yaml.count(CHARMCRAFT_YAML_DOCS_URL), 1)
+    pytest_check.is_not_in("select-platforms", charmcraft_yaml)
+    pytest_check.is_not_in("#config", charmcraft_yaml)
+    pytest_check.is_not_in("#containers", charmcraft_yaml)
+    pytest_check.is_not_in("#resources", charmcraft_yaml)
+    pytest_check.is_not_in(
+        "https://documentation.ubuntu.com/juju/3.6/reference/configuration/",
+        charmcraft_yaml,
     )
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 

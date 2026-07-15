@@ -1,6 +1,10 @@
 name: Schema
 on: [pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CHARMCRAFT_JSON: schema/charmcraft.json
 

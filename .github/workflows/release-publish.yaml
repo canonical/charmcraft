@@ -6,6 +6,10 @@ on:
       # https://github.com/canonical/starbase/settings/tag_protection
       - "[0-9]+.[0-9]+.[0-9]+"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

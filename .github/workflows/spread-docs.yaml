@@ -16,6 +16,10 @@ on:
   schedule:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   snap-build:
     runs-on: [self-hosted, linux, amd64, noble, medium]

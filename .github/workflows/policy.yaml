@@ -7,6 +7,10 @@ on:
       - hotfix/*
       - work/check-policy # For development
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   filter:
     runs-on: ubuntu-slim

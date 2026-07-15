@@ -68,7 +68,7 @@ VALID_AUTHORS = [
     pytest.param("Author McAuthorFace", id="ascii-author"),
     pytest.param("فلانة الفلانية", id="non-ascii-author"),
 ]
-CHARMCRAFT_YAML_DOCS_URL = (
+CANONICAL_CHARMCRAFT_DOCS_URL = (
     "https://documentation.ubuntu.com/charmcraft/stable/reference/files/"
     "charmcraft-yaml-file/"
 )
@@ -154,19 +154,21 @@ def test_files_created_correct(
     pytest_check.is_true(
         re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
     )
-    pytest_check.equal(charmcraft_yaml.count(CHARMCRAFT_YAML_DOCS_URL), 1)
+    # The generated template should keep one canonical docs link instead of
+    # multiple section-specific documentation URLs.
+    pytest_check.equal(charmcraft_yaml.count(CANONICAL_CHARMCRAFT_DOCS_URL), 1)
     pytest_check.is_not_in("# Documentation:", charmcraft_yaml)
     pytest_check.is_not_in(PLATFORMS_DOCS_URL, charmcraft_yaml)
     pytest_check.is_not_in(
-        f"{CHARMCRAFT_YAML_DOCS_URL}#config",
+        f"{CANONICAL_CHARMCRAFT_DOCS_URL}#config",
         charmcraft_yaml,
     )
     pytest_check.is_not_in(
-        f"{CHARMCRAFT_YAML_DOCS_URL}#containers",
+        f"{CANONICAL_CHARMCRAFT_DOCS_URL}#containers",
         charmcraft_yaml,
     )
     pytest_check.is_not_in(
-        f"{CHARMCRAFT_YAML_DOCS_URL}#resources",
+        f"{CANONICAL_CHARMCRAFT_DOCS_URL}#resources",
         charmcraft_yaml,
     )
     pytest_check.is_not_in(JUJU_DOCS_URL_PREFIX, charmcraft_yaml)

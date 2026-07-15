@@ -134,17 +134,10 @@ class BaseStoreService(craft_application.AppService):
         otp: str | None = None,
         permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
         ttl: int = AUTH_DEFAULT_TTL,
-        packages: Sequence[craft_store.endpoints.Package] | None = None,
+        packages: Collection[Mapping[str, str]] | None = None,
         channels: Sequence[str] | None = None,
     ) -> None:
         """Login to the store."""
-        # packages need to be serialized
-        package_dicts = (
-            [{"type": p.package_type, "name": p.package_name} for p in packages]
-            if packages is not None
-            else None
-        )
-
         try:
             self._auth.ensure_no_credentials()
             UbuntuOneLogin.login_with(
@@ -156,7 +149,7 @@ class BaseStoreService(craft_application.AppService):
                 application_name=self._app.name,
                 permissions=permissions,
                 ttl=ttl,
-                packages=package_dicts,  # ty: ignore[invalid-argument-type]
+                packages=packages,
                 channels=channels,
             )
         except craft_store.errors.CredentialsAlreadyAvailable as exc:
@@ -186,7 +179,7 @@ class BaseStoreService(craft_application.AppService):
         otp: str | None = None,
         permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
         ttl: int = AUTH_DEFAULT_TTL,
-        packages: Sequence[craft_store.endpoints.Package] | None = None,
+        packages: Collection[Mapping[str, str]] | None = None,
         channels: Sequence[str] | None = None,
     ) -> str:
         """Create a fresh set of login credentials for the store.
@@ -194,12 +187,6 @@ class BaseStoreService(craft_application.AppService):
         This logs in independent of any credentials currently stored for the application and
         returns the resulting macaroon as a string.
         """
-        # packages need to be serialized
-        package_dicts = (
-            [{"type": p.package_type, "name": p.package_name} for p in packages]
-            if packages is not None
-            else None
-        )
         ephemeral_auth = craft_store.Auth(
             application_name=self._app.name,
             host=str(parse.urlparse(self._base_url).netloc),
@@ -216,7 +203,7 @@ class BaseStoreService(craft_application.AppService):
             store_auth=ephemeral_auth,
             permissions=permissions,
             ttl=ttl,
-            packages=package_dicts,  # ty: ignore[invalid-argument-type]
+            packages=packages,
             channels=channels,
         )
 
@@ -264,7 +251,7 @@ class StoreService(BaseStoreService):
         otp: str | None = None,
         permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
         ttl: int = AUTH_DEFAULT_TTL,
-        packages: Sequence[craft_store.endpoints.Package] | None = None,
+        packages: Collection[Mapping[str, str]] | None = None,
         channels: Sequence[str] | None = None,
     ) -> None:
         """Login to the store using Ubuntu One SSO credentials."""

@@ -7,7 +7,6 @@ include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   charmcraft init --project-dir=charm1
   charmcraft init --project-dir=charm2
   charmcraft init --project-dir=charm3

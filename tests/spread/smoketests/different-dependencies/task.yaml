@@ -4,7 +4,6 @@ include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
   snap install --devmode --channel=v4/stable yq
   charmcraft init --project-dir=charm
   cd charm

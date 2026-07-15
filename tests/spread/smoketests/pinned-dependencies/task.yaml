@@ -4,7 +4,6 @@ include:
   - tests/
 
 prepare: |
-  tests.pkgs install unzip
 restore: |
   charmcraft clean
 

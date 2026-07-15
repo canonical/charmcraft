@@ -1,8 +1,5 @@
 summary: ensure that a charm with strict dependencies can build.
 
-prepare: |
-  tests.pkgs install unzip
-
 restore: |
   pushd charm
   charmcraft clean

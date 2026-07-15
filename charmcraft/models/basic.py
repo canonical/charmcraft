@@ -26,14 +26,13 @@ from typing_extensions import Self, override
 
 
 class _CustomStrictStr(str, metaclass=abc.ABCMeta):
-    """Generic class for strict strings with custom validation."""
+    """Abstract base class for strict string types with custom validation."""
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: type[Any], handler: pydantic.GetCoreSchemaHandler
+        cls, _source_type: type[Any], _handler: pydantic.GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         """Get the Pydantic schema."""
-        del source_type, handler
         return core_schema.no_info_after_validator_function(
             cls._strict_validate,
             core_schema.str_schema(strict=True),

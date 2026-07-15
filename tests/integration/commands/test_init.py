@@ -154,13 +154,13 @@ def test_files_created_correct(
     pytest_check.is_true(
         re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
     )
-    charmcraft_yaml_lines = charmcraft_yaml.splitlines()
-    pytest_check.equal(
-        charmcraft_yaml_lines[1],
-        f"# See {CANONICAL_CHARMCRAFT_DOCS_URL} for guidance.",
+    pytest_check.is_true(
+        charmcraft_yaml.startswith(
+            "# This file configures Charmcraft.\n"
+            f"# See {CANONICAL_CHARMCRAFT_DOCS_URL} for guidance.\n"
+        )
     )
-    # The generated template should keep one canonical docs link instead of
-    # multiple section-specific documentation URLs.
+    # The generated template should use one canonical docs link instead of multiple section-specific URLs.
     pytest_check.equal(charmcraft_yaml.count(CANONICAL_CHARMCRAFT_DOCS_URL), 1)
     pytest_check.is_not_in("# Documentation:", charmcraft_yaml)
     pytest_check.is_not_in(PLATFORMS_DOCS_URL, charmcraft_yaml)

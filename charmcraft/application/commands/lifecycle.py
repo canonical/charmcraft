@@ -39,7 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
     """Return the lifecycle related command group."""
     return [
-        lifecycle.CleanCommand,
+        CleanCommand,
         lifecycle.PullCommand,
         lifecycle.BuildCommand,
         lifecycle.StageCommand,
@@ -47,6 +47,39 @@ def get_lifecycle_commands() -> list[type[craft_cli.BaseCommand]]:
         PackCommand,
         lifecycle.TestCommand,
     ]
+
+
+class CleanCommand(lifecycle.CleanCommand):
+    """Command to remove charm build artifacts."""
+
+    name = "clean"
+    help_msg = "Remove a charm's build artefacts"
+    overview = textwrap.dedent(
+        """
+        Clean up build artefacts for a charm.
+
+        Charmcraft stores build artefacts in a work directory during the build
+        process. Use ``charmcraft clean`` to remove these artefacts and start
+        a fresh build, which is useful when you change the charm configuration,
+        switch plugins, or want to ensure a clean build environment.
+
+        When called without arguments, ``charmcraft clean`` removes the managed
+        build instance (the container or VM used during the build), effectively
+        giving you a fully clean slate for the next ``charmcraft pack``.
+
+        When called with one or more part names, only the artefacts for those
+        specific parts are removed, leaving other parts' artefacts intact. This
+        is useful to selectively rebuild only the parts that have changed.
+
+        Examples::
+
+            charmcraft clean
+
+            charmcraft clean my-part
+
+            charmcraft clean my-part another-part
+        """
+    )
 
 
 class PackCommand(lifecycle.PackCommand):

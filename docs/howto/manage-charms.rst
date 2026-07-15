@@ -618,6 +618,34 @@ to pack, whether to force pack if there are linting errors, etc.
 
     See next: :external+juju:ref:`Juju | Manage charms <manage-charms>`
 
+.. _clean-charm-build-artefacts:
+
+Clean charm build artefacts
+----------------------------
+
+During a build, Charmcraft stores intermediate build artefacts in a work directory.
+To remove these artefacts and start a completely fresh build, run:
+
+.. code-block:: bash
+
+    charmcraft clean
+
+This is useful when you change the charm configuration, switch plugins, or want to
+ensure a clean build environment before running ``charmcraft pack`` again.
+
+To clean the artefacts for specific parts only, pass the part names as arguments:
+
+.. code-block:: bash
+
+    charmcraft clean my-part
+
+.. code-block:: bash
+
+    charmcraft clean my-part another-part
+
+   See more: :ref:`ref_commands_clean`
+
+
 .. _publish-a-charm:
 
 Publish a charm

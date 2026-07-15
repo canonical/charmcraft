@@ -895,7 +895,12 @@ class PlatformCharm(CharmProject):
     # Silencing pyright because it complains about missing default value
     base: BaseStr | None = None
     build_base: BuildBaseStr | None = None
-    platforms: PlatformsDict
+    platforms: PlatformsDict = pydantic.Field(
+        description=(
+            "Defines the target platforms for this charm. Each platforms entry "
+            "produces a separate charm file when packing."
+        )
+    )
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         description=textwrap.dedent(

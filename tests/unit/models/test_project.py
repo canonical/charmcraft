@@ -740,6 +740,17 @@ def test_resolute_base_does_not_need_build_base():
     )
 
 
+def test_platforms_field_schema_description():
+    schema = project.PlatformCharm.model_json_schema()
+    platforms_description = schema["properties"]["platforms"]["description"]
+
+    assert (
+        platforms_description
+        == "Defines the target platforms for this charm. Each platforms entry "
+        "produces a separate charm file when packing."
+    )
+
+
 def test_resolute_base_supports_reactive_plugin(monkeypatch):
     monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
     project.PlatformCharm.unmarshal(

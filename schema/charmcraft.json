@@ -944,6 +944,7 @@
 					"additionalProperties": {
 						"$ref": "#/$defs/Platform"
 					},
+					"description": "Defines the target platforms for this charm. Each platforms entry produces a separate charm file when packing.",
 					"patternProperties": {
 						"(amd64|arm64|armhf|i386|ppc64el|riscv64|s390x)": {
 							"anyOf": [

@@ -23,10 +23,10 @@ execute: |
 
   # Verify the venv Python can import ops, reproducing the core26 dispatch script bug
   # where craft-parts removes venv/bin/python and the fallback uses system Python.
-  if grep -q "^venv/bin/python$" expected_files.txt; then
+  if grep -q "^venv/bin/python$" "expected_files.txt"; then
     charm_file=$(find . -maxdepth 1 -type f -name "*.charm" | head -1)
     tmpdir=$(mktemp -d)
-    trap "rm -rf $tmpdir" EXIT
+    trap "rm -rf \"$tmpdir\"" EXIT
     unzip -q "$charm_file" -d "$tmpdir"
     "$tmpdir/venv/bin/python" -c "import ops"
   fi

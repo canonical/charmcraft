@@ -46,10 +46,10 @@ on:
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, amd64]
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Build snap
@@ -67,7 +67,7 @@ jobs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
       - name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Find spread systems
         id: select
         run: |
@@ -88,7 +88,7 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -117,7 +117,7 @@ jobs:
     steps:
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -136,3 +136,11 @@ jobs:
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
         run: |
           spread google:ubuntu-22.04-64:tests/spread/store/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

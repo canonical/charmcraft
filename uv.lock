@@ -559,7 +559,7 @@ requires-dist = [
     { name = "craft-parts", specifier = "~=2.20" },
     { name = "craft-platforms", specifier = "~=0.10" },
     { name = "craft-providers", specifier = ">=3.7.1,<4.0" },
-    { name = "craft-store", git = "https://github.com/canonical/craft-store?rev=main" },
+    { name = "craft-store", git = "https://github.com/canonical/craft-store?rev=work%2FCHARMCRAFT-667%2Fubuntu-sso" },
     { name = "distro", specifier = ">=1.7.0" },
     { name = "docker", specifier = ">=7.0.0" },
     { name = "humanize", specifier = ">=2.6.0" },
@@ -1028,8 +1028,8 @@ wheels = [
 
 [[package]]
 name = "craft-store"
-version = "3.3.0.post599+g57af685"
-source = { git = "https://github.com/canonical/craft-store?rev=main#57af68545f0a9930a0cf1204633543e98572ef7a" }
+version = "3.3.0.post603+g266b205"
+source = { git = "https://github.com/canonical/craft-store?rev=work%2FCHARMCRAFT-667%2Fubuntu-sso#266b205ad4ec4cfc5e9842c687d153c1e5535721" }
 dependencies = [
     { name = "annotated-types" },
     { name = "httpx" },

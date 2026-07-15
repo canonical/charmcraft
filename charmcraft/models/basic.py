@@ -16,48 +16,77 @@
 
 """Charmcraft basic pydantic model."""
 
-from typing import Annotated
+import abc
+from typing import Any
 
 import craft_parts.constraints
 import pydantic
+from pydantic_core import core_schema
+from typing_extensions import Self, override
 
 
-def _validate_attribute_name(value: str) -> str:
-    """Validate attribute name."""
-    from charmcraft import linters  # noqa: PLC0415  prevent circular imports
+class _CustomStrictStr(str, metaclass=abc.ABCMeta):
+    """Generic class for strict strings with custom validation."""
 
-    valid_names = [
-        checker.name
-        for checker in linters.CHECKERS
-        if checker.check_type == linters.CheckType.ATTRIBUTE
-    ]
-    if value not in valid_names:
-        raise ValueError(f"Bad attribute name {value!r}")
-    return value
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: type[Any], handler: pydantic.GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        """Get the Pydantic schema."""
+        del source_type, handler
+        return core_schema.no_info_after_validator_function(
+            cls._strict_validate,
+            core_schema.str_schema(strict=True),
+        )
+
+    @classmethod
+    def _strict_validate(cls, value: str) -> Self:
+        """Validate and cast the value to this class."""
+        return cls(cls.custom_validate(value))
+
+    @classmethod
+    @abc.abstractmethod
+    def custom_validate(cls, value: str) -> str:
+        """Apply custom validation."""
+        raise NotImplementedError
 
 
-def _validate_linter_name(value: str) -> str:
-    """Validate linter name."""
-    from charmcraft import linters  # noqa: PLC0415  prevent circular imports
+class AttributeName(_CustomStrictStr):  # TODO: Turn this into a StrEnum
+    """Constrained string that must match a known attribute checker name."""
 
-    valid_names = [
-        checker.name
-        for checker in linters.CHECKERS
-        if checker.check_type == linters.CheckType.LINT
-    ]
-    if value not in valid_names:
-        raise ValueError(f"Bad lint name {value!r}")
-    return value
+    @classmethod
+    @override
+    def custom_validate(cls, value: str) -> str:
+        """Validate attribute name."""
+        from charmcraft import linters  # noqa: PLC0415  prevent circular imports
+
+        valid_names = [
+            checker.name
+            for checker in linters.CHECKERS
+            if checker.check_type == linters.CheckType.ATTRIBUTE
+        ]
+        if value not in valid_names:
+            raise ValueError(f"Bad attribute name {value!r}")
+        return value
+
+
+class LinterName(_CustomStrictStr):
+    """Constrained string that must match a known linter checker name."""
+
+    @classmethod
+    @override
+    def custom_validate(cls, value: str) -> str:
+        """Validate linter name."""
+        from charmcraft import linters  # noqa: PLC0415  prevent circular imports
+
+        valid_names = [
+            checker.name
+            for checker in linters.CHECKERS
+            if checker.check_type == linters.CheckType.LINT
+        ]
+        if value not in valid_names:
+            raise ValueError(f"Bad lint name {value!r}")
+        return value
 
 
 RelativePath = craft_parts.constraints.RelativePathStr
-AttributeName = Annotated[  # TODO: Turn this into a StrEnum
-    str,
-    pydantic.Field(strict=True),
-    pydantic.BeforeValidator(_validate_attribute_name),
-]
-LinterName = Annotated[
-    str,
-    pydantic.Field(strict=True),
-    pydantic.BeforeValidator(_validate_linter_name),
-]

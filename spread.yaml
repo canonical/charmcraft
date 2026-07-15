@@ -1,7 +1,6 @@
 project: charmcraft
 
 path: /charmcraft
-kill-timeout: 2h
 environment:
   PROJECT_PATH: /charmcraft
   SNAPD_TESTING_TOOLS: $PROJECT_PATH/tools/external/tools
@@ -353,6 +352,7 @@ suites:
       - ubuntu-22.04-64
   tests/spread/hooks/:
     summary: snap hook tests
+    kill-timeout: 30m
   tests/spread/store/:
     prepare: |
       snap install docker
@@ -385,6 +385,7 @@ suites:
     restore: |
       snap remove docker --purge
     summary: sequence of commands for different store-related functionalities
+    kill-timeout: 30m
     manual: true
     systems:
       - ubuntu-22.04-64

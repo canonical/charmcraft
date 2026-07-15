@@ -72,6 +72,11 @@ CHARMCRAFT_YAML_DOCS_URL = (
     "https://documentation.ubuntu.com/charmcraft/stable/reference/files/"
     "charmcraft-yaml-file/"
 )
+PLATFORMS_DOCS_URL = (
+    "https://documentation.ubuntu.com/charmcraft/stable/howto/build-guides/"
+    "select-platforms/"
+)
+JUJU_DOCS_URL_PREFIX = "https://documentation.ubuntu.com/juju/"
 
 
 @pytest.fixture
@@ -150,14 +155,21 @@ def test_files_created_correct(
         re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
     )
     pytest_check.equal(charmcraft_yaml.count(CHARMCRAFT_YAML_DOCS_URL), 1)
-    pytest_check.is_not_in("select-platforms", charmcraft_yaml)
-    pytest_check.is_not_in("#config", charmcraft_yaml)
-    pytest_check.is_not_in("#containers", charmcraft_yaml)
-    pytest_check.is_not_in("#resources", charmcraft_yaml)
+    pytest_check.is_not_in("# Documentation:", charmcraft_yaml)
+    pytest_check.is_not_in(PLATFORMS_DOCS_URL, charmcraft_yaml)
     pytest_check.is_not_in(
-        "https://documentation.ubuntu.com/juju/3.6/reference/configuration/",
+        f"{CHARMCRAFT_YAML_DOCS_URL}#config",
         charmcraft_yaml,
     )
+    pytest_check.is_not_in(
+        f"{CHARMCRAFT_YAML_DOCS_URL}#containers",
+        charmcraft_yaml,
+    )
+    pytest_check.is_not_in(
+        f"{CHARMCRAFT_YAML_DOCS_URL}#resources",
+        charmcraft_yaml,
+    )
+    pytest_check.is_not_in(JUJU_DOCS_URL_PREFIX, charmcraft_yaml)
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
 

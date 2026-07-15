@@ -894,7 +894,7 @@ at least one ``requires`` integration with ``container`` scope.
 ``resources``
 -------------
 
-    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`
+    See first: `Juju | Resource (charm) <https://juju.is/docs/juju/charm-resource>`_
 
 **Status:** Optional.
 

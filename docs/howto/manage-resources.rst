@@ -4,9 +4,9 @@ Manage resources
 ================
 
 This guide shows how to declare, publish, view, and manage
-charm :external+juju:ref:`resource <charm-resource>` revisions. To learn more
-about managing charm resources, visit
-:external+juju:ref:`manage-charm-resources`.
+charm `resources <https://juju.is/docs/juju/charm-resource>`_ revisions. To
+learn more about managing charm resources, visit `Manage charm resources
+<https://juju.is/docs/sdk/resources>`_.
 
 Declare a resource
 ------------------

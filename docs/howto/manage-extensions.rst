@@ -1,3 +1,6 @@
+.. meta::
+    :description: How to view and manage extensions.
+
 .. _manage-extensions:
 
 Manage extensions
@@ -5,16 +8,15 @@ Manage extensions
 
 .. important::
 
-   There are two versions of the ``paas-charm`` library used to build 12-factor
-   app charms:
+   Extension behaviour differs between Ubuntu base versions.
 
-   - **V1** supports Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) bases.
-   - **V2** supports Ubuntu 26.04 LTS (Resolute) bases and introduces improvements
-     that align configuration and behaviour across all supported frameworks.
+   - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) use the original
+     ``paas-charm`` templates.
+   - Ubuntu 26.04 LTS (Resolute) and higher use the ``-26.04`` templates, with
+     updated configuration and behaviour.
 
-   If you are targeting Ubuntu 26.04 LTS, you must use the V2 charm templates (the
-   ``-26.04`` variants). The guides on this page apply to both versions unless
-   noted otherwise.
+   If you are targeting Ubuntu 26.04 LTS or higher, use the ``-26.04`` templates.
+   The guides on this page apply to both base groups unless noted otherwise.
 
 This guide shows how to view available :ref:`extensions <extensions>`
 and view details about extensions in use.
@@ -30,9 +32,15 @@ For example:
 .. code-block:: bash
 
    $ charmcraft list-extensions
-   Extension name    Supported bases    Experimental bases
-   ----------------  -----------------  --------------------
-   flask-framework   ubuntu@22.04       ubuntu@26.04
+    Extension name         Supported bases             Experimental bases
+    ---------------------  --------------------------  --------------------
+    django-framework       ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
+    expressjs-framework    ubuntu@24.04                ubuntu@26.04
+    fastapi-framework      ubuntu@24.04                ubuntu@26.04
+    flask-framework        ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
+    go-framework           ubuntu@24.04                ubuntu@26.04
+    spring-boot-framework  ubuntu@24.04                ubuntu@26.04
+
 
 View details about the extension in use
 ---------------------------------------
@@ -44,156 +52,71 @@ extension.
 
 .. dropdown:: Example
 
-    .. tab-set::
+    .. code-block:: bash
 
-        .. tab-item:: V1
-            :sync: v1
+        mkdir my-flask-app-k8s
+        cd my-flask-app-k8s/
+        charmcraft init --profile flask-framework
 
-            .. code-block:: bash
+    .. terminal::
 
-                mkdir my-flask-app-k8s
-                cd my-flask-app-k8s/
-                charmcraft init --profile flask-framework
+        Charmed operator package file and directory tree initialised.
 
-            .. terminal::
+        Now edit the following package files to provide fundamental charm metadata
+        and other information:
 
-                Charmed operator package file and directory tree initialised.
+        charmcraft.yaml
+        src/charm.py
+        README.md
 
-                Now edit the following package files to provide fundamental charm metadata
-                and other information:
+    .. code-block:: bash
 
-                charmcraft.yaml
-                src/charm.py
-                README.md
+        ls -R
 
-            .. code-block:: bash
+    .. terminal::
 
-                ls -R
+        .:
+        charmcraft.yaml  requirements.txt  src
 
-            .. terminal::
+        ./src:
+        charm.py
 
-                .:
-                charmcraft.yaml  requirements.txt  src
+    .. code-block:: bash
 
-                ./src:
-                charm.py
+        cat charmcraft.yaml
 
-            .. code-block:: bash
+    .. code-block:: yaml
 
-                cat charmcraft.yaml
+        name: my-flask-app-k8s
 
-            .. code-block:: yaml
+        type: charm
 
-                name: my-flask-app-k8s
+        bases:
+            - build-on:
+            - name: ubuntu
+                channel: "22.04"
+            run-on:
+                - name: ubuntu
+                channel: "22.04"
 
-                type: charm
+        # (Required)
+        summary: A very short one-line summary of the flask application.
 
-                bases:
-                  - build-on:
-                    - name: ubuntu
-                      channel: "22.04"
-                    run-on:
-                      - name: ubuntu
-                        channel: "22.04"
+        # (Required)
+        description: |
+            A comprehensive overview of your Flask application.
 
-                # (Required)
-                summary: A very short one-line summary of the flask application.
+        extensions:
+            - flask-framework
 
-                # (Required)
-                description: |
-                    A comprehensive overview of your Flask application.
-
-                extensions:
-                    - flask-framework
-
-                # Uncomment the integrations used by your application
-                # requires:
-                #   mysql:
-                #     interface: mysql_client
-                #     limit: 1
-                #   postgresql:
-                #     interface: postgresql_client
-                #     limit: 1
-
-        .. tab-item:: V2
-            :sync: v2
-
-
-            .. code-block:: bash
-
-                mkdir my-flask-app-k8s
-                cd my-flask-app-k8s/
-                charmcraft init --profile flask-framework
-
-            .. terminal::
-
-                Charmed operator package file and directory tree initialised.
-
-                Now edit the following package files to provide fundamental charm metadata
-                and other information:
-
-                charmcraft.yaml
-                src/charm.py
-                README.md
-
-            .. code-block:: bash
-
-                ls -R
-
-            .. terminal::
-
-                .:
-                charmcraft.yaml  requirements.txt  src
-
-                ./src:
-                charm.py
-
-            .. code-block:: bash
-
-                cat charmcraft.yaml
-
-            .. code-block:: yaml
-
-                name: my-flask-app-k8s
-
-                type: charm
-
-                bases:
-                  - build-on:
-                    - name: ubuntu
-                      channel: "22.04"
-                    run-on:
-                      - name: ubuntu
-                        channel: "22.04"
-
-                # (Required)
-                summary: A very short one-line summary of the flask application.
-
-                # (Required)
-                description: |
-                    A comprehensive overview of your Flask application.
-
-                extensions:
-                    - flask-framework
-
-                # Uncomment the integrations used by your application
-                # requires:
-                #   mysql:
-                #     interface: mysql_client
-                #     limit: 1
-                #   postgresql:
-                #     interface: postgresql_client
-                #     limit: 1
-
-            To activate V2, set ``base`` to ``ubuntu@26.04``.
-
-            .. code-block:: yaml
-
-                name: my-flask-app-k8s
-
-                type: charm
-
-                base: ubuntu@26.04
+        # Uncomment the integrations used by your application
+        # requires:
+        #   mysql:
+        #     interface: mysql_client
+        #     limit: 1
+        #   postgresql:
+        #     interface: postgresql_client
+        #     limit: 1
 
 To view details about what that extension is adding to your charm, set the
 ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,
@@ -203,8 +126,8 @@ then run  ``charmcraft expand-extensions``. For example:
 
     .. tab-set::
 
-        .. tab-item:: V1
-            :sync: v1
+      .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
 
             .. code-block:: bash
 
@@ -314,8 +237,8 @@ then run  ``charmcraft expand-extensions``. For example:
                         Run app.config.from_prefixed_env() in your Flask application in order to
                         receive this configuration.
 
-        .. tab-item:: V2
-            :sync: v2
+      .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
 
             .. code-block:: bash
 

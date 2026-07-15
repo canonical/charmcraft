@@ -1,3 +1,6 @@
+.. meta::
+    :description: How to use a 12-factor app charm, including troubleshooting, observability, and TLS.
+
 .. _use-12-factor-charms:
 
 Use a 12-factor app charm
@@ -5,16 +8,15 @@ Use a 12-factor app charm
 
 .. important::
 
-   There are two versions of the ``paas-charm`` library used to build 12-factor
-   app charms:
+     Extension behaviour differs between Ubuntu base versions.
 
-   - **V1** supports Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) bases.
-   - **V2** supports Ubuntu 26.04 LTS (Resolute) bases and introduces improvements
-     that align configuration and behaviour across all supported frameworks.
+     - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) use the original
+       ``paas-charm`` templates.
+     - Ubuntu 26.04 LTS (Resolute) and higher use the ``-26.04`` templates, with
+       updated configuration and behaviour.
 
-   If you are targeting Ubuntu 26.04 LTS, you must use the V2 charm templates (the
-   ``-26.04`` variants). The guides on this page apply to both versions unless
-   noted otherwise.
+     If you are targeting Ubuntu 26.04 LTS or higher, use the ``-26.04`` templates.
+     The guides on this page apply to both base groups unless noted otherwise.
 
 .. _use-12-factor-charms-admin-user-django:
 
@@ -74,8 +76,8 @@ To view the Pebble logs for a deployed web app, run:
 
 .. tab-set::
 
-    .. tab-item:: V1
-        :sync: v1
+    .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
 
         .. tab-set::
 
@@ -122,8 +124,8 @@ To view the Pebble logs for a deployed web app, run:
                     juju ssh <spring-boot-app-name>/0 \
                     PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
-    .. tab-item:: V2
-        :sync: v2
+    .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
 
         .. tab-set::
 
@@ -182,8 +184,8 @@ To view more details about the web app itself, run:
 
 .. tab-set::
 
-    .. tab-item:: V1
-        :sync: v1
+    .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
 
         .. tab-set::
 
@@ -230,8 +232,8 @@ To view more details about the web app itself, run:
                     juju ssh <spring-boot-app-name>/0 \
                     PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
-    .. tab-item:: V2
-        :sync: v2
+    .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
 
         .. tab-set::
 
@@ -295,8 +297,8 @@ Juju container:
 
 .. tab-set::
 
-    .. tab-item:: V1
-        :sync: v1
+    .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
 
         .. tab-set::
 
@@ -350,8 +352,8 @@ Juju container:
                     /charm/bin/pebble  exec --context=spring-boot -- bash
 
 
-    .. tab-item:: V2
-        :sync: v2
+    .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
 
         .. tab-set::
 
@@ -472,8 +474,8 @@ name of the web app with the ``-c`` option.
 
 .. tab-set::
 
-    .. tab-item:: V1
-        :sync: v1
+    .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
 
         .. tab-set::
 
@@ -519,8 +521,8 @@ name of the web app with the ``-c`` option.
 
                     microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-    .. tab-item:: V2
-        :sync: v2
+    .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
 
         .. tab-set::
 

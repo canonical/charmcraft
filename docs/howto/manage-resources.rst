@@ -4,7 +4,7 @@ Manage resources
 ================
 
 This guide shows how to declare, publish, view, and manage
-charm `resources <https://juju.is/docs/juju/charm-resource>`_ revisions. To
+`charm resources <https://juju.is/docs/juju/charm-resource>`_ revisions. To
 learn more about managing charm resources, visit `Manage charm resources
 <https://juju.is/docs/sdk/resources>`_.
 

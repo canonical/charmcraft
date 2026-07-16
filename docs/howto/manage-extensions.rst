@@ -6,18 +6,6 @@
 Manage extensions
 =================
 
-.. important::
-
-   Extension behaviour differs between Ubuntu base versions.
-
-   - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) use the original
-     ``paas-charm`` templates.
-   - Ubuntu 26.04 LTS (Resolute) and higher use the ``-26.04`` templates, with
-     updated configuration and behaviour.
-
-   If you are targeting Ubuntu 26.04 LTS or higher, use the ``-26.04`` templates.
-   The guides on this page apply to both base groups unless noted otherwise.
-
 This guide shows how to view available :ref:`extensions <extensions>`
 and view details about extensions in use.
 
@@ -124,273 +112,113 @@ then run  ``charmcraft expand-extensions``. For example:
 
 .. dropdown:: Expanding an extension
 
-    .. tab-set::
+    .. code-block:: bash
 
-      .. tab-item:: Ubuntu 22.04 and 24.04
-        :sync: base-22-24
+        CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
 
-            .. code-block:: bash
+    .. terminal::
 
-                CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
-
-            .. terminal::
-
-                *EXPERIMENTAL* extension 'flask-framework' enabled
-                name: my-flask-app-k8s
-                summary: A very short one-line summary of the flask application.
-                description: |
-                    A comprehensive overview of your Flask application.
-                parts:
-                  charm:
-                    source: .
-                    charm-entrypoint: src/charm.py
-                    charm-binary-python-packages: []
-                    charm-python-packages: []
-                    charm-requirements:
-                      - requirements.txt
-                    charm-strict-dependencies: false
-                    plugin: charm
-                type: charm
-                bases:
-                - build-on:
-                  - name: ubuntu
-                    channel: '22.04'
-                  run-on:
-                    - name: ubuntu
-                      channel: '22.04'
-                actions:
-                  rotate-secret-key:
-                  description: Rotate the flask secret key. Users will be forced to log in again.
-                    This might be useful if a security breach occurs.
-                assumes:
-                  - k8s-api
-                containers:
-                  flask-app:
-                    resource: flask-app-image
-                peers:
-                  secret-storage:
-                    interface: secret-storage
-                provides:
-                  metrics-endpoint:
-                    interface: prometheus_scrape
-                  grafana-dashboard:
-                    interface: grafana_dashboard
-                requires:
-                  logging:
-                    interface: loki_push_api
-                  ingress:
-                    interface: ingress
-                    limit: 1
-                resources:
-                  flask-app-image:
-                    type: oci-image
-                    description: flask application image.
-                config:
-                  options:
-                    webserver-keepalive:
-                      type: int
-                      description: Time in seconds for webserver to wait for requests on a Keep-Alive
-                        connection.
-                    webserver-threads:
-                      type: int
-                      description: Run each webserver worker with the specified number of threads.
-                    webserver-timeout:
-                      type: int
-                      description: Time in seconds to kill and restart silent webserver workers.
-                    webserver-workers:
-                      type: int
-                      description: The number of webserver worker processes for handling requests.
-                    flask-application-root:
-                      type: string
-                      description: Path in which the application / web server is mounted. This configuration
-                        will set the FLASK_APPLICATION_ROOT environment variable. Run app.config.from_prefixed_env()
-                        in your Flask application in order to receive this configuration.
-                    flask-debug:
-                      type: boolean
-                      description: Whether Flask debug mode is enabled.
-                    flask-env:
-                      type: string
-                      description: What environment the Flask app is running in, by default it's 'production'.
-                    flask-permanent-session-lifetime:
-                      type: int
-                      description: Time in seconds for the cookie to expire in the Flask application
-                        permanent sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
-                        environment variable. Run app.config.from_prefixed_env() in your Flask application
-                        in order to receive this configuration.
-                    flask-preferred-url-scheme:
-                      type: string
-                      default: HTTPS
-                      description: Scheme for generating external URLs when not in a request context
-                        in the Flask application. By default, it's "HTTPS". This configuration will
-                        set the FLASK_PREFERRED_URL_SCHEME environment variable. Run app.config.from_prefixed_env()
-                        in your Flask application in order to receive this configuration.
-                    flask-secret-key:
-                      type: string
-                      description: The secret key used for securely signing the session cookie and
-                        for any other security related needs by your Flask application. This configuration
-                        will set the FLASK_SECRET_KEY environment variable. Run app.config.from_prefixed_env()
-                        in your Flask application in order to receive this configuration.
-                    flask-session-cookie-secure:
-                      type: boolean
-                      description: Set the secure attribute in the Flask application cookies. This
-                        configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
-                        Run app.config.from_prefixed_env() in your Flask application in order to
-                        receive this configuration.
-
-      .. tab-item:: Ubuntu 26.04 and higher
-        :sync: base-26-plus
-
-            .. code-block:: bash
-
-                CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
-
-            .. terminal::
-
-                *EXPERIMENTAL* extension 'flask-framework' enabled for base(s): ubuntu@26.04
-                name: my-flask-app-k8s
-                summary: A very short one-line summary of the Flask application.
-                description: |
-                    A comprehensive overview of your Flask application.
-                base: ubuntu@26.04
-                platforms:
-                    amd64:
-                        build-on:
-                        - amd64
-                        build-for:
-                        - amd64
-                parts:
-                    charm:
-                        plugin: uv
-                        source: .
-                        uv-groups:
-                        - charmlibs-pydeps
-                        build-snaps:
-                        - astral-uv
-                        - rustup
-                        override-build: |-
-                            rustup default stable
-                            craftctl default
-                type: charm
-                charm-libs:
-                - lib: traefik-k8s.ingress
-                version: '2'
-                - lib: observability-libs.juju_topology
-                version: '0'
-                - lib: grafana-k8s.grafana_dashboard
-                version: '0'
-                - lib: loki-k8s.loki_push_api
-                version: '1'
-                - lib: data-platform-libs.data_interfaces
-                version: '0'
-                - lib: prometheus-k8s.prometheus_scrape
-                version: '0'
-                - lib: redis-k8s.redis
-                version: '0'
-                - lib: data-platform-libs.s3
-                version: '0'
-                - lib: saml-integrator.saml
-                version: '0'
-                - lib: tempo-coordinator-k8s.tracing
-                version: '0'
-                - lib: smtp-integrator.smtp
-                version: '0'
-                - lib: openfga-k8s.openfga
-                version: '1'
-                - lib: hydra.oauth
-                version: '0'
-                - lib: squid-forward-proxy.http_proxy
-                version: '0'
-                actions:
-                    rotate-secret-key:
-                        description: Rotate the secret key. Users will be forced to log in again. This
-                        might be useful if a security breach occurs.
-                assumes:
-                - k8s-api
-                containers:
-                    app:
-                        resource: app-image
-                peers:
-                    secret-storage:
-                        interface: secret-storage
-                provides:
-                    metrics-endpoint:
-                        interface: prometheus_scrape
-                    grafana-dashboard:
-                        interface: grafana_dashboard
-                requires:
-                    logging:
-                        interface: loki_push_api
-                    ingress:
-                        interface: ingress
-                        limit: 1
-                resources:
-                    app-image:
-                        type: oci-image
-                        description: flask application image.
-                config:
-                    options:
-                        webserver-keepalive:
-                            type: int
-                            description: Time in seconds for webserver to wait for requests on a Keep-Alive
-                                connection.
-                        webserver-threads:
-                            type: int
-                            description: Run each webserver worker with the specified number of threads.
-                        webserver-timeout:
-                            type: int
-                            description: Time in seconds to kill and restart silent webserver workers.
-                        webserver-workers:
-                            type: int
-                            description: The number of webserver worker processes for handling requests.
-                        webserver-worker-class:
-                            type: string
-                            description: The webserver worker process class for handling requests. Can be
-                                either 'gevent' or 'sync'.
-                        flask-application-root:
-                            type: string
-                            description: Path in which the application / web server is mounted. This configuration
-                                will set the FLASK_APPLICATION_ROOT environment variable. Run `app.config.from_prefixed_env()`
-                                in your Flask application in order to receive this configuration.
-                        flask-debug:
-                            type: boolean
-                            description: Whether Flask debug mode is enabled.
-                        flask-env:
-                            type: string
-                            description: What environment the Flask app is running in, by default it's 'production'.
-                        flask-permanent-session-lifetime:
-                            type: int
-                            description: Time in seconds for the cookie to expire in the Flask application
-                                permanent sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
-                                environment variable. Run `app.config.from_prefixed_env()` in your Flask application
-                                in order to receive this configuration.
-                        flask-preferred-url-scheme:
-                            type: string
-                            default: HTTPS
-                            description: Scheme for generating external URLs when not in a request context
-                                in the Flask application. By default, it's "HTTPS". This configuration will
-                                set the FLASK_PREFERRED_URL_SCHEME environment variable. Run `app.config.from_prefixed_env()`
-                                in your Flask application in order to receive this configuration.
-                        flask-secret-key:
-                            type: string
-                            description: The secret key used for securely signing the session cookie and
-                                for any other security related needs by your Flask application. This configuration
-                                will set the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()`
-                                in your Flask application in order to receive this configuration.
-                        flask-secret-key-id:
-                            type: secret
-                            description: 'This configuration is similar to `flask-secret-key`, but instead
-                                accepts a Juju user secret ID. The secret should contain a single key, "value",
-                                which maps to the actual Flask secret key. To create the secret, run the following
-                                command: `juju add-secret my-flask-secret-key value=<secret-string> && juju
-                                grant-secret my-flask-secret-key flask-k8s`, and use the output secret ID
-                                to configure this option.'
-                        flask-session-cookie-secure:
-                            type: boolean
-                            description: Set the secure attribute in the Flask application cookies. This
-                                configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
-                                Run `app.config.from_prefixed_env()` in your Flask application in order to
-                                receive this configuration.
-
+        *EXPERIMENTAL* extension 'flask-framework' enabled
+        name: my-flask-app-k8s
+        summary: A very short one-line summary of the flask application.
+        description: |
+            A comprehensive overview of your Flask application.
+        parts:
+            charm:
+            source: .
+            charm-entrypoint: src/charm.py
+            charm-binary-python-packages: []
+            charm-python-packages: []
+            charm-requirements:
+                - requirements.txt
+            charm-strict-dependencies: false
+            plugin: charm
+        type: charm
+        bases:
+        - build-on:
+            - name: ubuntu
+            channel: '22.04'
+            run-on:
+            - name: ubuntu
+                channel: '22.04'
+        actions:
+            rotate-secret-key:
+            description: Rotate the flask secret key. Users will be forced to log in again.
+            This might be useful if a security breach occurs.
+        assumes:
+            - k8s-api
+        containers:
+            flask-app:
+            resource: flask-app-image
+        peers:
+            secret-storage:
+            interface: secret-storage
+        provides:
+            metrics-endpoint:
+            interface: prometheus_scrape
+            grafana-dashboard:
+            interface: grafana_dashboard
+        requires:
+            logging:
+            interface: loki_push_api
+            ingress:
+            interface: ingress
+            limit: 1
+        resources:
+            flask-app-image:
+            type: oci-image
+            description: flask application image.
+        config:
+            options:
+            webserver-keepalive:
+                type: int
+                description: Time in seconds for webserver to wait for requests on a Keep-Alive
+                connection.
+            webserver-threads:
+                type: int
+                description: Run each webserver worker with the specified number of threads.
+            webserver-timeout:
+                type: int
+                description: Time in seconds to kill and restart silent webserver workers.
+            webserver-workers:
+                type: int
+                description: The number of webserver worker processes for handling requests.
+            flask-application-root:
+                type: string
+                description: Path in which the application / web server is mounted. This configuration
+                will set the FLASK_APPLICATION_ROOT environment variable. Run app.config.from_prefixed_env()
+                in your Flask application in order to receive this configuration.
+            flask-debug:
+                type: boolean
+                description: Whether Flask debug mode is enabled.
+            flask-env:
+                type: string
+                description: What environment the Flask app is running in, by default it's 'production'.
+            flask-permanent-session-lifetime:
+                type: int
+                description: Time in seconds for the cookie to expire in the Flask application
+                permanent sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
+                environment variable. Run app.config.from_prefixed_env() in your Flask application
+                in order to receive this configuration.
+            flask-preferred-url-scheme:
+                type: string
+                default: HTTPS
+                description: Scheme for generating external URLs when not in a request context
+                in the Flask application. By default, it's "HTTPS". This configuration will
+                set the FLASK_PREFERRED_URL_SCHEME environment variable. Run app.config.from_prefixed_env()
+                in your Flask application in order to receive this configuration.
+            flask-secret-key:
+                type: string
+                description: The secret key used for securely signing the session cookie and
+                for any other security related needs by your Flask application. This configuration
+                will set the FLASK_SECRET_KEY environment variable. Run app.config.from_prefixed_env()
+                in your Flask application in order to receive this configuration.
+            flask-session-cookie-secure:
+                type: boolean
+                description: Set the secure attribute in the Flask application cookies. This
+                configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
+                Run app.config.from_prefixed_env() in your Flask application in order to
+                receive this configuration.
 
 To expand ``charmcraft.yaml`` using the extensions specified in the file
 and output the resulting configuration to the terminal, run

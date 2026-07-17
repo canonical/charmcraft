@@ -11,7 +11,7 @@ This file is optional, though it may be useful for charms intended for a
 machine cloud of the LXD type.
 
     See more: `Juju \| The LXD cloud and Juju
-    <https://documentation.ubuntu.com/juju/latest/reference/cloud/list-of-supported-clouds/the-lxd-cloud-and-juju/>`_
+    <https://canonical.com/juju/docs/juju-cli/latest/reference/cloud/list-of-supported-clouds/lxd/>`__
 
 The file allows you to specify a LXD profile to be applied to the LXD
 container that your charm is deployed into. The structure of the file

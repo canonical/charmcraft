@@ -169,7 +169,11 @@ def mock_store_anonymous_client() -> mock.Mock:
 
 @pytest.fixture
 def mock_publisher_gateway() -> mock.Mock:
-    return mock.Mock(spec_set=craft_store.PublisherGateway)
+    gateway = mock.Mock(spec_set=craft_store.PublisherGateway)
+    gateway.whoami.return_value = {
+        "account": {"username": "test-user"},
+    }
+    return gateway
 
 
 @pytest.fixture

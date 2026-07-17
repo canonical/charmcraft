@@ -24,10 +24,10 @@ from unittest import mock
 
 import craft_application
 import craft_cli.pytest_plugin
-import craft_store
 import pytest
 from craft_cli import CraftError
 from craft_store import models, publisher
+from craft_store.errors import UbuntuOneOtpRequiredError
 from craft_store.publisher import Releases
 
 from charmcraft import errors, store
@@ -53,9 +53,16 @@ type: charm
 """
 
 
-def test_login_basic_no_export(service_factory, mock_store_client):
-    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+def test_login_basic_no_export(mocker, monkeypatch, service_factory, mock_store_client):
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: (
+            "test@example.com" if not kw.get("hide") else "test-password"
+        ),
+    )
 
+    mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(
             charm=None,
@@ -74,20 +81,35 @@ def test_login_basic_no_export(service_factory, mock_store_client):
 @pytest.mark.parametrize("permission", [None, [], ["package-manage"]])
 @pytest.mark.parametrize("ttl", [None, 0, 2**65])
 def test_login_export(
+    mocker,
     monkeypatch,
     service_factory,
     mock_store_client,
+    fake_path,
     charm,
     bundle,
     channel,
     permission,
     ttl,
 ):
-    mock_client_cls = mock.Mock(return_value=mock_store_client)
-    monkeypatch.setattr(craft_store, "StoreClient", mock_client_cls)
-    mock_store_client.login.return_value = "Some store credentials"
-    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: (
+            "test@example.com" if not kw.get("hide") else "test-password"
+        ),
+    )
 
+    export_file = fake_path / "charmhub.login"
+    fake_encoded = "base64encodedcreds=="
+
+    mock_auth = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
+    mock_auth.encode_credentials.return_value = fake_encoded
+
+    mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
+    mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(
             charm=charm,
@@ -95,12 +117,48 @@ def test_login_export(
             channel=channel,
             permission=permission,
             ttl=ttl,
-            export=pathlib.Path("charmhub.login"),
+            export=export_file,
         )
     )
 
-    assert pathlib.Path("charmhub.login").read_text() == "Some store credentials"
-    mock_store_client.login.assert_called_once()
+    assert export_file.read_text() == fake_encoded
+
+
+def test_login_export_otp(
+    mocker, monkeypatch, service_factory, mock_store_client, fake_path
+):
+    prompts = iter(["test@example.com", "test-password", "123456"])
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: next(prompts),
+    )
+
+    export_file = fake_path / "charmhub.login"
+    fake_encoded = "base64encodedcreds=="
+
+    mock_auth = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
+    mock_auth.encode_credentials.return_value = fake_encoded
+
+    mocker.patch(
+        "charmcraft.services.store.UbuntuOneLogin.login_with",
+        side_effect=[UbuntuOneOtpRequiredError(), None],
+    )
+    mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+    cmd.run(
+        argparse.Namespace(
+            charm=None,
+            bundle=None,
+            channel=None,
+            permission=None,
+            ttl=None,
+            export=export_file,
+        )
+    )
+
+    assert export_file.read_text() == fake_encoded
 
 
 @pytest.mark.parametrize(

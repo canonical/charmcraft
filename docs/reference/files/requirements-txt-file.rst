@@ -4,14 +4,13 @@
 ``requirements.txt`` file
 =========================
 
-The ``requirements.txt`` file is a standard Python `requirements file
+Charmcraft only creates this file for 12-factor app profiles targeting Ubuntu 24.04 LTS
+or lower. Other profiles use a :ref:`pyproject-toml-file` instead.
+
+This file is a standard Python `requirements file
 <https://pip.pypa.io/en/stable/reference/requirements-file-format>`__ that declares and
 pins the Python packages that the charm needs.
 
-Charmcraft doesn't create this file for the Kubernetes and machine profiles. They use a
-:ref:`pyproject-toml-file` instead.
-
-When a charm is initialized with a 12-factor app profile, Charmcraft creates this file
-and pre-populates it with :external+ops:doc:`Ops <index>`. Any dependencies specified
-here are bundled with the charm when it's built with
+This file is pre-populated with :external+ops:doc:`Ops <index>`. Any dependencies
+specified here are bundled with the charm when it's built with
 :ref:`charmcraft pack <ref_commands_pack>`.

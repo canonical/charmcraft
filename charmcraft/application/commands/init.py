@@ -86,10 +86,12 @@ files and directories::
     ├── LICENSE                    - Your charm license, we recommend Apache 2
     ├── pyproject.toml             - Configuration for testing, formatting and
     │                                linting tools. Specifies Python dependencies for
+    │                                all profiles except 12-factor app profiles
+    │                                targeting Ubuntu 24.04 or lower
     │                                your charm if profile is 'kubernetes' or 'machine'
     ├── README.md                  - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt           - Python dependencies for your charm, with Ops,
-    │                                created for 12-factor app profiles only
+    ├── requirements.txt           - Python dependencies for 12-factor app profiles
+    │                                targeting Ubuntu 24.04 LTS or lower
     ├── src
     │   ├── charm.py               - Python code that operates your charm's workload
     │   └── <workload>.py          - Standalone module for workload-specific logic,

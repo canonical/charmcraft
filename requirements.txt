@@ -26,7 +26,7 @@ packaging==23.2
 platformdirs==3.11.0
 protobuf==3.20.3
 pycparser==2.21
-pydantic==1.10.24
+pydantic==1.10.26
 pydantic-yaml==0.11.2
 pymacaroons==0.13.0
 pynacl==1.5.0
@@ -45,7 +45,7 @@ six==1.16.0
 snap-helpers==0.4.2
 tabulate==0.9.0
 types-deprecated==1.2.9.20240311
-types-pyyaml==6.0.12.20250915
+types-pyyaml==6.0.12.20260518
 typing-extensions==4.8.0
 urllib3==2.2.3
 wrapt==1.15.0

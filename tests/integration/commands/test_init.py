@@ -147,6 +147,27 @@ def test_files_created_correct(
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
 
 
+@pytest.mark.parametrize(
+    ("profile", "uses_uv"),
+    [
+        pytest.param("machine", True, id="machine"),
+        pytest.param("kubernetes", True, id="kubernetes"),
+        pytest.param("flask-framework", False, id="flask-framework"),
+    ],
+)
+def test_success_message(new_path, init_command, emitter, profile: str, uses_uv: bool):
+    init_command.run(create_namespace(profile=profile))
+    output = "\n".join(
+        c.args[1] for c in emitter.interactions if c.args[0] == "message"
+    )
+    if uses_uv:
+        assert "\nuv.lock\n" not in output  # uv.lock isn't listed as a created file.
+        assert "Run 'uv lock'" in output
+    else:
+        assert "uv.lock" not in output
+        assert "uv lock" not in output
+
+
 def test_force(new_path, init_command):
     tmp_file = new_path / "README.md"
     with tmp_file.open("w") as f:

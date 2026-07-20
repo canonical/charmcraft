@@ -17,20 +17,16 @@
 
 from collections.abc import Iterable
 
-from craft_store import endpoints
-
 
 def get_packages(
     charms: Iterable[str] = (), bundles: Iterable[str] = ()
-) -> list[endpoints.Package]:
-    """Get a list of packages from charms and bundles."""
+) -> list[dict[str, str]]:
+    """Get a list of package specs from charms and bundles.
+
+    The store's token request API expects each package as a dict with
+    "type" and "name" keys.
+    """
     return [
-        *(
-            endpoints.Package(package_type="charm", package_name=charm)
-            for charm in charms
-        ),
-        *(
-            endpoints.Package(package_type="bundle", package_name=bundle)
-            for bundle in bundles
-        ),
+        *({"type": "charm", "name": charm} for charm in charms),
+        *({"type": "bundle", "name": bundle} for bundle in bundles),
     ]

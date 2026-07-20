@@ -318,7 +318,7 @@ suites:
     summary: test charm dependencies
     systems:
       - ubuntu-22.04-64
-    kill-timeout: 2h # Setting up Juju can take a while.
+    kill-timeout: 3h # Setting up Juju can take a while.
     priority: 50 # Because setting up Juju takes a while, do these first.
     prepare: |
       snap install juju --channel=3/stable

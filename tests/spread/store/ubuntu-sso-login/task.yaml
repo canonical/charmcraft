@@ -1,0 +1,15 @@
+summary: validate the Ubuntu One SSO export login flow
+
+execute: |
+  expect << 'EOF'
+    spawn charmcraft login --export=/tmp/sso-creds.login
+    expect "Email address: "
+    send "$env(STAGING_SSO_USERNAME)\r"
+    expect "Password: "
+    send "$env(STAGING_SSO_PASSWORD)\r"
+    expect eof
+  EOF
+  CHARMCRAFT_AUTH=$(cat /tmp/sso-creds.login) charmcraft whoami
+
+restore: |
+  rm -f /tmp/sso-creds.login

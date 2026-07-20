@@ -67,7 +67,7 @@ complete set of packages needed in the charm's virtual environment.
     A few examples include:
 
     - `uv export <https://docs.astral.sh/uv/reference/cli/#uv-export>`_
-    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/cli/pip-compile/>`_
+    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/reference/pip-compile/>`_
     - `pip freeze <https://pip.pypa.io/en/stable/cli/pip_freeze/>`_
 
 A basic ``requirements.txt`` file for a charm with no dependencies other than the

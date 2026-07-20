@@ -6,7 +6,7 @@
 Charmcraft 4.4 release notes
 ============================
 
-20 July 2026
+28 July 2026
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.4.
 

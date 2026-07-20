@@ -163,6 +163,10 @@ class PackCommand(lifecycle.PackCommand):
         step_name: str | None = None,
         **kwargs: Any,
     ) -> None:
+        current_dir = pathlib.Path.cwd()
+        project_dir = (parsed_args.project_dir or current_dir).resolve()
+        output_dir = (parsed_args.output or current_dir).resolve()
+
         project = cast(models.CharmcraftProject, self._services.get("project").get())
         if project.charm_libs:
             self._update_charm_libs()
@@ -180,21 +184,28 @@ class PackCommand(lifecycle.PackCommand):
         # Move artifacts in the outer instance.
         if not is_managed_mode():
             state_service = self._services.get("state")
+            artifacts: dict[str, pathlib.Path] | None
             try:
                 artifacts = cast(dict[str, pathlib.Path], state_service.get("artifact"))
             except KeyError:
                 craft_cli.emit.debug(
                     "Could not find artifacts in the state service. Not moving."
                 )
-            else:
-                project_dir = parsed_args.project_dir or pathlib.Path.cwd()
-                output_dir = parsed_args.output or pathlib.Path.cwd()
+                artifacts = None
 
+            if artifacts is not None:
                 for artifact in artifacts.values():
                     old_path = project_dir / artifact
                     new_path = output_dir / artifact
                     if old_path != new_path:
                         new_path.parent.mkdir(parents=True, exist_ok=True)
                         old_path.rename(new_path)
+
+            if output_dir != project_dir:
+                for charm_path in project_dir.glob("*.charm"):
+                    new_path = output_dir / charm_path.name
+                    if charm_path != new_path:
+                        new_path.parent.mkdir(parents=True, exist_ok=True)
+                        charm_path.rename(new_path)
 
         return result

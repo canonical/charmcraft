@@ -185,6 +185,7 @@ prepare: |
 
   tests.pkgs install snapd
   tests.pkgs install unzip
+  tests.pkgs install expect
 
   snap wait system seed.loaded
 
@@ -377,7 +378,9 @@ suites:
 
       # Ensure that the reused charms are registered if necessary.
       if ! charmcraft status "${CHARM_DEFAULT_NAME}"; then
-        charmcraft register $CHARM_DEFAULT_NAME
+        # Another system may register the charm simultaneously. If registration fails
+        # because we lost the race, verify that the charm is already registered.
+        charmcraft register "${CHARM_DEFAULT_NAME}" || charmcraft status "${CHARM_DEFAULT_NAME}"
       fi
 
       rm -f charmcraft.yaml
@@ -397,6 +400,11 @@ suites:
       # for GH actions set it in Settings -> Security -> Actions -> Repository secrets)
       CHARMCRAFT_AUTH: "$(HOST: echo $CHARMCRAFT_AUTH)"
       CHARMCRAFT_SINGLE_CHARM_AUTH: "$(HOST: echo $CHARMCRAFT_SINGLE_CHARM_AUTH)"
+
+      # Ubuntu One staging SSO credentials for testing the login flow.
+      CHARMCRAFT_STORE_SSO_URL: "$(HOST: echo ${CHARMCRAFT_STORE_SSO_URL:-https://login.staging.ubuntu.com})"
+      STAGING_SSO_USERNAME: "$(HOST: echo $STAGING_SSO_USERNAME)"
+      STAGING_SSO_PASSWORD: "$(HOST: echo $STAGING_SSO_PASSWORD)"
 
       # to not flood Charmhub with names the same two are always used in the Store related
       # tests (except in the names registration tests, of course); register them manually

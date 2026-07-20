@@ -168,7 +168,7 @@ that uses the :ref:`craft_parts_dump_plugin`:
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 9-13
+    :emphasize-lines: 9-14
 
     parts:
       my-charm:

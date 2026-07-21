@@ -48,13 +48,13 @@ without a browser-based authentication step.
 12-factor extension and profile updates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charmcraft 4.4 includes several improvements for 12-factor app and profile
-workflows:
+Charmcraft 4.4 introduces the following improvements to the 12-factor app
+templates and extensions:
 
-- Added extension dispatch support for 12-factor extensions.
-- Added base support for Flask and Django extensions.
-- Updated generated profile tests to treat warnings as errors by default.
-- Added validation for ``paas-config.yaml`` inputs.
+- Extension dispatch support for 12-factor extensions.
+- Base support for the Flask and Django extensions.
+- Generated tests now treat warnings as errors by default.
+- Validation for ``paas-config.yaml`` inputs.
 
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

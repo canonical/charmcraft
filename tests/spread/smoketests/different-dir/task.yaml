@@ -12,10 +12,10 @@ restore: |
 
 execute: |
   charmcraft pack --verbose --project-dir=charm
-  test ! -f charm/charm*.charm
-  test -f charm*.charm
+  test -f charm/charm*.charm
+  test ! -f charm*.charm
 
-  rm -f charm*.charm
+  rm -f charm/charm*.charm
 
   mkdir -p output
   charmcraft pack --verbose --project-dir=charm -o output

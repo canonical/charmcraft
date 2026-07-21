@@ -61,9 +61,16 @@ Documentation improvements
 
 Charmcraft 4.4 includes documentation updates for:
 
-- Kubernetes and machine profile setup and test guidance.
-- Charm naming and configuration-option usage guidance.
-- Web app charm how-to content and migration references.
+- Kubernetes and machine profile setup and test guidance in
+  :doc:`Manage charms </howto/manage-charms>` and
+  :doc:`Profile </reference/profile>`.
+- Charm naming and configuration-option usage guidance in
+  :doc:`Manage names </howto/manage-names>` and
+  :doc:`Manage charms </howto/manage-charms>`.
+- Web app charm how-to content and migration references in
+  :doc:`Manage a 12-factor app charm </howto/manage-web-app-charms/index>`,
+  :doc:`Migrate bases </howto/migrate-bases/index>`, and
+  :doc:`Migrate to other plugins </howto/migrate-plugins/index>`.
 
 
 Fixed bugs and issues

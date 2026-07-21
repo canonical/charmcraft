@@ -62,7 +62,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
@@ -71,10 +71,10 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems=$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     needs: [snap-build, spread-select]
     strategy:
       fail-fast: false
@@ -100,7 +100,7 @@ jobs:
 
       - name: Run spread
         run: |
-          spread google:${{ matrix.system }}
+          spread openstack:${{ matrix.system }}
 
       - name: Discard spread workers
         if: always()
@@ -111,7 +111,7 @@ jobs:
           done
 
   snap-store-tests:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     needs: [snap-build]
 
     steps:
@@ -138,7 +138,7 @@ jobs:
           STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
           CHARMCRAFT_STORE_SSO_URL: https://login.staging.ubuntu.com
         run: |
-          spread google:ubuntu-22.04-64:tests/spread/store/
+          spread openstack:ubuntu-22.04-64:tests/spread/store/
 
       - name: Discard spread workers
         if: always()

@@ -101,7 +101,7 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.5.
 
-- `ID <link>`__ <Title>
+- No entries yet.
 
 
 Known issues
@@ -112,7 +112,7 @@ patch releases.
 
 See individual issue links for any mitigations.
 
-- `ID <link>`__ <Title>
+- No entries yet.
 
 
 Contributors
@@ -121,7 +121,4 @@ Contributors
 We would like to express a big thank you to all the people who contributed to
 this release.
 
-:literalref:`@alex <https://example.com/alex>`,
-:literalref:`@blair <https://example.com/blair>`,
-:literalref:`@cam <https://example.com/cam>`,
-and :literalref:`@devin <https://example.com/devin>`
+Contributor list is pending.

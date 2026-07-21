@@ -59,18 +59,12 @@ templates and extensions:
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charmcraft 4.4 includes documentation updates for:
+Charmcraft 4.4 includes the following documentation changes:
 
-- Kubernetes and machine profile setup and test guidance in
-  :doc:`Manage charms </howto/manage-charms>` and
-  :doc:`Profile </reference/profile>`.
-- Charm naming and configuration-option usage guidance in
-  :doc:`Manage names </howto/manage-names>` and
-  :doc:`Manage charms </howto/manage-charms>`.
-- Web app charm how-to content and migration references in
-  :doc:`Manage a 12-factor app charm </howto/manage-web-app-charms/index>`,
-  :doc:`Migrate bases </howto/migrate-bases/index>`, and
-  :doc:`Migrate to other plugins </howto/migrate-plugins/index>`.
+- The guidance on setting up and testing machine and Kubernetes charms was
+  improved in :ref:`manage-charms` and :ref:`profile`.
+- Charm naming guidelines have been made clearer in :ref:`manage-names`.
+- :ref:`manage-charms` now clarifies how charms interact with Juju secrets.
 
 
 Fixed bugs and issues

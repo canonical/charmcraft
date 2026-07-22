@@ -1,3 +1,6 @@
+.. meta::
+    :description: How to view and manage extensions.
+
 .. _manage-extensions:
 
 Manage extensions
@@ -17,9 +20,15 @@ For example:
 .. code-block:: bash
 
    $ charmcraft list-extensions
-   Extension name    Supported bases    Experimental bases
-   ----------------  -----------------  --------------------
-   flask-framework                      ubuntu@22.04
+    Extension name         Supported bases             Experimental bases
+    ---------------------  --------------------------  --------------------
+    django-framework       ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
+    expressjs-framework    ubuntu@24.04                ubuntu@26.04
+    fastapi-framework      ubuntu@24.04                ubuntu@26.04
+    flask-framework        ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
+    go-framework           ubuntu@24.04                ubuntu@26.04
+    spring-boot-framework  ubuntu@24.04                ubuntu@26.04
+
 
 View details about the extension in use
 ---------------------------------------

@@ -88,6 +88,25 @@ test scaffolding:
 - Integration test templates for machine and Kubernetes profiles have improved comments
   pointing to the canonical guide on writing integration tests.
 
+Treat pytest warnings as errors by default
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In charms created with the ``machine`` and ``kubernetes`` profiles, tests will now fail
+on any Python warning by default. This behavior was added to bring attention to
+deprecated API calls and garbage collection bugs before they reach production.
+
+To ignore a warning across the project, add an ``ignore`` entry to your
+``pyproject.toml`` file, such as:
+
+.. code-block:: toml
+    :caption: pyproject.toml
+
+    [tool.pytest.ini_options]
+    filterwarnings = [
+        "error",
+        "ignore::UserWarning",
+    ]
+
 COS directory structure validation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

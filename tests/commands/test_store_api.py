@@ -298,7 +298,7 @@ def test_auth_bad_credentials(charmhub_config, monkeypatch):
 def test_no_keyring(charmhub_config):
     """Verify CraftStore is raised from Store when no keyring is available."""
     with patch(
-        "craft_store.StoreClient.__init__",
+        "craft_store.Auth.__init__",
         side_effect=craft_store.errors.NoKeyringError(),
     ):
         with pytest.raises(CraftError) as error:

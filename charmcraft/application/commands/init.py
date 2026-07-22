@@ -88,7 +88,6 @@ files and directories::
     │                                linting tools. Specifies Python dependencies for
     │                                all profiles except 12-factor app profiles
     │                                targeting Ubuntu 24.04 or lower
-    │                                your charm if profile is 'kubernetes' or 'machine'
     ├── README.md                  - Frontpage for your charmhub.io/charm/
     ├── requirements.txt           - Python dependencies for 12-factor app profiles
     │                                targeting Ubuntu 24.04 LTS or lower

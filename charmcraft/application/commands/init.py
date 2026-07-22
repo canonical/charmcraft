@@ -132,8 +132,7 @@ Next steps:
 """
     if "pyproject.toml" in project_files and "requirements.txt" not in project_files:
         return f"{default_message}\n{uv_message}"
-    else:
-        return default_message
+    return default_message
 
 
 def _make_workload_module_name(charm_name: str) -> str:

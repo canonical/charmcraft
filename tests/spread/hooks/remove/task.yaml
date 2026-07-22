@@ -8,7 +8,11 @@ include:
 
 prepare: |
   tests.pkgs install unzip
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm
+  cd charm
+  uv lock
 
 restore: |
   #shellcheck source=tests/spread/tools/prepare.sh

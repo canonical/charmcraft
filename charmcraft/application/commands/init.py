@@ -86,10 +86,11 @@ files and directories::
     ├── LICENSE                    - Your charm license, we recommend Apache 2
     ├── pyproject.toml             - Configuration for testing, formatting and
     │                                linting tools. Specifies Python dependencies for
-    │                                your charm if profile is 'kubernetes' or 'machine'
+    │                                all profiles except 12-factor app profiles
+    │                                targeting Ubuntu 24.04 or lower
     ├── README.md                  - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt           - Python dependencies for your charm, with Ops,
-    │                                created for 12-factor app profiles only
+    ├── requirements.txt           - Python dependencies for 12-factor app profiles
+    │                                targeting Ubuntu 24.04 LTS or lower
     ├── src
     │   ├── charm.py               - Python code that operates your charm's workload
     │   └── <workload>.py          - Standalone module for workload-specific logic,
@@ -100,8 +101,6 @@ files and directories::
     │   └── unit
     │       └── test_charm.py      - Unit tests
     ├── tox.ini                    - Configuration for tox, the tool to run all tests
-    ├── uv.lock                    - Specifies exact versions of Python dependencies,
-    │                                created if profile is 'kubernetes' or 'machine'
 
 You will need to edit at least charmcraft.yaml and README.md.
 
@@ -111,23 +110,29 @@ integration tests, which you can run using 'tox -e unit' and 'tox -e integration
 """
 
 
-def _make_success_message(src_files: list[str]) -> str:
-    src_files_str = "\n".join(src_files)
-    return f"""\
-Charmed operator package file and directory tree initialised.
+def _make_success_message(project_files: list[str]) -> str:
+    project_files_str = "\n".join(sorted(project_files, key=str.casefold))
+    default_message = f"""\
+Created project files for your charm:
 
-Now edit the following package files to provide fundamental charm metadata
-and other information:
-
-charmcraft.yaml
-{src_files_str}
-README.md
-
+{project_files_str}
+...
+"""
+    uv_message = """\
 To manage your charm's dependencies, use uv.
 
 To migrate from the Charm plugin to the uv plugin, see:
-https://documentation.ubuntu.com/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+
+Next steps:
+
+1. Run 'uv lock'
+2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
+3. Write your charm code and tests
 """
+    if "pyproject.toml" in project_files and "requirements.txt" not in project_files:
+        return f"{default_message}\n{uv_message}"
+    return default_message
 
 
 def _make_workload_module_name(charm_name: str) -> str:
@@ -249,7 +254,16 @@ class InitCommand(base.CharmcraftCommand):
             "tests/spread/lib/tools/retry",
             "spread/.extension",
         ]
-        src_files = ["src/charm.py"]
+        notable_project_files = [  # files worth mentioning in the command output
+            "charmcraft.yaml",
+            "pyproject.toml",
+            "README.md",
+            "requirements.txt",
+            "spread.yaml",
+            "spread/deploy/basic/task.yaml",
+            "src/charm.py",
+        ]
+        mention_project_files = []  # files to actually mention in the command output
         for template_name in env.list_templates():
             if not template_name.endswith(".j2"):
                 continue
@@ -266,10 +280,12 @@ class InitCommand(base.CharmcraftCommand):
                 if template_name in executables and os.name == "posix":
                     make_executable(fh)
                     emit.debug("  made executable")
-            if path.name == "workload.py" and path.parent.name == "src":
+            if template_name in notable_project_files:
+                mention_project_files.append(template_name)
+            if template_name == "src/workload.py":
                 workload_module = context["workload_module"]
                 workload_module_path = path.with_name(f"{workload_module}.py")
                 path.rename(workload_module_path)
-                src_files.append(f"src/{workload_module}.py")
-        for line in _make_success_message(src_files).split("\n"):
+                mention_project_files.append(f"src/{workload_module}.py")
+        for line in _make_success_message(mention_project_files).split("\n"):
             emit.message(line)

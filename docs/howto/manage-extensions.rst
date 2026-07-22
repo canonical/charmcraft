@@ -40,71 +40,67 @@ extension.
 
 .. dropdown:: Example
 
-   .. code-block:: bash
+    .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
-      mkdir my-flask-app-k8s
-      cd my-flask-app-k8s/
-      charmcraft init --profile flask-framework
+        charmcraft init --name my-flask-app-k8s --profile flask-framework
 
-  .. terminal::
+        Created project files for your charm:
 
-      Charmed operator package file and directory tree initialised.
+        charmcraft.yaml
+        pyproject.toml
+        requirements.txt
+        src/charm.py
+        ...
 
-      Now edit the following package files to provide fundamental charm metadata
-      and other information:
+    .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
-      charmcraft.yaml
-      src/charm.py
-      README.md
+        ls -R
 
-  .. code-block:: bash
+        .:
+        charmcraft.yaml  pyproject.toml  requirements.txt  src  tox.ini
 
-      ls -R
+        ./src:
+        charm.py
 
-  .. terminal::
+    .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
-      .:
-      charmcraft.yaml  requirements.txt  src
+        cat charmcraft.yaml
 
-      ./src:
-      charm.py
+    .. code-block:: yaml
 
-  .. code-block:: bash
+        name: my-flask-app-k8s
 
-      cat charmcraft.yaml
+        type: charm
 
-  .. code-block:: yaml
+        bases:
+          - build-on:
+            - name: ubuntu
+              channel: "22.04"
+            run-on:
+            - name: ubuntu
+              channel: "22.04"
 
-      name: my-flask-app-k8s
+        # (Required)
+        summary: A very short one-line summary of the flask application.
 
-      type: charm
+        # (Required)
+        description: |
+          A comprehensive overview of your Flask application.
 
-      bases:
-        - build-on:
-          - name: ubuntu
-            channel: "22.04"
-          run-on:
-          - name: ubuntu
-            channel: "22.04"
+        extensions:
+          - flask-framework
 
-      # (Required)
-      summary: A very short one-line summary of the flask application.
-
-      # (Required)
-      description: |
-        A comprehensive overview of your Flask application.
-
-      extensions:
-        - flask-framework
-
-      # Uncomment the integrations used by your application
-      # requires:
-      #   mysql:
-      #     interface: mysql_client
-      #     limit: 1
-      #   postgresql:
-      #     interface: postgresql_client
-      #     limit: 1
+        # Uncomment the integrations used by your application
+        # requires:
+        #   mysql:
+        #     interface: mysql_client
+        #     limit: 1
+        #   postgresql:
+        #     interface: postgresql_client
+        #     limit: 1
 
 To view details about what that extension is adding to your charm, set the
 ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,

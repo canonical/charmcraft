@@ -702,6 +702,7 @@ From the list of URLs, look for the endpoint that contains a ``grafana``
 suffix. This URL has the format:
 
 .. terminal::
+    :output-only:
 
     http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana
 

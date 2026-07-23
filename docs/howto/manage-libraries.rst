@@ -90,14 +90,12 @@ The easiest way to find an existing library for a given charm is via
 will query Charmhub and show which libraries are published for the specified
 charm, along with API/patch versions.
 
-.. code-block:: bash
-
-   charmcraft list-lib blogsystem
-
 .. terminal::
 
-   Library name    API    Patch
-   superlib        1      0
+    charmcraft list-lib blogsystem
+
+    Library name    API    Patch
+    superlib        1      0
 
 The listing will not show older API versions; this ensures that new users always start
 with the latest version.

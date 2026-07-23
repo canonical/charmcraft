@@ -12,36 +12,32 @@ When you register a name on Charmhub, that automatically creates 4 channels, all
 track ``latest`` but with different risk levels, namely, ``edge``, ``beta``,
 ``candidate``, ``stable``, respectively.
 
-    See more: :ref:`register-a-name`
+See more: :ref:`register-a-name`
 
-.. raw:: html
+.. A charm channel consists of three pieces, in this order: <track>/<risk>/<branch>.
 
-   <!--
-   A charm channel consists of three pieces, in this order: <track>/<risk>/<branch>.
+.. The <risk> refers to one of the following risk levels:
 
-   The <risk> refers to one of the following risk levels:
-
-       stable: (default) This is the latest, tested, working stable version of the charm.
-       candidate: A release candidate. There is high confidence this will work fine, but there may be minor bugs.
-       beta: A beta testing milestone release.
-       edge: The very latest version - expect bugs!
+..     stable: (default) This is the latest, tested, working stable version of the charm.
+..     candidate: A release candidate. There is high confidence this will work fine, but there may be minor bugs.
+..     beta: A beta testing milestone release.
+..     edge: The very latest version - expect bugs!
 
 
-   When you register, you get a track called `latest` with all the usual risk levels. So, you get all of:
+.. When you register, you get a track called `latest` with all the usual risk levels. So, you get all of:
 
-   latest/stable
-   latest/candidate
-   latest/beta
-   latest/edge
+.. latest/stable
+.. latest/candidate
+.. latest/beta
+.. latest/edge
 
-   This counts as 4 separate channels. They're created implicitly. (They're only _opened_ if you release a revision to them.)
+.. This counts as 4 separate channels. They're created implicitly. (They're only _opened_ if you release a revision to them.)
 
-   The track is what you request a guardrail and create a new of (not the channel).
+.. The track is what you request a guardrail and create a new of (not the channel).
 
-   Later on, if you specify a channel, you get:
-   - An implicit stable risk, if you don't declare a risk.
-   - An implicit empty branch, if you don't declare a branch.
-   -->
+.. Later on, if you specify a channel, you get:
+.. - An implicit stable risk, if you don't declare a risk.
+.. - An implicit empty branch, if you don't declare a branch.
 
 View the available channels
 ---------------------------
@@ -57,6 +53,7 @@ The following output shows four channels, all of which have the same track, ``la
 but different risk levels, namely, ``edge``, ``beta``, ``candidate``, and ``stable``.
 
 .. terminal::
+    :output-only:
 
     Track    Channel    Version    Revision
     latest   stable     -          -
@@ -64,6 +61,7 @@ but different risk levels, namely, ``edge``, ``beta``, ``candidate``, and ``stab
              beta       0.1        1
              edge       ↑          ↑
 
+..
 
    See more: :ref:`ref_commands_status`
 

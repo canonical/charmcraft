@@ -417,21 +417,22 @@ simultaneous requests with curl:
 
 .. code:: bash
 
-  curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
-  http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
-  http://flask-async-app/io http://flask-async-app/io
+    curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
+    http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
+    http://flask-async-app/io http://flask-async-app/io
 
 and they will all return at the same time.
 
 The results should arrive simultaneously and contain five instances of ``ok``:
 
 .. terminal::
+    :output-only:
 
-   ok
-   ok
-   ok
-   ok
-   ok
+    ok
+    ok
+    ok
+    ok
+    ok
 
 It can take up to a minute for the configuration to take effect. When the
 configuration changes, the charm will re-enter the active state, which you

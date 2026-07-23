@@ -47,6 +47,7 @@ extension.
       charmcraft init --profile flask-framework
 
   .. terminal::
+      :output-only:
 
       Charmed operator package file and directory tree initialised.
 
@@ -57,11 +58,9 @@ extension.
       src/charm.py
       README.md
 
-  .. code-block:: bash
+  .. terminal::
 
       ls -R
-
-  .. terminal::
 
       .:
       charmcraft.yaml  requirements.txt  src
@@ -69,11 +68,8 @@ extension.
       ./src:
       charm.py
 
-  .. code-block:: bash
-
-      cat charmcraft.yaml
-
   .. code-block:: yaml
+      :caption: charmcraft.yaml
 
       name: my-flask-app-k8s
 
@@ -112,11 +108,10 @@ then run  ``charmcraft expand-extensions``. For example:
 
 .. dropdown:: Expanding an extension
 
-   .. code-block:: bash
+  .. terminal::
 
       CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
 
-  .. terminal::
 
       *EXPERIMENTAL* extension 'flask-framework' enabled
       name: my-flask-app-k8s

@@ -16,11 +16,9 @@ Local environments
 
 To log in to Charmhub, run :ref:`charmcraft login <ref_commands_login>`:
 
-.. code-block:: bash
-
-   charmcraft login
-
 .. terminal::
+
+    charmcraft login
 
     Opening an authorization web page in your browser.
     If it does not open, please open this URL:

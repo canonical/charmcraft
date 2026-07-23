@@ -426,7 +426,7 @@ and they will all return at the same time.
 The results should arrive simultaneously and contain five instances of ``ok``:
 
 .. terminal::
-   :output-only:
+    :output-only:
 
     ok
     ok

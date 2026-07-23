@@ -53,6 +53,7 @@ After this, you can pack your charm with ``charmcraft pack``, as usual:
 If successful, the result should look like the following.
 
 .. terminal::
+    :output-only:
 
     Charms packed:
         tiny-bash_ubuntu-20.04-amd64.charm

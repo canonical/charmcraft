@@ -12,7 +12,7 @@ When you register a name on Charmhub, that automatically creates 4 channels, all
 track ``latest`` but with different risk levels, namely, ``edge``, ``beta``,
 ``candidate``, ``stable``, respectively.
 
-.. See more: :ref:`register-a-name`
+See more: :ref:`register-a-name`
 
 .. A charm channel consists of three pieces, in this order: <track>/<risk>/<branch>.
 
@@ -61,6 +61,7 @@ but different risk levels, namely, ``edge``, ``beta``, ``candidate``, and ``stab
              beta       0.1        1
              edge       ↑          ↑
 
+..
 
    See more: :ref:`ref_commands_status`
 

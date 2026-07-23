@@ -39,7 +39,7 @@ publish it to Charmhub, and manage its releases.
 - :ref:`how-to-build-remotely`
 - :ref:`manage-the-current-charmhub-user`
 - :ref:`manage-names`
-- :ref:`manage-icons`
+- :ref:`how-to-add-an-icon`
 - :ref:`manage-charm-revisions`
 - :ref:`manage-tracks`
 - :ref:`manage-channels`
@@ -84,6 +84,6 @@ update a charm to the new base:
     manage-revisions
     manage-channels
     manage-tracks
-    manage-icons
+    add-an-icon
     Migrate plugins <migrate-plugins/index>
     Migrate bases <migrate-bases/index>

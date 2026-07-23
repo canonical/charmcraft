@@ -161,10 +161,10 @@ Likewise, optional dependencies under the ``pyproject.toml`` key
 Include extra files
 -------------------
 
-The uv plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files such as a charm's icon
-were previously included from the main directory, stage them in the charm in a new part
-that uses the :ref:`craft_parts_dump_plugin`:
+The uv plugin only includes the contents of the ``src`` and ``lib`` directories as well
+as the generated virtual environment. Other files, such as the :ref:`icon-svg-file`, are
+no longer included by default and need to be explicitly packed in the charm with a new
+part that uses the :ref:`craft_parts_dump_plugin`.
 
 .. code-block:: yaml
     :caption: charmcraft.yaml

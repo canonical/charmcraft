@@ -38,27 +38,48 @@ List the charm's dependencies
 -----------------------------
 
 If the project directory doesn't already contain a :ref:`pyproject-toml-file`, create
-one. Next, list the charm's dependencies in the file's ``dependencies`` key.
+one. Next, list the charm's dependencies in a
+`dependency group <dependency groups_>`_ called ``main``.
 
 .. code-block:: toml
     :caption: pyproject.toml
-    :emphasize-lines: 6-9
 
-    [project]
-    name = "my-charm"
-    version = "0.0.1"
-    requires-python = ">=3.10"
-
-    # Dependencies of the charm code.
-    dependencies = [
+    [dependency-groups]
+    main = [
         "ops>=3,<4",
     ]
+
+    [tool.uv]
+    default-groups = ["main"]
+
+    [tool.uv.dependency-groups]
+    main = {requires-python = ">=3.10"}
 
 You can also add dependencies to your project's ``pyproject.toml`` file by running:
 
 .. code-block:: bash
 
-    uv add <dependency>
+    uv add --group main <dependency>
+
+.. warning::
+    Dependencies can also be placed in the ``dependencies`` key,
+    but the presence of the ``[project]`` table without a ``[build-system]``
+    is non-standard and will confuse workflow tools other than uv.
+    Use at your own risk.
+
+    .. code-block:: toml
+        :caption: pyproject.toml
+        :emphasize-lines: 6-9
+
+        [project]
+        name = "my-charm"
+        version = "0.0.1"
+        requires-python = ">=3.10"
+
+        # Dependencies of the charm code.
+        dependencies = [
+            "ops>=3,<4",
+        ]
 
 List charm library dependencies
 -------------------------------
@@ -78,27 +99,16 @@ running the following command at the root of the charm project:
 
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
-Next, in ``pyproject.toml``, list them in the ``dependencies`` key.
-
-.. code-block:: toml
-    :caption: pyproject.toml
-    :emphasize-lines: 4-6
-
-    # Dependencies of the charm code and PYDEPS from libraries.
-    dependencies = [
-        "ops>=3,<4",
-        "cosl",
-        "pydantic",
-        "cryptography",
-    ]
-
-Alternatively, you could list the library dependencies in a
+Next, in ``pyproject.toml``, list them in a
 `dependency group <dependency groups_>`_ called ``charmlibs-pydeps``.
 
 .. code-block:: toml
     :caption: pyproject.toml
 
     [dependency-groups]
+    main = [
+        "ops>=3,<4",
+    ]
     # PYDEPS from libraries that the charm uses.
     charmlibs-pydeps = [
         "cosl",
@@ -137,7 +147,7 @@ Add dependency groups
 ---------------------
 
 If the charm has dependency groups that should be included when creating the virtual
-environment, such as one for charm libraries, the
+environment, the
 :ref:`uv plugin's <craft_parts_uv_plugin>` ``uv-groups`` key can be set to include them:
 
 .. code-block:: yaml
@@ -151,10 +161,8 @@ environment, such as one for charm libraries, the
         build-snaps:
           - astral-uv
         uv-groups:
+          - main
           - charmlibs-pydeps
-
-Likewise, optional dependencies under the ``pyproject.toml`` key
-``project.optional-dependencies`` can be added with the ``uv-extras`` key.
 
 .. _howto-migrate-to-uv-include-extra-files:
 

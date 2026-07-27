@@ -23,6 +23,7 @@ class {{ class_name }}(ops.CharmBase):
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
         framework.observe(self.on["some_container"].pebble_ready, self._on_pebble_ready)
+        framework.observe(self.on["restart"].action, self._on_restart_action)
         self.container = self.unit.get_container("some-container")
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
@@ -49,6 +50,21 @@ class {{ class_name }}(ops.CharmBase):
         version = {{ workload_module }}.get_version()
         if version is not None:
             self.unit.set_workload_version(version)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_restart_action(self, event: ops.ActionEvent):
+        """Handle the restart action."""
+        self.unit.status = ops.MaintenanceStatus("restarting workload")
+        try:
+            self.container.restart(SERVICE_NAME)
+            self.wait_for_ready()
+        except ops.pebble.ConnectionError:
+            # Pebble isn't running yet, or the container is going away.
+            # Checking with 'can_connect' before restarting wouldn't help: the
+            # container can stop being reachable between the check and the restart.
+            self.unit.status = ops.WaitingStatus("waiting for the workload container")
+            event.fail("cannot connect to the workload container")
+            return
         self.unit.status = ops.ActiveStatus()
 
     def is_ready(self) -> bool:

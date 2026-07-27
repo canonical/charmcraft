@@ -93,3 +93,47 @@ def test_pebble_ready_service_not_ready():
     # Act & assert:
     with pytest.raises(testing.errors.UncaughtCharmError):
         ctx.run(ctx.on.pebble_ready(container_in), state_in)
+
+
+def test_restart_action():
+    """Test that the restart action starts the service and leaves the unit active."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    check_in = testing.CheckInfo(
+        CHECK_NAME,
+        level=ops.pebble.CheckLevel.READY,
+        status=ops.pebble.CheckStatus.UP,  # Simulate the Pebble check passing.
+    )
+    container_in = testing.Container(
+        "some-container",
+        can_connect=True,
+        layers={"base": MOCK_LAYER},
+        service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
+        check_infos={check_in},
+    )
+    state_in = testing.State(containers={container_in})
+
+    # Act:
+    state_out = ctx.run(ctx.on.action("restart"), state_in)
+
+    # Assert:
+    container_out = state_out.get_container(container_in.name)
+    assert container_out.service_statuses[SERVICE_NAME] == ops.pebble.ServiceStatus.ACTIVE
+    assert state_out.unit_status == testing.ActiveStatus()
+
+
+def test_restart_action_container_not_ready():
+    """Test that the restart action fails when the container can't be reached."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    container_in = testing.Container("some-container", can_connect=False)
+    state_in = testing.State(containers={container_in})
+
+    # Act & assert:
+    with pytest.raises(testing.ActionFailed) as exc_info:
+        ctx.run(ctx.on.action("restart"), state_in)
+    assert exc_info.value.message == "cannot connect to the workload container"
+    assert exc_info.value.state is not None
+    assert exc_info.value.state.unit_status == testing.WaitingStatus(
+        "waiting for the workload container"
+    )

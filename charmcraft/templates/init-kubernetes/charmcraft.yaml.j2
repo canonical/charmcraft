@@ -49,10 +49,6 @@ config:
       default: "info"
       type: string
     # A secret config option for a user-provided API token.
-    # Operator workflow:
-    #   juju add-secret my-api-token token=<value>
-    #   juju grant-secret <id> {{ name }}
-    #   juju config {{ name }} api-token=<id>
     # See https://documentation.ubuntu.com/juju/3.6/howto/manage-secrets/
     api-token:
       description: |

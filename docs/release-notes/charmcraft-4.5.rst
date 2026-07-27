@@ -54,6 +54,22 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
+Secrets handling in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` and ``kubernetes`` profiles now demonstrate both
+sides of Juju secrets.
+
+For a user-provided secret, the charm declares an ``api-token`` config option of type
+``secret``, resolves it, and re-reads it when the operator adds a new revision.
+
+For an app-managed secret, the leader creates a workload password with a rotation
+policy and an expiry, replaces it when Juju asks for rotation or reports expiry, and
+removes old revisions once no unit is using them.
+
+Both profiles scaffold unit and integration tests for this behaviour.
+
+
 <Feature A>
 ~~~~~~~~~~~
 

@@ -4,10 +4,10 @@
 
 """Charm the application."""
 
+import datetime
 import logging
 import secrets
 import time
-from datetime import timedelta
 
 import ops
 
@@ -100,7 +100,7 @@ class {{ class_name }}(ops.CharmBase):
                 {"password": secrets.token_hex(32)},
                 label=APP_SECRET_LABEL,
                 rotate=ops.SecretRotate.MONTHLY,
-                expire=timedelta(days=90),
+                expire=datetime.timedelta(days=90),
             )
 
     def _on_secret_rotate(self, event: ops.SecretRotateEvent):

@@ -9,7 +9,6 @@
 
 import logging
 import pathlib
-import subprocess
 
 import jubilant
 import pytest
@@ -25,29 +24,33 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
 
 
 def test_app_managed_secret_created(juju: jubilant.Juju):
-    """Check that the app-managed workload-password secret is visible after deployment."""
-    # The charm creates this secret on start (leader unit).
-    # 'juju list-secrets' shows all secrets the current model user can see.
-    result = subprocess.check_output(["juju", "list-secrets", "--format=yaml"], text=True)
-    assert "workload-password" in result, (
+    """Check that the charm created the app-managed workload password on start."""
+    labels = [secret.label for secret in juju.secrets()]
+    assert "workload-password" in labels, (
         "Expected the charm to create a 'workload-password' app secret on start. "
         "Check that the leader unit ran the start hook successfully."
     )
 
 
 def test_user_secret(juju: jubilant.Juju):
-    """Test that a user-provided api-token secret is resolved by the charm."""
-    # Create a user secret with a 'token' key and set it as config.
-    secret_uri = subprocess.check_output(
-        ["juju", "add-secret", "test-api-token", "token=testvalue123"],
-        text=True,
-    ).strip()
-    subprocess.check_call(["juju", "grant-secret", secret_uri, "{{ name }}"])
+    """Test that the charm resolves a user-provided api-token secret."""
+    # Create a user secret with a 'token' key, grant the charm access, and
+    # point the charm at it.
+    secret_uri = juju.add_secret("test-api-token", {"token": "shortvalue"})
+    juju.grant_secret(secret_uri, "{{ name }}")
     juju.config("{{ name }}", {"api-token": secret_uri})
     juju.wait(jubilant.all_active)
 
-    status = juju.status()
-    assert status.apps["{{ name }}"].is_active
+    # The charm logs the length of the token it resolved.
+    assert "api-token resolved (10 chars)" in juju.debug_log()
+
+    # Act — add a new revision of the same secret. Juju notifies the charm with
+    # a secret-changed event, and the charm re-reads the content.
+    juju.update_secret(secret_uri, {"token": "a-much-longer-token-value"})
+    juju.wait(jubilant.all_active)
+
+    # Assert — the charm picked up the new revision, not the original one.
+    assert "api-token resolved (25 chars)" in juju.debug_log()
 
     # Clean up: reset the config option so subsequent tests start clean.
     juju.config("{{ name }}", reset=["api-token"])

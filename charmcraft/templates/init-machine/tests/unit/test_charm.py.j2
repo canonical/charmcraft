@@ -6,7 +6,7 @@
 import pytest
 from ops import testing
 
-from charm import APP_SECRET_LABEL, {{ class_name }}
+from charm import API_TOKEN_LABEL, APP_SECRET_LABEL, {{ class_name }}
 
 
 def mock_get_version():
@@ -69,7 +69,6 @@ def test_config_changed_with_api_token():
     ctx = testing.Context({{ class_name }})
     secret = testing.Secret(
         tracked_content={"token": "my-secret-api-token"},
-        id="secret:abcdef123456",
         owner=None,  # user-owned secret (not app- or unit-owned)
     )
     state_in = testing.State(
@@ -89,7 +88,7 @@ def test_config_changed_api_token_not_found():
     # Arrange:
     ctx = testing.Context({{ class_name }})
     state_in = testing.State(
-        config={"api-token": "secret:doesnotexist"},
+        config={"api-token": "secret:doesnotexist00000000"},
         # No matching secret in state — simulates the secret not being granted.
     )
 
@@ -135,11 +134,11 @@ def test_secret_rotate():
 
 
 def test_secret_expired():
-    """Test that secret-expired removes the expired revision without error."""
+    """Test that secret-expired replaces the expired password with a new revision."""
     # Arrange:
     ctx = testing.Context({{ class_name }})
     secret = testing.Secret(
-        tracked_content={"password": "current-password"},
+        tracked_content={"password": "expired-password"},
         label=APP_SECRET_LABEL,
         owner="app",
     )
@@ -148,5 +147,49 @@ def test_secret_expired():
     # Act — simulate the tracked revision expiring:
     state_out = ctx.run(ctx.on.secret_expired(secret, revision=1), state_in)
 
-    # Assert — the charm should not have errored or blocked:
-    assert not isinstance(state_out.unit_status, testing.BlockedStatus)
+    # Assert — a new revision should have been added, not the old one removed:
+    out_secret = state_out.get_secret(label=APP_SECRET_LABEL)
+    assert out_secret.latest_content is not None
+    assert out_secret.latest_content["password"] != "expired-password"
+
+
+def test_secret_changed_new_api_token_revision():
+    """Test that the charm picks up a new revision of the user-provided api-token."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"token": "old-api-token"},
+        latest_content={"token": "new-api-token"},
+        label=API_TOKEN_LABEL,
+        owner=None,  # user-owned secret (not app- or unit-owned)
+    )
+    state_in = testing.State(secrets={secret}, config={"api-token": secret.id})
+
+    # Act:
+    state_out = ctx.run(ctx.on.secret_changed(secret), state_in)
+
+    # Assert — the charm refreshed, so it now tracks the latest revision:
+    out_secret = state_out.get_secret(label=API_TOKEN_LABEL)
+    assert out_secret.tracked_content == {"token": "new-api-token"}
+    assert state_out.unit_status == testing.ActiveStatus()
+
+
+def test_secret_remove():
+    """Test that secret-remove cleans up a revision that no unit is using."""
+    # Arrange — rotate twice, so that revision 2 is neither the oldest revision
+    # nor the newest one:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"password": "first-password"},
+        label=APP_SECRET_LABEL,
+        owner="app",
+    )
+    state = testing.State(secrets={secret}, leader=True)
+    for _ in range(2):
+        state = ctx.run(ctx.on.secret_rotate(state.get_secret(label=APP_SECRET_LABEL)), state)
+
+    # Act — Juju reports that revision 2 is no longer tracked by any unit:
+    ctx.run(ctx.on.secret_remove(state.get_secret(label=APP_SECRET_LABEL), revision=2), state)
+
+    # Assert — the charm asked Juju to remove that revision:
+    assert ctx.removed_secret_revisions == [2]

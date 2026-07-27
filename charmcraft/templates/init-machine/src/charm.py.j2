@@ -15,6 +15,7 @@ import {{ workload_module }}
 
 logger = logging.getLogger(__name__)
 
+API_TOKEN_LABEL = "api-token"  # Label for the user-provided secret named in charm config.
 APP_SECRET_LABEL = "workload-password"  # Label for the app-managed workload secret.
 
 
@@ -26,8 +27,10 @@ class {{ class_name }}(ops.CharmBase):
         framework.observe(self.on.install, self._on_install)
         framework.observe(self.on.start, self._on_start)
         framework.observe(self.on.config_changed, self._on_config_changed)
+        framework.observe(self.on.secret_changed, self._on_secret_changed)
         framework.observe(self.on.secret_rotate, self._on_secret_rotate)
         framework.observe(self.on.secret_expired, self._on_secret_expired)
+        framework.observe(self.on.secret_remove, self._on_secret_remove)
 
     def _on_install(self, event: ops.InstallEvent):
         """Install the workload on the machine."""
@@ -46,20 +49,31 @@ class {{ class_name }}(ops.CharmBase):
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle config-changed event — resolve the user-provided api-token secret."""
+        """Handle config-changed event — the api-token config might name a different secret."""
+        self._configure_api_token()
+
+    def _on_secret_changed(self, event: ops.SecretChangedEvent):
+        """Handle secret-changed event — the api-token secret has a new revision."""
+        if event.secret.label == API_TOKEN_LABEL:
+            self._configure_api_token()
+
+    def _configure_api_token(self) -> None:
+        """Read the user-provided api-token secret and configure the workload with it."""
         api_token_id = self.config.get("api-token")
         if not api_token_id:
             return
         try:
-            secret = self.model.get_secret(id=api_token_id)
+            # Attaching a label lets the secret-changed handler recognise this secret.
+            secret = self.model.get_secret(id=api_token_id, label=API_TOKEN_LABEL)
+            # 'refresh' tells Juju to start tracking the latest revision.
             content = secret.get_content(refresh=True)
-            token = content.get("token", "")
-            # Use 'token' to configure your workload, for example:
-            # {{ workload_module }}.configure(api_token=token)
-            logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))
         except ops.SecretNotFoundError:
             self.unit.status = ops.BlockedStatus("api-token secret not found or not granted")
             return
+        token = content.get("token", "")
+        # Use 'token' to configure your workload, for example:
+        # {{ workload_module }}.configure(api_token=token)
+        logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))
         self.unit.status = ops.ActiveStatus()
 
     def _ensure_app_secret(self) -> ops.Secret:
@@ -75,14 +89,26 @@ class {{ class_name }}(ops.CharmBase):
             )
 
     def _on_secret_rotate(self, event: ops.SecretRotateEvent):
-        """Handle secret-rotate event — generate a fresh workload password."""
+        """Handle secret-rotate event — the rotation policy says it's time for a new password."""
         if event.secret.label == APP_SECRET_LABEL:
-            event.secret.set_content({"password": secrets.token_hex(32)})
+            self._set_new_password(event.secret)
 
     def _on_secret_expired(self, event: ops.SecretExpiredEvent):
-        """Handle secret-expired event — remove the expired revision."""
+        """Handle secret-expired event — the current password must not be used any more."""
         if event.secret.label == APP_SECRET_LABEL:
-            event.secret.remove_revision(event.revision)
+            self._set_new_password(event.secret)
+
+    def _set_new_password(self, secret: ops.Secret) -> None:
+        """Add a new revision of the app-managed workload password."""
+        # Don't remove the old revision here: other units might still be using it.
+        # Juju emits secret-remove once no unit is tracking it any more.
+        secret.set_content({"password": secrets.token_hex(32)})
+
+    def _on_secret_remove(self, event: ops.SecretRemoveEvent):
+        """Handle secret-remove event — no unit is using this revision any more."""
+        # Without this, every rotation leaves another revision behind.
+        if event.secret.label == APP_SECRET_LABEL:
+            event.remove_revision()
 
 
 if __name__ == "__main__":  # pragma: nocover

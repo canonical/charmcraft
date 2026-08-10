@@ -22,6 +22,6 @@ dependencies. Alternatively, you can update this file by using ``uv add`` and
 
 You shouldn't manually edit this file.
 
-For 12-factor app profiles targeting Ubuntu 24.04 LTS or lower: This file isn't
+For 12-factor app charms targeting Ubuntu 24.04 LTS or lower, this file isn't
 necessary. Dependencies are specified in the :ref:`requirements-txt-file` instead of
 ``pyproject.toml``.

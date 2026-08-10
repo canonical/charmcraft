@@ -4,8 +4,8 @@
 ``requirements.txt`` file
 =========================
 
-Charmcraft only creates this file for 12-factor app profiles targeting Ubuntu 24.04 LTS
-or lower. Other profiles use a :ref:`pyproject-toml-file` instead.
+Charmcraft creates this file for 12-factor app charms targeting Ubuntu 24.04 LTS
+or lower. Other profiles and bases use a :ref:`pyproject-toml-file` instead.
 
 This file is a standard Python `requirements file
 <https://pip.pypa.io/en/stable/reference/requirements-file-format>`__ that declares and

@@ -39,6 +39,6 @@ Configuration of testing and linting tools is specified in the
 :ref:`pyproject-toml-file`. Dependencies are also specified in ``pyproject.toml``.
 You'll need to create the :ref:`uv-lock-file` before using tox.
 
-For 12-factor app profiles targeting Ubuntu 24.04 LTS or lower: ``tox.ini`` doesn't
+For 12-factor app charms targeting Ubuntu 24.04 LTS or lower, ``tox.ini`` doesn't
 require any plugins. Dependencies are specified in the :ref:`requirements-txt-file`
 instead of ``pyproject.toml``.

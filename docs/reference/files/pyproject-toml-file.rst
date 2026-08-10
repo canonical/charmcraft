@@ -21,6 +21,6 @@ Charmcraft creates this file with the following contents:
 You'll need to create :ref:`uv-lock-file` and update it if you change your charm's
 dependencies.
 
-For 12-factor app profiles targeting Ubuntu 24.04 LTS or lower: ``pyproject.toml``
+For 12-factor app charms targeting Ubuntu 24.04 LTS or lower, the ``pyproject.toml`` file
 only contains the configuration for tests and linters. Dependencies are specified in the
 :ref:`requirements-txt-file`, and there's no ``uv.lock`` file.

@@ -34,7 +34,7 @@ If the charm name you want is different from the current directory name, don't s
 ``--name`` argument. Otherwise the charm name will match the directory name.
 
 ``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
-charm, or a 12-factor app profile such as ``flask-framework``. If you don't specify a
+charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
 
 .. dropdown:: Example session

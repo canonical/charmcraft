@@ -12,13 +12,13 @@ your charm's dependencies and your development dependencies.
     `uv | The lockfile
     <https://docs.astral.sh/uv/concepts/projects/layout/#the-lockfile>`_
 
-Charmcraft doesn't create this file. This file is required if your charm uses the
-:ref:`craft_parts_uv_plugin`. It's also required by the tox-uv plugin. For more
+Charmcraft doesn't create this file. This file is required by the tox-uv plugin and
+charms with environments managed by the :ref:`craft_parts_uv_plugin`. For more
 information, see :ref:`tox-ini-file`.
 
-Use ``uv lock`` to create this file and update it if you change your charm's
-dependencies. Alternatively, you can update this file by using ``uv add`` and
-``uv remove`` to manage dependencies in the :ref:`pyproject-toml-file`.
+To create or update this file, run the ``uv lock`` command.
+Alternatively, you can update this file by running ``uv add`` or ``uv remove``
+to manage dependencies in the :ref:`pyproject-toml-file`.
 
 You shouldn't manually edit this file.
 

@@ -27,9 +27,9 @@ Charmcraft creates this file and defines the following tox environments:
 
 To run the commands in an environment, use ``tox -e <env-name>``.
 
-``tox.ini`` requires the `tox-uv <https://github.com/tox-dev/tox-uv>`_ plugin. First
-make sure that `uv <https://docs.astral.sh/uv/>`_ is installed on the current host. Then
-use uv to install tox and tox-uv:
+The ``tox.ini`` file requires the `tox-uv <https://github.com/tox-dev/tox-uv>`__ plugin.
+First, make sure that `uv <https://docs.astral.sh/uv/>`__ is installed on the current host.
+Then, install tox and tox-uv with uv:
 
 .. code-block:: bash
 

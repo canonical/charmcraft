@@ -12,5 +12,4 @@ This file is a standard Python `requirements file
 pins the Python packages that the charm needs.
 
 This file is pre-populated with :external+ops:doc:`Ops <index>`. Any dependencies
-specified here are bundled with the charm when it's built with
-:ref:`charmcraft pack <ref_commands_pack>`.
+specified here are bundled with the charm when it's packed.

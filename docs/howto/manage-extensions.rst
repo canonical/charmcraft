@@ -43,30 +43,6 @@ extension.
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
 
-        charmcraft init --name my-flask-app-k8s --profile flask-framework
-
-        Created project files for your charm:
-
-        charmcraft.yaml
-        pyproject.toml
-        requirements.txt
-        src/charm.py
-        ...
-
-    .. terminal::
-        :dir: ~/my-flask-app-k8s-operator
-
-        ls -R
-
-        .:
-        charmcraft.yaml  pyproject.toml  requirements.txt  src  tox.ini
-
-        ./src:
-        charm.py
-
-    .. terminal::
-        :dir: ~/my-flask-app-k8s-operator
-
         cat charmcraft.yaml
 
     .. code-block:: yaml

@@ -53,6 +53,7 @@ After this, you can pack your charm with ``charmcraft pack``, as usual:
 If successful, the result should look like the following.
 
 .. terminal::
+    :output-only:
 
     Charms packed:
         tiny-bash_ubuntu-20.04-amd64.charm
@@ -60,11 +61,9 @@ If successful, the result should look like the following.
 The charm file should contain all the files listed in the ``prime`` section of the
 ``tiny-bash`` part and the charm manifest.
 
-.. code-block:: bash
+.. terminal::
 
     unzip -l tiny-bash_ubuntu-20.04-amd64.charm
-
-.. terminal::
 
     Archive:  tiny-bash_ubuntu-20.04-amd64.charm
       Length      Date    Time    Name
@@ -90,11 +89,9 @@ The charm file should contain all the files listed in the ``prime`` section of t
 
 And you can also deploy your application with ``juju deploy``, as usual:
 
-.. code-block:: bash
-
-   juju deploy ./tiny-bash_ubuntu-20.04-amd64.charm
-
 .. terminal::
+
+    juju deploy ./tiny-bash_ubuntu-20.04-amd64.charm
 
     Located local charm "tiny-bash", revision 0
     Deploying "tiny-bash" from local charm "tiny-bash", revision 0
@@ -102,11 +99,9 @@ And you can also deploy your application with ``juju deploy``, as usual:
 If successful, the result should look as below, i.e., with the application status
 active.
 
-.. code-block:: bash
+.. terminal::
 
     juju status
-
-.. terminal::
 
     Model    Controller           Cloud/Region         Version  SLA          Timestamp
     default  localhost-localhost  localhost/localhost  2.9.12   unsupported  17:23:23-03:00

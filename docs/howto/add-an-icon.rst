@@ -17,8 +17,12 @@ Install prerequisites
 ---------------------
 
 You can create the icon with any vector graphics editor, but this guide works through
-the process with Inkscape. If you're following along step by step, `install Inkscape
-<https://inkscape-manuals.readthedocs.io/en/latest/installing-on-linux.html>`__.
+the process with Inkscape. If you're following along step by step, open a terminal and
+install the Inkscape snap:
+
+.. code-block:: bash
+
+    snap install inkscape
 
 Next, right-click on the following link to save the `icon template
 <https://assets.ubuntu.com/v1/fc0260eb-icon.svg>`__ to your machine. Leave the file name
@@ -40,7 +44,7 @@ With the background layer selected, press :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`F` 
 the Fill and Stroke interface. You can then select a color for the background.
 
 .. figure:: images/add-an-icon/color-select.png
-    :alt: Fill and stroke selection interface in Inkscape
+    :alt: Fill and stroke selection interface in the Inkscape editor
 
 Next, go back to the layer selection window and select the :guilabel:`PLACE LOGO HERE`
 layer. If you already have a vector image icon, drag it into this layer. If you have
@@ -49,11 +53,11 @@ a bitmap image, you'll need to convert it into a vector file first.
 If you don't have an existing logo, you can use the drawing tools in Inkscape to create
 one from scratch.
 
-Once everything is to your liking, rename this layer to something more meaningful, like
+When you're done editing the logo, rename this layer to something more meaningful, like
 :guilabel:`LOGO` or :guilabel:`ICON`.
 
 .. figure:: images/add-an-icon/import-logo.png
-    :alt: Draw something
+    :alt: Completed icon in the Inkscape editor
 
 Once you're happy with your icon, press :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`S` and save
 the file as ``icon.svg`` in the directory containing your charm's project file.

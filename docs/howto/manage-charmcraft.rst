@@ -53,21 +53,12 @@ to `these instructions <https://brew.sh/>`_).
 
     brew install charmcraft
 
-.. terminal::
-
-    ==> Downloading https://ghcr.io/v2/homebrew/core/charmcraft/manifests/1.3.2
-    ######################################################################## 100.0%
-    ==> Downloading https://ghcr.io/v2/homebrew/core/charmcraft/blobs/sha256:ebe7aac3dcfa401762faaf339a28e64bb5fb277a7d96bbcfb72bdc
-    ==> Downloading from https://pkg-containers.githubusercontent.com/ghcr1/blobs/sha256:ebe7aac3dcfa401762faaf339a28e64bb5fb277a7d
-    ######################################################################## 100.0%
-    ==> Pouring charmcraft--1.3.2.mojave.bottle.tar.gz
-    🍺  /usr/local/Cellar/charmcraft/1.3.2: 2,205 files, 17.2MB
-
 Charmhub commands work natively:
 
-.. code-block:: bash
+.. terminal::
 
     charmcraft whoami
+
     name:      John Doe
     username:  jdoe
     id:        xxxxxxxxxxxxxxxxxxxxxxxxx
@@ -76,11 +67,9 @@ In macOS, Charmcraft defaults to Multipass to build the charms in a container ma
 the target bases. Running pack asks to setup Multipass if not already installed, and
 continues with the packing process:
 
-.. code-block:: bash
-
-   $ charmcraft pack
-
 .. terminal::
+
+    charmcraft pack
 
     Multipass is required, but not installed. Do you wish to install Multipass and configure it with the defaults? [y/N]: y
     ==> Downloading https://github.com/canonical/multipass/releases/download/v1.7.2/multipass-1.7.2+mac-Darwin.pkg
@@ -119,11 +108,16 @@ a fresh new VM with 4 cores, 8GB RAM and a 20GB disk and the name ‘charm-dev':
 
 Last, open a shell in your new Ubuntu virtual machine, and install Charmcraft there:
 
-.. code-block:: bash
+.. terminal::
 
     multipass shell charm-dev
-    ...
-    ubuntu@charm-dev:~$ sudo snap install charmcraft --classic
+
+.. terminal::
+    :user: ubuntu
+    :host: charm-dev
+
+    sudo snap install charmcraft --classic
+
     charmcraft 2.2.0 from Canonical✓ installed
 
 That's it. You can now start typing in Charmcraft commands.

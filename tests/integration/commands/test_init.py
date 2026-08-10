@@ -161,8 +161,10 @@ def test_success_message(new_path, init_command, emitter, profile: str, uses_uv:
         c.args[1] for c in emitter.interactions if c.args[0] == "message"
     )
     if uses_uv:
-        assert "\nuv.lock\n" not in output  # uv.lock isn't listed as a created file.
         assert "Run 'uv lock'" in output
+        # uv.lock is mentioned in the instructions but isn't listed as a created file.
+        assert "including uv.lock" in output
+        assert "uv.lock" not in output.replace("including uv.lock", "")
     else:
         assert "uv.lock" not in output
         assert "uv lock" not in output

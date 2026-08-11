@@ -41,11 +41,6 @@ extension.
 
 .. dropdown:: Example
 
-    .. terminal::
-        :dir: ~/my-flask-app-k8s-operator
-
-        cat charmcraft.yaml
-
     .. code-block:: yaml
         :caption: charmcraft.yaml
 

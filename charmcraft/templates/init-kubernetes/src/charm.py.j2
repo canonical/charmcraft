@@ -35,7 +35,7 @@ class {{ class_name }}(ops.CharmBase):
                 SERVICE_NAME: {
                     "override": "replace",
                     "summary": "A service that runs in the workload container",
-                    "command": "/bin/foo",  # Change this!
+                    "command": "sleep infinity",  # Change this!
                     "startup": "enabled",
                 }
             }

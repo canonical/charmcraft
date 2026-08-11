@@ -16,11 +16,9 @@ Local environments
 
 To log in to Charmhub, run :ref:`charmcraft login <ref_commands_login>`:
 
-.. code-block:: bash
-
-   charmcraft login
-
 .. terminal::
+
+    charmcraft login
 
     Opening an authorization web page in your browser.
     If it does not open, please open this URL:
@@ -104,12 +102,9 @@ will push and release a charm could be:
 
 - Test that all is fine; for this get the content:
 
-  .. code-block:: bash
-
-        CHARMCRAFT_AUTH=`cat test1`
-        charmcraft whoami
-
   .. terminal::
+
+        CHARMCRAFT_AUTH=`cat test1` charmcraft whoami
 
         name: J. Doe
         username: jdoe-superdev
@@ -126,11 +121,11 @@ will push and release a charm could be:
   CHARMCRAFT_AUTH with the content of ``secrets.auth`` file, and use Charmcraft as
   normal:
 
-    .. code-block:: bash
+  .. code-block:: bash
 
-        export CHARMCRAFT_AUTH=<a long chunk of chars>
-        ...
-        charmcraft upload my-super-charm.charm --release edge
+      export CHARMCRAFT_AUTH=<a long chunk of chars>
+      ...
+      charmcraft upload my-super-charm.charm --release edge
 
 Check the currently logged in user
 ----------------------------------

@@ -118,19 +118,19 @@ parts:
       - python3.12-minimal
       - libgit2-1.7
       - libxslt1.1 # Used by craft-parts's maven plugin.
-      - python3-apt # Distro package providing libapt-pkg bindings, avoiding uv's PEP 625 sdist restriction.
     build-attributes:
       - enable-patchelf
+  python3-apt:
+    # Distro package providing libapt-pkg bindings, avoiding uv's PEP 625 sdist restriction.
+    plugin: nil
+    build-attributes:
+      - enable-patchelf
+    stage-packages:
+      - python3-apt
     organize:
-      # Move the distro-installed python3-apt module into the charmcraft venv's site-packages.
-      usr/lib/python3/dist-packages/apt: lib/python3.12/site-packages/apt
-      usr/lib/python3/dist-packages/aptsources: lib/python3.12/site-packages/aptsources
-      usr/lib/python3/dist-packages/apt_pkg-stubs: lib/python3.12/site-packages/apt_pkg-stubs
-      usr/lib/python3/dist-packages/apt_inst-stubs: lib/python3.12/site-packages/apt_inst-stubs
-      usr/lib/python3/dist-packages/apt_pkg*.so: lib/python3.12/site-packages/
-      usr/lib/python3/dist-packages/apt_inst*.so: lib/python3.12/site-packages/
+      "usr/lib/python3/dist-packages/*": "lib/python3.12/site-packages/"
   charmcraft:
-    after: [charmcraft-libs, build-deps]
+    after: [charmcraft-libs, build-deps, python3-apt]
     source: .
     plugin: uv
     build-environment:

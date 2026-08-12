@@ -65,7 +65,8 @@ def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
         check=True,
     )
     source_dir = project_path / "src"
-    source_dir.mkdir()
+    # Newer versions of `uv init` already create the src layout by default.
+    source_dir.mkdir(exist_ok=True)
     (source_dir / "charm.py").write_text("# Charm file")
 
 

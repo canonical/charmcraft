@@ -26,6 +26,9 @@ jobs:
             source-files:
               - '!({docs/**,*.md,**/*.md,.readthedocs.yaml})'
   policy:
+    permissions:
+      contents: read
+      security-events: write
     uses: canonical/starflow/.github/workflows/policy.yaml@main
     needs: filter
     if: ${{ needs.filter.outputs.source-files }}

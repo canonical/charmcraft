@@ -87,8 +87,6 @@ parts:
       - libssl-dev
       # Foreign function integration (libapt, rust deps, etc.)
       - libffi-dev
-      # Allow building python3-apt
-      - libapt-pkg-dev
       # Other bits and pieces
       - libgit2-dev # Needed to build pygit2
       - liblzma-dev # Compression/decompression
@@ -122,8 +120,17 @@ parts:
       - libxslt1.1 # Used by craft-parts's maven plugin.
     build-attributes:
       - enable-patchelf
+  python3-apt:
+    # Distro package providing libapt-pkg bindings, avoiding uv's PEP 625 sdist restriction.
+    plugin: nil
+    build-attributes:
+      - enable-patchelf
+    stage-packages:
+      - python3-apt
+    organize:
+      "usr/lib/python3/dist-packages/*": "lib/python3.12/site-packages/"
   charmcraft:
-    after: [charmcraft-libs, build-deps]
+    after: [charmcraft-libs, build-deps, python3-apt]
     source: .
     plugin: uv
     build-environment:
@@ -133,7 +140,7 @@ parts:
       - UV_NO_BINARY: "true"
       - CRYPTOGRAPHY_OPENSSL_NO_LEGACY: "true"
       - UV_FROZEN: "true"
-      - MAKEOPTS: -j$(nproc --all) # Parallel make jobs for things like python-apt
+      - MAKEOPTS: -j$(nproc --all) # Parallel make jobs for source builds (e.g. cryptography, pygit2)
       - UV_COMPILE_BYTECODE: "true"
       - CLICOLOR_FORCE: "true"
       - RUSTC: rustc-1.91
@@ -142,10 +149,6 @@ parts:
       - enable-patchelf
     override-build: |
       /snap/snapcraft/current/libexec/snapcraft/craftctl default
-
-      # Install python3-apt
-      . $CRAFT_PART_INSTALL/bin/activate
-      uv pip install -r requirements-noble.txt
 
       # No need for this symlink
       rm -f $CRAFT_PART_INSTALL/lib64

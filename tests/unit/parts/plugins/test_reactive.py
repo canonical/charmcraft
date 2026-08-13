@@ -140,9 +140,11 @@ def test_get_build_environment(plugin):
 
 def test_get_build_commands(plugin, tmp_path):
     assert plugin.get_build_commands() == [
-        f"{sys.executable} -I {_reactive.__file__} fake-project "
-        f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
-        "--charm-argument --charm-argument-with argument"
+        (
+            f"{sys.executable} -I {_reactive.__file__} fake-project "
+            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
+            "--charm-argument --charm-argument-with argument"
+        )
     ]
 
 

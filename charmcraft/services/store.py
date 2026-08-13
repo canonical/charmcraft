@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import os
 import platform
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any, cast
@@ -28,6 +29,7 @@ import distro
 from craft_cli import emit
 from craft_store import models, publisher
 from craft_store.errors import StoreServerError
+from craft_store.login import UbuntuOneLogin
 from overrides import override
 
 from charmcraft import const, env, errors, store
@@ -47,10 +49,11 @@ class BaseStoreService(craft_application.AppService):
     This service should be easily adjustable for craft-application.
     """
 
-    ClientClass: type[craft_store.StoreClient] = craft_store.StoreClient
-    client: craft_store.StoreClient
-    _endpoints: craft_store.endpoints.Endpoints = craft_store.endpoints.CHARMHUB
+    _namespace: str = "charm"
+    _auth: craft_store.Auth
+    _publisher: craft_store.PublisherGateway
     _environment_auth: str = const.ALTERNATE_AUTH_ENV_VAR
+    _ephemeral: bool = False
 
     @property
     def _user_agent(self) -> str:
@@ -82,56 +85,69 @@ class BaseStoreService(craft_application.AppService):
     def _storage_url(self) -> str:
         return env.get_store_config().storage_url
 
+    @property
+    def _login_url(self) -> str:
+        """Get the Ubuntu One SSO login URL."""
+        return env.get_store_config().login_url
+
+    def _setup_auth(self, *, ephemeral: bool = False) -> craft_store.Auth:
+        """Create and return a new Auth object."""
+        return craft_store.Auth(
+            application_name=self._app.name,
+            host=str(parse.urlparse(self._base_url).netloc),
+            environment_auth=self._environment_auth,
+            ephemeral=ephemeral,
+        )
+
     def setup(self) -> None:
         """Set up the store service."""
         super().setup()
-
         try:
-            self.client = self.ClientClass(
-                application_name=self._app.name,
-                base_url=self._base_url,
-                storage_base_url=self._storage_url,
-                endpoints=self._endpoints,
-                environment_auth=self._environment_auth,
-                user_agent=self._user_agent,
-            )
+            self._auth = self._setup_auth()
         except craft_store.errors.NoKeyringError:
             emit.progress(
                 "WARNING: Cannot get a keyring. Every store interaction that requires "
                 "authentication will require you to log in again.",
                 permanent=True,
             )
-            self.client = self.ClientClass(
-                application_name=self._app.name,
-                base_url=self._base_url,
-                storage_base_url=self._storage_url,
-                endpoints=self._endpoints,
-                environment_auth=self._environment_auth,
-                user_agent=self._user_agent,
-                ephemeral=True,
-            )
+            self._ephemeral = True
+            self._auth = self._setup_auth(ephemeral=True)
+        self._publisher = craft_store.PublisherGateway(
+            base_url=self._base_url,
+            namespace=self._namespace,
+            auth=craft_store.UbuntuOneAuth(
+                auth=self._auth,
+                api_base_url=self._base_url,
+                client_description=self._get_description(),
+            ),
+        )
 
-    def _get_description(self, description: str | None = None) -> str:
-        """Return the given description or a default one."""
-        if description is None:
-            return f"{self._app.name}@{platform.node()}"
-        return description
+    def _get_description(self) -> str:
+        """Return a description for identifying this client."""
+        return f"{self._app.name}@{platform.node()}"
 
     def login(
         self,
+        email: str,
+        password: str,
+        *,
+        otp: str | None = None,
         permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
-        description: str | None = None,
         ttl: int = AUTH_DEFAULT_TTL,
-        packages: Sequence[craft_store.endpoints.Package] | None = None,
+        packages: Collection[Mapping[str, str]] | None = None,
         channels: Sequence[str] | None = None,
-    ) -> str:
+    ) -> None:
         """Login to the store."""
-        description = self._get_description(description)
-
         try:
-            return self.client.login(
+            self._auth.ensure_no_credentials()
+            UbuntuOneLogin.login_with(
+                email=email,
+                password=password,
+                otp=otp,
+                base_url=self._base_url,
+                login_url=self._login_url,
+                application_name=self._app.name,
                 permissions=permissions,
-                description=description,
                 ttl=ttl,
                 packages=packages,
                 channels=channels,
@@ -145,18 +161,25 @@ class BaseStoreService(craft_application.AppService):
 
     def logout(self) -> None:
         """Log out of the store."""
-        self.client.logout()
+        self._auth.del_credentials()
+
+    def whoami(self) -> dict[str, Any]:
+        """Return full whoami info from the store."""
+        return self._publisher.whoami()
 
     def get_account_info(self):
         """Get the account details of the logged-in account."""
-        return self.client.whoami()["account"]
+        return self.whoami()["account"]
 
     def get_credentials(
         self,
+        email: str,
+        password: str,
+        *,
+        otp: str | None = None,
         permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
-        description: str | None = None,
         ttl: int = AUTH_DEFAULT_TTL,
-        packages: Sequence[craft_store.endpoints.Package] | None = None,
+        packages: Collection[Mapping[str, str]] | None = None,
         channels: Sequence[str] | None = None,
     ) -> str:
         """Create a fresh set of login credentials for the store.
@@ -164,53 +187,98 @@ class BaseStoreService(craft_application.AppService):
         This logs in independent of any credentials currently stored for the application and
         returns the resulting macaroon as a string.
         """
-        description = self._get_description(description)
-
-        store = craft_store.StoreClient(
+        ephemeral_auth = craft_store.Auth(
             application_name=self._app.name,
-            base_url=self._base_url,
-            storage_base_url=self._storage_url,
-            endpoints=self._endpoints,
-            environment_auth=None,
-            user_agent=self._user_agent,
+            host=str(parse.urlparse(self._base_url).netloc),
             ephemeral=True,
+            environment_auth=None,
         )
-
-        return store.login(
+        UbuntuOneLogin.login_with(
+            email=email,
+            password=password,
+            otp=otp,
+            base_url=self._base_url,
+            login_url=self._login_url,
+            application_name=self._app.name,
+            store_auth=ephemeral_auth,
             permissions=permissions,
-            description=description,
             ttl=ttl,
             packages=packages,
             channels=channels,
         )
 
+        # Exchange the raw macaroons for a store token.
+        craft_store.UbuntuOneAuth(
+            auth=ephemeral_auth,
+            api_base_url=self._base_url,
+            client_description=self._get_description(),
+        ).get_token_from_keyring()
+
+        raw_creds = ephemeral_auth.get_credentials()
+        return ephemeral_auth.encode_credentials(raw_creds)
+
 
 class StoreService(BaseStoreService):
     """A Store service specifically for Charmcraft."""
 
-    ClientClass = store.Client
-    client: store.Client  # pyright: ignore[reportIncompatibleVariableOverride]
+    client: store.Client
     anonymous_client: store.AnonymousClient
-    _publisher: craft_store.PublisherGateway
 
     @override
     def setup(self) -> None:
         """Set up the store service."""
         super().setup()
+        self.client = store.Client(
+            api_base_url=self._base_url,
+            storage_base_url=self._storage_url,
+            application_name=self._app.name,
+            auth_url=self._login_url,
+            environment_auth=self._environment_auth,
+            user_agent=self._user_agent,
+            ephemeral=self._ephemeral,
+        )
         self.anonymous_client = store.AnonymousClient(
             api_base_url=self._base_url,
             storage_base_url=self._storage_url,
         )
-        self._auth = craft_store.Auth(
-            application_name=self._app.name,
-            host=str(parse.urlparse(self._base_url).hostname),
-            environment_auth=self._environment_auth,
+
+    @override
+    def login(
+        self,
+        email: str,
+        password: str,
+        *,
+        otp: str | None = None,
+        permissions: Sequence[str] = AUTH_DEFAULT_PERMISSIONS,
+        ttl: int = AUTH_DEFAULT_TTL,
+        packages: Collection[Mapping[str, str]] | None = None,
+        channels: Sequence[str] | None = None,
+    ) -> None:
+        """Login to the store using Ubuntu One SSO credentials."""
+        if os.getenv(self._environment_auth):
+            raise errors.CraftError(
+                f"Cannot login when using alternative auth through "
+                f"{self._environment_auth} environment variable."
+            )
+        super().login(
+            email,
+            password,
+            otp=otp,
+            permissions=permissions,
+            ttl=ttl,
+            packages=packages,
+            channels=channels,
         )
-        self._publisher = craft_store.PublisherGateway(
-            base_url=self._base_url,
-            namespace="charm",
-            auth=self._auth,
-        )
+
+    @override
+    def logout(self) -> None:
+        """Log out of the store."""
+        if os.getenv(self._environment_auth):
+            raise errors.CraftError(
+                f"Cannot logout when using alternative auth through "
+                f"{self._environment_auth} environment variable."
+            )
+        super().logout()
 
     def get_package_metadata(self, name: str) -> publisher.RegisteredName:
         """Get the metadata for a package.

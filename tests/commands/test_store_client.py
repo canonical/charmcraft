@@ -19,7 +19,7 @@
 import base64
 import json
 from unittest import mock
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 import craft_store
 import pytest
@@ -93,12 +93,12 @@ class FakeResponse(requests.Response):
 
 @pytest.fixture
 def client_class():
-    """Return a client instance with craft-store's StoreClient methods mocked."""
+    """Return a client instance with craft-store's UbuntuOneStoreClient methods mocked."""
 
     auth_patch = patch("craft_store.Auth.__init__", return_value=None)
     auth_patch.start()
 
-    class _StoreClientMock(craft_store.StoreClient):
+    class _StoreClientMock(craft_store.UbuntuOneStoreClient):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
@@ -128,13 +128,15 @@ def test_client_init():
     api_url = "http://api.test"
     storage_url = "http://storage.test"
     user_agent = "Super User Agent"
-    with patch("craft_store.StoreClient.__init__") as mock_client_init:
+    with patch("craft_store.UbuntuOneStoreClient.__init__") as mock_client_init:
+        mock_client_init.return_value = None
         with patch("charmcraft.store.client.build_user_agent") as mock_ua:
             mock_ua.return_value = user_agent
             Client(api_url, storage_url, user_agent=user_agent)
     mock_client_init.assert_called_with(
         base_url=api_url,
         storage_base_url=storage_url,
+        auth_url="https://login.ubuntu.com",
         endpoints=craft_store.endpoints.CHARMHUB,
         application_name="charmcraft",
         user_agent=user_agent,
@@ -216,6 +218,20 @@ def test_client_init_removes_trailing_slashes(client_class):
 
     assert client.api_base_url == "https://local.test:1234"
     assert client.storage_base_url == "http://storage.test"
+
+
+def test_get_authorization_header_with_cached_store_token(client_class):
+    """Authorization header is built from a cached store token."""
+    cached_token = "some-plain-store-token"
+    client = client_class(
+        "https://api.charmhub.io", "https://storage.snapcraftcontent.com"
+    )
+    client._auth = MagicMock()
+    client._auth.get_credentials.return_value = cached_token
+
+    header = client._get_authorization_header()
+
+    assert header == f"Macaroon {cached_token}"
 
 
 def test_client_push_simple_ok(tmp_path, emitter, client_class):

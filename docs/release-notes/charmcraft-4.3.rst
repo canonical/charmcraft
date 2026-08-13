@@ -101,7 +101,7 @@ To ignore a warning across the project, add an ``ignore`` entry to your
 .. code-block:: toml
     :caption: pyproject.toml
 
-    [pytest]
+    [tool.pytest.ini_options]
     filterwarnings = [
         "error",
         "ignore::UserWarning",

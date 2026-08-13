@@ -26,5 +26,5 @@ from charmcraft import utils
 )
 def test_get_packages(charms, bundles):
     packages = utils.get_packages(charms=charms, bundles=bundles)
-    result_names = [package.package_name for package in packages]
+    result_names = [package["name"] for package in packages]
     assert result_names == charms + bundles

@@ -258,7 +258,7 @@ imports to include ``json``, ``os`` and ``secrets``. The top of the
 ``settings.py`` file should look similar to the following snippet:
 
 .. code-block:: python
-    :caption: ~/django-tutorial/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/django_hello_world/settings.py
     :emphasize-lines: 15,16,17
 
     """
@@ -284,7 +284,7 @@ Near the top of the ``settings.py`` file, change the ``SECRET_KEY``,
 ``DEBUG`` and ``ALLOWED_HOSTS`` variables to:
 
 .. code-block:: python
-    :caption: ~/django-tutorial/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/django_hello_world/settings.py
     :emphasize-lines: 2,5,7
 
     # SECURITY WARNING: keep the secret key used in production secret!
@@ -300,7 +300,7 @@ We will also use PostgreSQL as the database for our Django app. In
 ``DATABASES`` variable to:
 
 .. code-block:: python
-    :caption: ~/django-tutorial/django_hello_world/settings.py
+    :caption: ~/django-tutorial/django_hello_world/django_hello_world/settings.py
     :emphasize-lines: 3-8
 
     DATABASES = {
@@ -608,7 +608,7 @@ Open the ``django_hello_world/urls.py`` file and edit the imports for
 ``django.urls`` and the value of ``urlpatterns`` like in the following example:
 
 .. code-block:: python
-    :caption: ~/django-tutorial/django_hello_world/urls.py
+    :caption: ~/django-tutorial/django_hello_world/django_hello_world/urls.py
     :emphasize-lines: 2,5
 
     from django.contrib import admin

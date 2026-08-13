@@ -25,6 +25,25 @@ charmlibs-pydeps = [
     "cosl==1.9.1",
     "pydantic==2.13.3",
 ]
+# Dependencies of linting and static type checks
+lint = [
+    "ruff",
+    "codespell",
+    "pyright",
+]
+# Dependencies of unit tests
+unit = [
+    "coverage[toml]",
+    "ops[testing]",
+    "pytest",
+]
+# Dependencies of integration tests
+integration = [
+    "jubilant>=1.8,<2",
+    "pytest",
+    "pytest-jubilant>=2.0.1,<3",
+    "PyYAML",
+]
 
 
 # Testing tools configuration

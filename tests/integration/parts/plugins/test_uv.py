@@ -16,6 +16,7 @@
 
 import pathlib
 import platform
+import shutil
 import subprocess
 import sys
 
@@ -65,6 +66,10 @@ def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
         check=True,
     )
     source_dir = project_path / "src"
+    # Newer versions of `uv init` already scaffold a src/<package> layout;
+    # discard it so only the fixture's own charm.py ends up in the source tree.
+    if source_dir.exists():
+        shutil.rmtree(source_dir)
     source_dir.mkdir()
     (source_dir / "charm.py").write_text("# Charm file")
 

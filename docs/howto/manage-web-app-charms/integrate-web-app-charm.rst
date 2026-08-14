@@ -178,7 +178,7 @@ configure your 12-factor app.
 - ``HTTP_PROXY``
 - ``HTTPS_PROXY``
 
-For more information on how to deploy Squid forward proxy and integrate with HTTP proxy configurator, refer to the [official HTTP proxy configurator documentation](https://github.com/canonical/http-proxy-operators/files/http-proxy-configurator-operator/docs/tutorial/getting-started.md)
+For more information on how to deploy Squid forward proxy and integrate with HTTP proxy configurator, refer to the `official HTTP proxy configurator documentation <https://github.com/canonical/http-proxy-operators/files/http-proxy-configurator-operator/docs/tutorial/getting-started.md>`_
 
 .. _integrate-web-app-charm-integrate-s3:
 

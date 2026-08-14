@@ -1236,7 +1236,7 @@ def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
 
 
 def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
-    """Test that V2 generates paas-config dump part when paas-config.yaml exists."""
+    """Test that valid metrics_path in paas-config.yaml does not raise ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
     # Create paas-config.yaml in the project

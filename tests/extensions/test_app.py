@@ -1212,7 +1212,7 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
 
 
 def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
-    """Test that V2 generates paas-config dump part when paas-config.yaml exists."""
+    """Test that invalid metrics_path in paas-config.yaml raises ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
     # Create paas-config.yaml in the project

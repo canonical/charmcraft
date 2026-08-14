@@ -73,7 +73,7 @@ OAUTH_DYNAMIC_OPTIONS = {
 }
 
 # RFC 3986 path: must start with '/' and contain only unreserved, sub-delim, ':', '@', '/', or percent-encoded chars.
-_VALID_URL_PATH_RE = re.compile(r"^(/[A-Za-z0-9\-._~!$&'()*+,;=:@%/]*)$")
+_VALID_URL_PATH_RE = re.compile(r"^/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/]|%[0-9A-Fa-f]{2})*$")
 
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 PAAS_CONFIG_FILE = "paas-config.yaml"
@@ -442,7 +442,8 @@ class _AppBaseV2(_AppBase):
                 f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
                 f"for '{self.framework}-framework'"
             )
-        if metrics_path := parsed.get("metrics_path"):
+        if "metrics_path" in parsed:
+            metrics_path = parsed["metrics_path"]
             if not isinstance(metrics_path, str):
                 raise ExtensionError(
                     f"metrics_path in {PAAS_CONFIG_FILE} must be a string, got {type(metrics_path).__name__}"

@@ -40,7 +40,7 @@ class {{ class_name }}(ops.CharmBase):
     def _on_pause_action(self, event: ops.ActionEvent):
         """Handle the pause action: stop the workload, but leave the unit deployed."""
         {{ workload_module }}.stop()
-        self.unit.status = ops.MaintenanceStatus("paused: run the resume action to start again")
+        self.unit.status = ops.MaintenanceStatus("paused: run the resume action to restart")
 
     def _on_resume_action(self, event: ops.ActionEvent):
         """Handle the resume action: start the workload again."""

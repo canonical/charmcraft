@@ -48,11 +48,11 @@ config:
       default: "info"
       type: string
 
-# (Optional) Actions that an operator can run against a deployed unit.
+# (Optional) Actions that an operator can run against a unit.
 # More information on this section at:
-# https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/#actions
+# https://canonical.com/juju/docs/charmcraft/stable/reference/files/charmcraft-yaml-file/#actions
 # General actions documentation:
-# https://documentation.ubuntu.com/juju/3.6/reference/action/
+# https://canonical.com/juju/docs/juju-cli/3.6/reference/action/
 actions:
   # Example actions to take a unit out of service and put it back again.
   pause:
@@ -60,8 +60,7 @@ actions:
       Stop the workload, leaving the unit deployed.
 
       Use this to take a unit out of service, for example before performing
-      maintenance on the machine. Run the resume action to start the workload
-      again.
+      maintenance on the machine. Run the resume action to start the workload.
   resume:
     description: |
-      Start the workload again after running the pause action.
+      Start the workload after running the pause action.

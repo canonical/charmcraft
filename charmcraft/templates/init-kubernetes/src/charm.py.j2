@@ -62,8 +62,8 @@ class {{ class_name }}(ops.CharmBase):
             # Pebble isn't running yet, or the container is going away.
             # Checking with 'can_connect' before restarting wouldn't help: the
             # container can stop being reachable between the check and the restart.
-            self.unit.status = ops.WaitingStatus("waiting for the workload container")
-            event.fail("cannot connect to the workload container")
+            self.unit.status = ops.WaitingStatus("waiting for workload container")
+            event.fail("cannot connect to workload container")
             return
         self.unit.status = ops.ActiveStatus()
 

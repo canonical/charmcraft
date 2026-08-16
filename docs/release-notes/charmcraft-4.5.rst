@@ -54,7 +54,7 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
-Secrets handling in the machine and Kubernetes profiles
+Secret handling in the machine and Kubernetes profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Charms created with the ``machine`` and ``kubernetes`` profiles now demonstrate both
@@ -67,7 +67,7 @@ For an app-managed secret, the leader creates a workload password with a rotatio
 policy and an expiry, replaces it when Juju asks for rotation or reports expiry, and
 removes old revisions once no unit is using them.
 
-Both profiles scaffold unit and integration tests for this behaviour.
+Both profiles scaffold unit and integration tests for the added behavior.
 
 
 <Feature A>

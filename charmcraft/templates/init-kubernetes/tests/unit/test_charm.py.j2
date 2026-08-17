@@ -132,8 +132,10 @@ def test_restart_action_container_not_ready():
     # Act & assert:
     with pytest.raises(testing.ActionFailed) as exc_info:
         ctx.run(ctx.on.action("restart"), state_in)
-    assert exc_info.value.message == "cannot connect to the workload container"
-    assert exc_info.value.state is not None
+    assert exc_info.value.message == "cannot connect to workload container"
+    # 'isinstance' rather than 'is not None': ops annotates 'state' with a fallback stub
+    # that static type checkers can't see through, so narrowing it here keeps them happy.
+    assert isinstance(exc_info.value.state, testing.State)
     assert exc_info.value.state.unit_status == testing.WaitingStatus(
-        "waiting for the workload container"
+        "waiting for workload container"
     )

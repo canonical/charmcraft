@@ -30,6 +30,8 @@ class {{ class_name }}(ops.CharmBase):
         self.unit.status = ops.MaintenanceStatus("starting workload")
         # To start the workload, we'll add a Pebble layer to the workload container.
         # The layer specifies which service to run.
+        # The charm expects the service to have a long-running command. Don't use a command that
+        # starts the workload as a daemon then exits, otherwise self.wait_for_ready() will fail.
         layer: ops.pebble.LayerDict = {
             "services": {
                 SERVICE_NAME: {

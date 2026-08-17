@@ -67,7 +67,8 @@ For an app-managed secret, the leader creates a workload password with a rotatio
 policy and an expiry, replaces it when Juju asks for rotation or reports expiry, and
 removes old revisions once no unit is using them.
 
-Both profiles scaffold unit and integration tests for the added behavior.
+Both profiles scaffold unit and integration tests for the added behavior. The locked
+``ops`` version for both profiles is now 3.8.1, which the new unit tests require.
 
 
 <Feature A>

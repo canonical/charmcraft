@@ -75,7 +75,9 @@ class {{ class_name }}(ops.CharmBase):
     def _configure_api_token(self) -> None:
         """Read the user-provided api-token secret and configure the workload with it."""
         api_token_id = self.config.get("api-token")
-        if not api_token_id:
+        # A 'secret' config option is always a string, but self.config is typed as the union
+        # of every config type, so narrow it here to satisfy static type checks.
+        if not isinstance(api_token_id, str):
             return
         try:
             # Attaching a label lets the secret-changed handler recognise this secret.

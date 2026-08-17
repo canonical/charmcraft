@@ -122,6 +122,29 @@ def test_restart_action():
     assert state_out.unit_status == testing.ActiveStatus()
 
 
+def test_restart_action_service_not_ready():
+    """Test that the charm raises an error if the workload isn't ready after the restart."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    check_in = testing.CheckInfo(
+        CHECK_NAME,
+        level=ops.pebble.CheckLevel.READY,
+        status=ops.pebble.CheckStatus.DOWN,  # Simulate the Pebble check failing.
+    )
+    container_in = testing.Container(
+        "some-container",
+        can_connect=True,
+        layers={"base": MOCK_LAYER},
+        service_statuses={SERVICE_NAME: ops.pebble.ServiceStatus.INACTIVE},
+        check_infos={check_in},
+    )
+    state_in = testing.State(containers={container_in})
+
+    # Act & assert:
+    with pytest.raises(testing.errors.UncaughtCharmError):
+        ctx.run(ctx.on.action("restart"), state_in)
+
+
 def test_restart_action_container_not_ready():
     """Test that the restart action fails when the container can't be reached."""
     # Arrange:

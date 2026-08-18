@@ -15,7 +15,11 @@ import {{ workload_module }}
 
 logger = logging.getLogger(__name__)
 
-API_TOKEN_LABEL = "api-token"  # Label for the user-provided secret named in charm config.
+# This charm demonstrates the two independent roles a charm plays with Juju secrets.
+# The two secrets below are unrelated: one is observed, the other is owned.
+#  - api-token: owned by the operator, granted to this charm, named in charm config.
+#  - workload-password: created and rotated by this charm for its own workload.
+API_TOKEN_LABEL = "api-token"  # Any label works; matching the config option name is clearest.
 APP_SECRET_LABEL = "workload-password"  # Label for the app-managed workload secret.
 
 
@@ -45,7 +49,7 @@ class {{ class_name }}(ops.CharmBase):
             self.unit.set_workload_version(version)
         # Create the app-managed workload secret on first start (leader only).
         if self.unit.is_leader():
-            self._ensure_app_secret()
+            self._configure_workload_password()
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
@@ -73,9 +77,11 @@ class {{ class_name }}(ops.CharmBase):
             self.unit.status = ops.BlockedStatus("api-token secret not found or not granted")
             return
         token = content.get("token", "")
+        # Reconfiguring the workload can be slow, so tell the user what's happening.
+        self.unit.status = ops.MaintenanceStatus("reconfiguring workload")
+        logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))
         # Use 'token' to configure your workload, for example:
         # {{ workload_module }}.configure(api_token=token)
-        logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))
         self.unit.status = ops.ActiveStatus()
 
     def _ensure_app_secret(self) -> ops.Secret:
@@ -90,6 +96,18 @@ class {{ class_name }}(ops.CharmBase):
                 expire=datetime.timedelta(days=90),
             )
 
+    def _configure_workload_password(self) -> None:
+        """Configure the workload with the app-managed password (leader only)."""
+        secret = self._ensure_app_secret()
+        # A secret's owner reads the latest revision with 'peek_content', not 'get_content'.
+        self._configure_workload(secret.peek_content()["password"])
+
+    def _configure_workload(self, password: str) -> None:
+        """Tell the workload which password it should accept."""
+        # Use 'password' to configure your workload, for example:
+        # {{ workload_module }}.configure(workload_password=password)
+        logger.info("workload password configured (%d chars)", len(password))
+
     def _on_secret_rotate(self, event: ops.SecretRotateEvent):
         """Handle secret-rotate event — the rotation policy says it's time for a new password."""
         if event.secret.label == APP_SECRET_LABEL:
@@ -102,9 +120,11 @@ class {{ class_name }}(ops.CharmBase):
 
     def _set_new_password(self, secret: ops.Secret) -> None:
         """Add a new revision of the app-managed workload password."""
+        password = secrets.token_hex(32)
         # Don't remove the old revision here: other units might still be using it.
         # Juju emits secret-remove once no unit is tracking it any more.
-        secret.set_content({"password": secrets.token_hex(32)})
+        secret.set_content({"password": password})
+        self._configure_workload(password)
 
     def _on_secret_remove(self, event: ops.SecretRemoveEvent):
         """Handle secret-remove event — no unit is using this revision any more."""

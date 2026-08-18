@@ -48,7 +48,7 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
-    # A secret config option for a user-provided API token.
+    # A config option that points to a user-provided secret containing an API token.
     # See https://canonical.com/juju/docs/juju-cli/3.6/howto/manage-secrets/
     api-token:
       description: |
@@ -56,8 +56,9 @@ config:
         The secret must have a 'token' key.
 
         Create the secret: juju add-secret my-api-token token=<value>
-        Grant access:      juju grant-secret <id> {{ name }}
-        Set this option:   juju config {{ name }} api-token=<id>
+                           (returns a URI)
+        Grant access:      juju grant-secret <uri> {{ name }}
+        Set this option:   juju config {{ name }} api-token=<uri>
       type: secret
 
 # Your workload's containers.

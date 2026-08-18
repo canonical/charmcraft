@@ -27,6 +27,7 @@ from unittest import mock
 
 import pytest
 import pytest_check
+import yaml
 
 import charmcraft
 import charmcraft.application
@@ -146,6 +147,33 @@ def test_files_created_correct(
         re.search(rf"^name: {charm_name}$", charmcraft_yaml, re.MULTILINE)
     )
     pytest_check.is_true(re.search(rf"^# Copyright \d+ {author}", tox_ini))
+
+
+@pytest.mark.parametrize(
+    "profile",
+    [
+        "django-framework",
+        "expressjs-framework",
+        "fastapi-framework",
+        "flask-framework",
+        "go-framework",
+        "spring-boot-framework",
+    ],
+)
+def test_framework_profile_charm_user(new_path, init_command, profile):
+    v1_dir = new_path / "v1"
+    init_command.run(create_namespace(profile=profile, project_dir=v1_dir))
+
+    v1_project = yaml.safe_load((v1_dir / "charmcraft.yaml").read_text())
+    assert "charm-user" not in v1_project
+
+    v2_dir = new_path / "v2"
+    v2_template = f"init-{profile}-26.04"
+    with mock.patch.dict(init.PROFILES, {profile: v2_template}):
+        init_command.run(create_namespace(profile=profile, project_dir=v2_dir))
+
+    v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
+    assert v2_project["charm-user"] == "non-root"
 
 
 def test_force(new_path, init_command):

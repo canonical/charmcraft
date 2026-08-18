@@ -55,7 +55,9 @@ def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
         cwd=project_path,
         check=True,
     )
-    subprocess.run(["uv", "add", "ops>=2.0.0", "pyyaml>=5"], cwd=project_path, check=True)
+    subprocess.run(
+        ["uv", "add", "ops>=2.0.0", "pyyaml>=5"], cwd=project_path, check=True
+    )
     monkeypatch.delenv("UV_FROZEN", raising=False)
     subprocess.run(
         [

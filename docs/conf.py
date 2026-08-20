@@ -30,12 +30,8 @@ project = "Charmcraft"
 author = "Canonical"
 
 # Version string in sidebar
-if os.environ.get("READTHEDOCS_VERSION_TYPE", "external") == "external":  # PR or local build
-    # Because of setuptools, we can safely assume the version starts with `n.n`
-    major, minor, *_ = charmcraft.__version__.split(".")
-    release = f"{major}.{minor}"
-else:  # Branch build
-    release = os.environ.get("READTHEDOCS_VERSION", "latest")
+major, minor, *_ = charmcraft.__version__.split(".")
+release = "dev" if os.environ.get("READTHEDOCS_VERSION") == "latest" else f"{major}.{minor}"
 
 # Copyright string; shown at the bottom of the page
 copyright = "2023-%s, %s" % (datetime.date.today().year, author)

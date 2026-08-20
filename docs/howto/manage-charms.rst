@@ -34,7 +34,7 @@ If the charm name you want is different from the current directory name, don't s
 ``--name`` argument. Otherwise the charm name will match the directory name.
 
 ``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
-charm, or a 12-factor app profile such as ``flask-framework``. If you don't specify a
+charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
 
 .. dropdown:: Example session
@@ -44,14 +44,13 @@ profile, you get the ``kubernetes`` profile.
 
         charmcraft init --name my-flask-app-k8s --profile flask-framework
 
-        Charmed operator package file and directory tree initialised.
-
-        Now edit the following package files to provide fundamental charm metadata
-        and other information:
+        Created project files for your charm:
 
         charmcraft.yaml
+        pyproject.toml
+        requirements.txt
         src/charm.py
-        README.md
+        ...
 
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
@@ -59,10 +58,12 @@ profile, you get the ``kubernetes`` profile.
         ls -R
 
         .:
-        charmcraft.yaml  pyproject.toml  src  tox.ini
+        charmcraft.yaml  pyproject.toml  requirements.txt  src  tox.ini
 
         ./src:
         charm.py
+
+..
 
     See more: :ref:`ref_commands_init`, :ref:`profile`, :ref:`files`
 

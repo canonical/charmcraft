@@ -41,34 +41,6 @@ extension.
 
 .. dropdown:: Example
 
-    .. code-block:: bash
-
-        mkdir my-flask-app-k8s
-        cd my-flask-app-k8s/
-        charmcraft init --profile flask-framework
-
-    .. terminal::
-        :output-only:
-
-        Charmed operator package file and directory tree initialised.
-
-        Now edit the following package files to provide fundamental charm metadata
-        and other information:
-
-        charmcraft.yaml
-        src/charm.py
-        README.md
-
-    .. terminal::
-
-        ls -R
-
-        .:
-        charmcraft.yaml  requirements.txt  src
-
-        ./src:
-        charm.py
-
     .. code-block:: yaml
         :caption: charmcraft.yaml
 

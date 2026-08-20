@@ -318,3 +318,113 @@ class TestPackMoveArtifacts:
 
         # Artifact should still be in project_dir (no move since dirs are the same)
         assert (project_dir / artifact_name).read_text() == "charm content"
+
+    def test_move_artifacts_uses_original_cwd_with_relative_project_dir(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """Artifacts move correctly when the project dir is passed relative to cwd."""
+        project_dir = fake_project_dir
+        monkeypatch.chdir(project_dir.parent)
+        output_dir = project_dir.parent
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        state_service.set("artifact", "test-platform", value=artifact_name)
+
+        parsed_args = argparse.Namespace(
+            output=None,
+            project_dir=pathlib.Path("project"),
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        def _mock_super_run(*_args, **_kwargs):
+            monkeypatch.chdir(project_dir)
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+                side_effect=_mock_super_run,
+            ),
+        ):
+            pack._run(parsed_args)
+
+        assert (output_dir / artifact_name).read_text() == "charm content"
+        assert not (project_dir / artifact_name).exists()
+
+    def test_move_artifacts_falls_back_to_project_dir_files(
+        self,
+        fake_project_dir: pathlib.Path,
+        pack: lifecycle.PackCommand,
+        service_factory: services.ServiceFactory,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """Artifacts still move when the artifact state is unavailable."""
+        project_dir = fake_project_dir
+        monkeypatch.chdir(project_dir.parent)
+        output_dir = project_dir.parent
+
+        artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
+        (project_dir / artifact_name).write_text("charm content")
+
+        state_service = service_factory.get("state")
+        original_get = state_service.get
+
+        def _get(key, *args, **kwargs):
+            if key == "artifact":
+                raise KeyError(key)
+            return original_get(key, *args, **kwargs)
+
+        parsed_args = argparse.Namespace(
+            output=None,
+            project_dir=pathlib.Path("project"),
+            destructive_mode=True,
+            shell=False,
+            shell_after=False,
+            debug=False,
+            platform=None,
+            build_for=None,
+        )
+        project = cast("CharmcraftProject", service_factory.get("project").get())
+        project.charm_libs = []
+
+        def _mock_super_run(*_args, **_kwargs):
+            monkeypatch.chdir(project_dir)
+
+        with (
+            mock.patch(
+                "charmcraft.application.commands.lifecycle.is_managed_mode",
+                return_value=False,
+            ),
+            mock.patch.object(
+                state_service,
+                "get",
+                side_effect=_get,
+            ),
+            mock.patch.object(
+                lifecycle.PackCommand.__mro__[1],  # craft-application PackCommand
+                "_run",
+                side_effect=_mock_super_run,
+            ),
+        ):
+            pack._run(parsed_args)
+
+        assert (output_dir / artifact_name).read_text() == "charm content"
+        assert not (project_dir / artifact_name).exists()

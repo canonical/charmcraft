@@ -29,6 +29,12 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
     juju.wait(jubilant.all_active)
 
 
+def test_restart(charm: pathlib.Path, juju: jubilant.Juju):
+    """Restart the workload with the restart action."""
+    juju.run("{{ name }}/0", "restart")
+    juju.wait(jubilant.all_active)
+
+
 # If you implement {{ workload_module }}.get_version in the charm source,
 # remove the @pytest.mark.skip line to enable this test.
 # Alternatively, remove this test if you don't need it.

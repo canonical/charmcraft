@@ -153,11 +153,10 @@ the proxy URI (i.e., it must support the format
 and authentication modes supported by your web app. However, the 12 factor
 framework currently does not provide a native way to set these values directly.
 
-To supply them, your app should integrate with the `HTTP proxy configurator
-<https://github.com/canonical/http-proxy-operators/tree
-/main/http-proxy-configurator-operator>`_
-charm which relays this information to the Squid Forward Proxy charm.
-Add the following endpoint definition to your project file:
+To supply the domains and authentication modes to the Squid Forward Proxy charm, `deploy
+the HTTP proxy configurator charm
+<https://github.com/canonical/http-proxy-operators/blob/main/http-proxy-configurator-operator/docs/tutorial/getting-started.md>`__.
+Then, add the following endpoint definition to your project file:
 
 .. code-block:: yaml
 

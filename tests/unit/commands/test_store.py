@@ -82,6 +82,7 @@ def test_login_basic_no_export(mocker, monkeypatch, service_factory, mock_store_
 @pytest.mark.parametrize("ttl", [None, 0, 2**65])
 def test_login_export(
     mocker,
+    *,
     monkeypatch,
     service_factory,
     mock_store_client,

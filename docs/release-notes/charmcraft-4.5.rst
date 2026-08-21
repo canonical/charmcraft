@@ -62,8 +62,7 @@ actions, which stop and start the workload without removing the unit. Charms cre
 with the ``kubernetes`` profile now declare a ``restart`` action, which restarts the
 workload's Pebble service.
 
-Both profiles scaffold unit and integration tests for their actions. The locked ``ops``
-version for both profiles is now 3.8.1, which the new unit tests require.
+Both profiles scaffold unit and integration tests for their actions.
 
 
 <Feature A>

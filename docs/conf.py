@@ -238,6 +238,7 @@ exclude_patterns = [
     "common/craft-parts/reference/plugins/uv_plugin.rst",
     # Excluded craft-application documents that need substitutions:
     "common/craft-application/how-to-guides/build-remotely.rst",
+    "common/craft-application/how-to-guides/pack-a-pro-artifact.rst",
     "common/craft-application/how-to-guides/reuse-packages-between-builds.rst",
     "common/craft-application/reference/fetch-service.rst",
     "common/craft-application/reference/remote-builds.rst",

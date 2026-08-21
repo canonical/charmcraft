@@ -4,8 +4,8 @@
 .. _how-to-pack-a-charm-in-a-monorepo:
 .. _pack-a-charm-in-a-monorepo:
 
-Pack a charm in a monorepo
-==========================
+How to pack a charm in a monorepo
+=================================
 
 In a monorepo structure, a single Git repository contains multiple projects, such as
 multiple related charms, or an app codebase alongside its charm. In these
@@ -54,8 +54,8 @@ Configure charmcraft.yaml
 -------------------------
 
 When a charm is located in a subdirectory of a repository, configure the charm part in
-``charmcraft.yaml`` to set ``source`` to the repository root (or parent directory) and use
-``source-subdir`` to point to the charm directory:
+``charmcraft.yaml`` to set the ``source`` key to the repository root (or parent directory)
+and use the ``source-subdir`` key to point to the charm directory:
 
 .. code-block:: yaml
     :caption: charms/my-charm/charmcraft.yaml

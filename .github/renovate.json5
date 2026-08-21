@@ -1,4 +1,4 @@
 {
   extends: ["github>canonical/starflow:renovate.json5"],
-  ignorePaths: ["docs/**"],
+  ignorePaths: ["docs/**", "tests/**"],
 }

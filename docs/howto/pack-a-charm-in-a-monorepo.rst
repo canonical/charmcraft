@@ -1,0 +1,105 @@
+.. meta::
+    :description: How to pack a charm located in a monorepo structure with shared dependencies.
+
+.. _how-to-pack-a-charm-in-a-monorepo:
+.. _pack-a-charm-in-a-monorepo:
+
+Pack a charm in a monorepo
+==========================
+
+In a monorepo structure, a single Git repository contains multiple projects, such as
+multiple related charms, or an app codebase alongside its charm. In these
+repositories, a charm might need to reference shared Python packages, configuration files,
+or other parts located outside of the charm's own directory.
+
+By default, Charmcraft isolates the build environment to the directory containing
+``charmcraft.yaml``. When building in managed environments (such as LXD containers or
+virtual machines), files outside the charm's directory are not copied into the build
+instance.
+
+With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
+Git repository and mounts the entire repository into the build environment, allowing parts
+to access parent and sibling directories.
+
+
+Prerequisites
+-------------
+
+- A Git repository containing your charm and shared assets.
+- Charmcraft 4.5 or higher.
+
+
+Example repository layout
+-------------------------
+
+Consider a monorepo structured as follows:
+
+.. code-block:: text
+
+    my-monorepo/
+    ├── .git/
+    ├── shared/
+    │   ├── pyproject.toml
+    │   └── common/
+    │       └── utils.py
+    └── charms/
+        └── my-charm/
+            ├── charmcraft.yaml
+            ├── pyproject.toml
+            └── src/
+                └── charm.py
+
+
+Configure charmcraft.yaml
+-------------------------
+
+When a charm is located in a subdirectory of a repository, configure the charm part in
+``charmcraft.yaml`` to set ``source`` to the repository root (or parent directory) and use
+``source-subdir`` to point to the charm directory:
+
+.. code-block:: yaml
+    :caption: charms/my-charm/charmcraft.yaml
+
+    name: my-charm
+    type: charm
+    base: ubuntu@24.04
+    build-base: ubuntu@24.04
+    platforms:
+      amd64:
+
+    parts:
+      my-charm:
+        plugin: uv
+        source: ../..
+        source-subdir: charms/my-charm
+
+
+In your charm's ``pyproject.toml``, you can then reference shared local dependencies using
+relative paths:
+
+.. code-block:: toml
+    :caption: charms/my-charm/pyproject.toml
+
+    [project]
+    name = "my-charm"
+    version = "0.1.0"
+    dependencies = [
+        "ops",
+        "common @ file:///${PROJECT_DIR}/../../shared",
+    ]
+
+
+Pack the charm
+--------------
+
+To pack the charm using the monorepo root as the build root, set the
+``CHARMCRAFT_EXPERIMENTAL_MONOREPO`` environment variable when invoking
+``charmcraft pack``:
+
+.. code-block:: bash
+
+    cd charms/my-charm/
+    CHARMCRAFT_EXPERIMENTAL_MONOREPO=1 charmcraft pack
+
+Charmcraft will mount the root of the Git repository into the build instance and build the
+charm with access to the shared files.

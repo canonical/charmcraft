@@ -16,6 +16,7 @@
 """Unit tests for the Charmcraft-specific poetry plugin."""
 
 import pathlib
+import typing
 
 import craft_parts
 import pytest_check
@@ -134,8 +135,11 @@ def test_get_package_install_commands_source_subdir(
         cache_dir=tmp_path,
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-    plugin = craft_parts.plugins.get_plugin(
-        part=part, part_info=part_info, properties=plugin_properties
+    plugin = typing.cast(
+        plugins.PoetryPlugin,
+        craft_parts.plugins.get_plugin(
+            part=part, part_info=part_info, properties=plugin_properties
+        ),
     )
 
     build_path = part_info.part_build_dir

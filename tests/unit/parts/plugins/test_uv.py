@@ -14,6 +14,7 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import typing
 from pathlib import Path
 
 import craft_parts
@@ -91,8 +92,11 @@ def test_get_package_install_commands_source_subdir(tmp_path: Path, install_path
         cache_dir=tmp_path,
     )
     part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-    plugin = craft_parts.plugins.get_plugin(
-        part=part, part_info=part_info, properties=plugin_properties
+    plugin = typing.cast(
+        plugins.UvPlugin,
+        craft_parts.plugins.get_plugin(
+            part=part, part_info=part_info, properties=plugin_properties
+        ),
     )
 
     build_path = part_info.part_build_dir

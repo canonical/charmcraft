@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -33,7 +33,6 @@ constraints = [
     { name = "matplotlib", specifier = ">=3.7.0" },
     { name = "numpy", specifier = ">=1.22.0" },
     { name = "oauthlib", specifier = ">=3.0" },
-    { name = "ops", specifier = ">=2.0.0" },
     { name = "overrides", specifier = ">=7.3" },
     { name = "protobuf", specifier = "<6.33" },
     { name = "protobuf", specifier = ">=5.0" },
@@ -2645,8 +2644,8 @@ version = "2.4.0+ubuntu4"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2690,8 +2689,8 @@ version = "2.7.7+ubuntu5"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2734,8 +2733,8 @@ version = "2.9.9"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2752,8 +2751,8 @@ version = "3.0.0+ubuntu1"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -3362,8 +3361,8 @@ version = "2025.8.25"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
@@ -3424,8 +3423,8 @@ version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
@@ -3524,8 +3523,8 @@ version = "2025.2.19"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.12.*'",
+    "python_full_version == '3.13.*' or python_full_version >= '3.15'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [

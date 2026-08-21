@@ -17,6 +17,7 @@
 
 import pathlib
 import sys
+import typing
 
 import craft_application
 import pytest
@@ -26,34 +27,31 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(autouse=True)
-def add_part(
-    service_factory: craft_application.ServiceFactory, project_path: pathlib.Path
-):
-    service_factory.get("project").get().parts = {
-        "my-charm": {
-            "plugin": "python",
-            "python-requirements": ["requirements.txt"],
-            "source": str(project_path),
-            "source-type": "local",
-        }
-    }
-
-
-@pytest.fixture
-def python_project(project_path: pathlib.Path) -> None:
-    source_path = project_path / "src"
-    source_path.mkdir()
-    (source_path / "charm.py").write_text("# Charm file")
-    (project_path / "requirements.txt").write_text("distro==1.4.0")
-
-
 @pytest.mark.slow
-@pytest.mark.usefixtures("python_project")
+@pytest.mark.parametrize("source_subdir", [None, "charm_dir"])
 def test_python_plugin(
     service_factory: craft_application.ServiceFactory,
+    project_path: pathlib.Path,
     tmp_path: pathlib.Path,
+    source_subdir: str | None,
 ):
+    charm_dir = project_path / source_subdir if source_subdir else project_path
+    source_path = charm_dir / "src"
+    source_path.mkdir(parents=True)
+    (source_path / "charm.py").write_text("# Charm file")
+    (charm_dir / "requirements.txt").write_text("distro==1.4.0")
+
+    part_def: dict[str, typing.Any] = {
+        "plugin": "python",
+        "python-requirements": ["requirements.txt"],
+        "source": str(project_path),
+        "source-type": "local",
+    }
+    if source_subdir:
+        part_def["source-subdir"] = source_subdir
+
+    service_factory.get("project").get().parts = {"my-charm": part_def}
+
     install_path = tmp_path / "parts" / "my-charm" / "install"
     stage_path = tmp_path / "stage"
 
@@ -73,50 +71,5 @@ def test_python_plugin(
 
     # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
-    assert (stage_path / "venv" / "lib").is_dir()
-    assert not (stage_path / "venv" / "lib64").is_symlink()
-
-
-@pytest.mark.slow
-def test_python_plugin_source_subdir(
-    service_factory: craft_application.ServiceFactory,
-    project_path: pathlib.Path,
-    tmp_path: pathlib.Path,
-):
-    subdir = project_path / "charm_dir"
-    source_path = subdir / "src"
-    source_path.mkdir(parents=True)
-    (source_path / "charm.py").write_text("# Charm file in subdir")
-    (subdir / "requirements.txt").write_text("distro==1.4.0")
-
-    service_factory.get("project").get().parts = {
-        "my-charm": {
-            "plugin": "python",
-            "python-requirements": ["requirements.txt"],
-            "source": str(project_path),
-            "source-subdir": "charm_dir",
-            "source-type": "local",
-        }
-    }
-
-    install_path = tmp_path / "parts" / "my-charm" / "install"
-    stage_path = tmp_path / "stage"
-
-    service_factory.lifecycle.run("stage")
-
-    # Check that the part install directory looks correct.
-    assert (install_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
-    assert (install_path / "venv" / "lib").is_dir()
-    assert (
-        len(
-            list(
-                (install_path / "venv" / "lib").glob("python*/site-packages/distro.py")
-            )
-        )
-        == 1
-    )
-
-    # Check that the stage directory looks correct.
-    assert (stage_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
     assert (stage_path / "venv" / "lib").is_dir()
     assert not (stage_path / "venv" / "lib64").is_symlink()

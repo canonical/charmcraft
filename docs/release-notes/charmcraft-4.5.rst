@@ -101,7 +101,10 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.5.
 
-- No entries yet.
+- The ``poetry``, ``python``, and ``uv`` charm plugins now copy charm source and
+  library files from ``part_build_subdir`` rather than ``part_build_dir``,
+  resolving an issue where charms using ``source-subdir`` (such as in monorepo
+  structures) failed to find and copy their ``src/`` and ``lib/`` directories.
 
 
 Known issues

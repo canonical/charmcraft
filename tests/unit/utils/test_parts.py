@@ -32,57 +32,33 @@ def test_extend_python_build_environment():
     }
 
 
-def test_get_charm_copy_commands_no_dirs(tmp_path: pathlib.Path):
+@pytest.mark.parametrize(
+    ("dirs_to_create", "expected_dirs"),
+    [
+        ([], []),
+        (["src"], ["src"]),
+        (["lib"], ["lib"]),
+        (["src", "lib"], ["src", "lib"]),
+    ],
+)
+def test_get_charm_copy_commands(
+    tmp_path: pathlib.Path,
+    dirs_to_create: list[str],
+    expected_dirs: list[str],
+):
     build_dir = tmp_path / "build"
-    build_dir.mkdir()
+    build_dir.mkdir(parents=True, exist_ok=True)
+    for d in dirs_to_create:
+        (build_dir / d).mkdir(parents=True)
     install_dir = tmp_path / "install"
-    install_dir.mkdir()
+    install_dir.mkdir(parents=True, exist_ok=True)
 
     commands = parts.get_charm_copy_commands(build_dir, install_dir)
-    assert commands == []
-
-
-def test_get_charm_copy_commands_only_src(tmp_path: pathlib.Path):
-    build_dir = tmp_path / "build"
-    (build_dir / "src").mkdir(parents=True)
-    install_dir = tmp_path / "install"
-    install_dir.mkdir()
-
-    commands = parts.get_charm_copy_commands(build_dir, install_dir)
-    expected_src_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_dir / 'src'} {install_dir}"
-    )
-    assert commands == [expected_src_cmd]
-
-
-def test_get_charm_copy_commands_only_lib(tmp_path: pathlib.Path):
-    build_dir = tmp_path / "build"
-    (build_dir / "lib").mkdir(parents=True)
-    install_dir = tmp_path / "install"
-    install_dir.mkdir()
-
-    commands = parts.get_charm_copy_commands(build_dir, install_dir)
-    expected_lib_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_dir / 'lib'} {install_dir}"
-    )
-    assert commands == [expected_lib_cmd]
-
-
-def test_get_charm_copy_commands_both_src_and_lib(tmp_path: pathlib.Path):
-    build_dir = tmp_path / "build"
-    (build_dir / "src").mkdir(parents=True)
-    (build_dir / "lib").mkdir(parents=True)
-    install_dir = tmp_path / "install"
-    install_dir.mkdir()
-
-    commands = parts.get_charm_copy_commands(build_dir, install_dir)
-    expected_src_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_dir / 'src'} {install_dir}"
-    )
-    expected_lib_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_dir / 'lib'} {install_dir}"
-    )
-    assert commands == [expected_src_cmd, expected_lib_cmd]
+    expected_commands = [
+        f"cp --archive --recursive --reflink=auto {build_dir / d} {install_dir}"
+        for d in expected_dirs
+    ]
+    assert commands == expected_commands
 
 
 def test_get_charm_copy_commands_with_spaces(tmp_path: pathlib.Path):

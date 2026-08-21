@@ -75,3 +75,48 @@ def test_python_plugin(
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
     assert not (stage_path / "venv" / "lib64").is_symlink()
+
+
+@pytest.mark.slow
+def test_python_plugin_source_subdir(
+    service_factory: craft_application.ServiceFactory,
+    project_path: pathlib.Path,
+    tmp_path: pathlib.Path,
+):
+    subdir = project_path / "charm_dir"
+    source_path = subdir / "src"
+    source_path.mkdir(parents=True)
+    (source_path / "charm.py").write_text("# Charm file in subdir")
+    (subdir / "requirements.txt").write_text("distro==1.4.0")
+
+    service_factory.get("project").get().parts = {
+        "my-charm": {
+            "plugin": "python",
+            "python-requirements": ["requirements.txt"],
+            "source": str(project_path),
+            "source-subdir": "charm_dir",
+            "source-type": "local",
+        }
+    }
+
+    install_path = tmp_path / "parts" / "my-charm" / "install"
+    stage_path = tmp_path / "stage"
+
+    service_factory.lifecycle.run("stage")
+
+    # Check that the part install directory looks correct.
+    assert (install_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
+    assert (install_path / "venv" / "lib").is_dir()
+    assert (
+        len(
+            list(
+                (install_path / "venv" / "lib").glob("python*/site-packages/distro.py")
+            )
+        )
+        == 1
+    )
+
+    # Check that the stage directory looks correct.
+    assert (stage_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
+    assert (stage_path / "venv" / "lib").is_dir()
+    assert not (stage_path / "venv" / "lib64").is_symlink()

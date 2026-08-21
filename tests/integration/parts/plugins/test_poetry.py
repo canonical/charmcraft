@@ -80,3 +80,52 @@ def test_poetry_plugin(
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
     assert not (stage_path / "venv" / "lib64").is_symlink()
+
+
+@pytest.mark.slow
+def test_poetry_plugin_source_subdir(
+    service_factory: craft_application.ServiceFactory,
+    project_path: pathlib.Path,
+    tmp_path: pathlib.Path,
+):
+    subdir = project_path / "charm_dir"
+    subdir.mkdir(parents=True)
+    subprocess.run(
+        [
+            "poetry",
+            "init",
+            "--name=test-charm",
+            f"--python={platform.python_version()}",
+            f"--directory={subdir}",
+            "--no-interaction",
+        ],
+        cwd=subdir,
+        capture_output=True,
+        check=True,
+    )
+    source_dir = subdir / "src"
+    source_dir.mkdir()
+    (source_dir / "charm.py").write_text("# Charm file in subdir")
+
+    service_factory.get("project").get().parts = {
+        "my-charm": {
+            "plugin": "poetry",
+            "source": str(project_path),
+            "source-subdir": "charm_dir",
+            "source-type": "local",
+        }
+    }
+
+    install_path = tmp_path / "parts" / "my-charm" / "install"
+    stage_path = tmp_path / "stage"
+
+    service_factory.lifecycle.run("stage")
+
+    # Check that the part install directory looks correct.
+    assert (install_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
+    assert (install_path / "venv" / "lib").is_dir()
+
+    # Check that the stage directory looks correct.
+    assert (stage_path / "src" / "charm.py").read_text() == "# Charm file in subdir"
+    assert (stage_path / "venv" / "lib").is_dir()
+    assert not (stage_path / "venv" / "lib64").is_symlink()

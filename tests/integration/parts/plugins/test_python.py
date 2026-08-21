@@ -57,7 +57,6 @@ def test_python_plugin(
 
     service_factory.lifecycle.run("stage")
 
-    # Check that the part install directory looks correct.
     assert (install_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (install_path / "venv" / "lib").is_dir()
     assert (
@@ -69,7 +68,6 @@ def test_python_plugin(
         == 1
     )
 
-    # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
     assert not (stage_path / "venv" / "lib64").is_symlink()

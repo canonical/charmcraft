@@ -17,6 +17,7 @@
 
 import pathlib
 
+import craft_parts
 import pytest_check
 
 from charmcraft.parts import plugins
@@ -109,4 +110,80 @@ def test_no_get_rm_command(
     assert (
         f"rm -rf {install_path / 'venv/bin'}/!(activate)"
         not in poetry_plugin.get_build_commands()
+    )
+
+
+def test_get_package_install_commands_source_subdir(
+    tmp_path: pathlib.Path,
+    install_path: pathlib.Path,
+):
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec = {
+        "plugin": "poetry",
+        "source": str(tmp_path),
+        "source-subdir": "subdir",
+    }
+    plugin_properties = plugins.PoetryPluginProperties.unmarshal(spec)
+    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="poetry")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+    plugin = craft_parts.plugins.get_plugin(
+        part=part, part_info=part_info, properties=plugin_properties
+    )
+
+    build_path = part_info.part_build_dir
+    build_subdir = part_info.part_build_subdir
+    assert build_subdir != build_path
+
+    copy_src_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_subdir}/src {install_path}"
+    )
+    copy_lib_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_subdir}/lib {install_path}"
+    )
+    wrong_copy_src_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+    )
+    wrong_copy_lib_cmd = (
+        f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+    )
+
+    # Check if no src or libs exist
+    default_commands = plugin._get_package_install_commands()
+    pytest_check.is_not_in(copy_src_cmd, default_commands)
+    pytest_check.is_not_in(copy_lib_cmd, default_commands)
+
+    # Creating src/lib in parent build_path should not trigger copy
+    (build_path / "src").mkdir(parents=True)
+    (build_path / "lib" / "charm").mkdir(parents=True)
+    commands_with_parent_dirs = plugin._get_package_install_commands()
+    pytest_check.is_not_in(wrong_copy_src_cmd, commands_with_parent_dirs)
+    pytest_check.is_not_in(wrong_copy_lib_cmd, commands_with_parent_dirs)
+    pytest_check.is_not_in(copy_src_cmd, commands_with_parent_dirs)
+    pytest_check.is_not_in(copy_lib_cmd, commands_with_parent_dirs)
+
+    # With a src directory in build_subdir
+    (build_subdir / "src").mkdir(parents=True)
+    pytest_check.equal(
+        plugin._get_package_install_commands(), [*default_commands, copy_src_cmd]
+    )
+
+    # With both src and lib in build_subdir
+    (build_subdir / "lib" / "charm").mkdir(parents=True)
+    pytest_check.equal(
+        plugin._get_package_install_commands(),
+        [*default_commands, copy_src_cmd, copy_lib_cmd],
+    )
+
+    # With only lib in build_subdir
+    (build_subdir / "src").rmdir()
+    pytest_check.equal(
+        plugin._get_package_install_commands(), [*default_commands, copy_lib_cmd]
     )

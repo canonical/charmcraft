@@ -57,8 +57,7 @@ and use the ``source-subdir`` key to point to the charm directory:
 
     name: my-charm
     type: charm
-    base: ubuntu@24.04
-    build-base: ubuntu@24.04
+    base: ubuntu@26.04
     platforms:
       amd64:
 

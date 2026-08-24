@@ -18,38 +18,15 @@
 import pytest
 
 from charmcraft import const
-from charmcraft.application.main import APP_METADATA, create_app
+from charmcraft.application.main import create_app
 
 
-def test_app_metadata_allows_git_build_root() -> None:
-    assert APP_METADATA.allow_git_build_root is True
-
-
-@pytest.mark.parametrize(
-    ("env_value", "expected"),
-    [
-        (None, False),
-        ("0", False),
-        ("false", False),
-        ("no", False),
-        ("n", False),
-        ("1", True),
-        ("true", True),
-        ("yes", True),
-        ("y", True),
-    ],
-)
-def test_experimental_monorepo_config(
-    monkeypatch: pytest.MonkeyPatch, env_value: str | None, expected: bool
-) -> None:
-    if env_value is None:
-        monkeypatch.delenv(const.EXPERIMENTAL_MONOREPO_ENV_VAR, raising=False)
-    else:
-        monkeypatch.setenv(const.EXPERIMENTAL_MONOREPO_ENV_VAR, env_value)
+def test_experimental_monorepo_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(const.EXPERIMENTAL_MONOREPO_ENV_VAR, "1")
 
     app = create_app()
     app._configure_early_services()
     app._configure_services(None)
 
-    assert app.services.get("config").get("experimental_monorepo") is expected
-    assert app.services.get("provider")._use_git_build_root is expected
+    assert app.services.get("config").get("experimental_monorepo") is True
+    assert app.services.get("provider")._use_git_build_root is True

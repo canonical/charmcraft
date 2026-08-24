@@ -7,11 +7,6 @@
 How to pack a charm in a monorepo
 =================================
 
-In a monorepo structure, a single Git repository contains multiple projects, such as
-multiple related charms, or an app codebase alongside its charm. In these
-repositories, a charm might need to reference shared Python packages, configuration files,
-or other parts located outside of the charm's own directory.
-
 By default, Charmcraft isolates the build environment to the directory containing
 ``charmcraft.yaml``. When building in managed environments (such as LXD containers or
 virtual machines), files outside the charm's directory are not copied into the build
@@ -72,6 +67,11 @@ and use the ``source-subdir`` key to point to the charm directory:
         plugin: uv
         source: ../..
         source-subdir: charms/my-charm
+
+
+.. note::
+
+    If you want a top-level ``charmcraft.yaml`` file at the repository root with the charm source located in a subdirectory, you can use ``source-subdir`` on the charm part directly without enabling experimental monorepo mode.
 
 
 In your charm's ``pyproject.toml``, you can then reference shared local dependencies using

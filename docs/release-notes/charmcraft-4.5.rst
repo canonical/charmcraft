@@ -51,6 +51,18 @@ enabling charms to access shared dependencies located in parent or sibling direc
 For more details, see :ref:`pack-a-charm-in-a-monorepo`.
 
 
+Minor features
+--------------
+
+Charmcraft 4.5 brings the following minor changes.
+
+
+<Feature A>
+~~~~~~~~~~~
+
+- <Add a short description of a minor change.>
+
+
 Backwards-incompatible changes
 ------------------------------
 

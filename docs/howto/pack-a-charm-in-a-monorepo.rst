@@ -85,8 +85,11 @@ relative paths:
     version = "0.1.0"
     dependencies = [
         "ops",
-        "common @ file:///${PROJECT_DIR}/../../shared",
+        "common",
     ]
+
+    [tool.uv.sources]
+    common = { path = "../../shared" }
 
 
 Pack the charm

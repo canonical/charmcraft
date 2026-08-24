@@ -1,9 +1,8 @@
 summary: pack a charm that uses several lifecycle mechanisms and extra files
 
-# Limited to Ubuntu 22.04 and 24.04 because the init profiles no longer work with Python 3.8
+# Limited to Ubuntu 22.04 because the managed base image for this test is Ubuntu 22.04.
 systems:
   - ubuntu-22.04-64
-  - ubuntu-24.04-64
 
 environment:
   PROFILE/simple: simple
@@ -36,7 +35,7 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
+  charmcraft pack --verbose --destructive-mode
   ~/.local/bin/tox run
   test -f *.charm
   # Charmcraft 3.0 uses the craft-parts standard prime keyword that only

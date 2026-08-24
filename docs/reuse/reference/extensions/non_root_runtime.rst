@@ -1,10 +1,17 @@
 Runtime user and writable directory
 -----------------------------------
 
-When Charmcraft generates a version 2 12-factor charm targeting Ubuntu 26.04 LTS
-or higher, the generated ``charmcraft.yaml`` sets ``charm-user: non-root`` by
-default. The matching version 2 rock provides ``/app-data`` as a directory
-outside ``/app`` that is writable by the ``_daemon_`` user.
+.. tab-set::
 
-This behavior doesn't apply to version 1 generated charms or charms targeting
-lower Ubuntu bases.
+    .. tab-item:: Ubuntu 22.04 and 24.04
+        :sync: base-22-24
+
+        The generated ``charmcraft.yaml`` doesn't set ``charm-user``, so Juju
+        runs the charm as the root user by default.
+
+    .. tab-item:: Ubuntu 26.04 and higher
+        :sync: base-26-plus
+
+        The generated ``charmcraft.yaml`` sets ``charm-user: non-root`` by
+        default. The matching rock provides ``/app-data`` outside ``/app`` as
+        an application data directory writable by the ``_daemon_`` user.

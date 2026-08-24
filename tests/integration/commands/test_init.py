@@ -174,6 +174,7 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
     v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
     assert v2_project["charm-user"] == "non-root"
 
+
 @pytest.mark.parametrize(
     ("profile", "uses_uv"),
     [

@@ -56,7 +56,6 @@ BASIC_INIT_FILES = frozenset(
         "tests/unit",
         "tests/unit/test_charm.py",
         "tox.ini",
-        "uv.lock",
     )
 )
 UNKNOWN_AUTHOR_REGEX = re.compile(
@@ -174,6 +173,28 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
 
     v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
     assert v2_project["charm-user"] == "non-root"
+
+@pytest.mark.parametrize(
+    ("profile", "uses_uv"),
+    [
+        pytest.param("machine", True, id="machine"),
+        pytest.param("kubernetes", True, id="kubernetes"),
+        pytest.param("flask-framework", False, id="flask-framework"),
+    ],
+)
+def test_success_message(new_path, init_command, emitter, profile: str, uses_uv: bool):
+    init_command.run(create_namespace(profile=profile))
+    output = "\n".join(
+        c.args[1] for c in emitter.interactions if c.args[0] == "message"
+    )
+    if uses_uv:
+        assert "Run 'uv lock'" in output
+        # uv.lock is mentioned in the instructions but isn't listed as a created file.
+        assert "including uv.lock" in output
+        assert "uv.lock" not in output.replace("including uv.lock", "")
+    else:
+        assert "uv.lock" not in output
+        assert "uv lock" not in output
 
 
 def test_force(new_path, init_command):

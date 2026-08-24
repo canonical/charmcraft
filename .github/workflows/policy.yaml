@@ -36,10 +36,9 @@ jobs:
     if: ${{ needs.filter.outputs.source-files }}
     with:
       packages: python-apt-dev
-      # 1. requirements-noble.txt can't build on jammy
-      # 2. Ignore requirements files in spread tests, as some of these intentionally
+      # 1. Ignore requirements files in spread tests, as some of these intentionally
       #    contain vulnerable versions.
-      # 3. Docs contain requirements.txt files that don't specify versions.
+      # 2. Docs contain requirements.txt files that don't specify versions.
       osv-extra-args: "--config=osv-scanner.toml"
       osv-exclude-paths: |
         docs

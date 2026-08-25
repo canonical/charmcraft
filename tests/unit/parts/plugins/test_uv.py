@@ -14,8 +14,10 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 
+import typing
 from pathlib import Path
 
+import craft_parts
 import pytest
 import pytest_check
 
@@ -32,39 +34,89 @@ def test_get_venv_directory(uv_plugin: plugins.UvPlugin, install_path: Path):
     assert uv_plugin._get_venv_directory() == install_path / "venv"
 
 
+@pytest.mark.parametrize("source_subdir", [None, "subdir"])
 def test_get_package_install_commands(
-    uv_plugin: plugins.UvPlugin, build_path: Path, install_path: Path
+    tmp_path: Path,
+    install_path: Path,
+    source_subdir: str | None,
 ):
+    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
+    spec: dict[str, typing.Any] = {
+        "plugin": "uv",
+        "source": str(tmp_path),
+    }
+    if source_subdir:
+        spec["source-subdir"] = source_subdir
+    plugin_properties = plugins.UvPluginProperties.unmarshal(spec)
+    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="uv")
+    part = craft_parts.Part(
+        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
+    )
+    project_info = craft_parts.ProjectInfo(
+        application_name="test",
+        project_dirs=project_dirs,
+        cache_dir=tmp_path,
+    )
+    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
+    plugin = typing.cast(
+        plugins.UvPlugin,
+        craft_parts.plugins.get_plugin(
+            part=part, part_info=part_info, properties=plugin_properties
+        ),
+    )
+
+    build_path = part_info.part_build_dir
+    build_subdir = part_info.part_build_subdir
+    if source_subdir:
+        assert build_subdir != build_path
+    else:
+        assert build_subdir == build_path
+
     copy_src_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+        f"cp --archive --recursive --reflink=auto {build_subdir}/src {install_path}"
     )
-
     copy_lib_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+        f"cp --archive --recursive --reflink=auto {build_subdir}/lib {install_path}"
     )
 
-    default_commands = uv_plugin._get_package_install_commands()
+    default_commands = plugin._get_package_install_commands()
 
     pytest_check.is_not_in(copy_src_cmd, default_commands)
     pytest_check.is_not_in(copy_lib_cmd, default_commands)
 
-    (build_path / "src").mkdir(parents=True)
+    if source_subdir:
+        # Creating src/lib in parent build_path should not trigger copy
+        (build_path / "src").mkdir(parents=True)
+        (build_path / "lib" / "charm").mkdir(parents=True)
+        wrong_copy_src_cmd = (
+            f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+        )
+        wrong_copy_lib_cmd = (
+            f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
+        )
+        commands_with_parent_dirs = plugin._get_package_install_commands()
+        pytest_check.is_not_in(wrong_copy_src_cmd, commands_with_parent_dirs)
+        pytest_check.is_not_in(wrong_copy_lib_cmd, commands_with_parent_dirs)
+        pytest_check.is_not_in(copy_src_cmd, commands_with_parent_dirs)
+        pytest_check.is_not_in(copy_lib_cmd, commands_with_parent_dirs)
+
+    (build_subdir / "src").mkdir(parents=True)
 
     pytest_check.equal(
-        uv_plugin._get_package_install_commands(), [*default_commands, copy_src_cmd]
+        plugin._get_package_install_commands(), [*default_commands, copy_src_cmd]
     )
 
-    (build_path / "lib" / "charm").mkdir(parents=True)
+    (build_subdir / "lib" / "charm").mkdir(parents=True)
 
     pytest_check.equal(
-        uv_plugin._get_package_install_commands(),
+        plugin._get_package_install_commands(),
         [*default_commands, copy_src_cmd, copy_lib_cmd],
     )
 
-    (build_path / "src").rmdir()
+    (build_subdir / "src").rmdir()
 
     pytest_check.equal(
-        uv_plugin._get_package_install_commands(), [*default_commands, copy_lib_cmd]
+        plugin._get_package_install_commands(), [*default_commands, copy_lib_cmd]
     )
 
 

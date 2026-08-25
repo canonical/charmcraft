@@ -19,6 +19,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import typing
 
 import craft_application
 import pytest
@@ -28,21 +29,17 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(autouse=True)
-def add_part(
-    service_factory: craft_application.ServiceFactory, project_path: pathlib.Path
+@pytest.mark.slow
+@pytest.mark.parametrize("source_subdir", [None, "charm_dir"])
+def test_uv_plugin(
+    service_factory: craft_application.ServiceFactory,
+    project_path: pathlib.Path,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    source_subdir: str | None,
 ):
-    service_factory.get("project").get().parts = {
-        "my-charm": {
-            "plugin": "uv",
-            "source": str(project_path),
-            "source-type": "local",
-        }
-    }
-
-
-@pytest.fixture
-def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
+    charm_dir = project_path / source_subdir if source_subdir else project_path
+    charm_dir.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
             "uv",
@@ -52,45 +49,45 @@ def uv_project(project_path: pathlib.Path, monkeypatch) -> None:
             "--no-progress",
             "--no-workspace",
         ],
-        cwd=project_path,
+        cwd=charm_dir,
         check=True,
     )
-    subprocess.run(
-        ["uv", "add", "ops>=2.0.0", "pyyaml>=5"], cwd=project_path, check=True
-    )
+    subprocess.run(["uv", "add", "ops>=2.0.0", "pyyaml>=5"], cwd=charm_dir, check=True)
     monkeypatch.delenv("UV_FROZEN", raising=False)
     subprocess.run(
         [
             "uv",
             "lock",
         ],
-        cwd=project_path,
+        cwd=charm_dir,
         check=True,
     )
-    source_dir = project_path / "src"
+    source_dir = charm_dir / "src"
     # Newer versions of `uv init` already scaffold a src/<package> layout;
     # discard it so only the fixture's own charm.py ends up in the source tree.
     if source_dir.exists():
         shutil.rmtree(source_dir)
-    source_dir.mkdir()
+    source_dir.mkdir(parents=True, exist_ok=True)
     (source_dir / "charm.py").write_text("# Charm file")
 
+    part_def: dict[str, typing.Any] = {
+        "plugin": "uv",
+        "source": str(project_path),
+        "source-type": "local",
+    }
+    if source_subdir:
+        part_def["source-subdir"] = source_subdir
 
-@pytest.mark.slow
-@pytest.mark.usefixtures("uv_project")
-def test_uv_plugin(
-    service_factory: craft_application.ServiceFactory, tmp_path: pathlib.Path
-):
+    service_factory.get("project").get().parts = {"my-charm": part_def}
+
     install_path = tmp_path / "parts" / "my-charm" / "install"
     stage_path = tmp_path / "stage"
 
     service_factory.lifecycle.run("stage")
 
-    # Check that the part install directory looks correct.
     assert (install_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (install_path / "venv" / "lib").is_dir()
 
-    # Check that the stage directory looks correct.
     assert (stage_path / "src" / "charm.py").read_text() == "# Charm file"
     assert (stage_path / "venv" / "lib").is_dir()
     assert not (stage_path / "venv" / "lib64").is_symlink()

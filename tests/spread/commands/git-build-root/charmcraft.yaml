@@ -1,0 +1,18 @@
+name: monorepo-test-charm
+type: charm
+title: Monorepo test charm
+summary: Tests git-driven build root monorepo support.
+description: Verifies that CHARMCRAFT_EXPERIMENTAL_MONOREPO mounts the git root.
+base: ubuntu@VERSION_ID
+build-base: ubuntu@VERSION_ID
+platforms:
+  amd64:
+parts:
+  charm:
+    plugin: dump
+    source: .
+  shared-lib:
+    plugin: dump
+    source: ../shared
+    organize:
+      "*": shared/

@@ -78,10 +78,15 @@ Feature deprecations
 The following features are deprecated in Charmcraft 4.5.
 
 
-<Deprecated feature C>
-~~~~~~~~~~~~~~~~~~~~~~
+``create-lib``
+~~~~~~~~~~~~~~
 
-<Describe the deprecation status, alternatives, and migration guidance.>
+Charmhub no longer accepts the registration of new libraries, so the
+``charmcraft create-lib`` command no longer creates libraries. It now exits
+with an error that points to the `Charmhub-hosted charm libraries deprecation
+<https://ubu.link/charmhub-libraries-deprecation>`_ notice, which explains
+what to do instead. Use Python package charm libraries instead of
+Charmhub-hosted libraries.
 
 
 Scheduled feature deprecations

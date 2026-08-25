@@ -15,29 +15,13 @@ It's essential to start with a base of understanding of charm libraries from the
 Initialise a library
 --------------------
 
-In your charm's root directory, run the :ref:`charmcraft create-lib <ref_commands_create-lib>`
-command like this:
-
-.. code-block:: bash
-
-    charmcraft create-lib <lib-name>
-
-.. note::
-
-    Before creating a library, you must first register ownership of your charm's name.
-    To learn how to publish a charm on Charmhub, visit :ref:`publish-a-charm`.
-
-This will create a template file at
-``<charm-root-dir>/lib/charms/<charm-name>/v0/<lib-name>.py``.
-
-Edit this file to write your library.
-
 .. important::
 
-    A library must comprise a single Python file, :ref:`<libname>.py <libname-py-file>`.
-    If you write a library that feels too "big" for a single file, it is
-    likely that the library should be split up, or that you are actually
-    writing a full-on charm.
+    Charmhub no longer accepts the registration of new libraries, so
+    :ref:`charmcraft create-lib <ref_commands_create-lib>` no longer creates
+    libraries. See `Charmhub-hosted charm libraries deprecation
+    <https://ubu.link/charmhub-libraries-deprecation>`_ for more information,
+    including what to do instead.
 
 To learn how to manage a library, visit :external+ops:ref:`manage-libraries`.
 

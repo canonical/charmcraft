@@ -17,6 +17,7 @@
 """Gunicorn based extensions."""
 
 import copy
+import re
 from pathlib import Path
 from typing import Any
 
@@ -70,6 +71,11 @@ OAUTH_DYNAMIC_OPTIONS = {
         "default": "openid profile email",
     },
 }
+
+# RFC 3986 path: must start with '/' and contain only unreserved, sub-delim, ':', '@', '/', or percent-encoded chars.
+_VALID_URL_PATH_RE = re.compile(
+    r"^/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/]|%[0-9A-Fa-f]{2})*$"
+)
 
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 PAAS_CONFIG_FILE = "paas-config.yaml"
@@ -410,6 +416,44 @@ class _AppBase(SinglePlatformExtension):
 
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
+
+    @override
+    def _check_paas_config(self) -> None:
+        """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
+        config_path = self.project_root / PAAS_CONFIG_FILE
+        if not config_path.exists():
+            return
+
+        try:
+            parsed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ExtensionError(f"invalid YAML in {PAAS_CONFIG_FILE}: {exc}") from exc
+
+        if parsed is None:
+            return
+        if not isinstance(parsed, dict):
+            raise ExtensionError(f"{PAAS_CONFIG_FILE} must contain a top-level mapping")
+
+        framework_logging_format = parsed.get("framework_logging_format")
+        if (
+            isinstance(framework_logging_format, str)
+            and framework_logging_format.lower() == "json"
+            and self.framework not in JSON_LOGGING_SUPPORTED_FRAMEWORKS
+        ):
+            raise ExtensionError(
+                f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
+                f"for '{self.framework}-framework'"
+            )
+        if "metrics_path" in parsed:
+            metrics_path = parsed["metrics_path"]
+            if not isinstance(metrics_path, str):
+                raise ExtensionError(
+                    f"metrics_path in {PAAS_CONFIG_FILE} must be a string, got {type(metrics_path).__name__}"
+                )
+            if not _VALID_URL_PATH_RE.match(metrics_path):
+                raise ExtensionError(
+                    f"metrics_path in {PAAS_CONFIG_FILE} must be a valid URL path starting with '/', got '{metrics_path}'"
+                )
 
     @staticmethod
     @override

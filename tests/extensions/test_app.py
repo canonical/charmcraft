@@ -1209,3 +1209,47 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
             **expected_options,
         }
     }
+
+
+def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
+    """Test that invalid metrics_path in paas-config.yaml raises ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    # Create paas-config.yaml in the project
+    (tmp_path / "paas-config.yaml").write_text("metrics_path: something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        ExtensionError,
+        match=r"metrics_path in paas-config.yaml must be a valid URL path starting with '/'",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
+    """Test that valid metrics_path in paas-config.yaml does not raise ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    # Create paas-config.yaml in the project
+    (tmp_path / "paas-config.yaml").write_text("metrics_path: /something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    extensions.apply_extensions(tmp_path, input_yaml)

@@ -54,6 +54,7 @@ def test_user_secret(charm: pathlib.Path, juju: jubilant.Juju):
 
     # Clean up: reset the config option so subsequent tests start clean.
     juju.config("{{ name }}", reset=["api-token"])
+    juju.wait(jubilant.all_active)
 
 
 # If you implement {{ workload_module }}.get_version in the charm source,

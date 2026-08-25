@@ -82,7 +82,10 @@ class {{ class_name }}(ops.CharmBase):
         except ops.SecretNotFoundError:
             self.unit.status = ops.BlockedStatus("api-token secret not found or not granted")
             return
-        token = content.get("token", "")
+        if "token" not in content:
+            self.unit.status = ops.BlockedStatus("api-token secret has no 'token' key")
+            return
+        token = content["token"]
         # Reconfiguring the workload can be slow, so tell the user what's happening.
         self.unit.status = ops.MaintenanceStatus("reconfiguring workload")
         logger.info("api-token resolved (%d chars); reconfiguring workload", len(token))

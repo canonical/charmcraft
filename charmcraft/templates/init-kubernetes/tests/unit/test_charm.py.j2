@@ -164,6 +164,26 @@ def test_config_changed_api_token_not_found():
     assert isinstance(state_out.unit_status, testing.BlockedStatus)
 
 
+def test_config_changed_api_token_missing_key():
+    """Test that config-changed blocks when the secret has no 'token' key."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    secret = testing.Secret(
+        tracked_content={"not-token": "my-secret-api-token"},
+        owner=None,  # user-owned secret (not app- or unit-owned)
+    )
+    state_in = testing.State(
+        secrets={secret},
+        config={"api-token": secret.id},
+    )
+
+    # Act:
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+
+    # Assert:
+    assert isinstance(state_out.unit_status, testing.BlockedStatus)
+
+
 def test_config_changed_no_token():
     """Test that config-changed without api-token set does nothing."""
     # Arrange:

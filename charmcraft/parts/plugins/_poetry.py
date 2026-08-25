@@ -76,7 +76,7 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
         return [
             *super()._get_package_install_commands(),
             *utils.get_charm_copy_commands(
-                self._part_info.part_build_dir, self._part_info.part_install_dir
+                self._part_info.part_build_subdir, self._part_info.part_install_dir
             ),
         ]
 

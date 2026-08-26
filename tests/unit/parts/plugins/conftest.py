@@ -16,6 +16,7 @@
 """Shared fixtures for plugin unit tests."""
 
 import pathlib
+import shlex
 import typing
 from collections.abc import Callable
 
@@ -78,3 +79,38 @@ def make_plugin(tmp_path: pathlib.Path) -> MakePlugin:
         return plugin, part_info
 
     return _make_plugin
+
+
+COPY_COMMAND_BASE = ["cp", "--archive", "--recursive", "--reflink=auto"]
+COPY_COMMAND_PREFIX = shlex.join(COPY_COMMAND_BASE) + " "
+
+
+@pytest.fixture
+def copy_command(install_path: pathlib.Path) -> Callable[[pathlib.Path], str]:
+    """Return a function building the command that copies ``source`` into the charm.
+
+    Quoted the same way as ``utils.get_charm_copy_commands`` so paths with
+    spaces compare equal.
+    """
+
+    def _copy_command(source: pathlib.Path) -> str:
+        return shlex.join([*COPY_COMMAND_BASE, str(source), str(install_path)])
+
+    return _copy_command
+
+
+@pytest.fixture
+def split_copy_commands() -> Callable[[list[str]], tuple[list[str], list[str]]]:
+    """Return a function splitting install commands from the charm copy commands.
+
+    Only ``utils.get_charm_copy_commands`` reads the filesystem, so the install
+    list is stable for a given spec and the copy list is what the
+    directory-state tests assert on.
+    """
+
+    def _split(commands: list[str]) -> tuple[list[str], list[str]]:
+        copies = [cmd for cmd in commands if cmd.startswith(COPY_COMMAND_PREFIX)]
+        install = [cmd for cmd in commands if not cmd.startswith(COPY_COMMAND_PREFIX)]
+        return install, copies
+
+    return _split

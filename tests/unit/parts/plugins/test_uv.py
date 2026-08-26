@@ -17,7 +17,6 @@
 from pathlib import Path
 
 import pytest
-import pytest_check
 
 from charmcraft.parts import plugins
 
@@ -76,8 +75,8 @@ def test_copy_commands_follow_existing_directories(
     commands = plugin._get_package_install_commands()
 
     install_commands, copies = split_copy_commands(commands)
-    pytest_check.equal(copies, expected_copies)
-    pytest_check.equal(commands, [*install_commands, *copies])
+    assert copies == expected_copies
+    assert commands == [*install_commands, *copies]
 
 
 def test_copy_commands_ignore_parent_of_source_subdir(make_plugin, split_copy_commands):
@@ -87,7 +86,7 @@ def test_copy_commands_ignore_parent_of_source_subdir(make_plugin, split_copy_co
     (build_path / "lib" / "charm").mkdir(parents=True)
 
     _, copies = split_copy_commands(plugin._get_package_install_commands())
-    pytest_check.equal(copies, [])
+    assert copies == []
 
 
 def test_do_not_install_project(uv_plugin: plugins.UvPlugin) -> None:

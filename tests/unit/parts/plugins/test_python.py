@@ -20,7 +20,6 @@ import shlex
 import typing
 
 import pytest
-import pytest_check
 
 from charmcraft.parts import plugins
 
@@ -73,17 +72,15 @@ def test_pip_install_command_carries_part_options(
 
     install_command, check_command, *_ = plugin._get_package_install_commands()
 
-    with pytest_check.check():
-        assert install_command.startswith(PIP)
-    with pytest_check.check():
-        assert check_command.startswith(PIP)
+    assert install_command.startswith(PIP)
+    assert check_command.startswith(PIP)
     split_install_command = shlex.split(install_command)
     for constraints_file in constraints:
-        pytest_check.is_in(f"--constraint={constraints_file}", split_install_command)
+        assert f"--constraint={constraints_file}" in split_install_command
     for requirements_file in requirements:
-        pytest_check.is_in(f"--requirement={requirements_file}", split_install_command)
+        assert f"--requirement={requirements_file}" in split_install_command
     for package in packages:
-        pytest_check.is_in(package, split_install_command)
+        assert package in split_install_command
 
 
 @pytest.mark.parametrize("source_subdir", [None, "subdir"])
@@ -132,8 +129,8 @@ def test_copy_commands_follow_existing_directories(
     commands = plugin._get_package_install_commands()
 
     install_commands, copies = split_copy_commands(commands)
-    pytest_check.equal(copies, expected_copies)
-    pytest_check.equal(commands, [*install_commands, *copies])
+    assert copies == expected_copies
+    assert commands == [*install_commands, *copies]
 
 
 def test_copy_commands_ignore_parent_of_source_subdir(
@@ -146,7 +143,7 @@ def test_copy_commands_ignore_parent_of_source_subdir(
 
     _, copies = split_copy_commands(plugin._get_package_install_commands())
 
-    pytest_check.equal(copies, [])
+    assert copies == []
 
 
 def test_get_rm_command(

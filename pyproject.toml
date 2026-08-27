@@ -484,6 +484,7 @@ classmethod-decorators = ["pydantic.validator", "pydantic.root_validator"]
     "S103",    # Allow `os.chmod` setting a permissive mask `0o555` on file or directory
     "S108",    # Allow Probable insecure usage of temporary file or directory
     "PLR0913", # Allow many arguments for test functions (useful if we need many fixtures)
+    "PLR0917", # Too many arguments
     "PLR2004", # Allow magic values in tests
     "SLF",     # Allow accessing private members from tests.
     # Charmcraft-specific ignores, to be removed as we modernise the code.

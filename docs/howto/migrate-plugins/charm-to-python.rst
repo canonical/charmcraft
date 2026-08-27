@@ -67,7 +67,7 @@ complete set of packages needed in the charm's virtual environment.
     A few examples include:
 
     - `uv export <https://docs.astral.sh/uv/reference/cli/#uv-export>`_
-    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/cli/pip-compile/>`_
+    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/reference/pip-compile/>`_
     - `pip freeze <https://pip.pypa.io/en/stable/cli/pip_freeze/>`_
 
 A basic ``requirements.txt`` file for a charm with no dependencies other than the
@@ -105,13 +105,15 @@ If run from the base directory of a charm, this will show all the PYDEPS declara
 from all loaded charmlibs, which can be used to help generate the input for a tool
 that generates ``requirements.txt``.
 
+.. _howto-migrate-to-python-include-extra-files:
+
 Include extra files
 -------------------
 
-The Python plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files such as a charm's icon
-were previously included from the main directory, stage them in the charm in a new part
-that uses the :ref:`craft_parts_dump_plugin`:
+The Python plugin only includes the contents of the ``src`` and ``lib`` directories as
+well as the generated virtual environment. Other files, such as the
+:ref:`icon-svg-file`, are no longer included by default and need to be explicitly packed
+in the charm with a new part that uses the :ref:`craft_parts_dump_plugin`.
 
 .. code-block:: yaml
     :caption: charmcraft.yaml

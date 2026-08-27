@@ -1,3 +1,6 @@
+.. meta::
+    :description: Reference for the ``icon.svg`` file, including its required dimensions, best practices, and examples.
+
 .. _icon-svg-file:
 
 ``icon.svg`` file
@@ -44,23 +47,8 @@ Examples
 Including the file
 ------------------
 
-If your file is not in your project directory but not included in the charm, you can
-use the :ref:`craft_parts_dump_plugin` to include this file in your charm.
+If your charm's main part uses the Charm plugin, the ``icon.svg`` file is packed in the
+final charm by default if included in the same directory as your project file.
 
-.. dropdown:: Example
-
-    This example is the :ref:`charmcraft-yaml-key-parts` key of a project file that uses
-    the :ref:`craft_parts_poetry_plugin` to build a charm, augmented to add the charm's
-    ``icon.svg`` file.
-
-    .. code-block:: yaml
-
-        parts:
-          my-charm:
-            plugin: poetry
-            source: .
-          icon:
-            plugin: dump
-            source: .
-            stage:
-              - icon.svg
+If your charm's main part uses the Python, Poetry, or uv plugin, the ``icon.svg`` file
+must be :ref:`packed in the charm manually <how-to-pack-the-icon-in-the-charm>`.

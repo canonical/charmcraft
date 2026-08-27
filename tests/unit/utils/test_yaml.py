@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 import textwrap
 
+import pydantic
 import pytest
 
 from charmcraft.utils.yaml import dump_yaml, load_yaml
@@ -85,6 +86,7 @@ def test_load_yaml_file_problem(tmp_path, emitter):
         (None, "null\n...\n"),
         (1, "1\n...\n"),
         ("Stringy!", "Stringy!\n...\n"),
+        (pydantic.AnyUrl("https://example.com/"), "https://example.com/\n...\n"),
         (
             {"thing": "multi\nline\nstring\n", "single": "single line string"},
             textwrap.dedent(

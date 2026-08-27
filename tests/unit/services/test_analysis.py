@@ -109,7 +109,7 @@ def mock_zip_file(monkeypatch):
 
 @pytest.fixture
 def analysis_service():
-    return analysis.AnalysisService(app=application.APP_METADATA, services=None)
+    return analysis.AnalysisService(app=application.APP_METADATA, services=None)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(

@@ -101,13 +101,27 @@ You must prepare an ingress if you wish to integrate your 12-factor web app
 with the `Canonical Observability Stack
 (COS) <https://charmhub.io/topics/canonical-observability-stack>`_.
 COS relies on the Traefik ingress to expose, for example, Grafana.
-On MicroK8s, Traefik requires the MetalLB load balancer to be enabled which
-requires an IP range. Provide the IP range and enable the addon with:
+Traefik requires a load balancer to be enabled with an IP range. Provide the
+IP range and enable the load balancer with:
 
-.. code-block:: bash
+.. tab-set::
 
-    IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
-    microk8s enable metallb:$IPADDR-$IPADDR
+    .. tab-item:: MicroK8s
+        :sync: microk8s
+
+        .. code-block:: bash
+
+            IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+            microk8s enable metallb:$IPADDR-$IPADDR
+
+    .. tab-item:: Canonical K8s
+        :sync: canonical-k8s
+
+        .. code-block:: bash
+
+            IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+            sudo k8s set load-balancer.l2-mode=true load-balancer.cidrs=$IPADDR-$IPADDR
+            sudo k8s enable load-balancer
 
 
 Deploy and integrate observability to the 12-factor app with:
@@ -139,11 +153,10 @@ the proxy URI (i.e., it must support the format
 and authentication modes supported by your web app. However, the 12 factor
 framework currently does not provide a native way to set these values directly.
 
-To supply them, your app should integrate with the `HTTP proxy configurator
-<https://github.com/canonical/http-proxy-operators/tree
-/main/http-proxy-configurator-operator>`_
-charm which relays this information to the Squid Forward Proxy charm.
-Add the following endpoint definition to your project file:
+To supply the domains and authentication modes to the Squid Forward Proxy charm, `deploy
+the HTTP proxy configurator charm
+<https://github.com/canonical/http-proxy-operators/blob/main/http-proxy-configurator-operator/docs/tutorial/getting-started.md>`__.
+Then, add the following endpoint definition to your project file:
 
 .. code-block:: yaml
 

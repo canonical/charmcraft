@@ -90,8 +90,44 @@ def plugin(tmp_path, plugin_properties, spec):
     )
 
 
-def test_get_build_package(plugin):
-    assert plugin.get_build_packages() == set()
+def test_get_build_package_deb_based(plugin, mocker):
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_id.return_value = "ubuntu"
+
+    assert plugin.get_build_packages() == {
+        "git",
+        "python3-pip",
+        "python3-setuptools",
+        "python3-venv",
+        "python3-wheel",
+        "virtualenv",
+    }
+
+
+def test_get_build_package_yum_based(plugin, mocker):
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_id.return_value = "centos"
+
+    assert plugin.get_build_packages() == {
+        "git",
+        "python3-pip",
+        "python3-setuptools",
+        "python3-virtualenv",
+        "python3-wheel",
+    }
+
+
+def test_get_build_package_dnf_based(plugin, mocker):
+    mock_id = mocker.patch("craft_parts.utils.os_utils.OsRelease.id")
+    mock_id.return_value = "almalinux"
+
+    assert plugin.get_build_packages() == {
+        "git",
+        "python3-pip",
+        "python3-setuptools",
+        "python3-virtualenv",
+        "python3-wheel",
+    }
 
 
 def test_get_build_snaps(plugin):
@@ -104,9 +140,11 @@ def test_get_build_environment(plugin):
 
 def test_get_build_commands(plugin, tmp_path):
     assert plugin.get_build_commands() == [
-        f"{sys.executable} -I {_reactive.__file__} fake-project "
-        f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
-        "--charm-argument --charm-argument-with argument"
+        (
+            f"{sys.executable} -I {_reactive.__file__} fake-project "
+            f"{tmp_path}/parts/foo/build {tmp_path}/parts/foo/install "
+            "--charm-argument --charm-argument-with argument"
+        )
     ]
 
 

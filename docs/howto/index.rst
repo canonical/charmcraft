@@ -25,7 +25,6 @@ to include any libraries, parts, or other assets your application may require.
 - :ref:`manage-charms`
 - :ref:`Manage 12-factor app charms <manage-12-factor-app-charms>`
 - :ref:`select-platforms`
-- :ref:`manage-parts`
 - :ref:`manage-resources`
 - :ref:`manage-libraries`
 - :ref:`manage-extensions`
@@ -37,9 +36,10 @@ Publish and release
 When you're ready to distribute your charm, Charmcraft provides commands to register it,
 publish it to Charmhub, and manage its releases.
 
+- :ref:`how-to-build-remotely`
 - :ref:`manage-the-current-charmhub-user`
 - :ref:`manage-names`
-- :ref:`manage-icons`
+- :ref:`how-to-add-an-icon`
 - :ref:`manage-charm-revisions`
 - :ref:`manage-tracks`
 - :ref:`manage-channels`
@@ -75,7 +75,7 @@ update a charm to the new base:
     manage-extensions
     manage-resources
     manage-libraries
-    manage-parts
+    build-remotely
     shared-cache
     pack-a-hooks-based-charm-with-charmcraft
     pack-a-reactive-charm-with-charmcraft
@@ -84,6 +84,6 @@ update a charm to the new base:
     manage-revisions
     manage-channels
     manage-tracks
-    manage-icons
+    add-an-icon
     Migrate plugins <migrate-plugins/index>
     Migrate bases <migrate-bases/index>

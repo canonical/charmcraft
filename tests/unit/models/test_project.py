@@ -18,7 +18,6 @@
 import itertools
 import json
 import pathlib
-import re
 import textwrap
 from textwrap import dedent
 from typing import Any
@@ -727,11 +726,55 @@ def test_devel_base_needs_build_base(base: str):
         )
 
 
-@pytest.mark.parametrize("base", ["ubuntu@26.04"])
-def test_unreleased_devel_base_needs_devel(base: str):
+def test_resolute_base_does_not_need_build_base():
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "nil"}},
+        }
+    )
+
+
+def test_resolute_base_supports_reactive_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "reactive"}},
+        }
+    )
+
+
+def test_resolute_base_supports_charm_plugin(monkeypatch):
+    monkeypatch.setenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR, "1")
+    project.PlatformCharm.unmarshal(
+        {
+            "type": "charm",
+            "name": "test-charm",
+            "summary": "",
+            "description": "",
+            "base": "ubuntu@26.04",
+            "platforms": {"amd64": None},
+            "parts": {"charm": {"plugin": "charm"}},
+        }
+    )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin():
     with pytest.raises(
         pydantic.ValidationError,
-        match=re.escape(f"development build-base must be used when base is '{base}'"),
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
     ):
         project.PlatformCharm.unmarshal(
             {
@@ -739,24 +782,69 @@ def test_unreleased_devel_base_needs_devel(base: str):
                 "name": "test-charm",
                 "summary": "",
                 "description": "",
-                "base": base,
-                "build-base": base,
+                "base": "ubuntu@26.04",
                 "platforms": {"amd64": None},
-                "parts": {"charm": {"plugin": "nil"}},
+                "parts": {"charm": {"plugin": "charm"}},
             }
         )
-    project.PlatformCharm.unmarshal(
-        {
-            "type": "charm",
-            "name": "test-charm",
-            "summary": "",
-            "description": "",
-            "base": base,
-            "build-base": "ubuntu@devel",
-            "platforms": {"amd64": None},
-            "parts": {"charm": {"plugin": "nil"}},
-        }
-    )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_charm_plugin_is_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="craft-application#1092")
+def test_resolute_base_rejects_charm_plugin_without_env_var():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' plugin with base 'ubuntu@26.04'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@26.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "charm"}},
+            }
+        )
+
+
+def test_legacy_plugins_are_checked_against_build_base():
+    with pytest.raises(
+        pydantic.ValidationError,
+        match="Cannot use 'charm' or 'reactive' plugins with base 'ubuntu@25.10'",
+    ):
+        project.PlatformCharm.unmarshal(
+            {
+                "type": "charm",
+                "name": "test-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "build-base": "ubuntu@25.10",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "reactive"}},
+            }
+        )
 
 
 @pytest.mark.parametrize(

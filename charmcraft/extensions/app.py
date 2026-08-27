@@ -17,13 +17,15 @@
 """Gunicorn based extensions."""
 
 import copy
+import re
 from pathlib import Path
 from typing import Any
 
+import yaml
 from overrides import override
 
 from ..errors import ExtensionError
-from .extension import Extension
+from .extension import Extension, SinglePlatformExtension, get_project_bases
 
 APP_PORT_OPTION = {
     "app-port": {
@@ -70,10 +72,69 @@ OAUTH_DYNAMIC_OPTIONS = {
     },
 }
 
+# RFC 3986 path: must start with '/' and contain only unreserved, sub-delim, ':', '@', '/', or percent-encoded chars.
+_VALID_URL_PATH_RE = re.compile(
+    r"^/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/]|%[0-9A-Fa-f]{2})*$"
+)
+
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
+PAAS_CONFIG_FILE = "paas-config.yaml"
+JSON_LOGGING_SUPPORTED_FRAMEWORKS = {"fastapi", "flask", "django"}
 
 
-class _AppBase(Extension):
+class _FrameworkFactory:
+    """Route to a V1 or V2 extension class based on the project's target bases.
+
+    Instances are callable and expose get_supported_bases and is_experimental
+    so they can be registered and introspected like an Extension subclass.
+
+    The V2 classes will always supersedes V1 if the base is supported by V2 class.
+    """
+
+    def __init__(self, v1_cls: type[Extension], v2_cls: type[Extension]) -> None:
+        """Store the V1 and V2 extension classes.
+
+        :param v1_cls: the V1 extension class.
+        :param v2_cls: the V2 extension class.
+        """
+        self._v1_cls = v1_cls
+        self._v2_cls = v2_cls
+
+    def __call__(self, *, project_root: Path, yaml_data: dict[str, Any]) -> Extension:
+        """Route to V1 or V2 based on project bases.
+
+        :param project_root: the project root directory.
+        :param yaml_data: the raw yaml data.
+        :return: an Extension instance from the appropriate version.
+        """
+        bases = get_project_bases(yaml_data)
+        if any(base in self._v1_cls.get_supported_bases() for base in bases):
+            return self._v1_cls(project_root=project_root, yaml_data=yaml_data)
+        return self._v2_cls(project_root=project_root, yaml_data=yaml_data)
+
+    def get_supported_bases(self) -> list[tuple[str, str]]:
+        """Return merged supported bases from both V1 and V2, deduped and ordered.
+
+        :return: list of supported (distribution, series) tuples.
+        """
+        return list(
+            dict.fromkeys(
+                self._v1_cls.get_supported_bases() + self._v2_cls.get_supported_bases()
+            )
+        )
+
+    def is_experimental(self, base: tuple[str, str] | None) -> bool:
+        """Check if experimental, delegating to the class that supports the base.
+
+        :param base: the target base tuple or None.
+        :return: True if the base is experimental, False otherwise.
+        """
+        if base in self._v1_cls.get_supported_bases():
+            return self._v1_cls.is_experimental(base)
+        return self._v2_cls.is_experimental(base)
+
+
+class _AppBase(SinglePlatformExtension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
@@ -97,13 +158,13 @@ class _AppBase(Extension):
     @override
     def get_supported_bases() -> list[tuple[str, str]]:
         """Return supported bases."""
-        return [("ubuntu", "22.04")]
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
 
     @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
-        return True
+        return False
 
     framework: str
     actions: dict = {
@@ -193,6 +254,34 @@ class _AppBase(Extension):
             raise ExtensionError(
                 "Non-optional configuration options can not have default values.\n"
                 f"Please either remove the default value or set optional field to true or remove it for the {', '.join(invalid_non_optionals)} configuration option(s)."
+            )
+        self._check_paas_config()
+
+    def _check_paas_config(self) -> None:
+        """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
+        config_path = self.project_root / PAAS_CONFIG_FILE
+        if not config_path.exists():
+            return
+
+        try:
+            parsed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ExtensionError(f"invalid YAML in {PAAS_CONFIG_FILE}: {exc}") from exc
+
+        if parsed is None:
+            return
+        if not isinstance(parsed, dict):
+            raise ExtensionError(f"{PAAS_CONFIG_FILE} must contain a top-level mapping")
+
+        framework_logging_format = parsed.get("framework_logging_format")
+        if (
+            isinstance(framework_logging_format, str)
+            and framework_logging_format.lower() == "json"
+            and self.framework not in JSON_LOGGING_SUPPORTED_FRAMEWORKS
+        ):
+            raise ExtensionError(
+                f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
+                f"for '{self.framework}-framework'"
             )
 
     def _validate_cos_custom_dir(self) -> None:
@@ -325,6 +414,99 @@ class _AppBase(Extension):
         return f"{self.framework}-app-image"
 
 
+class _AppBaseV2(_AppBase):
+    """V2 base class for 12-factor applications using uv."""
+
+    @override
+    def _check_paas_config(self) -> None:
+        """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
+        config_path = self.project_root / PAAS_CONFIG_FILE
+        if not config_path.exists():
+            return
+
+        try:
+            parsed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ExtensionError(f"invalid YAML in {PAAS_CONFIG_FILE}: {exc}") from exc
+
+        if parsed is None:
+            return
+        if not isinstance(parsed, dict):
+            raise ExtensionError(f"{PAAS_CONFIG_FILE} must contain a top-level mapping")
+
+        framework_logging_format = parsed.get("framework_logging_format")
+        if (
+            isinstance(framework_logging_format, str)
+            and framework_logging_format.lower() == "json"
+            and self.framework not in JSON_LOGGING_SUPPORTED_FRAMEWORKS
+        ):
+            raise ExtensionError(
+                f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
+                f"for '{self.framework}-framework'"
+            )
+        if "metrics_path" in parsed:
+            metrics_path = parsed["metrics_path"]
+            if not isinstance(metrics_path, str):
+                raise ExtensionError(
+                    f"metrics_path in {PAAS_CONFIG_FILE} must be a string, got {type(metrics_path).__name__}"
+                )
+            if not _VALID_URL_PATH_RE.match(metrics_path):
+                raise ExtensionError(
+                    f"metrics_path in {PAAS_CONFIG_FILE} must be a valid URL path starting with '/', got '{metrics_path}'"
+                )
+
+    @staticmethod
+    @override
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "26.04")]
+
+    @override
+    def _get_root_snippet(self) -> dict[str, Any]:
+        """Return the root snippet to be merged into the user charmcraft.yaml."""
+        snippet = super()._get_root_snippet()
+        snippet["parts"] = {
+            "charm": {
+                "plugin": "uv",
+                "source": ".",
+                "build-snaps": ["astral-uv", "rustup"],
+                "override-build": "rustup default stable\ncraftctl default",
+                "uv-groups": ["charmlibs-pydeps"],
+            },
+            **self.get_config_part(),
+        }
+        return snippet
+
+    def get_config_part(self) -> dict[str, Any]:
+        """Get config part if paas-config.yaml is present."""
+        config_file = Path(self.project_root) / "paas-config.yaml"
+        if not config_file.is_file():
+            return {}
+        return {
+            "config": {
+                "plugin": "dump",
+                "source": ".",
+                "stage": ["paas-config.yaml"],
+            }
+        }
+
+    @override
+    def get_image_name(self) -> str:
+        """Return name of the app image."""
+        return "app-image"
+
+    @override
+    def get_container_name(self) -> str:
+        """Return name of the container for the app image."""
+        return "app"
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is_experimental is always True for V2."""
+        return True
+
+
 GUNICORN_WEBSERVER_OPTIONS = {
     "webserver-keepalive": {
         "type": "int",
@@ -349,7 +531,7 @@ GUNICORN_WEBSERVER_OPTIONS = {
 }
 
 
-class FlaskFramework(_AppBase):
+class FlaskFrameworkV1(_AppBase):
     """Extension for 12-factor Flask applications."""
 
     framework = "flask"
@@ -395,12 +577,22 @@ class FlaskFramework(_AppBase):
 
     @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
-        """Check if the extension is in an experimental state."""
-        return False
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
 
 
-class DjangoFramework(_AppBase):
+class FlaskFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor Flask applications."""
+
+    framework = "flask"
+    options = FlaskFrameworkV1.options
+
+
+FlaskFrameworkFactory = _FrameworkFactory(FlaskFrameworkV1, FlaskFrameworkV2)
+
+
+class DjangoFrameworkV1(_AppBase):
     """Extension for 12-factor Django applications."""
 
     framework = "django"
@@ -438,12 +630,29 @@ class DjangoFramework(_AppBase):
 
     @staticmethod
     @override
-    def is_experimental(base: tuple[str, ...] | None) -> bool:  # noqa: ARG004
+    def get_supported_bases() -> list[tuple[str, str]]:
+        """Return supported bases."""
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
         """Check if the extension is in an experimental state."""
         return False
 
 
-class GoFramework(_AppBase):
+class DjangoFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor Django applications."""
+
+    framework = "django"
+    actions = {**DjangoFrameworkV1.actions}
+    options = DjangoFrameworkV1.options
+
+
+DjangoFrameworkFactory = _FrameworkFactory(DjangoFrameworkV1, DjangoFrameworkV2)
+
+
+class GoFrameworkV1(_AppBase):
     """Extension for 12-factor Go applications."""
 
     framework = "go"
@@ -470,7 +679,21 @@ class GoFramework(_AppBase):
         return "app"
 
 
-class FastAPIFramework(_AppBase):
+class GoFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor Go applications."""
+
+    framework = "go"
+    options = {
+        **APP_PORT_OPTION,
+        **METRICS_OPTIONS,
+        **SECRET_OPTIONS,
+    }
+
+
+GoFrameworkFactory = _FrameworkFactory(GoFrameworkV1, GoFrameworkV2)
+
+
+class FastAPIFrameworkV1(_AppBase):
     """Extension for 12-factor FastAPI applications."""
 
     framework = "fastapi"
@@ -511,7 +734,17 @@ class FastAPIFramework(_AppBase):
         return "app"
 
 
-class ExpressJSFramework(_AppBase):
+class FastAPIFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor FastAPI applications."""
+
+    framework = "fastapi"
+    options = FastAPIFrameworkV1.options
+
+
+FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFrameworkV1, FastAPIFrameworkV2)
+
+
+class ExpressJSFrameworkV1(_AppBase):
     """Extension for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
@@ -538,7 +771,19 @@ class ExpressJSFramework(_AppBase):
         return "app"
 
 
-class SpringBootFramework(_AppBase):
+class ExpressJSFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor ExpressJS applications."""
+
+    framework = "expressjs"
+    options = ExpressJSFrameworkV1.options
+
+
+ExpressJSFrameworkFactory = _FrameworkFactory(
+    ExpressJSFrameworkV1, ExpressJSFrameworkV2
+)
+
+
+class SpringBootFrameworkV1(_AppBase):
     """Extension for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
@@ -592,3 +837,16 @@ class SpringBootFramework(_AppBase):
     def get_container_name(self) -> str:
         """Return name of the container for the app image."""
         return "app"
+
+
+class SpringBootFrameworkV2(_AppBaseV2):
+    """Extension v2 for 12-factor Spring Boot applications."""
+
+    framework = "spring-boot"
+    options = SpringBootFrameworkV1.options
+    endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options
+
+
+SpringBootFrameworkFactory = _FrameworkFactory(
+    SpringBootFrameworkV1, SpringBootFrameworkV2
+)

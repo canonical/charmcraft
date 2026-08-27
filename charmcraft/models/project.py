@@ -17,6 +17,7 @@
 
 import abc
 import datetime
+import os
 import pathlib
 import re
 import textwrap
@@ -184,6 +185,18 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     in order to preserve field order. It's registered as a virtual child class below.
     """
 
+    @classmethod
+    def _providers_base(cls, base: str) -> Any:  # noqa: ANN401
+        """Get a BaseAlias from the Project base.
+
+        This overrides the base implementation to return None if the base is unknown,
+        preventing validation errors on build-base for new or experimental bases.
+        """
+        try:
+            return super()._providers_base(base)
+        except ValueError:
+            return None
+
     type: Literal["charm"]
     title: models.ProjectTitle | None = None
     summary: CharmcraftSummaryStr | None = None
@@ -235,6 +248,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
     def started_at(self) -> datetime.datetime:
         """Get the time that Charmcraft started running."""
         return self._started_at
+
+    @classmethod
+    def _get_devel_bases(cls) -> Iterable[Any]:
+        """Return craft-application devel bases that require build-base: devel."""
+        return ()
 
     @classmethod
     def unmarshal(cls, data: dict[str, Any]):
@@ -927,27 +945,33 @@ class PlatformCharm(CharmProject):
     def _validate_removed_questing_plugins(
         cls, value: dict[str, dict[str, Any]], info: pydantic.ValidationInfo
     ) -> dict[str, dict[str, Any]]:
-        """Check that the charm and reactive plugins aren't used on Ubuntu 25.10+."""
+        """Check that the charm and reactive plugins are only used on supported bases."""
         plugins = {v.get("plugin", k) for k, v in value.items()}
-        if not plugins & {"charm", "reactive"}:
+        legacy_plugins = plugins & {"charm", "reactive"}
+        if not legacy_plugins:
             return value
-        if (base := info.data.get("base")) in const.CHARM_OR_REACTIVE_BASES:
-            return value
-        if base is not None:
-            raise ValueError(
-                f"Cannot use 'charm' or 'reactive' plugins with base {base!r}"
+
+        if base := info.data.get("base"):
+            build_base = info.data.get("build_base") or base
+            build_bases = {str(build_base)}
+        else:
+            # Multi-base charms.
+            build_bases = {
+                str(info.build_base)
+                for info in craft_platforms.charm.get_platforms_charm_build_plan(
+                    base=None,
+                    platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
+                        info.data["platforms"], mode="json", by_alias=True
+                    ),
+                )
+            }
+
+        effective_reactive_bases = const.REACTIVE_PLUGIN_BASES
+        if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+            effective_reactive_bases = (
+                effective_reactive_bases | const.REACTIVE_PLUGIN_EXPERIMENTAL_BASES
             )
-        # Multi-base charms.
-        build_bases = {
-            str(info.build_base)
-            for info in craft_platforms.charm.get_platforms_charm_build_plan(
-                base=None,
-                platforms=pydantic.TypeAdapter(PlatformsDict).dump_python(
-                    info.data["platforms"], mode="json", by_alias=True
-                ),
-            )
-        }
-        if invalid_bases := build_bases - const.CHARM_OR_REACTIVE_BASES:
+        if invalid_bases := build_bases - effective_reactive_bases:
             if len(invalid_bases) == 1:
                 raise ValueError(
                     f"Cannot use 'charm' or 'reactive' plugins with base {invalid_bases.pop()!r}"
@@ -956,6 +980,24 @@ class PlatformCharm(CharmProject):
             raise ValueError(
                 f"Cannot use 'charm' or 'reactive' plugins with bases {invalid_bases_str}"
             )
+
+        if "charm" in legacy_plugins:
+            effective_charm_bases = const.CHARM_PLUGIN_BASES
+            if os.getenv(const.EXPERIMENTAL_EXTENSIONS_ENV_VAR):
+                effective_charm_bases = (
+                    effective_charm_bases | const.CHARM_PLUGIN_EXPERIMENTAL_BASES
+                )
+            if invalid_bases := build_bases - effective_charm_bases:
+                if len(invalid_bases) == 1:
+                    raise ValueError(
+                        f"Cannot use 'charm' plugin with base {invalid_bases.pop()!r}"
+                    )
+                invalid_bases_str = humanize_list(
+                    sorted(invalid_bases), conjunction="or"
+                )
+                raise ValueError(
+                    f"Cannot use 'charm' plugin with bases {invalid_bases_str}"
+                )
         return value
 
 

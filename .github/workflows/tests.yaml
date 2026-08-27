@@ -15,7 +15,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
 
   pull_request:
@@ -28,7 +29,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
   merge_group:
     paths-ignore:
@@ -40,7 +42,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
       - spread.yaml
 
   # Allows you to run this workflow manually from the Actions tab
@@ -48,17 +51,17 @@ on:
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, amd64]
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Build snap
         uses: canonical/action-build@v1
         id: snapcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
@@ -69,7 +72,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
           path: snap-artifacts

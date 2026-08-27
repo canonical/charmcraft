@@ -49,21 +49,17 @@ and ``--filepath=<path to file resource>`` / ``--image=<OCI image>``. For exampl
     using the "short form" of the digest, the image needs to be present locally so its
     proper ID (the "long form") can be retrieved.
 
-.. code-block:: bash
-
-   charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
-
 .. terminal::
+
+    charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
 
     Revision 1 created of resource 'someresource' for charm 'my-super-charm'
 
-.. code-block:: bash
+.. terminal::
 
     charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
 
-.. terminal::
-
-   Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
+    Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
 
 Charmcraft will first check if that specific image is available in Canonical's Registry,
 and just use it if that's the case. If not, it will try to get it from the developer's

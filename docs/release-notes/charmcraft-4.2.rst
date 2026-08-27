@@ -120,6 +120,13 @@ The following issues have been resolved in Charmcraft 4.2.1:
   using a separate ``metadata.yaml`` file and the ``--project-dir`` argument
 - `#2620 <https://github.com/canonical/charmcraft/issues/2620>`__ Multi-base shorthand
   notation fails on v4.2.0
+- `#2705 <https://github.com/canonical/charmcraft/pull/2705>`__ refer to inline charmcraft.yaml metadata in pack help
+  metadata instead of the legacy ``metadata.yaml`` split-file format.
+
+The following issues have been resolved in Charmcraft 4.2.2:
+
+- `#2598 <https://github.com/canonical/charmcraft/issues/2598>`__ Remote build fails
+  when getting project name
 
 Contributors
 ------------

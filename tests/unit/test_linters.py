@@ -40,12 +40,17 @@ from charmcraft.models.lint import LintResult
     further_garbage=strategies.text(),
 )
 def test_fuzz_python_name_regex(name, next_char, further_garbage):
-    assert linters.PYTHON_NAME_REGEX.match(name).group(0) == name
-    assert linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}").group(0) == name
-    assert (
-        linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}{further_garbage}").group(0)
-        == name
-    )
+    match_1 = linters.PYTHON_NAME_REGEX.match(name)
+    assert match_1 is not None
+    assert match_1.group(0) == name
+
+    match_2 = linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}")
+    assert match_2 is not None
+    assert match_2.group(0) == name
+
+    match_3 = linters.PYTHON_NAME_REGEX.match(f"{name}{next_char}{further_garbage}")
+    assert match_3 is not None
+    assert match_3.group(0) == name
 
 
 @pytest.mark.parametrize(
@@ -59,7 +64,9 @@ def test_fuzz_python_name_regex(name, next_char, further_garbage):
     ],
 )
 def test_min_version_regex_matches(string, expected):
-    assert linters.MIN_VERSION_REGEX.search(string).group(1) == expected
+    match = linters.MIN_VERSION_REGEX.search(string)
+    assert match is not None
+    assert match.group(1) == expected
 
 
 @pytest.mark.parametrize(
@@ -73,7 +80,9 @@ def test_min_version_regex_matches(string, expected):
     ],
 )
 def test_approx_version_regex_matches(string, expected):
-    assert expected in linters.APPROX_VERSION_REGEX.search(string).group(1, 2)
+    match = linters.APPROX_VERSION_REGEX.search(string)
+    assert match is not None
+    assert expected in match.group(1, 2)
 
 
 @pytest.mark.parametrize(
@@ -81,7 +90,9 @@ def test_approx_version_regex_matches(string, expected):
     [("==1.0.0", "1.0.0")],
 )
 def test_exact_version_regex_matches(string, expected):
-    assert linters.EXACT_VERSION_REGEX.search(string).group(1) == expected
+    match = linters.EXACT_VERSION_REGEX.search(string)
+    assert match is not None
+    assert match.group(1) == expected
 
 
 @pytest.fixture

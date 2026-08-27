@@ -1,0 +1,37 @@
+summary: pack a simple reactive charm on older systems
+priority: 100
+
+systems:
+  - ubuntu-20.04-64
+  - ubuntu-22.04-64
+
+environment:
+  CHARM_SNAP_CHANNEL/stable: stable
+  CHARM_SNAP_CHANNEL/two: 2.x/stable
+
+prepare: |
+  cd reactivecharm
+
+  BASE_CHANNEL=$(echo $SPREAD_SYSTEM | cut -d- -f2)
+
+  sed -i "s|BASE_CHANNEL|$BASE_CHANNEL|g" charmcraft.yaml
+  sed -i "s|CHARM_SNAP_CHANNEL|$CHARM_SNAP_CHANNEL|g" charmcraft.yaml
+
+  git init
+  git config --global --add safe.directory $PWD
+  git add .
+  git config user.email "you@example.com"
+  git config user.name "Your Name"
+  git commit -m 'initial commit'
+
+restore: |
+  pushd reactivecharm
+  charmcraft clean
+  popd
+
+  rm -rf reactivecharm
+
+execute: |
+  cd reactivecharm
+  charmcraft pack
+  test -f reactive-test*.charm

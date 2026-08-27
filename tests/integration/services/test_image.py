@@ -25,7 +25,7 @@ from charmcraft.services.image import ImageService
 def image_service() -> ImageService:
     service = ImageService(
         app=application.APP_METADATA,
-        services=None,  # pyright: ignore[reportArgumentType]
+        services=None,  # ty: ignore[invalid-argument-type]
     )
     service.setup()
     return service

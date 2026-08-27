@@ -156,17 +156,19 @@ environment, such as one for charm libraries, the
 Likewise, optional dependencies under the ``pyproject.toml`` key
 ``project.optional-dependencies`` can be added with the ``uv-extras`` key.
 
+.. _howto-migrate-to-uv-include-extra-files:
+
 Include extra files
 -------------------
 
-The uv plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files such as a charm's icon
-were previously included from the main directory, stage them in the charm in a new part
-that uses the :ref:`craft_parts_dump_plugin`:
+The uv plugin only includes the contents of the ``src`` and ``lib`` directories as well
+as the generated virtual environment. Other files, such as the :ref:`icon-svg-file`, are
+no longer included by default and need to be explicitly packed in the charm with a new
+part that uses the :ref:`craft_parts_dump_plugin`.
 
 .. code-block:: yaml
     :caption: charmcraft.yaml
-    :emphasize-lines: 9-13
+    :emphasize-lines: 9-14
 
     parts:
       my-charm:

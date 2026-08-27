@@ -31,7 +31,7 @@ CURRENT_ARCH = craft_platforms.DebianArchitecture.from_host()
 
 @pytest.fixture
 def service(project_path):
-    return ProjectService(app=APP_METADATA, services=None, project_dir=project_path)
+    return ProjectService(app=APP_METADATA, services=None, project_dir=project_path)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(

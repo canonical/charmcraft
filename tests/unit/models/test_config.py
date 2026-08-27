@@ -72,6 +72,7 @@ def test_empty_config():
 def test_correct_option_type(option, type_):
     config = JujuConfig(options={"my-opt": option})
 
+    assert config.options is not None
     assert isinstance(config.options["my-opt"], type_)
 
 

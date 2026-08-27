@@ -80,7 +80,7 @@ execute: |
 
   # Deploy Django app
   juju deploy \
-    ./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    ./django-hello-world_$(dpkg --print-architecture).charm \
     django-hello-world --resource \
     django-app-image=localhost:32000/django-hello-world:0.1
 
@@ -122,7 +122,7 @@ execute: |
 
   # refresh the deployment
   juju refresh django-hello-world \
-    --path=./django-hello-world_ubuntu-22.04-$(dpkg --print-architecture).charm \
+    --path=./django-hello-world_$(dpkg --print-architecture).charm \
     --resource django-app-image=localhost:32000/django-hello-world:0.1
 
   # wait for the Django app to come back to active idle

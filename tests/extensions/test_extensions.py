@@ -20,7 +20,7 @@ import pytest
 from overrides import override
 
 from charmcraft import const, errors, extensions
-from charmcraft.extensions.extension import Extension
+from charmcraft.extensions.extension import Extension, SinglePlatformExtension
 
 
 class FakeExtension(Extension):
@@ -30,12 +30,12 @@ class FakeExtension(Extension):
     bases = [("ubuntu", "22.04")]
 
     @classmethod
-    def get_supported_bases(cls) -> list[tuple[str, ...]]:
+    def get_supported_bases(cls) -> list[tuple[str, str]]:
         """Return a list of tuple of supported bases."""
         return cls.bases
 
     @staticmethod
-    def is_experimental(_base: tuple[str, ...] | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         """Return whether or not this extension is unstable for given base."""
         return False
 
@@ -59,7 +59,7 @@ class ExperimentalExtension(FakeExtension):
     bases = [("ubuntu", "22.04")]
 
     @staticmethod
-    def is_experimental(_base: str | None) -> bool:
+    def is_experimental(base: tuple[str, str] | None) -> bool:
         return True
 
 
@@ -129,10 +129,10 @@ def test_experimental_no_env(fake_extensions, tmp_path):
         "bases": [
             {
                 "build-on": [
-                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                    {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64"]}
                 ],
                 "run-on": [
-                    {"name": "ubuntu", "channel": "20.04", "architectures": ["amd64"]}
+                    {"name": "ubuntu", "channel": "22.04", "architectures": ["amd64"]}
                 ],
             }
         ],
@@ -141,7 +141,10 @@ def test_experimental_no_env(fake_extensions, tmp_path):
     with pytest.raises(errors.ExtensionError) as exc:
         extensions.apply_extensions(tmp_path, charmcraft_config)
 
-    expected_message = f"Extension is experimental: '{ExperimentalExtension.name}'"
+    expected_message = (
+        f"Extension {ExperimentalExtension.name!r} is experimental on base(s): "
+        "ubuntu@22.04"
+    )
     assert str(exc.value) == expected_message
 
 
@@ -167,7 +170,7 @@ def test_wrong_base(fake_extensions, tmp_path):
         extensions.apply_extensions(tmp_path, charmcraft_config)
 
     expected_message = (
-        f"Extension '{FakeExtension.name}' does not support base: ('ubuntu', '20.04')"
+        f"Extension '{FakeExtension.name}' does not support base(s): ubuntu@20.04"
     )
     assert str(exc.value) == expected_message
 
@@ -216,3 +219,141 @@ def test_apply_extensions(fake_extensions, tmp_path):
 
     # New part
     assert parts[f"{FullExtension.name}/new-part"] == {"plugin": "nil", "source": None}
+
+
+def test_validate_with_base_key(tmp_path):
+    yaml_data = {"base": "ubuntu@22.04"}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("fake")  # Should not raise
+
+
+def test_validate_with_shortform_bases_unsupported(tmp_path):
+    yaml_data = {"bases": [{"name": "ubuntu", "channel": "20.04"}]}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
+    ):
+        ext.validate("fake")
+
+
+def test_validate_with_unsupported_base_key(tmp_path):
+    yaml_data = {"base": "ubuntu@20.04"}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
+    ):
+        ext.validate("fake")
+
+
+def test_validate_overridden(tmp_path):
+    called = False
+
+    class OverriddenExtension(FakeExtension):
+        def validate(self, extension_name: str):
+            nonlocal called
+            called = True
+            super().validate(extension_name)
+
+    yaml_data = {"base": "ubuntu@22.04"}
+    ext = OverriddenExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("overridden")
+    assert called
+
+
+class MockSinglePlatformExtension(SinglePlatformExtension):
+    @classmethod
+    def get_supported_bases(cls) -> list[tuple[str, str]]:
+        return [("ubuntu", "22.04"), ("ubuntu", "24.04")]
+
+    @staticmethod
+    def is_experimental(base: tuple[str, str] | None) -> bool:
+        return False
+
+    def get_root_snippet(self) -> dict[str, Any]:
+        return {}
+
+    def get_part_snippet(self) -> dict[str, Any]:
+        return {}
+
+    def get_parts_snippet(self) -> dict[str, Any]:
+        return {}
+
+
+def test_single_platform_extension_validation(tmp_path):
+    # Test with 'base' key
+    ext = MockSinglePlatformExtension(
+        project_root=tmp_path, yaml_data={"base": "ubuntu@22.04"}
+    )
+    ext.validate("mock")
+
+    # Test with single platform label
+    ext = MockSinglePlatformExtension(
+        project_root=tmp_path, yaml_data={"platforms": {"ubuntu@22.04:amd64": None}}
+    )
+    ext.validate("mock")
+
+    # Test with multiple platforms, same base
+    yaml_data = {"platforms": {"ubuntu@22.04:amd64": None, "ubuntu@22.04:arm64": None}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("mock")
+
+    # Test with multiple bases in labels
+    yaml_data = {"platforms": {"ubuntu@22.04:amd64": None, "ubuntu@24.04:amd64": None}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match="Extension does not support multiple bases"
+    ):
+        ext.validate("mock")
+
+    # Test with build-for (list form)
+    yaml_data = {"platforms": {"my-amd64": {"build-for": ["ubuntu@22.04:amd64"]}}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("mock")
+
+    # Test with build-for (scalar form)
+    yaml_data = {"platforms": {"my-amd64": {"build-for": "ubuntu@22.04:amd64"}}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("mock")
+
+    # Test with unsupported base in platform label
+    yaml_data = {"platforms": {"ubuntu@20.04:amd64": None}}
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
+    ):
+        ext.validate("mock")
+    # Test with different build-for
+    yaml_data = {
+        "platforms": {
+            "my-amd64": {"build-for": ["ubuntu@22.04:amd64"]},
+            "my-arm64": {"build-for": ["ubuntu@24.04:arm64"]},
+        }
+    }
+    ext = MockSinglePlatformExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match="Extension does not support multiple bases"
+    ):
+        ext.validate("mock")
+
+
+def test_validate_platforms_unsupported_base(tmp_path):
+    yaml_data = {"platforms": {"ubuntu@20.04:amd64": None}}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    with pytest.raises(
+        errors.ExtensionError, match=r"does not support base\(s\): ubuntu@20.04"
+    ):
+        ext.validate("fake")
+
+
+def test_validate_platforms_supported_base(tmp_path):
+    # '22.04' should pass if FakeExtension supports it
+    yaml_data = {"platforms": {"ubuntu@22.04:amd64": None}}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("fake")  # Should not raise
+
+
+def test_validate_with_bases_legacy(tmp_path):
+    # Legacy 'bases' should still work
+    yaml_data = {"bases": [{"build-on": [{"name": "ubuntu", "channel": "22.04"}]}]}
+    ext = FakeExtension(project_root=tmp_path, yaml_data=yaml_data)
+    ext.validate("fake")

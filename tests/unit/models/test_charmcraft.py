@@ -32,6 +32,10 @@ from charmcraft.models import charmcraft
             charmcraft.Base(name="ubuntu", channel="22.04", architectures=[]),
         ),
         (
+            "ubuntu@26.04",
+            charmcraft.Base(name="ubuntu", channel="26.04", architectures=[]),
+        ),
+        (
             "almalinux@9",
             charmcraft.Base(name="almalinux", channel="9", architectures=[]),
         ),

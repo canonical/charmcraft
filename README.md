@@ -101,5 +101,5 @@ Charmcraft is released under the [Apache-2.0 license](LICENSE)
 [tests-results]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml
 [spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push
 [spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml
-[weekly-spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml/badge.svg
-[weekly-spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread-large.yaml
+[weekly-spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread-manual.yaml/badge.svg
+[weekly-spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread-manual.yaml

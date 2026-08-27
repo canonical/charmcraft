@@ -282,4 +282,4 @@ def test_format_content_table(content):
 @pytest.mark.parametrize("fmt", ["yolo", 0])
 def test_format_content_invalid(fmt):
     with pytest.raises(ValueError, match="^Unknown output format "):
-        format_content(None, fmt)
+        format_content(None, fmt)  # ty: ignore[no-matching-overload]

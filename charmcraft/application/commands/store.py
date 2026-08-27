@@ -36,7 +36,7 @@ from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_store import attenuations, models, publisher
-from craft_store.errors import CredentialsUnavailable
+from craft_store.errors import CredentialsUnavailable, UbuntuOneOtpRequiredError
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
@@ -76,6 +76,14 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_WARNING = (
+    "WARNING: Charmhub-hosted charm libraries are deprecated. "
+    "Go to https://ubu.link/charmhub-libraries-deprecation for more information."
+)
+
+
+def _emit_charmlibs_deprecation_warning() -> None:
+    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 class LoginCommand(CharmcraftCommand):
@@ -87,9 +95,9 @@ class LoginCommand(CharmcraftCommand):
         """
         Login to Charmhub.
 
-        Charmcraft will provide a URL for the Charmhub login. When you have
-        successfully logged in, Charmcraft will store a token for ongoing
-        access to Charmhub at the CLI (if `--export` option was not used
+        Charmcraft will prompt for your Ubuntu One email address and password.
+        When you have successfully logged in, Charmcraft will store a token for
+        ongoing access to Charmhub at the CLI (if `--export` option was not used
         otherwise it will only save the credentials in the indicated file).
 
         If `--export <file>` option is used, a secret credentials file will
@@ -206,17 +214,48 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
-        if parsed_args.export:
-            credentials = self._services.store.get_credentials(
-                packages=packages, **kwargs
+        if not parsed_args.export and os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
+            raise CraftError(
+                f"Cannot login when using alternative auth through "
+                f"{const.ALTERNATE_AUTH_ENV_VAR} environment variable."
             )
+
+        email = emit.prompt("Email address: ")
+        password = emit.prompt("Password: ", hide=True)
+
+        store = cast(StoreService, self._services.get("store"))
+        if parsed_args.export:
+            try:
+                credentials = store.get_credentials(
+                    email=email, password=password, packages=packages, **kwargs
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                credentials = store.get_credentials(
+                    email=email, password=password, otp=otp, packages=packages, **kwargs
+                )
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            try:
+                store.login(
+                    email=email,
+                    password=password,
+                    packages=packages,
+                    **kwargs,
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                store.login(
+                    email=email,
+                    password=password,
+                    otp=otp,
+                    packages=packages,
+                    **kwargs,
+                )
+            username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -240,8 +279,9 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        store = cast(StoreService, self._services.get("store"))
         try:
-            self._services.store.logout()
+            store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -265,7 +305,7 @@ class WhoamiCommand(CharmcraftCommand):
         """Run the command."""
         store = cast("StoreService", self._services.get("store"))
         try:
-            macaroon_info = store.client.whoami()
+            macaroon_info = store.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -1255,6 +1295,7 @@ class CreateLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         lib_name = parsed_args.name
         valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
         valid_first_char = string.ascii_lowercase
@@ -1349,6 +1390,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         charm_name = (
             self._services.get("project").get().name or utils.get_name_from_yaml()
         )
@@ -1457,7 +1499,7 @@ class PublishLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in analysis:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,
@@ -1515,6 +1557,7 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
@@ -1666,6 +1709,7 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
+        _emit_charmlibs_deprecation_warning()
         store = cast("StoreService", self._services.get("store"))
         project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
@@ -1774,6 +1818,7 @@ class ListLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.name:
             charm_name = parsed_args.name
         else:

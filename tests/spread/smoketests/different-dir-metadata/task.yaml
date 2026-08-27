@@ -1,5 +1,8 @@
 summary: pack a charm with separate metadata files from a different directory
 
+restore: |
+  rm -f tester-grpc*.charm
+
 execute: |
-  # If we pull successfully it means we got the correct files!
-  charmcraft pull --verbose --project-dir=charm
+  charmcraft pack --verbose --project-dir=charm
+  test -f tester-grpc*.charm

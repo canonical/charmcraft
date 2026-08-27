@@ -14,7 +14,7 @@ execute: |
   pushd "${CHARM_DIR}"
   rm -f *.charm
 
-  charmcraft pack --destructive-mode
+  charmcraft pack
 
   test -f *.charm
   cat expected_files.txt | while read filepath; do

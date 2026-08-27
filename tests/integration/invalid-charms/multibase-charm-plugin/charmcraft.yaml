@@ -10,9 +10,6 @@ platforms:
   questing:
     build-on: ubuntu@25.10:amd64
     build-for: ubuntu@25.10:amd64
-  resolute:
-    build-on: ubuntu@26.04:amd64
-    build-for: ubuntu@26.04:amd64
 
 parts:
   my-part:

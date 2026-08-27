@@ -1,4 +1,4 @@
-name: Spread
+name: Spread tests for source
 on:
   pull_request:
     paths-ignore:
@@ -11,7 +11,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   merge_group:
     paths-ignore:
       - .github/**
@@ -23,7 +24,8 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   push:
     branches:
       - main
@@ -37,41 +39,42 @@ on:
       - .editorconfig
       - .pre-commit-config.yaml
       - .readthedocs.yaml
-      - "*.md" # Only top-level Markdown files
+      - "**/*.md"
+      - "*.md"
   schedule:
     - cron: "0 0 */2 * *"
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, amd64]
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Build snap
         uses: snapcore/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
       - name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list google: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems=$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     needs: [snap-build, spread-select]
     strategy:
       fail-fast: false
@@ -85,19 +88,19 @@ jobs:
           mkdir "${{ github.workspace }}"
 
       - name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
 
       - name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
 
       - name: Run spread
         run: |
-          spread google:${{ matrix.system }}
+          spread openstack:${{ matrix.system }}
 
       - name: Discard spread workers
         if: always()
@@ -108,20 +111,20 @@ jobs:
           done
 
   snap-store-tests:
-    runs-on: spread-installed
+    runs-on: [self-hosted, spread-enabled]
     needs: [snap-build]
 
     steps:
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Checkout charmcraft
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
 
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         name: Download snap artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: snap
 
@@ -131,5 +134,16 @@ jobs:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
           CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
           CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
+          STAGING_SSO_USERNAME: ${{ vars.STAGING_SSO_USERNAME }}
+          STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
+          CHARMCRAFT_STORE_SSO_URL: https://login.staging.ubuntu.com
         run: |
-          spread google:ubuntu-22.04-64:tests/spread/store/
+          spread openstack:ubuntu-22.04-64:tests/spread/store/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

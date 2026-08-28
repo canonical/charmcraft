@@ -19,6 +19,7 @@ import pathlib
 
 import pytest
 
+from charmcraft import utils
 from charmcraft.parts import plugins
 
 
@@ -69,7 +70,6 @@ def test_build_subdir_follows_source_subdir(make_plugin, source_subdir: str | No
 )
 def test_copy_commands_follow_existing_directories(
     make_plugin,
-    copy_command,
     split_copy_commands,
     source_subdir: str | None,
     has_src: bool,
@@ -82,11 +82,12 @@ def test_copy_commands_follow_existing_directories(
     if has_lib:
         (build_subdir / "lib" / "charm").mkdir(parents=True)
 
-    expected_copies = []
-    if has_src:
-        expected_copies.append(copy_command(build_subdir / "src"))
-    if has_lib:
-        expected_copies.append(copy_command(build_subdir / "lib"))
+    expected_copies = list(
+        utils.get_charm_copy_commands(
+            part_info.part_build_subdir,
+            part_info.part_install_dir,
+        )
+    )
 
     commands = plugin._get_package_install_commands()
 

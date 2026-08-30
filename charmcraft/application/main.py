@@ -51,14 +51,6 @@ APP_METADATA = craft_application.AppMetadata(
     allow_git_build_root=True,
 )
 
-PRIME_BEHAVIOUR_CHANGE_MESSAGE = (
-    "IMPORTANT: The behaviour of the 'prime' keyword has changed in Charmcraft 3. This "
-    "keyword will no longer add files that would otherwise be excluded from the "
-    "charm, instead filtering existing files. Additional files may be added using the "
-    "'dump' plugin.\n"
-    "To include extra files, see: https://juju.is/docs/sdk/include-extra-files-in-a-charm"
-)
-
 
 class Charmcraft(craft_application.Application):
     """Charmcraft application definition."""
@@ -77,22 +69,6 @@ class Charmcraft(craft_application.Application):
     def command_groups(self) -> list[craft_cli.CommandGroup]:
         """Return command groups."""
         return self._command_groups
-
-    def _check_deprecated(self, yaml_data: dict[str, Any]) -> None:
-        """Check for deprecated fields in the yaml_data."""
-        # We only need to warn people once.
-        if self.is_managed():
-            return
-        has_primed_part = False
-        if "parts" in yaml_data:
-            prime_changed_extensions = {"charm", "reactive"}
-            for name, part in yaml_data["parts"].items():
-                if not {name, part.get("plugin", None)} & prime_changed_extensions:
-                    continue
-                if "prime" in part:
-                    has_primed_part = True
-        if has_primed_part:
-            craft_cli.emit.progress(PRIME_BEHAVIOUR_CHANGE_MESSAGE, permanent=True)
 
     def _configure_services(self, provider_name: str | None) -> None:
         super()._configure_services(provider_name)

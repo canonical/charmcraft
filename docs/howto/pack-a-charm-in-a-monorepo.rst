@@ -12,8 +12,8 @@ Git repository and mounts the entire repository into the build environment. Part
 access parent and sibling directories.
 
 By default, Charmcraft isolates the build environment to the directory containing
-``charmcraft.yaml``. When building in managed environments (such as LXD containers or
-virtual machines), files outside the charm's directory are not copied into the build
+the project file. When building in managed environments, such as LXD containers or
+virtual machines, files outside the charm's directory are not copied into the build
 instance.
 
 Prerequisites

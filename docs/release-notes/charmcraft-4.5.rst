@@ -46,8 +46,8 @@ Monorepo support
 
 Charmcraft now supports packing charms located within monorepos when the
 ``CHARMCRAFT_EXPERIMENTAL_MONOREPO`` environment variable is enabled. In this mode,
-Charmcraft mounts the root of the enclosing Git repository into the build instance,
-enabling charms to access shared dependencies located in parent or sibling directories.
+Charmcraft mounts the root of the enclosing Git repository into the build instance.
+Charms can then access shared dependencies located in parent or sibling directories.
 The necessary project file changes and commands to enable this feature are
 described in :ref:`pack-a-charm-in-a-monorepo`.
 

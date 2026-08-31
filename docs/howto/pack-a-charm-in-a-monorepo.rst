@@ -4,12 +4,12 @@
 .. _how-to-pack-a-charm-in-a-monorepo:
 .. _pack-a-charm-in-a-monorepo:
 
-How to pack a charm in a monorepo
-=================================
+Pack a charm in a monorepo
+=========================
 
 With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
-Git repository and mounts the entire repository into the build environment, allowing parts
-to access parent and sibling directories.
+Git repository and mounts the entire repository into the build environment. Parts can then
+access parent and sibling directories.
 
 By default, Charmcraft isolates the build environment to the directory containing
 ``charmcraft.yaml``. When building in managed environments (such as LXD containers or

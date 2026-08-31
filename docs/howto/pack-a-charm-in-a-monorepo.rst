@@ -7,14 +7,14 @@
 Pack a charm in a monorepo
 ==========================
 
-With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
-Git repository and mounts the entire repository into the build environment. Parts can then
-access parent and sibling directories.
-
 By default, Charmcraft isolates the build environment to the directory containing
 the project file. When building in managed environments, such as LXD containers or
 virtual machines, files outside the charm's directory are not copied into the build
 instance.
+
+With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
+Git repository and mounts the entire repository into the build environment. Parts can then
+access parent and sibling directories.
 
 Prerequisites
 -------------
@@ -24,8 +24,8 @@ Prerequisites
 
 
 
-Declare the root and charm directories
---------------------------------------
+Declare project directories
+---------------------------
 
 Consider a charm monorepo that looks as follows:
 
@@ -46,7 +46,7 @@ Consider a charm monorepo that looks as follows:
 
 For charms located in subdirectories of your repository, set the ``source`` key of
 each charm's main part to the relative directory of the repository root and the
-``source-subdir`` key to the relative directory path containing the charm's project
+``source-subdir`` key to the subdirectory path containing the charm's project
 file.
 
 For the charm in the example repository shown previously, these keys would be

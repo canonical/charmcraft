@@ -7,27 +7,27 @@
 How to pack a charm in a monorepo
 =================================
 
+With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
+Git repository and mounts the entire repository into the build environment, allowing parts
+to access parent and sibling directories.
+
 By default, Charmcraft isolates the build environment to the directory containing
 ``charmcraft.yaml``. When building in managed environments (such as LXD containers or
 virtual machines), files outside the charm's directory are not copied into the build
 instance.
 
-With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
-Git repository and mounts the entire repository into the build environment, allowing parts
-to access parent and sibling directories.
-
-
 Prerequisites
 -------------
 
-- A Git repository containing your charm and shared assets.
-- Charmcraft 4.5 or higher.
+- A Git repository containing your charm and shared assets
+- Charmcraft 4.5 or higher
 
 
-Example repository layout
--------------------------
 
-Consider a monorepo structured as follows:
+Declare the root and charm directories
+--------------------------------------
+
+Consider a charm monorepo that looks as follows:
 
 .. code-block:: text
 
@@ -44,16 +44,17 @@ Consider a monorepo structured as follows:
             └── src/
                 └── charm.py
 
+For charms located in subdirectories of your repository, set the ``source`` key of
+each charm's main part to the relative directory of the repository root and the
+``source-subdir`` key to the relative directory path containing the charm's project
+file.
 
-Configure charmcraft.yaml
--------------------------
-
-When a charm is located in a subdirectory of a repository, configure the charm part in
-``charmcraft.yaml`` to set the ``source`` key to the repository root (or parent directory)
-and use the ``source-subdir`` key to point to the charm directory:
+For the charm in the example repository shown previously, these keys would be
+declared as:
 
 .. code-block:: yaml
     :caption: charms/my-charm/charmcraft.yaml
+    :emphasize-lines: 10-11
 
     name: my-charm
     type: charm
@@ -73,11 +74,12 @@ and use the ``source-subdir`` key to point to the charm directory:
     If you want a top-level ``charmcraft.yaml`` file at the repository root with the charm source located in a subdirectory, you can use ``source-subdir`` on the charm part directly without enabling experimental monorepo mode.
 
 
-In your charm's ``pyproject.toml``, you can then reference shared local dependencies using
-relative paths:
+To reference shared dependencies in your charm's ``pyproject.toml`` file, declare the paths
+relative to the directory containing the charm project file:
 
 .. code-block:: toml
     :caption: charms/my-charm/pyproject.toml
+    :emphasize-lines: 10
 
     [project]
     name = "my-charm"

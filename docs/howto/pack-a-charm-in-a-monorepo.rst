@@ -5,7 +5,7 @@
 .. _pack-a-charm-in-a-monorepo:
 
 Pack a charm in a monorepo
-=========================
+==========================
 
 With experimental monorepo support enabled, Charmcraft detects the root of the enclosing
 Git repository and mounts the entire repository into the build environment. Parts can then

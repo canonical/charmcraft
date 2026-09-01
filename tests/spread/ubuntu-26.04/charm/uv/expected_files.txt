@@ -2,4 +2,5 @@ metadata.yaml
 manifest.yaml
 dispatch
 src/charm.py
+venv/bin/python
 venv/lib/python3.14/site-packages/ops/charm.py

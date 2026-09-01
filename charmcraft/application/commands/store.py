@@ -82,7 +82,7 @@ CHARMLIBS_DEPRECATION_WARNING = (
 )
 CREATE_LIB_REMOVAL_MESSAGE = (
     "ERROR: New libraries can no longer be registered on Charmhub. "
-    f"Go to {CHARMLIBS_DEPRECATION_URL} for more information."
+    f"For rationale and alternatives, consult {CHARMLIBS_DEPRECATION_URL}."
 )
 
 
@@ -1272,11 +1272,10 @@ class CreateLibCommand(CharmcraftCommand):
         Create a Charmhub-hosted library.
 
         Charmhub no longer accepts the registration of new libraries, so
-        this command no longer creates libraries. It exits with an error
-        that points to more information.
+        this command exits with an error.
 
-        See {CHARMLIBS_DEPRECATION_URL} for more information, including
-        what to do instead.
+        See {CHARMLIBS_DEPRECATION_URL} for the rationale behind this
+        change and instructions on what to do instead.
     """
     )
 

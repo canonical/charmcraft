@@ -22,8 +22,6 @@ Prerequisites
 - A Git repository containing your charm and shared assets
 - Charmcraft 4.5 or higher
 
-
-
 Declare project directories
 ---------------------------
 
@@ -44,17 +42,16 @@ Consider a charm monorepo that looks as follows:
             └── src/
                 └── charm.py
 
-For charms located in subdirectories of your repository, set the ``source`` key of
-each charm's main part to the relative directory of the repository root and the
-``source-subdir`` key to the subdirectory path containing the charm's project
-file.
+For charms located in subdirectories of your repository, set the ``source`` key of each
+charm's main part to the relative path of the repository root and the ``source-subdir`` key to the directory
+containing the charm's project file.
 
 For the charm in the example repository shown previously, these keys would be
 declared as:
 
 .. code-block:: yaml
     :caption: charms/my-charm/charmcraft.yaml
-    :emphasize-lines: 10-11
+    :emphasize-lines: 10,11
 
     name: my-charm
     type: charm
@@ -71,11 +68,12 @@ declared as:
 
 .. note::
 
-    If you want a top-level ``charmcraft.yaml`` file at the repository root with the charm source located in a subdirectory, you can use ``source-subdir`` on the charm part directly without enabling experimental monorepo mode.
-
+    For repositories with the ``charmcraft.yaml`` file at the root and the charm source in a subdirectory,
+    you do not need to enable monorepo support. Instead, declare the ``source-subdir`` key in the
+    charm's main part.
 
 To reference shared dependencies in your charm's ``pyproject.toml`` file, declare the paths
-relative to the directory containing the charm project file:
+relative to the directory containing the charm project file.
 
 .. code-block:: toml
     :caption: charms/my-charm/pyproject.toml

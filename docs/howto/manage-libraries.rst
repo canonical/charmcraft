@@ -15,13 +15,10 @@ It's essential to start with a base of understanding of charm libraries from the
 Initialise a library
 --------------------
 
-.. important::
 
-    Charmhub no longer accepts the registration of new libraries, so
-    :ref:`charmcraft create-lib <ref_commands_create-lib>` no longer creates
-    libraries. See `Charmhub-hosted charm libraries deprecation
-    <https://ubu.link/charmhub-libraries-deprecation>`_ for more information,
-    including what to do instead.
+Charmhub no longer accepts the registration of new libraries. The `Charmhub-hosted charm
+libraries deprecation notice <https://ubu.link/charmhub-libraries-deprecation>`__
+explains the rationale behind this change and instructions on what to do instead.
 
 To learn how to manage a library, visit :external+ops:ref:`manage-libraries`.
 

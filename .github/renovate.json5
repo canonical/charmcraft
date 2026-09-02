@@ -38,5 +38,5 @@
       datasourceTemplate: "maven",
       depNameTemplate: "org.springframework.boot:spring-boot-starter-parent",
     },
-  ],  
+  ],
 }

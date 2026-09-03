@@ -1,3 +1,5 @@
+.. meta::
+    :description: Reference the integrations supplied by the framework extension.
 
 Relations
 ---------

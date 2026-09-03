@@ -101,6 +101,8 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.5.
 
+- `#2661 <https://github.com/canonical/charmcraft/issues/2661>`__
+  Packing a charm sometimes fails with "Too many levels of symbolic links"
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
 

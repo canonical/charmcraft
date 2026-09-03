@@ -42,18 +42,12 @@ See more: :ref:`register-a-name`
 View the available channels
 ---------------------------
 
-To view a charm's channels on Charmhub, run ``charmcraft status`` followed by the name
-of the charm. E.g.,
-
-.. code-block:: bash
-
-    charmcraft status my-awesome-charm
-
-The following output shows four channels, all of which have the same track, ``latest``,
-but different risk levels, namely, ``edge``, ``beta``, ``candidate``, and ``stable``.
+To view your charm's channels on Charmhub, run ``charmcraft status`` followed by the
+name of the charm.
 
 .. terminal::
-    :output-only:
+
+    charmcraft status my-awesome-charm
 
     Track    Channel    Version    Revision
     latest   stable     -          -

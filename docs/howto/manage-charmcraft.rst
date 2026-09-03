@@ -63,26 +63,9 @@ Charmhub commands work natively:
     username:  jdoe
     id:        xxxxxxxxxxxxxxxxxxxxxxxxx
 
-In macOS, Charmcraft defaults to Multipass to build the charms in a container matching
-the target bases. Running pack asks to setup Multipass if not already installed, and
-continues with the packing process:
-
-.. terminal::
-
-    charmcraft pack
-
-    Multipass is required, but not installed. Do you wish to install Multipass and configure it with the defaults? [y/N]: y
-    ==> Downloading https://github.com/canonical/multipass/releases/download/v1.7.2/multipass-1.7.2+mac-Darwin.pkg
-    Already downloaded: /Users/jdoe/Library/Caches/Homebrew/downloads/4237fcef800faa84459a2911c3818dfa76f1532d693b151438f1c8266318715b--multipass-1.7.2+mac-Darwin.pkg
-    ==> Installing Cask multipass
-    ==> Running installer for multipass; your password may be necessary.
-    Package installers may write to any location; options such as `--appdir` are ignored.
-    installer: Package name is multipass
-    installer: Installing at base path /
-    installer: The install was successful.
-    🍺  multipass was successfully installed!
-    Packing charm 'test-charm_ubuntu-20.04-amd64.charm'...
-    Starting charmcraft-test-charm-12886917363-0-0-amd64 ...
+On macOS, Charmcraft defaults to Multipass for the build environment. If Multipass isn't
+installed on the system, Charmcraft will offer to install it the first time you run the
+``charmcraft pack`` command.
 
 You can also install Charmcraft in an isolated environment.
 
@@ -99,26 +82,19 @@ on any platform, as it will give you an isolated development environment.
 
 First, `install Multipass <https://documentation.ubuntu.com/multipass/latest/how-to-guides/install-multipass/>`_.
 
-Second, use Multipass to provision a virtual machine. The following command will launch
-a fresh new VM with 4 cores, 8GB RAM and a 20GB disk and the name ‘charm-dev':
+Then, provision a virtual machine with Multipass. The following command launches
+a fresh new VM with 4 cores, 8GB RAM, a 20GB disk. and the name 'charm-dev':
 
 .. code-block:: bash
 
     multipass launch --cpus 4 --memory 8G --disk 20G --name charm-dev
 
-Last, open a shell in your new Ubuntu virtual machine, and install Charmcraft there:
+Open a shell in the resulting Ubuntu virtual machine and install Charmcraft there:
 
-.. terminal::
+.. code-block:: bash
 
     multipass shell charm-dev
-
-.. terminal::
-    :user: ubuntu
-    :host: charm-dev
-
     sudo snap install charmcraft --classic
-
-    charmcraft 2.2.0 from Canonical✓ installed
 
 That's it. You can now start typing in Charmcraft commands.
 

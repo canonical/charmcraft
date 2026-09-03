@@ -69,9 +69,9 @@ maintained separately from Charmcraft.
 Release a charm revision into a channel
 ---------------------------------------
 
-To :ref:`ref_commands_release` a specific charm revision to a channel, run ``charmcraft release``,
-followed by the name of the charm and flags specifying the revision and
-its target channel. For example,
+To release a charm revision to a channel, run :ref:`charmcraft release
+<ref_commands_release>` followed by the name of the charm, the revision number, and the
+target channel. For example:
 
 .. terminal::
 

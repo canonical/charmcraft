@@ -124,14 +124,18 @@ then run  ``charmcraft expand-extensions``. For example:
         provides:
           metrics-endpoint:
             interface: prometheus_scrape
+            optional: true
           grafana-dashboard:
             interface: grafana_dashboard
+            optional: true
         requires:
           logging:
             interface: loki_push_api
+            optional: true
           ingress:
             interface: ingress
             limit: 1
+            optional: true
         resources:
           flask-app-image:
             type: oci-image

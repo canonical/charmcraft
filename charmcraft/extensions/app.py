@@ -329,12 +329,18 @@ class _AppBase(SinglePlatformExtension):
             "peers": {"secret-storage": {"interface": "secret-storage"}},
             "actions": self.actions,
             "requires": {
-                "logging": {"interface": "loki_push_api"},
-                "ingress": {"interface": "ingress", "limit": 1},
+                "logging": {"interface": "loki_push_api", "optional": True},
+                "ingress": {"interface": "ingress", "limit": 1, "optional": True},
             },
             "provides": {
-                "metrics-endpoint": {"interface": "prometheus_scrape"},
-                "grafana-dashboard": {"interface": "grafana_dashboard"},
+                "metrics-endpoint": {
+                    "interface": "prometheus_scrape",
+                    "optional": True,
+                },
+                "grafana-dashboard": {
+                    "interface": "grafana_dashboard",
+                    "optional": True,
+                },
             },
             "config": {"options": copy.deepcopy(self.options)},
             "parts": {

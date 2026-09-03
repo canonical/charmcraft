@@ -13,14 +13,18 @@ relations, as they were automatically supplied by the |framework| extension:
     provides:
       metrics-endpoint:
         interface: prometheus_scrape
+        optional: true
       grafana-dashboard:
         interface: grafana_dashboard
+        optional: true
     requires:
       logging:
         interface: loki_push_api
+        optional: true
       ingress:
         interface: ingress
         limit: 1
+        optional: true
 
 In addition to these relations, in each ``provides`` and ``requires``
 block you may specify further relations, to integrate with

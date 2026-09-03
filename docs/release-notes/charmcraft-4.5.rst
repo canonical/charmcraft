@@ -58,6 +58,21 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
+Optional relations in 12-factor app charms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The relations supplied by the 12-factor app extensions are now marked as
+``optional: true`` in the charm's metadata. This applies to the ``logging`` and
+``ingress`` relations in ``requires``, and the ``metrics-endpoint`` and
+``grafana-dashboard`` relations in ``provides``.
+
+None of these relations were ever required for the charm to reach an active
+state. The ``optional`` key is informational only, so this change doesn't alter
+how your charm behaves. It does let tools that read charm metadata, such as
+automated test harnesses, determine which relations they need to satisfy before
+deploying your charm.
+
+
 <Feature A>
 ~~~~~~~~~~~
 

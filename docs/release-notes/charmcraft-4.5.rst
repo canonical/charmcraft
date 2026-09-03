@@ -39,13 +39,17 @@ Non-snap installations of Charmcraft have the following dependencies:
 What's new
 ----------
 
-Charmcraft 4.5 brings the following features, integrations, and improvements.
+Charmcraft 4.5 brings the following new features.
 
+Monorepo support
+~~~~~~~~~~~~~~~~
 
-<Important change>
-~~~~~~~~~~~~~~~~~~
-
-<Describe the most important change in this release and how it affects users.>
+Charmcraft now supports packing charms located within monorepos when the
+``CHARMCRAFT_EXPERIMENTAL_MONOREPO`` environment variable is enabled. In this mode,
+Charmcraft mounts the root of the enclosing Git repository into the build instance.
+Charms can then access shared dependencies located in parent or sibling directories.
+The necessary project file changes and commands to enable this feature are
+described in :ref:`pack-a-charm-in-a-monorepo`.
 
 
 Minor features
@@ -78,10 +82,14 @@ Feature deprecations
 The following features are deprecated in Charmcraft 4.5.
 
 
-<Deprecated feature C>
-~~~~~~~~~~~~~~~~~~~~~~
+Library registration
+~~~~~~~~~~~~~~~~~~~~
 
-<Describe the deprecation status, alternatives, and migration guidance.>
+Charmhub no longer accepts the registration of new libraries, so the ``charmcraft
+create-lib`` command now exits with an error that points to the `Charmhub-hosted charm
+libraries deprecation notice <https://ubu.link/charmhub-libraries-deprecation>`__, which
+explains what to do instead. New and existing charm libraries should now be distributed
+as Python packages.
 
 
 Scheduled feature deprecations

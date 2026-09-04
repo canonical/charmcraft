@@ -13,8 +13,6 @@ keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
-.. include:: /reuse/reference/extensions/non_root_runtime.rst
-
 .. _django-framework-extension-database:
 
 Database requirement
@@ -31,6 +29,8 @@ for every application, such as
 `MySQL <https://www.mysql.com/>`_. See the
 :ref:`how-to guide <manage-12-factor-app-charms>` for how to deploy
 a database and integrate the Django application with it.
+
+.. include:: /reuse/reference/extensions/non_root_runtime.rst
 
 .. _django-framework-extension-config-options:
 

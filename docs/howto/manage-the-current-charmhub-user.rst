@@ -14,8 +14,13 @@ How you log in depends on whether you're working in a local or remote environmen
 Local environments
 ~~~~~~~~~~~~~~~~~~
 
-To log in to Charmhub, run the :ref:`charmcraft login <ref_commands_login>` command,
-which will open a web browser and prompt you to log in with your Ubuntu One account.
+To log in to Charmhub, run:
+
+.. code-block:: bash
+
+    charmcraft login
+
+This will open a web browser and prompt you to log in with your Ubuntu One account.
 
 Remote environments
 ~~~~~~~~~~~~~~~~~~~

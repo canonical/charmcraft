@@ -83,7 +83,7 @@ on any platform, as it will give you an isolated development environment.
 First, `install Multipass <https://documentation.ubuntu.com/multipass/latest/how-to-guides/install-multipass/>`_.
 
 Then, provision a virtual machine with Multipass. The following command launches
-a fresh new VM with 4 cores, 8GB RAM, a 20GB disk. and the name 'charm-dev':
+a fresh new VM with 4 cores, 8GB RAM, a 20GB disk, and the name 'charm-dev':
 
 .. code-block:: bash
 

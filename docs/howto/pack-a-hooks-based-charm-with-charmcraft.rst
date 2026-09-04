@@ -44,7 +44,7 @@ hooks-based charm, as shown below:
           - icon.svg
           - metadata.yaml
 
-Then, you can pack the charm by running:
+Then, pack the charm by running:
 
 .. code-block:: bash
 

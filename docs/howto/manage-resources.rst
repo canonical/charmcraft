@@ -47,9 +47,8 @@ the resource (cf. ``charmcraft.yaml``), and ``--filepath=<path to file resource>
 
     Revision 1 created of resource 'someresource' for charm 'my-super-charm'
 
-The ``--image`` option must be passed the OCI image's long or short SHA hash. If the
-short SHA hash is used, the image must be present locally so its long SHA hash can be
-retrieved.
+The ``--image`` option must be passed an OCI image digest, prefixed with ``sha256:``, or
+a local image ID.
 
 .. terminal::
 

@@ -30,6 +30,8 @@ for every application, such as
 :ref:`how-to guide <manage-12-factor-app-charms>` for how to deploy
 a database and integrate the Django application with it.
 
+.. include:: /reuse/reference/extensions/non_root_runtime.rst
+
 .. _django-framework-extension-config-options:
 
 ``config.options`` key

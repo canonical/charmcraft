@@ -44,7 +44,9 @@ APP_METADATA = craft_application.AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
-    source_ignore_patterns=["*.charm", "charmcraft.yaml"],
+    # .venv and .tox are ignored as a workaround for a craft-parts bug.
+    # See: https://github.com/canonical/craft-parts/issues/1703
+    source_ignore_patterns=["*.charm", "charmcraft.yaml", ".venv", ".tox"],
     docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
     mandatory_adoptable_fields=[],  # Version field is not mandatory.

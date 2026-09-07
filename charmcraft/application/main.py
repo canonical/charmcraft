@@ -159,10 +159,11 @@ class Charmcraft(craft_application.Application):
             dispatcher = self._get_dispatcher()
             dispatcher.load_command(self.app_config)
             parsed_args = dispatcher.parsed_args()
+            requested_project_dir = getattr(
+                parsed_args, "project_dir_option", None
+            ) or getattr(parsed_args, "project_dir", None)
             new_project_dir = (
-                getattr(parsed_args, "project_dir", self.project_dir)
-                .expanduser()
-                .resolve()
+                (requested_project_dir or self.project_dir).expanduser().resolve()
             )
             if new_project_dir != self.project_dir:
                 self.project_dir = new_project_dir

@@ -1,4 +1,4 @@
-# Copyright 2020-2024 Canonical Ltd.
+# Copyright 2020-2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,42 +16,35 @@
 
 """Infrastructure for the 'init' command."""
 
+from __future__ import annotations
+
 import argparse
-import os
+import importlib.resources
 import pathlib
-import re
-from datetime import date
+from typing import cast
 
-from craft_cli import CraftError, emit
+from craft_application.commands import InitCommand as BaseInitCommand
+from craft_cli import CraftError
 
-from charmcraft.application.commands import base
-from charmcraft.utils import get_templates_environment, make_executable
+from charmcraft.services.init import CharmcraftInitService
 
-# the available profiles and in which directory the template can be found
-# NOTE: init-<framework>-framework-26.04 template dirs exist but are intentionally
-# not wired into PROFILES yet. They are staged for when ubuntu@26.04 + the V2
-# (uv-based) 12-factor extensions become the default. Wiring them in will also
-# require handling the experimental-extensions gating during `init`/`tox` tests.
-PROFILES = {
-    "kubernetes": "init-kubernetes",
-    "machine": "init-machine",
-    "flask-framework": "init-flask-framework",
-    "django-framework": "init-django-framework",
-    "go-framework": "init-go-framework",
-    "fastapi-framework": "init-fastapi-framework",
-    "expressjs-framework": "init-expressjs-framework",
-    "spring-boot-framework": "init-spring-boot-framework",
-    "test-kubernetes": "test-kubernetes",
-    "test-machine": "test-machine",
-}
 DEFAULT_PROFILE = "kubernetes"
-
+DEFAULT_BASES = {
+    "django-framework": "ubuntu@24.04",
+    "expressjs-framework": "ubuntu@24.04",
+    "fastapi-framework": "ubuntu@24.04",
+    "flask-framework": "ubuntu@24.04",
+    "go-framework": "ubuntu@24.04",
+    "kubernetes": "ubuntu@24.04",
+    "machine": "ubuntu@24.04",
+    "spring-boot-framework": "ubuntu@24.04",
+}
 
 _overview = """
 Initialize a charm operator package tree and files.
 
-This command will modify the directory to create the necessary files for a
-charm operator package. By default it will work in the current directory.
+This command creates a charm project in the current directory or in
+<project-dir> when provided.
 
 Available profiles are:
     kubernetes:
@@ -63,6 +56,9 @@ Available profiles are:
 
     django-framework:
         A basic Kubernetes charm for a 12-factor Django app.
+
+    expressjs-framework:
+        A basic Kubernetes charm for a 12-factor ExpressJS app.
 
     fastapi-framework:
         A basic Kubernetes charm for a 12-factor FastAPI app.
@@ -76,114 +72,40 @@ Available profiles are:
     spring-boot-framework:
         A basic Kubernetes charm for a 12-factor Spring Boot app.
 
-Depending on the profile choice, Charmcraft will setup the following tree of
-files and directories::
-
-    .
-    ├── charmcraft.yaml            - Charm build configuration
-    ├── CONTRIBUTING.md            - Instructions for how to build and develop
-    │                                your charm
-    ├── LICENSE                    - Your charm license, we recommend Apache 2
-    ├── pyproject.toml             - Configuration for testing, formatting and
-    │                                linting tools. Specifies Python dependencies for
-    │                                all profiles except 12-factor app charms
-    │                                targeting Ubuntu 24.04 LTS or lower
-    ├── README.md                  - Frontpage for your charmhub.io/charm/
-    ├── requirements.txt           - Python dependencies for 12-factor app charms
-    │                                targeting Ubuntu 24.04 LTS or lower
-    ├── src
-    │   ├── charm.py               - Python code that operates your charm's workload
-    │   └── <workload>.py          - Standalone module for workload-specific logic,
-    │                                created if profile is 'kubernetes' or 'machine'
-    ├── tests
-    │   ├── integration
-    │   │   └── test_charm.py      - Integration tests
-    │   └── unit
-    │       └── test_charm.py      - Unit tests
-    ├── tox.ini                    - Configuration for tox, the tool to run all tests
-
-You will need to edit at least charmcraft.yaml and README.md.
-
-Your minimal operator code is in src/charm.py, which uses the 'ops' Python framework.
-See https://documentation.ubuntu.com/ops/latest/. There are also some sample unit and
-integration tests, which you can run using 'tox -e unit' and 'tox -e integration'.
+Use --base to select a base-specific variant of a profile when one is
+available.
 """
 
 
-def _make_success_message(project_files: list[str]) -> str:
-    project_files_str = "\n".join(sorted(project_files, key=str.casefold))
-    default_message = f"""\
-Created project files for your charm:
-
-{project_files_str}
-...
-"""
-    uv_message = """\
-To manage your charm's dependencies, use uv.
-
-To migrate from the Charm plugin to the uv plugin, see:
-https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
-
-Next steps:
-
-1. Run 'uv lock'
-2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
-3. Write your charm code and tests
-"""
-    if "pyproject.toml" in project_files and "requirements.txt" not in project_files:
-        return f"{default_message}\n{uv_message}"
-    return default_message
-
-
-def _make_workload_module_name(charm_name: str) -> str:
-    module_name = charm_name.replace("-", "_")
-    generic_names = [  # put names with more components at the beginning of the list
-        "k8s_charm",
-        "k8s_operator",
-        "machine_charm",
-        "machine_operator",
-        "vm_charm",
-        "vm_operator",
-        "charm",
-        "operator",
-        "k8s",
-        "machine",
-        "vm",
-    ]
-    if module_name in generic_names:
-        return "workload"
-    for generic_name in generic_names:
-        generic_suffix = f"_{generic_name}"
-        if module_name.endswith(generic_suffix):
-            return module_name[: -len(generic_suffix)]
-    return module_name
-
-
-def _get_users_full_name_gecos() -> str | None:
-    """Get user's full name from Gecos (/etc/passwd)."""
-    try:
-        import pwd  # noqa: PLC0415
-    except ImportError:
-        return None
-    try:
-        return pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0]
-    except KeyError:
-        return None
-
-
-class InitCommand(base.CharmcraftCommand):
+class InitCommand(BaseInitCommand):
     """Initialize a directory to be a charm project."""
 
-    name = "init"
     help_msg = "Initialize a charm operator package tree and files"
     overview = _overview
-    common = True
+    default_profile = DEFAULT_PROFILE
 
-    def fill_parser(self, parser):
-        """Specify command's specific parameters."""
-        parser.add_argument(
-            "--name", help="The name of the charm; defaults to the directory name"
+    @property
+    def parent_template_dir(self) -> pathlib.Path:
+        """Return the directory containing Charmcraft init profiles."""
+        with importlib.resources.path(
+            self._app.name, "templates"
+        ) as parent_template_dir:
+            return parent_template_dir / "init"
+
+    @property
+    def profiles(self) -> list[str]:
+        """Return profile names without their base variant suffixes."""
+        return sorted(
+            {
+                template_dir.name.partition("__")[0]
+                for template_dir in self.parent_template_dir.iterdir()
+                if template_dir.is_dir()
+            }
         )
+
+    def fill_parser(self, parser: argparse.ArgumentParser) -> None:
+        """Specify Charmcraft's init parameters."""
+        super().fill_parser(parser)
         parser.add_argument(
             "--author",
             help="The charm author; defaults to the current user name per GECOS",
@@ -192,100 +114,50 @@ class InitCommand(base.CharmcraftCommand):
             "-f",
             "--force",
             action="store_true",
-            help="Initialize even if the directory is not empty (will not overwrite files)",
-        )
-        parser.add_argument(
-            "--profile",
-            choices=list(PROFILES),
-            default=DEFAULT_PROFILE,
-            help=f"Use the specified project profile (defaults to '{DEFAULT_PROFILE}')",
+            help="Initialize without overwriting files that already exist",
         )
         parser.add_argument(
             "-p",
             "--project-dir",
+            dest="project_dir_option",
             type=pathlib.Path,
-            default=pathlib.Path.cwd(),
-            help="Specify the project's directory (defaults to current)",
+            default=None,
+            help="Deprecated alias for the positional <project-dir> argument",
         )
 
-    def run(self, parsed_args: argparse.Namespace):
-        """Execute command's actual functionality."""
-        init_dirpath = parsed_args.project_dir.resolve()
-        if not init_dirpath.exists():
-            init_dirpath.mkdir(parents=True)
-        elif any(init_dirpath.iterdir()) and not parsed_args.force:
-            tpl = "{!r} is not empty (consider using --force to work on nonempty directories)"
-            raise CraftError(tpl.format(str(init_dirpath)))
-        emit.debug(f"Using project directory {str(init_dirpath)!r}")
+    def run(self, parsed_args: argparse.Namespace) -> None:
+        """Initialize a charm project with Charmcraft-specific context."""
+        project_dir = self._get_project_dir(parsed_args)
+        if parsed_args.name is None:
+            parsed_args.name = project_dir.name
 
-        if parsed_args.author is None:
-            parsed_args.author = _get_users_full_name_gecos()
+        init_service = cast(CharmcraftInitService, self._services.get("init"))
+        init_service.validate_project_name(parsed_args.name)
+        init_service.configure_init(
+            author=parsed_args.author,
+            force=parsed_args.force,
+            project_name=parsed_args.name,
+        )
+        super().run(parsed_args)
 
-        if not parsed_args.author:
-            raise CraftError(
-                "Unable to automatically determine author's name, specify it with --author"
+    def _get_template_dir(self, parsed_args: argparse.Namespace) -> pathlib.Path:
+        """Resolve Charmcraft's default base before generic variant selection."""
+        if parsed_args.base is None and parsed_args.profile in DEFAULT_BASES:
+            return (
+                self.parent_template_dir
+                / f"{parsed_args.profile}__{DEFAULT_BASES[parsed_args.profile]}"
             )
+        return super()._get_template_dir(parsed_args)
 
-        if not parsed_args.name:
-            parsed_args.name = init_dirpath.name
-            emit.debug(f"Set project name to '{parsed_args.name}'")
-
-        if not re.match(r"[a-z][a-z0-9-]*[a-z0-9]$", parsed_args.name):
+    @staticmethod
+    def _get_project_dir(parsed_args: argparse.Namespace) -> pathlib.Path:
+        """Resolve the positional project directory or its deprecated alias."""
+        project_dir = parsed_args.project_dir
+        project_dir_option = getattr(parsed_args, "project_dir_option", None)
+        if project_dir is not None and project_dir_option is not None:
             raise CraftError(
-                f"{parsed_args.name} is not a valid charm name. "
-                "The name must start with a lowercase letter "
-                "and contain only alphanumeric characters and hyphens."
+                "Cannot use <project-dir> and --project-dir at the same time."
             )
-
-        context = {
-            "name": parsed_args.name,
-            "author": parsed_args.author,
-            "year": date.today().year,
-            "class_name": "".join(re.split(r"\W+", parsed_args.name.title())) + "Charm",
-            "workload_module": _make_workload_module_name(parsed_args.name),
-        }
-
-        template_directory = PROFILES[parsed_args.profile]
-        env = get_templates_environment(template_directory)
-
-        executables = [
-            "run_tests",
-            "src/charm.py",
-            "tests/spread/lib/tools/retry",
-            "spread/.extension",
-        ]
-        notable_project_files = [  # files worth mentioning in the command output
-            "charmcraft.yaml",
-            "pyproject.toml",
-            "README.md",
-            "requirements.txt",
-            "spread.yaml",
-            "spread/deploy/basic/task.yaml",
-            "src/charm.py",
-        ]
-        mention_project_files = []  # files to actually mention in the command output
-        for template_name in env.list_templates():
-            if not template_name.endswith(".j2"):
-                continue
-            template = env.get_template(template_name)
-            template_name = template_name[:-3]
-            emit.debug(f"Rendering {template_name}")
-            path = init_dirpath / template_name
-            if path.exists():
-                continue
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with path.open("wt", encoding="utf8") as fh:
-                out = template.render(context)
-                fh.write(out)
-                if template_name in executables and os.name == "posix":
-                    make_executable(fh)
-                    emit.debug("  made executable")
-            if template_name in notable_project_files:
-                mention_project_files.append(template_name)
-            if template_name == "src/workload.py":
-                workload_module = context["workload_module"]
-                workload_module_path = path.with_name(f"{workload_module}.py")
-                path.rename(workload_module_path)
-                mention_project_files.append(f"src/{workload_module}.py")
-        for line in _make_success_message(mention_project_files).split("\n"):
-            emit.message(line)
+        return pathlib.Path(
+            project_dir or project_dir_option or pathlib.Path.cwd()
+        ).resolve()

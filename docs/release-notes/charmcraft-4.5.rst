@@ -58,10 +58,12 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
-<Feature A>
-~~~~~~~~~~~
+Base-specific init profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- <Add a short description of a minor change.>
+The ``charmcraft init`` command now accepts ``--base`` for profiles that provide
+base-specific variants. The 12-factor framework profiles support ``ubuntu@24.04`` and
+``ubuntu@26.04``. They continue to use Ubuntu 24.04 when ``--base`` isn't provided.
 
 
 Backwards-incompatible changes

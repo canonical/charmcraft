@@ -87,10 +87,15 @@ class InitCommand(BaseInitCommand):
     @property
     def parent_template_dir(self) -> pathlib.Path:
         """Return the directory containing Charmcraft init profiles."""
-        with importlib.resources.path(
-            self._app.name, "templates"
-        ) as parent_template_dir:
-            return parent_template_dir / "init"
+        if not hasattr(self, "_template_dir_stack"):
+            import contextlib
+
+            self._template_dir_stack = contextlib.ExitStack()
+            parent_templates = self._template_dir_stack.enter_context(
+                importlib.resources.path(self._app.name, "templates")
+            )
+            self._parent_template_dir = parent_templates / "init"
+        return self._parent_template_dir
 
     @property
     def profiles(self) -> list[str]:

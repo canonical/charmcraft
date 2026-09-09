@@ -50,7 +50,9 @@ class PackageService(services.PackageService):
 
     def _project_file_path(self, filename: str) -> pathlib.Path:
         """Return the path for a project-local file."""
-        return self._services.get("project").resolve_project_file_path().parent / filename
+        return (
+            self._services.get("project").resolve_project_file_path().parent / filename
+        )
 
     def _has_reactive_plugin(self) -> bool:
         """Return whether the project uses the reactive plugin."""

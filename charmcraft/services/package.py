@@ -100,9 +100,8 @@ class PackageService(services.PackageService):
         )
 
     @package_file(const.METADATA_FILENAME)
-    def get_metadata_yaml(self, partition: str | None = None) -> str | Literal[False]:  # noqa: ARG002
+    def get_metadata_yaml(self, partition: str | None = None) -> str | Literal[False]:
         """Get the mediated metadata.yaml contents."""
-
         metadata_path = self._project_file_path(const.METADATA_FILENAME)
 
         if self._has_reactive_plugin():

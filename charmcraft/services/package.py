@@ -100,9 +100,8 @@ class PackageService(services.PackageService):
         )
 
     @package_file(const.METADATA_FILENAME)
-    def get_metadata_yaml(self, partition: str | None = None) -> str | bool:
+    def get_metadata_yaml(self, partition: str | None = None) -> str | bool:  # noqa: ARG002
         """Get the mediated metadata.yaml contents."""
-        del partition
 
         metadata_path = self._project_file_path(const.METADATA_FILENAME)
 

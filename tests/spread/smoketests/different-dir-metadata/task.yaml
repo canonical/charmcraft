@@ -1,8 +1,9 @@
 summary: pack a charm with separate metadata files from a different directory
 
 restore: |
-  rm -f tester-grpc*.charm
+  rm -f tester-grpc*.charm charm/tester-grpc*.charm
 
 execute: |
   charmcraft pack --verbose --project-dir=charm
-  test -f tester-grpc*.charm
+  test ! -f tester-grpc*.charm
+  test -f charm/tester-grpc*.charm

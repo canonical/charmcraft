@@ -51,6 +51,7 @@ APP_METADATA = craft_application.AppMetadata(
     supports_multi_base=True,
     mandatory_adoptable_fields=[],  # Version field is not mandatory.
     allow_git_build_root=True,
+    always_repack=False,
 )
 
 

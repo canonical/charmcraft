@@ -204,15 +204,30 @@ def test_profiles_discovered_from_templates(init_command):
     assert init_command.profiles == sorted(ALL_PROFILES)
 
 
-def test_explicit_base_variant(new_path, init_command):
-    init_command.run(create_namespace(profile="flask-framework", base="ubuntu@26.04"))
+@pytest.mark.parametrize(
+    "profile",
+    [
+        "django-framework",
+        "expressjs-framework",
+        "flask-framework",
+        "fastapi-framework",
+        "go-framework",
+        "spring-boot-framework",
+    ],
+)
+@pytest.mark.parametrize("base", ["ubuntu@24.04", "ubuntu@26.04"])
+def test_explicit_base_variant(new_path, init_command, profile: str, base: str):
+    init_command.run(create_namespace(profile=profile, base=base))
 
     project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
 
-    assert project["base"] == "ubuntu@26.04"
-    assert project["charm-user"] == "non-root"
+    assert project["base"] == base
+    assert project.get("charm-user") == ("non-root" if base == "ubuntu@26.04" else None)
     assert (new_path / "pyproject.toml").exists()
-    assert not (new_path / "requirements.txt").exists()
+    if base == "ubuntu@26.04":
+        assert not (new_path / "requirements.txt").exists()
+    elif profile in ["django-framework", "flask-framework", "fastapi-framework"]:
+        assert (new_path / "requirements.txt").exists()
 
 
 def test_unavailable_base_variant(new_path, init_command):

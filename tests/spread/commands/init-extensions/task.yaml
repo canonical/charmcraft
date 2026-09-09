@@ -3,14 +3,16 @@ priority: 500 # This builds pydantic, so do it early
 kill-timeout: 75m # Because it builds pydantic, it takes a long time.
 systems:
   # We only need to run this test once, and it takes a long time.
-  - ubuntu-22.04-64
+  - ubuntu-26.04-64
 environment:
-  PROFILE/flask: flask-framework
-  PROFILE/django: django-framework
-  PROFILE/go: go-framework
-  PROFILE/fastapi: fastapi-framework
-  PROFILE/expressjs: expressjs-framework
-  PROFILE/springboot: spring-boot-framework
+  PROFILE/flask_ubuntu_24_04,flask_ubuntu_26_04: flask-framework
+  PROFILE/django_ubuntu_24_04,django_ubuntu_26_04: django-framework
+  PROFILE/go_ubuntu_24_04,go_ubuntu_26_04: go-framework
+  PROFILE/fastapi_ubuntu_24_04,fastapi_ubuntu_26_04: fastapi-framework
+  PROFILE/expressjs_ubuntu_24_04,expressjs_ubuntu_26_04: expressjs-framework
+  PROFILE/springboot_ubuntu_24_04,springboot_ubuntu_26_04: spring-boot-framework
+  BASE/flask_ubuntu_24_04,django_ubuntu_24_04,go_ubuntu_24_04,fastapi_ubuntu_24_04,expressjs_ubuntu_24_04,springboot_ubuntu_24_04: ubuntu@24.04
+  BASE/flask_ubuntu_26_04,django_ubuntu_26_04,go_ubuntu_26_04,fastapi_ubuntu_26_04,expressjs_ubuntu_26_04,springboot_ubuntu_26_04: ubuntu@26.04
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
 
 prepare: |
@@ -33,7 +35,7 @@ execute: |
 
   mkdir -p test-init
   cd test-init
-  charmcraft init --profile "${PROFILE}" --name hello-world
+  charmcraft init --profile "${PROFILE}" --name hello-world --base "${BASE}"
   charmcraft fetch-libs
   charmcraft pack --verbose
   test -f *.charm

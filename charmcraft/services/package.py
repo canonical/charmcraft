@@ -317,9 +317,9 @@ class PackageService(services.PackageService):
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
-        Note: manifest.yaml is now generated via the @package_file-decorated
+        Note: manifest.yaml is generated via the @package_file-decorated
         get_manifest_yaml() method as part of ST160's mediated packaging flow.
-        This method handles metadata.yaml, actions.yaml, and config.yaml.
+        This method only handles metadata.yaml, actions.yaml, and config.yaml.
 
         :param path: The path to the prime directory.
         """
@@ -327,16 +327,6 @@ class PackageService(services.PackageService):
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         path.mkdir(parents=True, exist_ok=True)
-        svc = cast("AnalysisService", self._services.get("analysis"))
-        lint_results = svc.lint_directory(
-            self._services.get("lifecycle").prime_dir,
-            ignore=self._get_ignored_manifest_checks(project),
-        )
-        manifest = self.get_manifest(lint_results)
-        self._write_asset(
-            self._render_manifest_yaml(manifest),
-            path / const.MANIFEST_FILENAME,
-        )
 
         project_dict = project.marshal()
         is_reactive = self._has_reactive_plugin()

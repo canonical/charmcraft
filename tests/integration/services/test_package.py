@@ -70,7 +70,11 @@ def test_write_metadata(monkeypatch, new_path, package_service, project_path):
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
+        if file.name == const.MANIFEST_FILENAME:
+            continue
         pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
+
+    assert not (test_prime_dir / const.MANIFEST_FILENAME).exists()
 
 
 @freezegun.freeze_time(
@@ -87,11 +91,16 @@ def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path
     expected_prime_dir = project_path.parent / "prime"
 
     (test_prime_dir / const.METADATA_FILENAME).write_text("INVALID!!")
+    (test_prime_dir / const.MANIFEST_FILENAME).write_text("INVALID!!")
 
     package_service.write_metadata(test_prime_dir)
 
     for file in expected_prime_dir.iterdir():
+        if file.name == const.MANIFEST_FILENAME:
+            continue
         pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
+
+    assert (test_prime_dir / const.MANIFEST_FILENAME).read_text() == "INVALID!!"
 
 
 @pytest.mark.parametrize(

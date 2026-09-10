@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -33,6 +33,7 @@ constraints = [
     { name = "matplotlib", specifier = ">=3.7.0" },
     { name = "numpy", specifier = ">=1.22.0" },
     { name = "oauthlib", specifier = ">=3.0" },
+    { name = "ops", specifier = ">=2.0.0" },
     { name = "overrides", specifier = ">=7.3" },
     { name = "protobuf", specifier = "<6.33" },
     { name = "protobuf", specifier = ">=5.0" },
@@ -2644,8 +2645,8 @@ version = "2.4.0+ubuntu4"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2689,8 +2690,8 @@ version = "2.7.7+ubuntu5"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2733,8 +2734,8 @@ version = "2.9.9"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -2751,8 +2752,8 @@ version = "3.0.0+ubuntu1"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
 ]
@@ -3361,8 +3362,8 @@ version = "2025.8.25"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
@@ -3423,8 +3424,8 @@ version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
@@ -3523,8 +3524,8 @@ version = "2025.2.19"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version == '3.11.*'",
 ]
 dependencies = [
@@ -3540,16 +3541,16 @@ wheels = [
 
 [[package]]
 name = "sphinx-terminal"
-version = "1.0.3"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
     { name = "sphinx" },
     { name = "sphinx-copybutton" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/f7/c48cfa302ba9e82687972334b1995e687cab79999a1805cb3d96d67b80dd/sphinx_terminal-1.0.3.tar.gz", hash = "sha256:7a5ae9d20f5e9fd96d7df753e62b5415e33816a4833b73fcd8d60afee4695cbb", size = 95465, upload-time = "2025-12-02T01:10:18.08Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/6a/8a40612509f222dc966d80f9438f6780c3a0b7ed6e849420e9d277e0e15f/sphinx_terminal-1.1.0.tar.gz", hash = "sha256:447d883c33a6d790b66bc23cce90ef5ce87d19af63ff4bbb8d44eb441152333a", size = 106116, upload-time = "2026-07-16T17:13:15.092Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/09/6afb984b5b58f6d522dea00f59b19ffa2405fb72b298803f51ac3df0f31d/sphinx_terminal-1.0.3-py3-none-any.whl", hash = "sha256:127ca5f21d4a4880bb5f8d18e7114f89d66f96df425478fb376376697e8315ac", size = 20096, upload-time = "2025-12-02T01:10:16.851Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/e2/09e3f6530238d3a654a74ca36af4187be72938f8adfcf9b0fd24bf92fe06/sphinx_terminal-1.1.0-py3-none-any.whl", hash = "sha256:a2985d7982b68cd2271473148c65ccef62259ef644b5b76053cd709a5e15175d", size = 21265, upload-time = "2026-07-16T17:13:13.815Z" },
 ]
 
 [[package]]

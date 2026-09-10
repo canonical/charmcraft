@@ -25,7 +25,6 @@ import pathlib
 from typing import cast
 
 from craft_application.commands import InitCommand as BaseInitCommand
-from craft_cli import CraftError
 
 from charmcraft.services.init import CharmcraftInitService
 
@@ -158,8 +157,9 @@ class InitCommand(BaseInitCommand):
         parser.add_argument(
             "-p",
             "--project-dir",
+            dest="project_dir_option",
             type=pathlib.Path,
-            default=pathlib.Path.cwd(),
+            default=None,
             help="Specify the project's directory (defaults to current)",
         )
 
@@ -192,10 +192,6 @@ class InitCommand(BaseInitCommand):
         """Resolve the positional project directory or its deprecated alias."""
         project_dir = parsed_args.project_dir
         project_dir_option = getattr(parsed_args, "project_dir_option", None)
-        if project_dir is not None and project_dir_option is not None:
-            raise CraftError(
-                "Cannot use <project-dir> and --project-dir at the same time."
-            )
         return pathlib.Path(
-            project_dir or project_dir_option or pathlib.Path.cwd()
+            project_dir_option or project_dir or pathlib.Path.cwd()
         ).resolve()

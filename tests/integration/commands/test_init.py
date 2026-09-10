@@ -313,7 +313,6 @@ def test_nonoverlapping_file_does_not_require_force(new_path, init_command):
 def test_project_dir_alias(new_path, init_command):
     project_dir = new_path / "project"
     params = create_namespace(project_dir=new_path)
-    params.project_dir = None
     params.project_dir_option = project_dir
 
     init_command.run(params)
@@ -321,17 +320,26 @@ def test_project_dir_alias(new_path, init_command):
     assert (project_dir / "charmcraft.yaml").exists()
 
 
-def test_project_dir_arguments_conflict(new_path, init_command):
-    with pytest.raises(
-        errors.CraftError,
-        match="Cannot use <project-dir> and --project-dir at the same time",
-    ):
-        init_command.run(
-            create_namespace(
-                project_dir=new_path / "positional",
-                project_dir_option=new_path / "option",
-            )
+def test_project_dir_alias_parser(init_command):
+    parser = argparse.ArgumentParser()
+    init_command.fill_parser(parser)
+
+    params = parser.parse_args(["--project-dir=project"])
+
+    assert params.project_dir is None
+    assert params.project_dir_option == pathlib.Path("project")
+
+
+def test_project_dir_alias_takes_precedence(new_path, init_command):
+    option = new_path / "option"
+    init_command.run(
+        create_namespace(
+            project_dir=new_path / "positional",
+            project_dir_option=option,
         )
+    )
+
+    assert (option / "charmcraft.yaml").exists()
 
 
 @pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag", "camelCase"])

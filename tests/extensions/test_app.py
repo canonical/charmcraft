@@ -22,15 +22,21 @@ from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
     DjangoFrameworkV1,
+    DjangoFrameworkV2,
     ExpressJSFrameworkFactory,
     ExpressJSFrameworkV1,
+    ExpressJSFrameworkV2,
     FastAPIFrameworkFactory,
     FastAPIFrameworkV1,
+    FastAPIFrameworkV2,
     FlaskFrameworkFactory,
     FlaskFrameworkV1,
+    FlaskFrameworkV2,
     GoFrameworkFactory,
     GoFrameworkV1,
+    GoFrameworkV2,
     SpringBootFrameworkV1,
+    SpringBootFrameworkV2,
 )
 
 NON_OPTIONAL_OPTIONS = {
@@ -121,12 +127,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "flask-app-image": {
@@ -206,12 +222,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "django-app-image": {
@@ -281,12 +307,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "app-image": {
@@ -356,12 +392,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "app-image": {
@@ -431,12 +477,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "app-image": {
@@ -495,12 +551,22 @@ def make_spring_boot_input_yaml():
                 },
                 "peers": {"secret-storage": {"interface": "secret-storage"}},
                 "provides": {
-                    "metrics-endpoint": {"interface": "prometheus_scrape"},
-                    "grafana-dashboard": {"interface": "grafana_dashboard"},
+                    "metrics-endpoint": {
+                        "interface": "prometheus_scrape",
+                        "optional": True,
+                    },
+                    "grafana-dashboard": {
+                        "interface": "grafana_dashboard",
+                        "optional": True,
+                    },
                 },
                 "requires": {
-                    "logging": {"interface": "loki_push_api"},
-                    "ingress": {"interface": "ingress", "limit": 1},
+                    "logging": {"interface": "loki_push_api", "optional": True},
+                    "ingress": {
+                        "interface": "ingress",
+                        "limit": 1,
+                        "optional": True,
+                    },
                 },
                 "resources": {
                     "app-image": {
@@ -954,15 +1020,42 @@ def test_flask_merge_relation(flask_input_yaml, tmp_path):
     flask_input_yaml["requires"] = new_requires
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["provides"] == {
-        "metrics-endpoint": {"interface": "prometheus_scrape"},
-        "grafana-dashboard": {"interface": "grafana_dashboard"},
+        "metrics-endpoint": {"interface": "prometheus_scrape", "optional": True},
+        "grafana-dashboard": {"interface": "grafana_dashboard", "optional": True},
         **new_provides,
     }
     assert applied["requires"] == {
-        "logging": {"interface": "loki_push_api"},
-        "ingress": {"interface": "ingress", "limit": 1},
+        "logging": {"interface": "loki_push_api", "optional": True},
+        "ingress": {"interface": "ingress", "limit": 1, "optional": True},
         **new_requires,
     }
+
+
+@pytest.mark.parametrize(
+    "extension_class",
+    [
+        DjangoFrameworkV1,
+        DjangoFrameworkV2,
+        ExpressJSFrameworkV1,
+        ExpressJSFrameworkV2,
+        FastAPIFrameworkV1,
+        FastAPIFrameworkV2,
+        FlaskFrameworkV1,
+        FlaskFrameworkV2,
+        GoFrameworkV1,
+        GoFrameworkV2,
+        SpringBootFrameworkV1,
+        SpringBootFrameworkV2,
+    ],
+)
+def test_extension_supplied_relations_are_optional(extension_class, tmp_path):
+    extension = extension_class(project_root=tmp_path, yaml_data={})
+    snippet = extension._get_root_snippet()
+
+    assert snippet["requires"]["logging"]["optional"] is True
+    assert snippet["requires"]["ingress"]["optional"] is True
+    assert snippet["provides"]["metrics-endpoint"]["optional"] is True
+    assert snippet["provides"]["grafana-dashboard"]["optional"] is True
 
 
 def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):

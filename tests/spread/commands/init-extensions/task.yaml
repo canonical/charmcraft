@@ -18,6 +18,9 @@ environment:
 prepare: |
   tests.pkgs install pipx python3-venv
   pipx install --force tox
+  if [ "${BASE}" = "ubuntu@26.04" ]; then
+    pipx inject tox tox-uv
+  fi
 
 restore: |
   pushd test-init
@@ -46,4 +49,9 @@ execute: |
   # expand charmcraft.yaml for the scenario tests to work
   charmcraft expand-extensions > charmcraft-expanded.yaml
   mv charmcraft-expanded.yaml charmcraft.yaml
-  ~/.local/bin/tox -c ../tox.ini -e unit
+  if [ "${BASE}" = "ubuntu@26.04" ]; then
+    cp -r ../tests .
+    ~/.local/bin/tox -e unit
+  else
+    ~/.local/bin/tox -c ../tox.ini -e unit
+  fi

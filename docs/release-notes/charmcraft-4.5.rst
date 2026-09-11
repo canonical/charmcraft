@@ -62,8 +62,8 @@ Base-specific init profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``charmcraft init`` command now accepts ``--base`` for profiles that provide
-base-specific variants. The 12-factor framework profiles(django, flask, fastapi, go,
- expressjs and spring-boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
+base-specific variants. The 12-factor framework profiles (Django, Flask, FastAPI, Go,
+ExpressJS, and Spring Boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
 They continue to use Ubuntu 24.04 when ``--base`` isn't provided.
 
 

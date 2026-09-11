@@ -4,7 +4,7 @@
 [project]
 name = "{{ name }}"
 version = "0.0.1"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 
 # Dependencies of the charm code
 # You should list the dependencies of the code in src/, including any charm libraries from PyPI.
@@ -13,17 +13,12 @@ requires-python = ">=3.10"
 # 'charm-libs' block in charmcraft.yaml, run `charmcraft fetch-libs` to download the libraries,
 # then inspect the libraries for dependencies specified in PYDEPS. List those dependencies here.
 dependencies = [
-    "dpcharmlibs-interfaces==1.0.2",
-    "jinja2==3.1.6",
-    "jsonschema==4.26",
-    "ops==3.7.1",
-    "paas-charm>=1.0",
+    "paas-charm>=2.0.dev0",
 ]
 [dependency-groups]
 # PYDEPS from libraries that the charm uses.
 charmlibs-pydeps = [
     "cosl==1.9.1",
-    "pydantic==2.13.3",
 ]
 # Dependencies of linting and static type checks
 lint = [

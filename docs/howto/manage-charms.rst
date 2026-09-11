@@ -26,7 +26,7 @@ in your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 
-    charmcraft init --name <charm name> --profile <profile>
+    charmcraft init --name <charm name> --profile <profile> [--base <base>]
 
 This will create all the necessary files and populate them with useful content.
 
@@ -37,20 +37,35 @@ If the charm name you want is different from the current directory name, don't s
 charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
 
+Profiles that support multiple bases use Ubuntu 24.04 by default. To select another
+available base variant, provide the base in ``<distribution>@<version>`` format. For
+example, initialize an Ubuntu 26.04 Flask charm with
+``--profile flask-framework --base ubuntu@26.04``.
+
 .. dropdown:: Example session
 
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
 
-        charmcraft init --name my-flask-app-k8s --profile flask-framework
+        charmcraft init --name my-flask-app-k8s --profile flask-framework --base ubuntu@26.04
 
         Created project files for your charm:
 
         charmcraft.yaml
         pyproject.toml
-        requirements.txt
         src/charm.py
         ...
+
+        To manage your charm's dependencies, use uv.
+
+        To migrate from the Charm plugin to the uv plugin, see:
+        https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+
+        Next steps:
+
+        1. Run 'uv lock'
+        2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
+        3. Write your charm code and tests
 
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
@@ -58,7 +73,7 @@ profile, you get the ``kubernetes`` profile.
         ls -R
 
         .:
-        charmcraft.yaml  pyproject.toml  requirements.txt  src  tox.ini
+        charmcraft.yaml  pyproject.toml  src  tox.ini
 
         ./src:
         charm.py

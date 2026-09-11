@@ -23,6 +23,7 @@ import os
 import pathlib
 import shutil
 from collections.abc import Iterable
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, cast
 
 import craft_platforms
@@ -78,6 +79,7 @@ class PackageService(services.PackageService):
         self, prime_dir: pathlib.Path, dest_dir: pathlib.Path
     ) -> pathlib.Path:
         """Pack a prime directory as a charm for a given set of bases."""
+        self._materialize_package_files(None)
         charm_name = self.get_charm_name()
         charm_path = dest_dir / charm_name
         emit.progress(f"Packing charm {charm_name}")
@@ -120,6 +122,87 @@ class PackageService(services.PackageService):
 
         return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
 
+    def _get_existing_manifest_timestamp(self) -> str | None:
+        """Get the charmcraft_started_at timestamp from an existing manifest.
+
+        Returns the timestamp if a manifest.yaml exists in the prime directory,
+        or None if no manifest exists. This enables stable timestamps across
+        repeated pack runs when the lifecycle is skipped.
+        """
+        prime_dir = self._services.get("lifecycle").prime_dir
+        manifest_path = prime_dir / const.MANIFEST_FILENAME
+        if manifest_path.is_file():
+            try:
+                existing = yaml.safe_load(manifest_path.read_text())
+                if isinstance(existing, dict):
+                    started_at = existing.get("charmcraft-started-at")
+                    if started_at is not None:
+                        if isinstance(started_at, datetime | date):
+                            return started_at.isoformat()
+                        return str(started_at)
+            except yaml.YAMLError:
+                pass
+        return None
+
+    def _get_ignored_manifest_checks(
+        self, project: BasesCharm | PlatformCharm
+    ) -> set[str]:
+        """Get ignored lint and attribute checks for manifest generation."""
+        if not project.analysis:
+            return set()
+
+        return {
+            *project.analysis.ignore.linters,
+            *project.analysis.ignore.attributes,
+        }
+
+    def _render_manifest_yaml(self, manifest: Manifest) -> str:
+        """Render manifest.yaml contents.
+
+        We need to include unset/default values in order to ensure that the
+        architecture is included on each base in the manifest, even when the
+        architectures are inferred. However, we also need to exclude Nones so that
+        image-info isn't included in manifest.yaml if it doesn't exist.
+        """
+        return utils.dump_yaml(
+            manifest.model_dump(
+                mode="json",
+                by_alias=True,
+                exclude_unset=False,
+                exclude_none=True,
+            )
+        )
+
+    @package_file(const.MANIFEST_FILENAME)
+    def get_manifest_yaml(self, partition: str | None = None) -> str:
+        """Get the mediated manifest.yaml contents.
+
+        This method is decorated with @package_file to participate in ST160's
+        conditional repack logic. For timestamp stability, the charmcraft_started_at
+        value is reused from the existing manifest when available, preventing
+        unnecessary repacks on repeated pack runs.
+        """
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
+        analysis_svc = cast("AnalysisService", self._services.get("analysis"))
+        lint_results = list(
+            analysis_svc.lint_directory(
+                self._services.get("lifecycle").prime_dir,
+                ignore=self._get_ignored_manifest_checks(project),
+            )
+        )
+
+        started_at = self._get_existing_manifest_timestamp()
+        if started_at is None:
+            started_at = str(
+                self._services.get("state").get("charmcraft", "started_at")
+            )
+
+        return self._render_manifest_yaml(
+            self.get_manifest(lint_results, started_at=started_at)
+        )
+
     def _write_file_or_object(
         self, model: dict | None, filename: str, dest_dir: pathlib.Path
     ) -> None:
@@ -143,7 +226,12 @@ class PackageService(services.PackageService):
         with dest_path.open("wt+") as dest_file:
             yaml.safe_dump(model, dest_file)
 
-    def get_manifest(self, lint_results: Iterable[lint.CheckResult]) -> Manifest:
+    def get_manifest(
+        self,
+        lint_results: Iterable[lint.CheckResult],
+        *,
+        started_at: str | None = None,
+    ) -> Manifest:
         """Get the manifest for this charm."""
         attributes = [
             Attribute(name=result.name, result=result.result)
@@ -160,11 +248,14 @@ class PackageService(services.PackageService):
 
         bases = self.get_manifest_bases()
 
+        if started_at is None:
+            started_at = str(
+                self._services.get("state").get("charmcraft", "started_at")
+            )
+
         return Manifest(
             charmcraft_version=charmcraft.__version__,
-            charmcraft_started_at=str(
-                self._services.get("state").get("charmcraft", "started_at")
-            ),
+            charmcraft_started_at=started_at,
             analysis={"attributes": attributes},
             image_info=image_info,
             bases=bases,
@@ -229,41 +320,16 @@ class PackageService(services.PackageService):
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
+        Note: manifest.yaml is generated via the @package_file-decorated
+        get_manifest_yaml() method as part of ST160's mediated packaging flow.
+        This method only handles metadata.yaml, actions.yaml, and config.yaml.
+
         :param path: The path to the prime directory.
         """
         project = cast(
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         path.mkdir(parents=True, exist_ok=True)
-        if project.analysis:
-            ignore_checkers = {
-                *project.analysis.ignore.linters,
-                *project.analysis.ignore.attributes,
-            }
-        else:
-            ignore_checkers = set()
-        svc = cast("AnalysisService", self._services.get("analysis"))
-        lint_results = svc.lint_directory(
-            self._services.get("lifecycle").prime_dir, ignore=ignore_checkers
-        )
-        manifest = self.get_manifest(lint_results)
-        # Converting the manifest to a dictionary here is fairly fragile.
-        # We need to include unset/default values in order to ensure that the
-        # architecture is included on each base in the manifest, even when the
-        # architectures are inferred. However, we also need to exclude Nones so that
-        # image-info isn't included in manifest.yaml if it doesn't exist.
-        # Tread carefully when changing this next line. Treat it like an antique
-        # crystal wine glass.
-        (path / "manifest.yaml").write_text(
-            utils.dump_yaml(
-                manifest.model_dump(
-                    mode="json",
-                    by_alias=True,
-                    exclude_unset=False,
-                    exclude_none=True,
-                )
-            )
-        )
 
         project_dict = project.marshal()
         is_reactive = self._has_reactive_plugin()

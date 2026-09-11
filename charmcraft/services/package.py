@@ -79,6 +79,7 @@ class PackageService(services.PackageService):
         self, prime_dir: pathlib.Path, dest_dir: pathlib.Path
     ) -> pathlib.Path:
         """Pack a prime directory as a charm for a given set of bases."""
+        self._materialize_package_files(None)
         charm_name = self.get_charm_name()
         charm_path = dest_dir / charm_name
         emit.progress(f"Packing charm {charm_name}")

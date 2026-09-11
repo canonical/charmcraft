@@ -248,7 +248,9 @@ class PackageService(services.PackageService):
         bases = self.get_manifest_bases()
 
         if started_at is None:
-            started_at = str(self._services.get("state").get("charmcraft", "started_at"))
+            started_at = str(
+                self._services.get("state").get("charmcraft", "started_at")
+            )
 
         return Manifest(
             charmcraft_version=charmcraft.__version__,

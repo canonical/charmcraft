@@ -47,3 +47,19 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
+
+# (Optional) Actions that an operator can run against a unit.
+# More information on this section at:
+# https://canonical.com/juju/docs/charmcraft/stable/reference/files/charmcraft-yaml-file/#actions
+# General actions documentation:
+# https://canonical.com/juju/docs/juju-cli/3.6/reference/action/
+actions:
+  pause:
+    description: |
+      Stop the workload, leaving the unit deployed.
+
+      Use this to take a unit out of service, for example before performing
+      maintenance on the machine. Run the resume action to start the workload.
+  resume:
+    description: |
+      Start the workload after running the pause action.

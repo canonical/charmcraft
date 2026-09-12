@@ -21,7 +21,6 @@ import dataclasses
 import os
 import pathlib
 import re
-import string
 import sys
 import tempfile
 import textwrap
@@ -76,9 +75,14 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_URL = "https://ubu.link/charmhub-libraries-deprecation"
 CHARMLIBS_DEPRECATION_WARNING = (
     "WARNING: Charmhub-hosted charm libraries are deprecated. "
-    "Go to https://ubu.link/charmhub-libraries-deprecation for more information."
+    f"Go to {CHARMLIBS_DEPRECATION_URL} for more information."
+)
+CREATE_LIB_REMOVAL_MESSAGE = (
+    "ERROR: New libraries can no longer be registered on Charmhub. "
+    f"For rationale and alternatives, consult {CHARMLIBS_DEPRECATION_URL}."
 )
 
 
@@ -1259,34 +1263,21 @@ class StatusCommand(CharmcraftCommand):
 
 
 class CreateLibCommand(CharmcraftCommand):
-    """Create a charm library."""
+    """Create a charm library (no longer supported)."""
 
     name = "create-lib"
-    help_msg = "Create a charm library"
+    help_msg = "Create a charm library (no longer supported)"
     overview = textwrap.dedent(
-        """
+        f"""
         Create a Charmhub-hosted library.
 
-        Charmcraft manages charm libraries, which are published by charmers
-        to help other charmers integrate their charms. This command creates
-        a new library in your charm which you are publishing for others.
+        Charmhub no longer accepts the registration of new libraries, so
+        this command exits with an error.
 
-        This command MUST be run inside your charm directory with a valid
-        metadata.yaml. It will create the Python library with API version 0
-        initially:
-
-          lib/charms/<yourcharm>/v0/<name>.py
-
-        Each library has a unique identifier assigned by Charmhub that
-        supports accurate updates of libraries even if charms are renamed.
-        Charmcraft will request a unique ID from Charmhub and initialise a
-        template Python library.
-
-        Creating a charm library will take you through login if needed.
+        See {CHARMLIBS_DEPRECATION_URL} for the rationale behind this
+        change and instructions on what to do instead.
     """
     )
-    format_option = True
-    always_load_project = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1294,63 +1285,9 @@ class CreateLibCommand(CharmcraftCommand):
         parser.add_argument("name", help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
-        """Run the command."""
-        _emit_charmlibs_deprecation_warning()
-        lib_name = parsed_args.name
-        valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
-        valid_first_char = string.ascii_lowercase
-        if (
-            set(lib_name) - valid_all_chars
-            or not lib_name
-            or lib_name[0] not in valid_first_char
-        ):
-            raise CraftError(
-                "Invalid library name. Must only use lowercase alphanumeric "
-                "characters and underscore, starting with alpha."
-            )
-
-        charm_name = (
-            self._services.get("project").get().name or utils.get_name_from_yaml()
-        )
-        if charm_name is None:
-            raise CraftError(
-                "Cannot find a valid charm name in charm definition. "
-                "Check that you are using the correct project directory."
-            )
-
-        # '-' is valid in charm names, but not in a python import
-        # mutate the name so the path is a valid import
-        importable_charm_name = utils.create_importable_name(charm_name)
-
-        # all libraries born with API version 0
-        full_name = f"charms.{importable_charm_name}.v0.{lib_name}"
-        lib_data = utils.get_lib_info(full_name=full_name)
-        lib_path = lib_data.path
-        if lib_path.exists():
-            raise CraftError(f"This library already exists: {str(lib_path)!r}.")
-
-        emit.progress(f"Creating library {lib_name}.")
-        store = Store(env.get_store_config())
-        lib_id = store.create_library_id(charm_name, lib_name)
-
-        # create the new library file from the template
-        environment = utils.get_templates_environment("charmlibs")
-        template = environment.get_template("new_library.py.j2")
-        context = {"lib_id": lib_id}
-        try:
-            lib_path.parent.mkdir(parents=True, exist_ok=True)
-            lib_path.write_text(template.render(context))
-        except OSError as exc:
-            raise CraftError(
-                f"Error writing the library in {str(lib_path)!r}: {exc!r}."
-            )
-
-        if parsed_args.format:
-            info = {"library_id": lib_id}
-            emit.message(cli.format_content(info, parsed_args.format))
-        else:
-            emit.message(f"Library {full_name} created with id {lib_id}.")
-            emit.message(f"Consider 'git add {lib_path}'.")
+        """Fail early, as Charmhub no longer accepts new libraries."""
+        emit.progress(CREATE_LIB_REMOVAL_MESSAGE, permanent=True)
+        return 1
 
 
 class PublishLibCommand(CharmcraftCommand):

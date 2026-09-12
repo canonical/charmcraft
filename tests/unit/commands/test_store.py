@@ -36,6 +36,7 @@ from charmcraft.application.commands import SetResourceArchitecturesCommand
 from charmcraft.application.commands import store as store_commands
 from charmcraft.application.commands.store import (
     CHARMLIBS_DEPRECATION_WARNING,
+    CREATE_LIB_REMOVAL_MESSAGE,
     CreateLibCommand,
     FetchLibs,
     ListLibCommand,
@@ -262,27 +263,12 @@ def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path, emitter) 
     emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
-def test_create_lib_warns_deprecation(
-    monkeypatch, new_path: pathlib.Path, emitter, service_factory
-) -> None:
-    mock_store = mock.Mock()
-    mock_store.return_value.create_library_id.return_value = "lib-id"
-    monkeypatch.setattr(store_commands, "Store", mock_store)
-    mock_template = mock.Mock()
-    mock_template.render.return_value = "LIBAPI = 0\nLIBID = 'lib-id'\nLIBPATCH = 1\n"
-    mock_environment = mock.Mock()
-    mock_environment.get_template.return_value = mock_template
-    monkeypatch.setattr(
-        store_commands.utils,
-        "get_templates_environment",
-        mock.Mock(return_value=mock_environment),
-    )
-
+def test_create_lib_fails_early(emitter, service_factory) -> None:
     cmd = CreateLibCommand({"app": APP_METADATA, "services": service_factory})
 
-    cmd.run(argparse.Namespace(name="my_lib", format=False))
+    assert cmd.run(argparse.Namespace(name="my_lib")) == 1
 
-    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+    emitter.assert_progress(CREATE_LIB_REMOVAL_MESSAGE, permanent=True)
 
 
 def test_list_lib_warns_deprecation(monkeypatch, emitter, service_factory) -> None:

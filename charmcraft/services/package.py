@@ -177,7 +177,7 @@ class PackageService(services.PackageService):
     def get_manifest_yaml(self, partition: str | None = None) -> str:
         """Get the mediated manifest.yaml contents.
 
-        This method is decorated with @package_file to participate in ST160's
+        This method is decorated with @package_file to participate in the
         conditional repack logic. For timestamp stability, the charmcraft_started_at
         value is reused from the existing manifest when available, preventing
         unnecessary repacks on repeated pack runs.
@@ -321,7 +321,7 @@ class PackageService(services.PackageService):
         """Write additional charm metadata.
 
         Note: manifest.yaml is generated via the @package_file-decorated
-        get_manifest_yaml() method as part of ST160's mediated packaging flow.
+        get_manifest_yaml() method as part of the mediated packaging flow.
         This method only handles metadata.yaml, actions.yaml, and config.yaml.
 
         :param path: The path to the prime directory.

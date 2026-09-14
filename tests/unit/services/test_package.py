@@ -88,6 +88,10 @@ def test_get_metadata(
     assert package_service.metadata == metadata
 
 
+def test_supports_conditional_repack(package_service):
+    assert package_service.supports_conditional_repack is True
+
+
 def test_get_metadata_yaml_prefers_project_file(
     package_service,
     service_factory: craft_application.ServiceFactory,
@@ -267,24 +271,24 @@ def test_get_manifest_yaml_reuses_unquoted_timestamp(
     assert existing_timestamp in result
 
 
-def test_write_metadata_writes_manifest_yaml(
+def test_write_metadata_does_not_write_manifest_yaml(
     package_service,
     service_factory: craft_application.ServiceFactory,
 ):
-    """Test that write_metadata still writes manifest.yaml during the transition."""
+    """Test that manifest.yaml stays under ST160 package-file mediation."""
     dirs = service_factory.get("lifecycle").project_info.dirs
     service_factory.get("project").get_platforms()
 
     package_service.write_metadata(dirs.prime_dir)
 
-    assert (dirs.prime_dir / const.MANIFEST_FILENAME).is_file()
+    assert not (dirs.prime_dir / const.MANIFEST_FILENAME).exists()
 
 
-def test_write_metadata_overwrites_existing_manifest_yaml(
+def test_write_metadata_does_not_overwrite_existing_manifest_yaml(
     package_service,
     service_factory: craft_application.ServiceFactory,
 ):
-    """Test that write_metadata refreshes manifest.yaml from the generator."""
+    """Test that legacy metadata writes do not touch manifest.yaml."""
     dirs = service_factory.get("lifecycle").project_info.dirs
     manifest_path = dirs.prime_dir / const.MANIFEST_FILENAME
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -292,7 +296,7 @@ def test_write_metadata_overwrites_existing_manifest_yaml(
 
     package_service.write_metadata(dirs.prime_dir)
 
-    assert manifest_path.read_text() != "old: manifest\n"
+    assert manifest_path.read_text() == "old: manifest\n"
 
 
 def test_get_manifest_yaml_uses_state_timestamp_when_no_manifest(

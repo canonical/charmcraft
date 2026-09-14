@@ -93,6 +93,17 @@ class PackageService(services.PackageService):
         platform = platform.replace(":", "-")
         return f"{name}_{platform}.charm"
 
+    def get_artifacts(self) -> dict[str | None, pathlib.Path]:
+        """Get the output artifacts for ST160-mediated packing."""
+        return {None: self.output_dir / self.get_charm_name()}
+
+    def _pack(self, *, name: str | None = None, path: pathlib.Path) -> None:
+        """Pack a specific charm artifact for ST160-mediated packing."""
+        if name is not None:
+            raise RuntimeError(f"Unexpected partition name {name!r} for charm pack")
+
+        self.pack_charm(self._services.get("lifecycle").prime_dir, path.parent)
+
     @property
     def metadata(self) -> CharmMetadata:
         """Metadata model for this project."""
@@ -319,11 +330,9 @@ class PackageService(services.PackageService):
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
-        Note: manifest.yaml contents are generated via the
-        @package_file-decorated get_manifest_yaml() method, but are still
-        written here until Charmcraft switches to the full mediated packing
-        flow. This method also handles metadata.yaml, actions.yaml, and
-        config.yaml.
+        Note: manifest.yaml is mediated via the @package_file-decorated
+        get_manifest_yaml() method during packaging, so this legacy helper only
+        handles metadata.yaml, actions.yaml, and config.yaml.
 
         :param path: The path to the prime directory.
         """
@@ -331,7 +340,6 @@ class PackageService(services.PackageService):
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         path.mkdir(parents=True, exist_ok=True)
-        self._write_asset(self.get_manifest_yaml(), path / const.MANIFEST_FILENAME)
 
         project_dict = project.marshal()
         is_reactive = self._has_reactive_plugin()

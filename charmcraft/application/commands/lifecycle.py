@@ -179,9 +179,9 @@ class PackCommand(lifecycle.PackCommand):
 
         # Move artifacts in the outer instance.
         if not is_managed_mode():
-            state_service = self._services.get("state")
+            package_service = self._services.get("package")
             try:
-                artifacts = cast(dict[str, pathlib.Path], state_service.get("artifact"))
+                pack_state = package_service.read_state()
             except KeyError:
                 craft_cli.emit.debug(
                     "Could not find artifacts in the state service. Not moving."
@@ -190,9 +190,10 @@ class PackCommand(lifecycle.PackCommand):
                 project_dir = parsed_args.project_dir or pathlib.Path.cwd()
                 output_dir = parsed_args.output or pathlib.Path.cwd()
 
-                for artifact in artifacts.values():
-                    old_path = project_dir / artifact
-                    new_path = output_dir / artifact
+                for artifact in pack_state.artifacts:
+                    artifact_path = artifact.path
+                    old_path = project_dir / artifact_path
+                    new_path = output_dir / artifact_path
                     if old_path != new_path:
                         new_path.parent.mkdir(parents=True, exist_ok=True)
                         old_path.rename(new_path)

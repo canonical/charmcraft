@@ -63,13 +63,12 @@ inside the library file, then repeat the publish procedure.
 To share your library with other charm developers, navigate to the host charm's Charmhub
 page, go to **Libraries** tab, then copy and share the URL at the top of the page.
 
-View the libs published for a charm
------------------------------------
+View a charm's published libraries
+----------------------------------
 
-The easiest way to find an existing library for a given charm is via
-:ref:`charmcraft list-lib <ref_commands_list-lib>`, as shown below. This
-will query Charmhub and show which libraries are published for the specified
-charm, along with API/patch versions.
+To view a charm's libraries, run the :ref:`charmcraft list-lib <ref_commands_list-lib>`
+command. This will show the given charm's libraries alongside their API and patch
+versions.
 
 .. terminal::
 

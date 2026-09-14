@@ -193,8 +193,7 @@ Finally, call the action using:
 If successful, the terminal will output something like:
 
 .. terminal::
-
-    juju run django-app/0 clearsession
+    :output-only:
 
     Running operation 1 with 1 task
       - task 2 on unit-django-app-0
@@ -244,8 +243,7 @@ Finally, call the action using:
 If successful, the terminal will output something like:
 
 .. terminal::
-
-    juju run flask-app/0 updatelogfile logfile="/tmp/example.log"
+    :output-only:
 
     Running operation 1 with 1 task
       - task 2 on unit-flask-app-0

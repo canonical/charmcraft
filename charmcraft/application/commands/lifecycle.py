@@ -33,6 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import argparse
 
     from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.package import PackageService
     from charmcraft.services.store import StoreService
 
 
@@ -179,7 +180,7 @@ class PackCommand(lifecycle.PackCommand):
 
         # Move artifacts in the outer instance.
         if not is_managed_mode():
-            package_service = self._services.get("package")
+            package_service = cast("PackageService", self._services.get("package"))
             try:
                 artifacts = package_service.read_artifacts_state()
             except KeyError:

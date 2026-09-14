@@ -79,7 +79,6 @@ class PackageService(services.PackageService):
         self, prime_dir: pathlib.Path, dest_dir: pathlib.Path
     ) -> pathlib.Path:
         """Pack a prime directory as a charm for a given set of bases."""
-        self._materialize_package_files(None)
         charm_name = self.get_charm_name()
         charm_path = dest_dir / charm_name
         emit.progress(f"Packing charm {charm_name}")
@@ -320,9 +319,11 @@ class PackageService(services.PackageService):
     def write_metadata(self, path: pathlib.Path) -> None:
         """Write additional charm metadata.
 
-        Note: manifest.yaml is generated via the @package_file-decorated
-        get_manifest_yaml() method as part of the mediated packaging flow.
-        This method only handles metadata.yaml, actions.yaml, and config.yaml.
+        Note: manifest.yaml contents are generated via the
+        @package_file-decorated get_manifest_yaml() method, but are still
+        written here until Charmcraft switches to the full mediated packing
+        flow. This method also handles metadata.yaml, actions.yaml, and
+        config.yaml.
 
         :param path: The path to the prime directory.
         """
@@ -330,6 +331,7 @@ class PackageService(services.PackageService):
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )
         path.mkdir(parents=True, exist_ok=True)
+        self._write_asset(self.get_manifest_yaml(), path / const.MANIFEST_FILENAME)
 
         project_dict = project.marshal()
         is_reactive = self._has_reactive_plugin()

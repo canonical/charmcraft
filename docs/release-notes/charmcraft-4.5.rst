@@ -58,6 +58,17 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
+Example actions in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` profile now declare ``pause`` and ``resume``
+actions, which stop and start the workload without removing the unit. Charms created
+with the ``kubernetes`` profile now declare a ``restart`` action, which restarts the
+workload's Pebble service.
+
+Both profiles scaffold unit and integration tests for their actions.
+
+
 <Feature A>
 ~~~~~~~~~~~
 

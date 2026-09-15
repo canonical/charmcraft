@@ -58,11 +58,11 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
-    oci-archive:flask-hello-world_0.1_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/flask-hello-world:0.1
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/flask-hello-world \
+    ./flask-hello-world_0.1_$(dpkg --print-architecture).rock
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -90,7 +90,7 @@ execute: |
   juju deploy \
     ./flask-hello-world_$(dpkg --print-architecture).charm \
     flask-hello-world --resource \
-    flask-app-image=localhost:32000/flask-hello-world:0.1
+    flask-app-image=flask-hello-world:0.1
   # [docs:deploy-flask-app-end]
 
   # [docs:deploy-nginx]
@@ -120,9 +120,11 @@ execute: |
 
   # [docs:docker-update]
   rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:flask-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/flask-hello-world:0.2
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/flask-hello-world \
+    ./flask-hello-world_0.2_$(dpkg --print-architecture).rock
   # [docs:docker-update-end]
 
   cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -132,7 +134,7 @@ execute: |
   charmcraft pack
   juju refresh flask-hello-world \
     --path=./flask-hello-world_$(dpkg --print-architecture).charm \
-    --resource flask-app-image=localhost:32000/flask-hello-world:0.2
+    --resource flask-app-image=flask-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
@@ -158,9 +160,11 @@ execute: |
 
   # [docs:docker-2nd-update]
   rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:flask-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/flask-hello-world:0.3
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/flask-hello-world \
+    ./flask-hello-world_0.3_$(dpkg --print-architecture).rock
   # [docs:docker-2nd-update-end]
 
   cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -170,7 +174,7 @@ execute: |
   charmcraft pack
   juju refresh flask-hello-world \
     --path=./flask-hello-world_$(dpkg --print-architecture).charm \
-    --resource flask-app-image=localhost:32000/flask-hello-world:0.3
+    --resource flask-app-image=flask-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
   # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.

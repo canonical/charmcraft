@@ -218,9 +218,9 @@ the terminal will respond with something similar to
 The file name reflects your system's architecture. After
 the initial pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry, which stores OCI
-archives so they can be downloaded and deployed in the Kubernetes cluster.
-Copy the rock:
+The rock needs to be imported into the Canonical Kubernetes cluster so
+that the image is available to Juju. Import the rock directly into the
+cluster's containerd image store:
 
 .. literalinclude:: code/expressjs/task.yaml
     :language: bash
@@ -230,12 +230,13 @@ Copy the rock:
 
 This command contains the following pieces:
 
-- ``--insecure-policy``: adopts a permissive policy that
-  removes the need for a dedicated policy file.
-- ``--dest-tls-verify=false``: disables the need for HTTPS
-  and verify certificates while interacting with the MicroK8s registry.
-- ``oci-archive``: specifies the rock we created for our Express app.
-- ``docker``: specifies the name of the image in the MicroK8s registry.
+- ``--address``: points to the containerd socket that
+  Canonical Kubernetes uses.
+- ``--namespace k8s.io``: imports the image into the containerd
+  namespace that Kubernetes reads from.
+- ``images import``: imports the rock we created for our Express app.
+- ``--base-name``: sets the image name that the charm references. The
+  image tag is taken from the rock's version.
 
 Create the charm
 ----------------
@@ -383,7 +384,7 @@ following output:
     juju status
 
     Model                  Controller      Cloud/Region        Version  SLA          Timestamp
-    expressjs-hello-world  dev-controller  microk8s/localhost  3.6.5    unsupported  12:24:51+03:00
+    expressjs-hello-world  dev-controller  k8s-cloud  3.6.5    unsupported  12:24:51+03:00
 
     App                    Version  Status  Scale  Charm                  Channel  Rev  Address        Exposed  Message
     expressjs-hello-world           active      1  expressjs-hello-world             0  10.152.183.38  no

@@ -66,11 +66,11 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
-    oci-archive:go-hello-world_0.1_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/go-hello-world:0.1
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/go-hello-world \
+    ./go-hello-world_0.1_$(dpkg --print-architecture).rock
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -102,7 +102,7 @@ execute: |
   juju deploy \
     ./go-hello-world_$(dpkg --print-architecture).charm \
     go-hello-world --resource \
-    app-image=localhost:32000/go-hello-world:0.1
+    app-image=go-hello-world:0.1
   # [docs:deploy-go-app-end]
 
   # [docs:deploy-nginx]
@@ -132,9 +132,11 @@ execute: |
 
   # [docs:docker-update]
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:go-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/go-hello-world:0.2
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/go-hello-world \
+    ./go-hello-world_0.2_$(dpkg --print-architecture).rock
   # [docs:docker-update-end]
 
   cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -144,7 +146,7 @@ execute: |
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
   juju refresh go-hello-world \
     --path=./go-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/go-hello-world:0.2
+    --resource app-image=go-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
@@ -181,9 +183,11 @@ execute: |
 
   # [docs:docker-2nd-update]
   ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:go-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/go-hello-world:0.3
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/go-hello-world \
+    ./go-hello-world_0.3_$(dpkg --print-architecture).rock
   # [docs:docker-2nd-update-end]
 
   cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -193,7 +197,7 @@ execute: |
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
   juju refresh go-hello-world \
     --path=./go-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/go-hello-world:0.3
+    --resource app-image=go-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
   # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.

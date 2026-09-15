@@ -78,11 +78,11 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
-    oci-archive:django-hello-world_0.1_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/django-hello-world:0.1
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/django-hello-world \
+    ./django-hello-world_0.1_$(dpkg --print-architecture).rock
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -114,7 +114,7 @@ execute: |
   juju deploy \
     ./django-hello-world_$(dpkg --print-architecture).charm \
     django-hello-world --resource \
-    django-app-image=localhost:32000/django-hello-world:0.1
+    django-app-image=django-hello-world:0.1
   # [docs:deploy-django-app-end]
 
   # [docs:deploy-postgres]
@@ -176,16 +176,18 @@ execute: |
 
   # [docs:repack-update]
   rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:django-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/django-hello-world:0.2
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/django-hello-world \
+    ./django-hello-world_0.2_$(dpkg --print-architecture).rock
   # [docs:repack-update-end]
 
   # [docs:refresh-deployment]
   cd charm
   juju refresh django-hello-world \
       --path=./django-hello-world_$(dpkg --print-architecture).charm \
-      --resource django-app-image=localhost:32000/django-hello-world:0.2
+      --resource django-app-image=django-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # [docs:disable-debug-mode]
@@ -206,9 +208,11 @@ execute: |
 
   # [docs:repack-2nd-update]
   rockcraft pack
-  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
-    oci-archive:django-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/django-hello-world:0.3
+  sudo /snap/k8s/current/bin/ctr \
+    --address /run/containerd/containerd.sock \
+    --namespace k8s.io images import \
+    --base-name docker.io/library/django-hello-world \
+    ./django-hello-world_0.3_$(dpkg --print-architecture).rock
   # [docs:repack-2nd-update-end]
 
   cd charm
@@ -220,7 +224,7 @@ execute: |
   charmcraft pack
   juju refresh django-hello-world \
     --path=./django-hello-world_$(dpkg --print-architecture).charm \
-    --resource django-app-image=localhost:32000/django-hello-world:0.3
+    --resource django-app-image=django-hello-world:0.3
   # [docs:repack-refresh-2nd-deployment-end]
 
   # Wait for django-hello-world to be active

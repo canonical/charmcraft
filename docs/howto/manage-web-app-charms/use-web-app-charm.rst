@@ -83,25 +83,25 @@ To view the Pebble logs for a deployed web app, run:
 
         .. code-block:: bash
 
-            juju ssh --container django-app <app-name>/0 pebble logs
+            juju ssh --container django-app <APP-NAME>/0 pebble logs
 
         **Express, FastAPI, and Go**
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 pebble logs
+            juju ssh --container app <APP-NAME>/0 pebble logs
 
         **Flask**
 
         .. code-block:: bash
 
-            juju ssh --container flask-app <app-name>/0 pebble logs
+            juju ssh --container flask-app <APP-NAME>/0 pebble logs
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
     .. tab-item:: Ubuntu 26.04 and higher
@@ -111,13 +111,13 @@ To view the Pebble logs for a deployed web app, run:
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 pebble logs
+            juju ssh --container app <APP-NAME>/0 pebble logs
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
 .. seealso::
@@ -139,25 +139,25 @@ To view more details about the web app itself, run:
 
         .. code-block:: bash
 
-            juju ssh --container django-app <app-name>/0 pebble plan
+            juju ssh --container django-app <APP-NAME>/0 pebble plan
 
         **Express, FastAPI, and Go**
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 pebble plan
+            juju ssh --container app <APP-NAME>/0 pebble plan
 
         **Flask**
 
         .. code-block:: bash
 
-            juju ssh --container flask-app <app-name>/0 pebble plan
+            juju ssh --container flask-app <APP-NAME>/0 pebble plan
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
     .. tab-item:: Ubuntu 26.04 and higher
@@ -167,13 +167,13 @@ To view more details about the web app itself, run:
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 pebble plan
+            juju ssh --container app <APP-NAME>/0 pebble plan
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
 This command provides information on what services you may start in your app
@@ -191,7 +191,7 @@ SSH into the Juju container
 You can debug the app directly and monitor its status by :vale-ignore:`SSHing` into the
 Juju container:
 
-For ``<framework>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
+For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 ``go``.
 
 .. tab-set::
@@ -203,28 +203,28 @@ For ``<framework>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 
         .. code-block:: bash
 
-            juju ssh --container django-app <app-name>/0 \
+            juju ssh --container django-app <APP-NAME>/0 \
             pebble exec --context=django -- bash
 
         **Express, FastAPI, and Go**
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 \
-            pebble exec --context=<framework> -- bash
+            juju ssh --container app <APP-NAME>/0 \
+            pebble exec --context=<FRAMEWORK> -- bash
 
         **Flask**
 
         .. code-block:: bash
 
-            juju ssh --container flask-app <app-name>/0 \
+            juju ssh --container flask-app <APP-NAME>/0 \
             pebble exec --context=flask -- bash
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
             /charm/bin/pebble  exec --context=spring-boot -- bash
 
@@ -235,14 +235,14 @@ For ``<framework>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 
         .. code-block:: bash
 
-            juju ssh --container app <app-name>/0 \
-            pebble exec --context=<framework> -- bash
+            juju ssh --container app <APP-NAME>/0 \
+            pebble exec --context=<FRAMEWORK> -- bash
 
         **Spring Boot**
 
         .. code-block:: bash
 
-            juju ssh <app-name>/0 \
+            juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
             /charm/bin/pebble  exec --context=spring-boot -- bash
 

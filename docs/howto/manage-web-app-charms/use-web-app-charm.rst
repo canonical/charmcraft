@@ -76,7 +76,7 @@ To view the Pebble logs for a deployed web app, run:
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
         **Django**
@@ -104,7 +104,7 @@ To view the Pebble logs for a deployed web app, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
         **Django, Express, FastAPI, Flask, and Go**
@@ -132,7 +132,7 @@ To view more details about the web app itself, run:
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
         **Django**
@@ -160,7 +160,7 @@ To view more details about the web app itself, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
         **Django, Express, FastAPI, Flask, and Go**
@@ -196,7 +196,7 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
         **Django**
@@ -228,7 +228,7 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
             /charm/bin/pebble  exec --context=spring-boot -- bash
 
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
         **Django, Express, FastAPI, Flask, and Go**
@@ -314,7 +314,7 @@ name of the web app with the ``-c`` option.
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
         **Django**
@@ -335,7 +335,7 @@ name of the web app with the ``-c`` option.
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
         **All frameworks on MicroK8s**

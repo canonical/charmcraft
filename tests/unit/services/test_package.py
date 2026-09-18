@@ -88,6 +88,10 @@ def test_get_metadata(
     assert package_service.metadata == metadata
 
 
+def test_supports_conditional_repack(package_service):
+    assert package_service.supports_conditional_repack is True
+
+
 def test_get_metadata_yaml_prefers_project_file(
     package_service,
     service_factory: craft_application.ServiceFactory,
@@ -216,6 +220,100 @@ def test_get_manifest(
     )
 
     assert package_service.get_manifest(lint) == expected
+
+
+def test_get_manifest_yaml_basic(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that get_manifest_yaml returns valid YAML content."""
+    service_factory.get("project").get_platforms()
+
+    result = package_service.get_manifest_yaml()
+
+    assert isinstance(result, str)
+    assert "charmcraft_version" in result or "charmcraft-version" in result
+    assert "2020-03-14T00:00:00+00:00" in result
+    assert "bases" in result
+
+
+def test_get_manifest_yaml_reuses_timestamp(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that get_manifest_yaml reuses timestamp from existing manifest."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.prime_dir.mkdir(exist_ok=True)
+    existing_timestamp = "2019-01-01T00:00:00+00:00"
+    (dirs.prime_dir / const.MANIFEST_FILENAME).write_text(
+        f"charmcraft-started-at: '{existing_timestamp}'\n"
+    )
+
+    result = package_service.get_manifest_yaml()
+
+    assert existing_timestamp in result
+
+
+def test_get_manifest_yaml_reuses_unquoted_timestamp(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that get_manifest_yaml coerces parsed YAML timestamps back to strings."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.prime_dir.mkdir(exist_ok=True)
+    existing_timestamp = "2019-01-01T00:00:00+00:00"
+    (dirs.prime_dir / const.MANIFEST_FILENAME).write_text(
+        f"charmcraft-started-at: {existing_timestamp}\n"
+    )
+
+    result = package_service.get_manifest_yaml()
+
+    assert existing_timestamp in result
+
+
+def test_write_metadata_does_not_write_manifest_yaml(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that manifest.yaml stays under ST160 package-file mediation."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    service_factory.get("project").get_platforms()
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert not (dirs.prime_dir / const.MANIFEST_FILENAME).exists()
+
+
+def test_write_metadata_does_not_overwrite_existing_manifest_yaml(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that legacy metadata writes do not touch manifest.yaml."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    manifest_path = dirs.prime_dir / const.MANIFEST_FILENAME
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text("old: manifest\n")
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert manifest_path.read_text() == "old: manifest\n"
+
+
+def test_get_manifest_yaml_uses_state_timestamp_when_no_manifest(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Test that get_manifest_yaml falls back to state timestamp when no manifest exists."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.prime_dir.mkdir(exist_ok=True)
+    state_timestamp = "2021-06-15T12:00:00+00:00"
+    service_factory.get("state").set(
+        "charmcraft", "started_at", value=state_timestamp, overwrite=True
+    )
+
+    result = package_service.get_manifest_yaml()
+
+    assert state_timestamp in result
 
 
 def test_do_not_overwrite_metadata_yaml(

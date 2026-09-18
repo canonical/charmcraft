@@ -37,9 +37,9 @@ If the charm name you want is different from the current directory name, don't s
 charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
 
-Profiles that support multiple bases use Ubuntu 24.04 by default. To select another
+Profiles that support multiple bases use Ubuntu 24.04 LTS by default. To select another
 available base variant, provide the base in ``<distribution>@<version>`` format. For
-example, initialize an Ubuntu 26.04 Flask charm with
+example, initialize an Ubuntu 26.04 LTS Flask charm with
 ``--profile flask-framework --base ubuntu@26.04``.
 
 .. dropdown:: Example session

@@ -61,12 +61,12 @@ Once you have a rock, use ``charmcraft init`` and specify the relevant profile:
 
             charmcraft init --profile spring-boot-framework
 
-These profiles use Ubuntu 24.04 by default. To initialize a profile for Ubuntu 26.04,
-add ``--base ubuntu@26.04`` to the command.
+These profiles use Ubuntu 24.04 LTS by default. To initialize a profile for Ubuntu
+26.04 LTS, add ``--base ubuntu@26.04`` to the command.
 
 Charmcraft automatically creates a ``charmcraft.yaml`` project file, a
 ``pyproject.toml`` file and source code for the charm in your current directory.
-Ubuntu 24.04 profiles also include a ``requirements.txt`` file.
+Ubuntu 24.04 LTS profiles also include a ``requirements.txt`` file.
 
 Configuration
 -------------

@@ -10,6 +10,9 @@ Unless a section states otherwise, the behavior applies to V1 and V2. Ubuntu 24.
 selects V1 and Ubuntu 26.04 LTS selects experimental V2, as described in
 :ref:`extensions`.
 
+V1 provides ``app-secret-key`` as a string and ``app-secret-key-id`` as a Juju secret
+ID. V2 replaces both options with one ``app-secret-key`` option of type ``secret``.
+
 .. tip::
 
     If you'd like to see the full contents contributed by this extension,

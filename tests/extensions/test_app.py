@@ -548,6 +548,8 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -579,14 +581,8 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
-    assert (
-        applied["config"]["options"]["app-secret-key"]
-        == FlaskFrameworkV1.options["flask-secret-key"]
-    )
-    assert (
-        applied["config"]["options"]["app-secret-key-id"]
-        == FlaskFrameworkV1.options["flask-secret-key-id"]
-    )
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert "flask-secret-key" not in applied["config"]["options"]
     assert "flask-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
@@ -620,14 +616,8 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
-    assert (
-        applied["config"]["options"]["app-secret-key"]
-        == DjangoFrameworkV1.options["django-secret-key"]
-    )
-    assert (
-        applied["config"]["options"]["app-secret-key-id"]
-        == DjangoFrameworkV1.options["django-secret-key-id"]
-    )
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert "django-secret-key" not in applied["config"]["options"]
     assert "django-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
@@ -661,6 +651,8 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -692,6 +684,8 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -723,6 +717,8 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         }
     }
     assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",

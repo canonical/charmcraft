@@ -10,9 +10,8 @@ keys that a user may interact with.
 Unless a section states otherwise, the behavior applies to V1 and V2.
 
 V1 uses ``django-secret-key`` and ``django-secret-key-id``. Experimental V2 on Ubuntu
-26.04 LTS uses ``app-secret-key`` and ``app-secret-key-id`` with the same option types
-and descriptions. The base selects the extension version as described in
-:ref:`extensions`.
+26.04 LTS replaces both options with one ``app-secret-key`` option of type ``secret``.
+The base selects the extension version as described in :ref:`extensions`.
 
 .. tip::
 
@@ -176,8 +175,8 @@ The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
-V1 automatically adds ``django-secret-key-id``. V2 automatically adds
-``app-secret-key-id`` instead. The secret must contain a single key ``value``,
+V1 automatically adds ``django-secret-key-id``. V2 automatically adds the
+secret-typed ``app-secret-key`` instead. The secret must contain a single key ``value``,
 which holds the actual Django secret key and is exposed as the
 ``DJANGO_SECRET_KEY`` environment variable. If this configuration option is not set,
 ``DJANGO_SECRET_KEY`` is automatically assigned a random value.

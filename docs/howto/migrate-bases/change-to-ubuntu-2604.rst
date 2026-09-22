@@ -71,8 +71,8 @@ is not automatic.
    metadata and workload contract and is not compatible with V2.
 #. Update generated metadata to use the ``app`` container, ``app-image`` resource,
    and a ``peers`` relation with the ``peers`` interface.
-#. For Flask and Django, rename ``flask-secret-key`` or ``django-secret-key`` and
-   their ``-id`` variants to ``app-secret-key`` and ``app-secret-key-id``.
+#. Replace the V1 string and secret-ID options with one ``app-secret-key`` option of
+   type ``secret``. For Flask and Django, this also removes the framework prefix.
 #. If the charm uses :ref:`paas-config-yaml-file`, verify its top-level V2 keys and
    values before packing.
 #. Build the workload with the matching experimental Ubuntu 26.04 LTS Rockcraft

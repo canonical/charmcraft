@@ -49,9 +49,9 @@ All six V2 framework extensions generate the following contract:
     * - Peer relation
       - ``secret-storage`` with the ``secret-storage`` interface
       - ``peers`` with the ``peers`` interface
-    * - Flask and Django secret options
-      - ``flask-secret-key`` or ``django-secret-key`` and their ``-id`` variants
-      - ``app-secret-key`` and ``app-secret-key-id``
+    * - Secret options
+      - A string secret key and a separate secret-ID option
+      - One ``app-secret-key`` option of type ``secret``
     * - Optional build input
       - None
       - :ref:`paas-config-yaml-file`

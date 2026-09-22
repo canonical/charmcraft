@@ -59,6 +59,15 @@ SECRET_OPTIONS = {
         "and use the output secret ID to configure this option.",
     },
 }
+V2_SECRET_OPTIONS = {
+    "app-secret-key": {
+        **SECRET_OPTIONS["app-secret-key-id"],
+        "description": SECRET_OPTIONS["app-secret-key-id"]["description"].replace(
+            "This configuration is similar to `app-secret-key`, but instead accepts",
+            "Accepts",
+        ),
+    }
+}
 OAUTH_DYNAMIC_OPTIONS = {
     "{endpoint_name}-redirect-path": {
         "type": "string",
@@ -613,8 +622,7 @@ class FlaskFrameworkV2(_AppBaseV2):
             for key, value in FlaskFrameworkV1.options.items()
             if key not in {"flask-secret-key", "flask-secret-key-id"}
         },
-        "app-secret-key": FlaskFrameworkV1.options["flask-secret-key"],
-        "app-secret-key-id": FlaskFrameworkV1.options["flask-secret-key-id"],
+        **V2_SECRET_OPTIONS,
     }
 
 
@@ -681,8 +689,7 @@ class DjangoFrameworkV2(_AppBaseV2):
             for key, value in DjangoFrameworkV1.options.items()
             if key not in {"django-secret-key", "django-secret-key-id"}
         },
-        "app-secret-key": DjangoFrameworkV1.options["django-secret-key"],
-        "app-secret-key-id": DjangoFrameworkV1.options["django-secret-key-id"],
+        **V2_SECRET_OPTIONS,
     }
 
 
@@ -723,7 +730,7 @@ class GoFrameworkV2(_AppBaseV2):
     options = {
         **APP_PORT_OPTION,
         **METRICS_OPTIONS,
-        **SECRET_OPTIONS,
+        **V2_SECRET_OPTIONS,
     }
 
 
@@ -775,7 +782,14 @@ class FastAPIFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor FastAPI applications."""
 
     framework = "fastapi"
-    options = FastAPIFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FastAPIFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFrameworkV1, FastAPIFrameworkV2)
@@ -812,7 +826,14 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = ExpressJSFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in ExpressJSFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 ExpressJSFrameworkFactory = _FrameworkFactory(
@@ -880,7 +901,14 @@ class SpringBootFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
-    options = SpringBootFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in SpringBootFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
     endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options
 
 

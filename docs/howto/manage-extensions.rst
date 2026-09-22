@@ -35,7 +35,7 @@ View details about the extension in use
 ---------------------------------------
 
 Suppose you've initialised a rock / charm with a profile that comes with
-an extension (currently, ``flask-framework``), and your
+an extension, and your
 ``rockcraft.yaml`` / ``charmcraft.yaml > extensions`` lists this
 extension.
 
@@ -75,17 +75,16 @@ extension.
         #     interface: postgresql_client
         #     limit: 1
 
-To view details about what that extension is adding to your charm, set the
-``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` environment variable to ``1``,
-then run  ``charmcraft expand-extensions``. For example:
+To view details about what the V1 extension is adding to your charm, run
+``charmcraft expand-extensions``. V1 extensions on Ubuntu 22.04 LTS and Ubuntu 24.04 LTS
+do not require an experimental feature flag. For example:
 
 .. dropdown:: Expanding an extension
 
     .. terminal::
 
-        CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
+        charmcraft expand-extensions
 
-        *EXPERIMENTAL* extension 'flask-framework' enabled
         name: my-flask-app-k8s
         summary: A very short one-line summary of the flask application.
         description: |
@@ -191,3 +190,13 @@ To expand ``charmcraft.yaml`` using the extensions specified in the file
 and output the resulting configuration to the terminal, run
 :ref:`ref_commands_expand-extensions`. To expand the
 extensions listed in ``rockcraft.yaml``, run :ref:`ref_commands_expand-extensions`.
+
+Ubuntu 26.04 LTS selects experimental V2. Set the feature flag when expanding or
+packing a V2 project:
+
+.. code-block:: bash
+
+    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
+
+The extension has no explicit version key. The project base selects V1 or V2 as
+described in :ref:`extensions`.

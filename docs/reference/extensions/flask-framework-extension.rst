@@ -6,6 +6,12 @@ Flask framework extension
 
 The ``flask-framework`` extension includes configuration options customised for a Flask
 application. This document describes all the keys that a user may interact with.
+Unless a section states otherwise, the behavior applies to V1 and V2.
+
+V1 uses ``flask-secret-key`` and ``flask-secret-key-id``. Experimental V2 on Ubuntu
+26.04 LTS uses ``app-secret-key`` and ``app-secret-key-id`` with the same option types
+and descriptions. The base selects the extension version as described in
+:ref:`extensions`.
 
 .. tip::
 

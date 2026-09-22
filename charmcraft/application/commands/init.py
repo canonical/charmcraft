@@ -64,6 +64,9 @@ Available profiles are:
     django-framework:
         A basic Kubernetes charm for a 12-factor Django app.
 
+    expressjs-framework:
+        A basic Kubernetes charm for a 12-factor Express app.
+
     fastapi-framework:
         A basic Kubernetes charm for a 12-factor FastAPI app.
 

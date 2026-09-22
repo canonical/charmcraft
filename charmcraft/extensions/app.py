@@ -417,6 +417,22 @@ class _AppBase(SinglePlatformExtension):
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
 
+    @staticmethod
+    def _validate_port(parsed: dict[str, Any], key: str) -> None:
+        """Validate a top-level port in ``paas-config.yaml``."""
+        if key not in parsed:
+            return
+        value = parsed[key]
+        if type(value) is not int:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be an integer, "
+                f"got {type(value).__name__}"
+            )
+        if not 1 <= value <= 65535:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be between 1 and 65535, got {value}"
+            )
+
     @override
     def _check_paas_config(self) -> None:
         """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
@@ -444,15 +460,19 @@ class _AppBaseV2(_AppBase):
                 f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
                 f"for '{self.framework}-framework'"
             )
-        if "metrics_path" in parsed:
-            metrics_path = parsed["metrics_path"]
+        self._validate_port(parsed, "port")
+        self._validate_port(parsed, "metrics-port")
+        if "metrics-path" in parsed:
+            metrics_path = parsed["metrics-path"]
             if not isinstance(metrics_path, str):
                 raise ExtensionError(
-                    f"metrics_path in {PAAS_CONFIG_FILE} must be a string, got {type(metrics_path).__name__}"
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a string, "
+                    f"got {type(metrics_path).__name__}"
                 )
             if not _VALID_URL_PATH_RE.match(metrics_path):
                 raise ExtensionError(
-                    f"metrics_path in {PAAS_CONFIG_FILE} must be a valid URL path starting with '/', got '{metrics_path}'"
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a valid URL path "
+                    f"starting with '/', got '{metrics_path}'"
                 )
 
     @staticmethod
@@ -475,6 +495,7 @@ class _AppBaseV2(_AppBase):
             },
             **self.get_config_part(),
         }
+        snippet["peers"] = {"peers": {"interface": "peers"}}
         return snippet
 
     def get_config_part(self) -> dict[str, Any]:
@@ -586,7 +607,15 @@ class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
 
     framework = "flask"
-    options = FlaskFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FlaskFrameworkV1.options.items()
+            if key not in {"flask-secret-key", "flask-secret-key-id"}
+        },
+        "app-secret-key": FlaskFrameworkV1.options["flask-secret-key"],
+        "app-secret-key-id": FlaskFrameworkV1.options["flask-secret-key-id"],
+    }
 
 
 FlaskFrameworkFactory = _FrameworkFactory(FlaskFrameworkV1, FlaskFrameworkV2)
@@ -646,7 +675,15 @@ class DjangoFrameworkV2(_AppBaseV2):
 
     framework = "django"
     actions = {**DjangoFrameworkV1.actions}
-    options = DjangoFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in DjangoFrameworkV1.options.items()
+            if key not in {"django-secret-key", "django-secret-key-id"}
+        },
+        "app-secret-key": DjangoFrameworkV1.options["django-secret-key"],
+        "app-secret-key-id": DjangoFrameworkV1.options["django-secret-key-id"],
+    }
 
 
 DjangoFrameworkFactory = _FrameworkFactory(DjangoFrameworkV1, DjangoFrameworkV2)

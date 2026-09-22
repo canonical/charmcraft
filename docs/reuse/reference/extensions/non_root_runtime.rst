@@ -22,8 +22,8 @@ Learn more about ``charm-user`` in the
         The generated ``charmcraft.yaml`` doesn't set ``charm-user``, so Juju
         runs the charm as the root user by default.
 
-    .. tab-item:: Ubuntu 26.04 and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04
+        :sync: base-26
 
         The generated ``charmcraft.yaml`` sets ``charm-user: non-root`` by
         default. The matching rock provides ``/app-data`` outside ``/app`` as

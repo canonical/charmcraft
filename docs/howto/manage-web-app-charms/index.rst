@@ -66,6 +66,12 @@ Charmcraft automatically creates a ``charmcraft.yaml`` project file, a
 will need to check the project file and ``README.md`` to verify that the charm's name
 and description are correct.
 
+The generated profile targets the stable V1 extension. To use experimental V2, change
+the project base to Ubuntu 26.04 LTS, migrate the generated dependencies to
+``pyproject.toml`` and ``uv.lock``, and use the matching experimental Ubuntu 26.04 LTS
+Rockcraft framework image. V2 is selected by the base rather than an extension version
+key. Follow :ref:`howto-change-to-ubuntu-26-04-12-factor` for the complete migration.
+
 Configuration
 -------------
 

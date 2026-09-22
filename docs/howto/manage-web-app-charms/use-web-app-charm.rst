@@ -12,10 +12,10 @@ Use a 12-factor app charm
 
      - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) use the original
        ``paas-charm`` templates.
-     - Ubuntu 26.04 LTS (Resolute) and higher use the ``-26.04`` templates, with
+     - Ubuntu 26.04 LTS (Resolute) uses the experimental V2 contract, with
        updated configuration and behaviour.
 
-     If you are targeting Ubuntu 26.04 LTS or higher, use the ``-26.04`` templates.
+     If you are targeting Ubuntu 26.04 LTS, use the matching experimental templates.
      The guides on this page apply to both base groups unless noted otherwise.
 
 .. _use-12-factor-charms-admin-user-django:
@@ -104,8 +104,8 @@ To view the Pebble logs for a deployed web app, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -160,8 +160,8 @@ To view more details about the web app itself, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -228,8 +228,8 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
             /charm/bin/pebble  exec --context=spring-boot -- bash
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -335,8 +335,8 @@ name of the web app with the ``-c`` option.
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **All frameworks on MicroK8s**
 

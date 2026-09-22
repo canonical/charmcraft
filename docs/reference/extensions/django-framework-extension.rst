@@ -7,6 +7,12 @@ Django framework extension
 The ``django-framework`` extension includes configuration options
 customised for a Django application. This document describes all the
 keys that a user may interact with.
+Unless a section states otherwise, the behavior applies to V1 and V2.
+
+V1 uses ``django-secret-key`` and ``django-secret-key-id``. Experimental V2 on Ubuntu
+26.04 LTS uses ``app-secret-key`` and ``app-secret-key-id`` with the same option types
+and descriptions. The base selects the extension version as described in
+:ref:`extensions`.
 
 .. tip::
 
@@ -170,8 +176,8 @@ The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
-The configuration option ``django-secret-key-id`` is automatically added by the
-``django-framework`` extension. The secret must contain a single key ``value``,
+V1 automatically adds ``django-secret-key-id``. V2 automatically adds
+``app-secret-key-id`` instead. The secret must contain a single key ``value``,
 which holds the actual Django secret key and is exposed as the
 ``DJANGO_SECRET_KEY`` environment variable. If this configuration option is not set,
 ``DJANGO_SECRET_KEY`` is automatically assigned a random value.

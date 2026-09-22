@@ -7,6 +7,9 @@ Spring Boot framework extension
 The ``spring-boot-framework`` extension includes configuration options customised for a
 Spring Boot application. This document describes all the keys that a user may interact
 with.
+Unless a section states otherwise, the behavior applies to V1 and V2. Ubuntu 24.04 LTS
+selects V1 and Ubuntu 26.04 LTS selects experimental V2, as described in
+:ref:`extensions`.
 
 .. tip::
 

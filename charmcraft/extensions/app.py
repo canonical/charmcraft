@@ -61,11 +61,11 @@ SECRET_OPTIONS = {
 }
 V2_SECRET_OPTIONS = {
     "app-secret-key": {
-        **SECRET_OPTIONS["app-secret-key-id"],
-        "description": SECRET_OPTIONS["app-secret-key-id"]["description"].replace(
-            "This configuration is similar to `app-secret-key`, but instead accepts",
-            "Accepts",
-        ),
+        "type": "secret",
+        "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units"
+        'The secret should contain a single key, "value", which maps to the actual application secret key. '
+        "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key my-app`, "
+        "and use the output secret ID to configure this option.",
     }
 }
 OAUTH_DYNAMIC_OPTIONS = {

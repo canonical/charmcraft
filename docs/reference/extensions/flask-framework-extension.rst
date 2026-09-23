@@ -6,11 +6,6 @@ Flask framework extension
 
 The ``flask-framework`` extension includes configuration options customised for a Flask
 application. This document describes all the keys that a user may interact with.
-Unless a section states otherwise, the behavior applies to V1 and V2.
-
-V1 uses ``flask-secret-key`` and ``flask-secret-key-id``. Experimental V2 on Ubuntu
-26.04 LTS replaces both options with one ``app-secret-key`` option of type ``secret``.
-The base selects the extension version as described in :ref:`extensions`.
 
 .. tip::
 
@@ -151,6 +146,26 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. tab-set::
+
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
+        :sync: base-22-24
+
+        The extension automatically adds the ``flask-secret-key-id`` configuration
+        option. The secret must contain a single key ``value``, which holds the actual
+        Flask secret key and is exposed as the ``FLASK_SECRET_KEY`` environment
+        variable. If this configuration option is not set, ``FLASK_SECRET_KEY`` is
+        automatically assigned a random value.
+
+    .. tab-item:: Ubuntu 26.04 LTS and higher
+        :sync: base-26
+
+        The extension automatically adds the secret-typed ``app-secret-key``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Flask secret key and is exposed as the ``FLASK_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``FLASK_SECRET_KEY`` is automatically assigned a random value.
 
 .. _flask-grafana-graphs:
 

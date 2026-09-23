@@ -1,5 +1,5 @@
 .. meta::
-    :description: Reference for Charmcraft extensions, including the V1 and experimental V2 contracts for 12-factor app frameworks.
+    :description: Reference for Charmcraft extensions, including how the Ubuntu base shapes the contract generated for 12-factor app frameworks.
 
 .. _extensions:
 
@@ -17,26 +17,26 @@ when initializing your project.
 - :ref:`go-framework-extension`
 - :ref:`spring-boot-framework-extension`
 
-12-factor extension versions
-----------------------------
+12-factor extension behavior by base
+------------------------------------
 
-The Ubuntu base selects the version of a 12-factor framework extension. There is no
-version key in ``charmcraft.yaml``.
+The Ubuntu base selects the contract that a 12-factor framework extension generates.
+There is no version key in ``charmcraft.yaml``.
 
-* Ubuntu 22.04 LTS and Ubuntu 24.04 LTS select V1 where the framework supports the base.
-* Ubuntu 26.04 LTS selects experimental V2.
+* Ubuntu 22.04 LTS and Ubuntu 24.04 LTS generate the established contract, where the
+  framework supports the base.
+* Ubuntu 26.04 LTS generates an experimental contract. It requires
+  ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or packs the
+  project. The lower bases don't require the environment variable.
 
-V2 requires ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or
-packs the project. V1 does not require the environment variable.
-
-All six V2 framework extensions generate the following contract:
+On Ubuntu 26.04 LTS, all six framework extensions generate the following contract:
 
 .. list-table::
     :header-rows: 1
 
     * - Generated field
-      - V1
-      - V2
+      - Ubuntu 22.04 LTS and 24.04 LTS
+      - Ubuntu 26.04 LTS
     * - Charm part plugin
       - ``charm``
       - ``uv``
@@ -56,10 +56,9 @@ All six V2 framework extensions generate the following contract:
       - None
       - :ref:`paas-config-yaml-file`
 
-Charmcraft stages ``paas-config.yaml`` only when the file exists in a V2 project.
-Migration between the extension versions is not automatic. Follow
-:ref:`howto-change-to-ubuntu-26-04-12-factor` when changing an existing 12-factor
-app charm to V2.
+Charmcraft stages ``paas-config.yaml`` only when the file exists in an Ubuntu 26.04 LTS
+project. Changing the base of an existing project partially migrates it to the other
+contract.
 
 
 .. toctree::

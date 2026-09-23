@@ -55,50 +55,6 @@ Replace the ``bases`` key with:
 :ref:`reference-platforms` has all the details about the ``platforms`` key,
 including the syntax for specifying multiple bases and architectures.
 
-.. _howto-change-to-ubuntu-26-04-12-factor:
-
-Migrate a 12-factor app charm to V2
------------------------------------
-
-Changing the base of a 12-factor app charm from Ubuntu 22.04 LTS or Ubuntu 24.04 LTS
-to Ubuntu 26.04 LTS selects the experimental V2 framework extension. The migration
-is not automatic.
-
-#. Replace the ``bases`` key with ``base: ubuntu@26.04`` and a ``platforms`` mapping.
-#. Replace the Charm plugin and ``requirements.txt`` dependency workflow with the uv
-   plugin, ``pyproject.toml``, and a committed ``uv.lock`` file.
-#. Require ``paas-charm>=2.0.dev0,<3``. Stable paas-charm 1.x implements the V1
-   metadata and workload contract and is not compatible with V2.
-#. Update generated metadata to use the ``app`` container, ``app-image`` resource,
-   and a ``peers`` relation with the ``peers`` interface.
-#. Replace the V1 string and secret-ID options with one ``app-secret-key`` option of
-   type ``secret``. For Flask and Django, this also removes the framework prefix.
-#. If the charm uses :ref:`paas-config-yaml-file`, verify its top-level V2 keys and
-   values before packing.
-#. Build the workload with the matching experimental Ubuntu 26.04 LTS Rockcraft
-   framework extension. In particular, the Flask and Django V2 images place the
-   workload under ``/app``.
-#. Set ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when expanding or packing
-   the charm.
-
-Run ``uv lock`` after updating ``pyproject.toml``:
-
-.. code-block:: bash
-
-    uv lock
-
-Then inspect the expanded metadata before packing:
-
-.. code-block:: bash
-
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
-
-The `12-factor app support documentation
-<https://canonical.com/juju/docs/12-factor/>`__ describes paas-charm runtime
-semantics. The `Rockcraft extension reference
-<https://documentation.ubuntu.com/rockcraft/latest/reference/extensions/>`__
-describes the matching workload-image extensions.
-
 Update part names
 -----------------
 

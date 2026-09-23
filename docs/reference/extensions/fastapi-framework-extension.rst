@@ -7,12 +7,6 @@ FastAPI framework extension
 The ``fastapi-framework`` extension includes configuration options
 customised for a FastAPI application. This document describes all the
 keys that a user may interact with.
-Unless a section states otherwise, the behavior applies to V1 and V2. Ubuntu 24.04 LTS
-selects V1 and Ubuntu 26.04 LTS selects experimental V2, as described in
-:ref:`extensions`.
-
-V1 provides ``app-secret-key`` as a string and ``app-secret-key-id`` as a Juju secret
-ID. V2 replaces both options with one ``app-secret-key`` option of type ``secret``.
 
 .. tip::
 
@@ -159,6 +153,12 @@ the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+The extension automatically adds the secret-typed ``app-secret-key``
+configuration option. The secret must contain a single key ``value``, which
+holds the actual FastAPI app secret key and is exposed as the ``APP_SECRET_KEY``
+environment variable. If this configuration option is not set,
+``APP_SECRET_KEY`` is automatically assigned a random value.
 
 .. _fastapi-grafana-graphs:
 

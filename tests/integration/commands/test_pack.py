@@ -63,8 +63,9 @@ def test_build_basic_charm(
 
     emitter.assert_progress(f"Packing charm {charm_files[0].name}")
 
-    assert "bases" in manifest
     project = app.services.get("project").get().marshal()
+
+    assert "bases" in manifest
     if "platforms" in project:
         base_name = manifest["bases"][0]["name"]
         base_version = manifest["bases"][0]["channel"]

@@ -71,7 +71,6 @@ from charmcraft.utils.parts import (
 from charmcraft.utils.project import (
     find_charm_sources,
     get_charm_name_from_path,
-    get_templates_environment,
 )
 from charmcraft.utils.skopeo import Skopeo
 from charmcraft.utils.store import get_packages
@@ -120,7 +119,6 @@ __all__ = [
     "get_venv_cleanup_commands",
     "find_charm_sources",
     "get_charm_name_from_path",
-    "get_templates_environment",
     "Skopeo",
     "get_packages",
     "dump_yaml",

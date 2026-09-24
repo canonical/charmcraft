@@ -55,9 +55,11 @@ def test_get_generated_metadata_and_manifest_yaml(
     monkeypatch.setattr(
         service_factory,
         "get",
-        lambda service_name: fake_lifecycle
-        if service_name == "lifecycle"
-        else original_get(service_name),
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
     )
 
     metadata = yaml.safe_load(package_service.get_metadata_yaml())
@@ -81,9 +83,11 @@ def test_get_generated_manifest_yaml_ignores_project_manifest_file(
     monkeypatch.setattr(
         service_factory,
         "get",
-        lambda service_name: fake_lifecycle
-        if service_name == "lifecycle"
-        else original_get(service_name),
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
     )
 
     project_dir = service_factory.get("project").resolve_project_file_path().parent
@@ -109,9 +113,11 @@ def test_get_metadata_yaml_skips_reactive_generated_metadata(
     monkeypatch.setattr(
         service_factory,
         "get",
-        lambda service_name: fake_lifecycle
-        if service_name == "lifecycle"
-        else original_get(service_name),
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
     )
 
     dirs = fake_lifecycle.project_info.dirs

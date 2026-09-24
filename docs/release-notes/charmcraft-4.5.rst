@@ -64,7 +64,53 @@ Base-specific init profiles
 The ``charmcraft init`` command now accepts ``--base`` for profiles that provide
 base-specific variants. The 12-factor framework profiles (Django, Flask, FastAPI, Go,
 ExpressJS, and Spring Boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
-They continue to use Ubuntu 24.04 LTS when ``--base`` isn't provided.
+All profiles use Ubuntu 24.04 LTS when ``--base`` isn't provided.
+
+Example actions in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` profile now declare ``pause`` and ``resume``
+actions, which stop and start the workload without removing the unit. Charms created
+with the ``kubernetes`` profile now declare a ``restart`` action, which restarts the
+workload's Pebble service.
+
+Both profiles scaffold unit and integration tests for the added behavior.
+
+Secret handling in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` and ``kubernetes`` profiles now demonstrate both
+sides of Juju secrets.
+
+For a user-provided secret, the charm declares an ``api-token`` config option of type
+``secret``, resolves it, and re-reads it when the operator adds a new revision.
+
+For an app-managed secret, the leader creates a workload password with a rotation
+policy and an expiry, replaces it when Juju asks for rotation or reports expiry, and
+removes unused revisions.
+
+Both profiles scaffold unit and integration tests for the added behavior.
+
+Removed lockfile from machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``machine`` and ``kubernetes`` profiles no longer include a ``uv.lock`` file. You
+need to run ``uv lock`` after creating a charm with ``charmcraft init``.
+
+In addition,  ``charmcraft init`` now has a better description of the created files and
+how to manage them. For example, if the charm requires uv, the description explains
+when to run ``uv lock``.
+
+Other init profile updates
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The dependencies of the ``machine`` and ``kubernetes`` profiles are now bounded to
+  their current major version. This reduces the risk of breaking changes if you use
+  automated dependency updates.
+- The logging configuration of the ``machine`` and ``kubernetes`` profiles now ensure
+  that live logs are not emitted from the charm code during unit tests.
+- Charms created with the ``kubernetes`` profile now use an Ubuntu image as a
+  placeholder for the charm's real image, so that integration tests pass by default.
 
 
 Backwards-incompatible changes

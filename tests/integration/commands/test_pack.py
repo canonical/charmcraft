@@ -21,6 +21,7 @@ import zipfile
 from unittest import mock
 
 import craft_application
+from craft_parts import callbacks
 import craft_platforms
 import pytest
 import yaml
@@ -31,6 +32,11 @@ from charmcraft.application import commands
 from charmcraft.application.main import Charmcraft
 
 CURRENT_PLATFORM = utils.get_os_platform()
+
+
+def _reset_parts_callbacks() -> None:
+    """Reset craft-parts callback state between repeated app runs in one test."""
+    callbacks.unregister_all()
 
 
 def _create_app(
@@ -146,6 +152,7 @@ def test_pack_skips_when_inputs_are_unchanged(
     first_mtime_ns = charm_path.stat().st_mtime_ns
 
     time.sleep(1)
+    _reset_parts_callbacks()
 
     second_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     second_app.configure({})
@@ -162,6 +169,7 @@ def test_pack_skips_when_inputs_are_unchanged(
 )
 def test_pack_rebuilds_when_project_metadata_changes(
     monkeypatch: pytest.MonkeyPatch,
+    emitter: RecordingEmitter,
     new_path: pathlib.Path,
     project_path: pathlib.Path,
     fake_project_file: pathlib.Path,
@@ -184,6 +192,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
 
     time.sleep(1)
     (project_path / const.METADATA_FILENAME).write_text("subordinate: true\n")
+    _reset_parts_callbacks()
 
     second_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     second_app.configure({})
@@ -199,6 +208,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
 )
 def test_pack_artifact_contains_dispatch_after_repeated_pack(
     monkeypatch: pytest.MonkeyPatch,
+    emitter: RecordingEmitter,
     new_path: pathlib.Path,
     project_path: pathlib.Path,
     fake_project_file: pathlib.Path,
@@ -216,6 +226,7 @@ def test_pack_artifact_contains_dispatch_after_repeated_pack(
     if first_app.run() != 0:
         pytest.skip("pack requires unavailable host build packages in this environment")
 
+    _reset_parts_callbacks()
     second_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     second_app.configure({})
     assert second_app.run() == 0

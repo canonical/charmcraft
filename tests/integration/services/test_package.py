@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2023-2026 Canonical Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,115 +13,119 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-"""Tests for package service."""
+"""Integration tests for the package service."""
 
-import datetime
 import pathlib
+from types import SimpleNamespace
 
-import freezegun
+import craft_cli.pytest_plugin
 import pytest
-import pytest_check
+import yaml
+from craft_application import ServiceFactory
 
-import charmcraft
 from charmcraft import const
-from charmcraft.application.main import APP_METADATA
-from charmcraft.services.package import PackageService
-
-
-@pytest.fixture(
-    params=[
-        pytest.param(path, id=path.name)
-        for path in (pathlib.Path(__file__).parent / "sample_projects").iterdir()
-    ]
-)
-def project_path(request: pytest.FixtureRequest) -> pathlib.Path:
-    return request.param / "project"
 
 
 @pytest.fixture
-def fake_project_yaml(project_path: pathlib.Path) -> str:
-    return (project_path / "charmcraft.yaml").read_text()
+def package_service(service_factory: ServiceFactory):
+    return service_factory.get("package")
 
 
 @pytest.fixture
-def package_service(
-    project_path: pathlib.Path,
-    service_factory,
-    monkeypatch: pytest.MonkeyPatch,
-):
-    monkeypatch.chdir(project_path)
-    svc = PackageService(
-        app=APP_METADATA,
-        services=service_factory,
+def fake_lifecycle(tmp_path: pathlib.Path):
+    stage_dir = tmp_path / "stage"
+    prime_dir = tmp_path / "prime"
+    stage_dir.mkdir()
+    prime_dir.mkdir()
+    return SimpleNamespace(
+        prime_dir=prime_dir,
+        project_info=SimpleNamespace(
+            dirs=SimpleNamespace(stage_dir=stage_dir, prime_dir=prime_dir)
+        ),
     )
-    service_factory.package = svc
-    return svc
 
 
-@freezegun.freeze_time(
-    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
-)
-def test_write_metadata(monkeypatch, new_path, package_service, project_path):
-    monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    test_prime_dir = new_path / "prime"
-    test_prime_dir.mkdir()
-    expected_prime_dir = project_path.parent / "prime"
+def test_get_generated_metadata_and_manifest_yaml(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: ServiceFactory,
+    fake_lifecycle,
+):
+    original_get = service_factory.get
+    monkeypatch.setattr(
+        service_factory,
+        "get",
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
+    )
 
-    package_service.write_metadata(test_prime_dir)
+    metadata = yaml.safe_load(package_service.get_metadata_yaml())
+    manifest = yaml.safe_load(package_service.get_manifest_yaml())
+    project = service_factory.get("project").get().marshal()
 
-    for file in expected_prime_dir.iterdir():
-        if file.name == const.MANIFEST_FILENAME:
-            continue
-        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
-
-    assert not (test_prime_dir / const.MANIFEST_FILENAME).exists()
-
-
-@freezegun.freeze_time(
-    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
-)
-def test_overwrite_metadata(monkeypatch, new_path, package_service, project_path):
-    """Test that the metadata file gets rewritten for a charm.
-
-    Regression test for https://github.com/canonical/charmcraft/issues/1654
-    """
-    monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    test_prime_dir = new_path / "prime"
-    test_prime_dir.mkdir()
-    expected_prime_dir = project_path.parent / "prime"
-
-    (test_prime_dir / const.METADATA_FILENAME).write_text("INVALID!!")
-    (test_prime_dir / const.MANIFEST_FILENAME).write_text("INVALID!!")
-
-    package_service.write_metadata(test_prime_dir)
-
-    for file in expected_prime_dir.iterdir():
-        if file.name == const.MANIFEST_FILENAME:
-            continue
-        pytest_check.equal((test_prime_dir / file.name).read_text(), file.read_text())
-
-    assert (test_prime_dir / const.MANIFEST_FILENAME).read_text() == "INVALID!!"
+    assert metadata["name"] == project["name"]
+    assert metadata["summary"] == project["summary"]
+    assert metadata["description"] == project["description"]
+    assert manifest["charmcraft-started-at"] == "2020-03-14T00:00:00+00:00"
+    assert manifest["bases"]
 
 
-@pytest.mark.parametrize(
-    "project_path",
-    [pathlib.Path(__file__).parent / "sample_projects" / "basic-reactive" / "project"],
-)
-@freezegun.freeze_time(
-    datetime.datetime(2020, 3, 14, 0, 0, 0, tzinfo=datetime.timezone.utc)
-)
-def test_no_overwrite_reactive_metadata(monkeypatch, new_path, package_service):
-    """Test that the metadata file doesn't get overwritten for a reactive charm..
+def test_get_generated_manifest_yaml_ignores_project_manifest_file(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: ServiceFactory,
+    fake_lifecycle,
+):
+    original_get = service_factory.get
+    monkeypatch.setattr(
+        service_factory,
+        "get",
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
+    )
 
-    Regression test for https://github.com/canonical/charmcraft/issues/1654
-    """
-    monkeypatch.setattr(charmcraft, "__version__", "3.0-test-version")
-    test_prime_dir = new_path / "prime"
-    test_prime_dir.mkdir()
-    test_stage_dir = new_path / "stage"
-    test_stage_dir.mkdir()
-    (test_stage_dir / const.METADATA_FILENAME).write_text("INVALID!!")
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    (project_dir / const.MANIFEST_FILENAME).write_text(
+        "charmcraft-started-at: stale\ncharmcraft-version: stale\n"
+    )
 
-    package_service.write_metadata(test_prime_dir)
+    manifest = yaml.safe_load(package_service.get_manifest_yaml())
 
-    assert not (test_prime_dir / const.METADATA_FILENAME).exists()
+    assert manifest["charmcraft-started-at"] == "2020-03-14T00:00:00+00:00"
+    assert manifest["charmcraft-version"] != "stale"
+    assert manifest["bases"]
+
+
+def test_get_metadata_yaml_skips_reactive_generated_metadata(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: ServiceFactory,
+    fake_lifecycle,
+):
+    original_get = service_factory.get
+    monkeypatch.setattr(
+        service_factory,
+        "get",
+        lambda service_name: (
+            fake_lifecycle
+            if service_name == "lifecycle"
+            else original_get(service_name)
+        ),
+    )
+
+    dirs = fake_lifecycle.project_info.dirs
+    dirs.stage_dir.mkdir(exist_ok=True)
+    (dirs.stage_dir / const.METADATA_FILENAME).write_text("name: reactive\n")
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
+
+    assert package_service.get_metadata_yaml() is False
+    emitter.assert_debug(
+        "'metadata.yaml' generated by charm. Not using original project metadata."
+    )

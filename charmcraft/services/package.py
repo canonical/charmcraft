@@ -21,8 +21,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-import shutil
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -30,7 +29,9 @@ import craft_platforms
 import yaml
 from craft_application import services
 from craft_application.services.package import package_file
+from craft_application.services.state import ValueType
 from craft_cli import emit
+from typing_extensions import override
 
 import charmcraft
 from charmcraft import const, errors, models, utils
@@ -86,21 +87,30 @@ class PackageService(services.PackageService):
 
         return charm_path
 
-    def get_charm_name(self) -> str:
-        """Get a charm file name for the appropriate set of run-on bases."""
-        name = self._services.get("project").get().name
-        platform = self._services.get("build_plan").plan()[0].platform
-        platform = platform.replace(":", "-")
-        return f"{name}_{platform}.charm"
-
+    @override
     def get_artifacts(self) -> dict[str | None, pathlib.Path]:
-        """Get the output artifacts for ST160-mediated packing."""
+        """Get the output artifacts for this application."""
         return {None: self.output_dir / self.get_charm_name()}
+
+    @override
+    def write_artifacts_state(
+        self, artifacts: Mapping[str | None, pathlib.Path]
+    ) -> None:
+        """Write artifact state for repeated pack runs."""
+        platform = self._build_info.platform
+        state_service = self._services.get("state")
+        state_entries = cast(
+            ValueType,
+            [{"name": name, "path": str(path)} for name, path in artifacts.items()],
+        )
+        state_service.set(
+            "artifacts", platform, value=state_entries or None, overwrite=True
+        )
 
     def read_artifacts_state(
         self, platform: str | None = None
     ) -> dict[str | None, pathlib.Path]:
-        """Read artifact-oriented packaging state without PackState unmarshalling."""
+        """Read artifact-oriented packaging state."""
         if platform is None:
             platform = self._build_info.platform
 
@@ -131,12 +141,34 @@ class PackageService(services.PackageService):
             if artifact.get("path")
         }
 
+    @override
     def _pack(self, *, name: str | None = None, path: pathlib.Path) -> None:
-        """Pack a specific charm artifact for ST160-mediated packing."""
-        if name is not None:
-            raise RuntimeError(f"Unexpected partition name {name!r} for charm pack")
+        """Pack the prime directory into the given charm path."""
+        del name
+        prime_dir = self._services.get("lifecycle").prime_dir
+        emit.progress(f"Packing charm {path.name}")
+        utils.build_zip(path, prime_dir)
 
-        self.pack_charm(self._services.get("lifecycle").prime_dir, path.parent)
+    def get_charm_name(self) -> str:
+        """Get a charm file name for the appropriate set of run-on bases."""
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
+        name = project.name
+        build_item = self._services.get("build_plan").plan()[0]
+        platform = build_item.platform
+
+        if (
+            isinstance(project, PlatformCharm)
+            and project.base
+            and ":" not in platform
+            and "@" not in platform
+            and platform in const.SUPPORTED_ARCHITECTURES | {"all"}
+        ):
+            platform = f"{project.base}:{platform}"
+
+        platform = platform.replace(":", "-")
+        return f"{name}_{platform}.charm"
 
     @property
     def metadata(self) -> CharmMetadata:
@@ -159,12 +191,65 @@ class PackageService(services.PackageService):
                 return False
             if metadata_path.is_file():
                 return metadata_path.read_text()
-            return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
+            return self.metadata.to_yaml_string()
 
         if metadata_path.is_file():
             return metadata_path.read_text()
 
-        return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
+        return self.metadata.to_yaml_string()
+
+    @package_file(const.JUJU_ACTIONS_FILENAME)
+    def get_actions_yaml(
+        self, partition: str | None = None
+    ) -> str | None | Literal[False]:
+        """Get the mediated actions.yaml contents."""
+        return self._get_mediated_yaml("actions", const.JUJU_ACTIONS_FILENAME)
+
+    @package_file(const.JUJU_CONFIG_FILENAME)
+    def get_config_yaml(
+        self, partition: str | None = None
+    ) -> str | None | Literal[False]:
+        """Get the mediated config.yaml contents."""
+        return self._get_mediated_yaml("config", const.JUJU_CONFIG_FILENAME)
+
+    def _get_mediated_yaml(
+        self, project_key: str, filename: str
+    ) -> str | None | Literal[False]:
+        """Get the mediated contents of an optional project YAML file.
+
+        If the given key is absent from the project model and no reactive
+        charm generates the file, no file is generated - even if a
+        project-local file exists. Returns False only when a reactive charm has
+        already generated the file in prime; returns None when the file should
+        be absent from the packaged charm.
+
+        Precedence:
+        1. A file generated by a reactive charm in the stage directory.
+        2. If the key is absent from the project model, nothing.
+        3. A project-local file of the given name.
+        4. The contents of the given key from the project model.
+        """
+        project = cast(
+            "BasesCharm | PlatformCharm", self._services.get("project").get()
+        )
+        project_dict = project.marshal()
+        value = cast(dict | None, project_dict.get(project_key))
+
+        if self._has_reactive_plugin():
+            stage_dir = self._services.get("lifecycle").project_info.dirs.stage_dir
+            if (stage_dir / filename).exists():
+                emit.debug(f"{filename!r} generated by charm. Skipping generation.")
+                return False
+
+        if not value:
+            return None
+
+        file_path = self._project_file_path(filename)
+
+        if file_path.is_file():
+            return file_path.read_text()
+
+        return yaml.safe_dump(value, sort_keys=True)
 
     def _get_existing_manifest_timestamp(self) -> str | None:
         """Get the charmcraft_started_at timestamp from an existing manifest.
@@ -247,28 +332,10 @@ class PackageService(services.PackageService):
             self.get_manifest(lint_results, started_at=started_at)
         )
 
-    def _write_file_or_object(
-        self, model: dict | None, filename: str, dest_dir: pathlib.Path
-    ) -> None:
-        """Write a yaml file to the destination directory if the given object is not None.
-
-        This function prefers copying the file over, but will generate YAML from the given
-        model otherwise.
-
-        :param model: The dictionary to write (or None)
-        :param filename: The name of the file to copy or write.
-        :param dest_dir: The path of the destination directory.
-        """
-        if not model:
-            return
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        source_path = self._project_file_path(filename)
-        dest_path = dest_dir / filename
-        if source_path.is_file():
-            shutil.copyfile(source_path, dest_path)
-            return
-        with dest_path.open("wt+") as dest_file:
-            yaml.safe_dump(model, dest_file)
+    @override
+    def update_project(self) -> None:
+        """Update project fields with dynamic values set during the lifecycle."""
+        super().update_project()
 
     def get_manifest(
         self,
@@ -303,6 +370,20 @@ class PackageService(services.PackageService):
             analysis={"attributes": attributes},
             image_info=image_info,
             bases=bases,
+        )
+
+    @override
+    def _app_needs_repack(self, partition: str | None = None) -> bool:
+        """Detect post-prime changes that occur before mediated packing runs."""
+        artifact_path = self.get_artifacts()[partition]
+        if not artifact_path.exists():
+            return True
+
+        prime_dir = self._prime_dir_for(partition)
+        dispatch_path = prime_dir / const.DISPATCH_FILENAME
+        return (
+            dispatch_path.exists()
+            and dispatch_path.stat().st_mtime_ns > artifact_path.stat().st_mtime_ns
         )
 
     def get_manifest_bases(self) -> list[models.Base]:
@@ -360,38 +441,3 @@ class PackageService(services.PackageService):
                     ]
 
         raise TypeError(f"Unknown charm type {project.__class__}, cannot get bases.")
-
-    def write_metadata(self, path: pathlib.Path) -> None:
-        """Write additional charm metadata.
-
-        Note: manifest.yaml is mediated via the @package_file-decorated
-        get_manifest_yaml() method during packaging, so this legacy helper only
-        handles metadata.yaml, actions.yaml, and config.yaml.
-
-        :param path: The path to the prime directory.
-        """
-        project = cast(
-            "BasesCharm | PlatformCharm", self._services.get("project").get()
-        )
-        path.mkdir(parents=True, exist_ok=True)
-
-        project_dict = project.marshal()
-        is_reactive = self._has_reactive_plugin()
-        stage_dir = self._services.get("lifecycle").project_info.dirs.stage_dir
-
-        metadata = self.get_metadata_yaml()
-        if metadata is not False:
-            self._write_asset(metadata, path / const.METADATA_FILENAME)
-
-        if is_reactive and (stage_dir / const.JUJU_ACTIONS_FILENAME).exists():
-            emit.debug(
-                f"{const.JUJU_ACTIONS_FILENAME!r} generated by charm. Skipping generation."
-            )
-        elif actions := cast(dict | None, project_dict.get("actions")):
-            self._write_file_or_object(actions, "actions.yaml", path)
-        if is_reactive and (stage_dir / const.JUJU_CONFIG_FILENAME).exists():
-            emit.debug(
-                f"{const.JUJU_CONFIG_FILENAME!r} generated by charm. Skipping generation."
-            )
-        elif config := cast(dict | None, project_dict.get("config")):
-            self._write_file_or_object(config, "config.yaml", path)

@@ -136,7 +136,7 @@ else
 	brew install gnutls
 	brew postinstall gnutls
 	brew install libgit2@1.7  # For building pygit2
-	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
+	sudo cp -R $$(brew --prefix)/opt/libgit2@1.7/* /usr/local
 endif
 
 .PHONY: schema

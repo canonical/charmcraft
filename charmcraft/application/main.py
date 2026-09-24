@@ -44,7 +44,9 @@ APP_METADATA = craft_application.AppMetadata(
     name="charmcraft",
     summary=GENERAL_SUMMARY,
     ProjectClass=models.CharmcraftProject,
-    source_ignore_patterns=["*.charm", "charmcraft.yaml"],
+    # .venv and .tox are ignored as a workaround for a craft-parts bug.
+    # See: https://github.com/canonical/craft-parts/issues/1703
+    source_ignore_patterns=["*.charm", "charmcraft.yaml", ".venv", ".tox"],
     docs_url="https://documentation.ubuntu.com/charmcraft/{version}",
     supports_multi_base=True,
     mandatory_adoptable_fields=[],  # Version field is not mandatory.
@@ -135,10 +137,11 @@ class Charmcraft(craft_application.Application):
             dispatcher = self._get_dispatcher()
             dispatcher.load_command(self.app_config)
             parsed_args = dispatcher.parsed_args()
+            requested_project_dir = getattr(
+                parsed_args, "project_dir_option", None
+            ) or getattr(parsed_args, "project_dir", None)
             new_project_dir = (
-                getattr(parsed_args, "project_dir", self.project_dir)
-                .expanduser()
-                .resolve()
+                (requested_project_dir or self.project_dir).expanduser().resolve()
             )
             if new_project_dir != self.project_dir:
                 self.project_dir = new_project_dir

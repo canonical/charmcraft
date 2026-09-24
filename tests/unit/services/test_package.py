@@ -160,7 +160,10 @@ def test_get_actions_yaml_generates_from_model(
     service_factory: craft_application.ServiceFactory,
 ):
     """Actions defined in the project model are generated as YAML."""
-    project = service_factory.get("project").get()
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
     project.actions = {"test-action": {"description": "A test action"}}
     monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
 
@@ -212,7 +215,10 @@ def test_get_config_yaml_generates_from_model(
     service_factory: craft_application.ServiceFactory,
 ):
     """Config defined in the project model is generated as YAML."""
-    project = service_factory.get("project").get()
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
     project.config = {"options": {"my-option": {"type": "string", "default": "value"}}}
     monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
 

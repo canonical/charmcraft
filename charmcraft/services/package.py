@@ -33,7 +33,7 @@ from craft_cli import emit
 from typing_extensions import override
 
 import charmcraft
-from charmcraft import const, dispatch, errors, models, utils
+from charmcraft import const, errors, models, utils
 from charmcraft.models import lint
 from charmcraft.models.manifest import Attribute, Manifest
 from charmcraft.models.metadata import CharmMetadata
@@ -336,28 +336,6 @@ class PackageService(services.PackageService):
             self.get_manifest(lint_results, started_at=started_at)
         )
 
-    def _write_asset_if_changed(
-        self, source: str | bytes | None | pathlib.Path, destination: pathlib.Path
-    ) -> None:
-        """Write an asset only when the destination content actually changes."""
-        if not self._asset_changed(source, destination, partition_name=None):
-            return
-        self._pre_pack_prime_changed = True
-        self._write_asset(source, destination)
-
-    def _materialize_package_files_to(
-        self, path: pathlib.Path, partition_name: str | None
-    ) -> None:
-        """Write generated package files into a specific directory."""
-        for package_file_entry in self._package_files(partition_name):
-            generator = getattr(self, package_file_entry.method_name)
-            content = generator(partition_name)
-            if content is False:
-                continue
-
-            destination = path / package_file_entry.relative_path
-            self._write_asset_if_changed(content, destination)
-
     @override
     def update_project(self) -> None:
         """Update project fields with dynamic values set during the lifecycle."""
@@ -470,18 +448,3 @@ class PackageService(services.PackageService):
                     ]
 
         raise TypeError(f"Unknown charm type {project.__class__}, cannot get bases.")
-
-    def write_metadata(self, path: pathlib.Path) -> None:
-        """Materialize package files for compatibility with direct callers.
-
-        Package files are normally materialized by craft-application's
-        mediated packer. Keep this method for tests and any legacy direct
-        callers so it preserves the same precedence rules for project-provided
-        metadata.
-
-        :param path: The path to the prime directory.
-        """
-        self._pre_pack_prime_changed = False
-        self._materialize_package_files_to(path, partition_name=None)
-        if dispatch.create_dispatch(prime_dir=path):
-            self._pre_pack_prime_changed = True

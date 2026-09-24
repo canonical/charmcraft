@@ -307,10 +307,6 @@ class PackageService(services.PackageService):
         value is reused from the existing manifest when available, preventing
         unnecessary repacks on repeated pack runs.
         """
-        manifest_path = self._project_file_path(const.MANIFEST_FILENAME)
-        if manifest_path.is_file():
-            return manifest_path.read_text()
-
         project = cast(
             "BasesCharm | PlatformCharm", self._services.get("project").get()
         )

@@ -396,15 +396,19 @@ def test_get_manifest_yaml_basic(
     assert "bases" in result
 
 
-def test_get_manifest_yaml_prefers_project_file(
+def test_get_manifest_yaml_ignores_project_file(
     package_service,
     service_factory: craft_application.ServiceFactory,
 ):
+    """Manifest output is always rendered, not read from a project-local file."""
     project_dir = service_factory.get("project").resolve_project_file_path().parent
-    expected = "charmcraft-started-at: project-file\n"
-    (project_dir / const.MANIFEST_FILENAME).write_text(expected)
+    stale_manifest = "charmcraft-started-at: project-file\n"
+    (project_dir / const.MANIFEST_FILENAME).write_text(stale_manifest)
 
-    assert package_service.get_manifest_yaml() == expected
+    result = package_service.get_manifest_yaml()
+
+    assert result != stale_manifest
+    assert "project-file" not in result
 
 
 def test_get_manifest_yaml_reuses_timestamp(

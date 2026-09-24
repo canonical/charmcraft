@@ -71,6 +71,33 @@ def test_get_generated_metadata_and_manifest_yaml(
     assert manifest["bases"]
 
 
+def test_get_generated_manifest_yaml_ignores_project_manifest_file(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: ServiceFactory,
+    fake_lifecycle,
+):
+    original_get = service_factory.get
+    monkeypatch.setattr(
+        service_factory,
+        "get",
+        lambda service_name: fake_lifecycle
+        if service_name == "lifecycle"
+        else original_get(service_name),
+    )
+
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    (project_dir / const.MANIFEST_FILENAME).write_text(
+        "charmcraft-started-at: stale\ncharmcraft-version: stale\n"
+    )
+
+    manifest = yaml.safe_load(package_service.get_manifest_yaml())
+
+    assert manifest["charmcraft-started-at"] == "2020-03-14T00:00:00+00:00"
+    assert manifest["charmcraft-version"] != "stale"
+    assert manifest["bases"]
+
+
 def test_get_metadata_yaml_skips_reactive_generated_metadata(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
     monkeypatch: pytest.MonkeyPatch,

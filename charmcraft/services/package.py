@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -29,6 +29,7 @@ import craft_platforms
 import yaml
 from craft_application import services
 from craft_application.services.package import package_file
+from craft_application.services.state import ValueType
 from craft_cli import emit
 from typing_extensions import override
 
@@ -92,13 +93,18 @@ class PackageService(services.PackageService):
         return {None: self.output_dir / self.get_charm_name()}
 
     @override
-    def write_artifacts_state(self, artifacts: dict[str | None, pathlib.Path]) -> None:
+    def write_artifacts_state(
+        self, artifacts: Mapping[str | None, pathlib.Path]
+    ) -> None:
         """Write artifact state for repeated pack runs."""
         platform = self._build_info.platform
         state_service = self._services.get("state")
-        state_entries = [
+        state_entries = cast(
+            ValueType,
+            [
             {"name": name, "path": str(path)} for name, path in artifacts.items()
-        ]
+            ],
+        )
         state_service.set(
             "artifacts", platform, value=state_entries or None, overwrite=True
         )

@@ -22,7 +22,6 @@ from unittest import mock
 
 import craft_application
 import craft_platforms
-import craft_store
 import pytest
 import yaml
 from craft_cli.pytest_plugin import RecordingEmitter
@@ -42,9 +41,6 @@ def _create_app(
 ) -> Charmcraft:
     services.register_services()
     service_factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-    service_factory.get("store").client = mock.Mock(  # ty: ignore[unresolved-attribute]
-        spec_set=craft_store.StoreClient
-    )
     service_factory.update_kwargs("charm_libs", project_dir=project_dir)
     service_factory.update_kwargs(
         "lifecycle",
@@ -64,6 +60,7 @@ def _create_app(
         services=service_factory,
     )
     app._configure_services(None)
+    app.services.get("store").client = mock.Mock()  # ty: ignore[unresolved-attribute]
     commands.fill_command_groups(app)
     return app
 
@@ -145,7 +142,7 @@ def test_pack_skips_when_inputs_are_unchanged(
     if first_app.run() != 0:
         pytest.skip("pack requires unavailable host build packages in this environment")
 
-    charm_path = next(project_path.glob("example-charm_*.charm"))
+    charm_path = next(new_path.glob("example-charm_*.charm"))
     first_mtime_ns = charm_path.stat().st_mtime_ns
 
     time.sleep(1)
@@ -182,7 +179,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
     if first_app.run() != 0:
         pytest.skip("pack requires unavailable host build packages in this environment")
 
-    charm_path = next(project_path.glob("example-charm_*.charm"))
+    charm_path = next(new_path.glob("example-charm_*.charm"))
     first_mtime_ns = charm_path.stat().st_mtime_ns
 
     time.sleep(1)
@@ -223,6 +220,6 @@ def test_pack_artifact_contains_dispatch_after_repeated_pack(
     second_app.configure({})
     assert second_app.run() == 0
 
-    charm_path = next(project_path.glob("example-charm_*.charm"))
+    charm_path = next(new_path.glob("example-charm_*.charm"))
     with zipfile.ZipFile(charm_path) as charm_zip:
         assert const.DISPATCH_FILENAME in charm_zip.namelist()

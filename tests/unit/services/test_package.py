@@ -107,7 +107,9 @@ def test_get_metadata_yaml_matches_metadata_model_rendering(
     metadata_path = project_dir / const.METADATA_FILENAME
 
     assert not metadata_path.exists()
-    assert package_service.get_metadata_yaml() == package_service.metadata.to_yaml_string()
+    assert (
+        package_service.get_metadata_yaml() == package_service.metadata.to_yaml_string()
+    )
 
 
 def test_get_metadata_yaml_skips_reactive_generated_metadata(

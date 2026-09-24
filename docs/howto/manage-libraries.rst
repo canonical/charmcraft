@@ -15,29 +15,10 @@ It's essential to start with a base of understanding of charm libraries from the
 Initialise a library
 --------------------
 
-In your charm's root directory, run the :ref:`charmcraft create-lib <ref_commands_create-lib>`
-command like this:
 
-.. code-block:: bash
-
-    charmcraft create-lib <lib-name>
-
-.. note::
-
-    Before creating a library, you must first register ownership of your charm's name.
-    To learn how to publish a charm on Charmhub, visit :ref:`publish-a-charm`.
-
-This will create a template file at
-``<charm-root-dir>/lib/charms/<charm-name>/v0/<lib-name>.py``.
-
-Edit this file to write your library.
-
-.. important::
-
-    A library must comprise a single Python file, :ref:`<libname>.py <libname-py-file>`.
-    If you write a library that feels too "big" for a single file, it is
-    likely that the library should be split up, or that you are actually
-    writing a full-on charm.
+Charmhub no longer accepts the registration of new libraries. The `Charmhub-hosted charm
+libraries deprecation notice <https://ubu.link/charmhub-libraries-deprecation>`__
+explains the rationale behind this change and instructions on what to do instead.
 
 To learn how to manage a library, visit :external+ops:ref:`manage-libraries`.
 
@@ -82,13 +63,12 @@ inside the library file, then repeat the publish procedure.
 To share your library with other charm developers, navigate to the host charm's Charmhub
 page, go to **Libraries** tab, then copy and share the URL at the top of the page.
 
-View the libs published for a charm
------------------------------------
+View a charm's published libraries
+----------------------------------
 
-The easiest way to find an existing library for a given charm is via
-:ref:`charmcraft list-lib <ref_commands_list-lib>`, as shown below. This
-will query Charmhub and show which libraries are published for the specified
-charm, along with API/patch versions.
+To view a charm's libraries, run the :ref:`charmcraft list-lib <ref_commands_list-lib>`
+command. This will show the given charm's libraries alongside their API and patch
+versions.
 
 .. terminal::
 

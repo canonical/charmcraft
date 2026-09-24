@@ -35,9 +35,22 @@ restore: |
 execute: |
   cd charm
 
-  # create a library
-  charmcraft create-lib $LIB_NAME
-  test -f lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  # create a library file by hand (charmcraft create-lib no longer exists,
+  # as Charmhub does not accept the registration of new libraries anymore)
+  lib_filepath=lib/charms/$CHARM_UNDERSCORE_NAME/v0/$LIB_NAME.py
+  mkdir -p $(dirname $lib_filepath)
+  cat << EOF > $lib_filepath
+  # The unique Charmhub library identifier, never change it
+  LIBID = "spread-test-lib-id"
+
+  # Increment this major API version when introducing breaking changes
+  LIBAPI = 0
+
+  # Increment this PATCH version before using `charmcraft publish-lib` or reset
+  # to 0 if you are raising the major API version
+  LIBPATCH = 1
+  EOF
+  test -f $lib_filepath
 
   # publish 0.1
   publish_result=$(charmcraft publish-lib charms.$CHARM_UNDERSCORE_NAME.v0.$LIB_NAME --format=json)

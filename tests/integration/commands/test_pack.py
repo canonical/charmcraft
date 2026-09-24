@@ -39,6 +39,11 @@ def _reset_parts_callbacks() -> None:
     callbacks.unregister_all()
 
 
+def _state_dir_for(work_dir: pathlib.Path) -> pathlib.Path:
+    """Return a state directory outside the work tree used for repeated pack tests."""
+    return work_dir.parent / f"{work_dir.name}-state"
+
+
 def _create_app(
     project_dir: pathlib.Path,
     work_dir: pathlib.Path,
@@ -141,7 +146,7 @@ def test_pack_skips_when_inputs_are_unchanged(
         ["charmcraft", "pack", "--destructive-mode"],
     )
     (project_path / "requirements.txt").write_text("distro==1.4.0")
-    state_dir = new_path / "state"
+    state_dir = _state_dir_for(new_path)
 
     first_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     first_app.configure({})
@@ -180,7 +185,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
         ["charmcraft", "pack", "--destructive-mode"],
     )
     (project_path / "requirements.txt").write_text("distro==1.4.0")
-    state_dir = new_path / "state"
+    state_dir = _state_dir_for(new_path)
 
     first_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     first_app.configure({})
@@ -219,7 +224,7 @@ def test_pack_artifact_contains_dispatch_after_repeated_pack(
         ["charmcraft", "pack", "--destructive-mode"],
     )
     (project_path / "requirements.txt").write_text("distro==1.4.0")
-    state_dir = new_path / "state"
+    state_dir = _state_dir_for(new_path)
 
     first_app = _create_app(project_path, new_path, state_dir, monkeypatch)
     first_app.configure({})

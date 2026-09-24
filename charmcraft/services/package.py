@@ -107,6 +107,40 @@ class PackageService(services.PackageService):
             "artifacts", platform, value=state_entries or None, overwrite=True
         )
 
+    def read_artifacts_state(
+        self, platform: str | None = None
+    ) -> dict[str | None, pathlib.Path]:
+        """Read artifact-oriented packaging state."""
+        if platform is None:
+            platform = self._build_info.platform
+
+        state_service = self._services.get("state")
+
+        try:
+            artifacts = cast(
+                list[dict[str, str | None]] | None,
+                state_service.get("artifacts", platform),
+            )
+        except KeyError:
+            artifact = cast(str | None, state_service.get("artifact", platform))
+            resources = cast(
+                dict[str, str] | None, state_service.get("resources", platform)
+            )
+            artifact_entries: list[dict[str, str | None]] = []
+            if artifact:
+                artifact_entries.append({"name": None, "path": artifact})
+            if resources:
+                artifact_entries.extend(
+                    {"name": name, "path": path} for name, path in resources.items()
+                )
+            artifacts = artifact_entries
+
+        return {
+            artifact.get("name"): pathlib.Path(cast(str, artifact["path"]))
+            for artifact in artifacts or []
+            if artifact.get("path")
+        }
+
     @override
     def _pack(self, *, name: str | None = None, path: pathlib.Path) -> None:
         """Pack the prime directory into the given charm path."""

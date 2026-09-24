@@ -200,6 +200,7 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
     assert v2_project["charm-user"] == "non-root"
     v2_pyproject = (v2_dir / "pyproject.toml").read_text()
     assert '"paas-charm>=2.0.dev1,<3",' in v2_pyproject
+    assert '"cosl==1.10.3",' in v2_pyproject
 
 
 def test_profiles_discovered_from_templates(init_command):

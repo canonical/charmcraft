@@ -58,21 +58,13 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
-Example actions in the machine and Kubernetes profiles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Base-specific init profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charms created with the ``machine`` profile now declare ``pause`` and ``resume``
-actions, which stop and start the workload without removing the unit. Charms created
-with the ``kubernetes`` profile now declare a ``restart`` action, which restarts the
-workload's Pebble service.
-
-Both profiles scaffold unit and integration tests for their actions.
-
-
-<Feature A>
-~~~~~~~~~~~
-
-- <Add a short description of a minor change.>
+The ``charmcraft init`` command now accepts ``--base`` for profiles that provide
+base-specific variants. The 12-factor framework profiles (Django, Flask, FastAPI, Go,
+ExpressJS, and Spring Boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
+They continue to use Ubuntu 24.04 LTS when ``--base`` isn't provided.
 
 
 Backwards-incompatible changes
@@ -120,6 +112,8 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.5.
 
+- `#2661 <https://github.com/canonical/charmcraft/issues/2661>`__
+  Packing a charm sometimes fails with "Too many levels of symbolic links"
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
 

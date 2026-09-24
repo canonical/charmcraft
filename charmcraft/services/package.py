@@ -49,10 +49,6 @@ if TYPE_CHECKING:
 class PackageService(services.PackageService):
     """Business logic for creating packages."""
 
-    def __init__(self, app, services) -> None:
-        super().__init__(app, services)
-        self._pre_pack_prime_changed = False
-
     def _project_file_path(self, filename: str) -> pathlib.Path:
         """Return the path for a project-local file."""
         return (
@@ -379,9 +375,6 @@ class PackageService(services.PackageService):
     @override
     def _app_needs_repack(self, partition: str | None = None) -> bool:
         """Detect post-prime changes that occur before mediated packing runs."""
-        if self._pre_pack_prime_changed:
-            return True
-
         artifact_path = self.get_artifacts()[partition]
         if not artifact_path.exists():
             return True

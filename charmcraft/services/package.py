@@ -101,9 +101,7 @@ class PackageService(services.PackageService):
         state_service = self._services.get("state")
         state_entries = cast(
             ValueType,
-            [
-            {"name": name, "path": str(path)} for name, path in artifacts.items()
-            ],
+            [{"name": name, "path": str(path)} for name, path in artifacts.items()],
         )
         state_service.set(
             "artifacts", platform, value=state_entries or None, overwrite=True

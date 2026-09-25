@@ -170,13 +170,28 @@ The ``<config option name>`` and ``<key inside the secret>`` keywords in
 the environment variable name will have the hyphens replaced by
 underscores and all the letters capitalised.
 
-The configuration option ``django-secret-key-id`` is automatically added by the
-``django-framework`` extension. The secret must contain a single key ``value``,
-which holds the actual Django secret key and is exposed as the
-``DJANGO_SECRET_KEY`` environment variable. If this configuration option is not set,
-``DJANGO_SECRET_KEY`` is automatically assigned a random value.
+See more: :external+juju:ref:`Juju | Secret <secret>`
 
-   See more: :external+juju:ref:`Juju | Secret <secret>`
+.. tab-set::
+
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
+        :sync: base-22-24
+
+        The extension automatically adds the ``django-secret-key-id`` configuration
+        option. The secret must contain a single key ``value``, which holds the actual
+        Django secret key and is exposed as the ``DJANGO_SECRET_KEY`` environment
+        variable. If this configuration option is not set, ``DJANGO_SECRET_KEY`` is
+        automatically assigned a random value.
+
+    .. tab-item:: Ubuntu 26.04 LTS and higher
+        :sync: base-26
+
+        The extension automatically adds the secret-typed ``app-secret-key``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Django secret key and is exposed as the ``DJANGO_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``DJANGO_SECRET_KEY`` is automatically assigned a random value.
+
 
 .. _django-grafana-graphs:
 

@@ -35,7 +35,7 @@ View details about the extension in use
 ---------------------------------------
 
 Suppose you've initialised a rock / charm with a profile that comes with
-an extension (currently, ``flask-framework``), and your
+an extension, and your
 ``rockcraft.yaml`` / ``charmcraft.yaml > extensions`` lists this
 extension.
 
@@ -85,7 +85,6 @@ then run  ``charmcraft expand-extensions``. For example:
 
         CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
 
-        *EXPERIMENTAL* extension 'flask-framework' enabled
         name: my-flask-app-k8s
         summary: A very short one-line summary of the flask application.
         description: |

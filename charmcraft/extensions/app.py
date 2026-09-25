@@ -59,6 +59,15 @@ SECRET_OPTIONS = {
         "and use the output secret ID to configure this option.",
     },
 }
+V2_SECRET_OPTIONS = {
+    "app-secret-key": {
+        "type": "secret",
+        "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units. "
+        'The secret should contain a single key, "value", which maps to the actual application secret key. '
+        "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key my-app`, "
+        "and use the output secret ID to configure this option.",
+    }
+}
 OAUTH_DYNAMIC_OPTIONS = {
     "{endpoint_name}-redirect-path": {
         "type": "string",
@@ -417,6 +426,22 @@ class _AppBase(SinglePlatformExtension):
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
 
+    @staticmethod
+    def _validate_port(parsed: dict[str, Any], key: str) -> None:
+        """Validate a top-level port in ``paas-config.yaml``."""
+        if key not in parsed:
+            return
+        value = parsed[key]
+        if type(value) is not int:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be an integer, "
+                f"got {type(value).__name__}"
+            )
+        if not 1 <= value <= 65535:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be between 1 and 65535, got {value}"
+            )
+
     @override
     def _check_paas_config(self) -> None:
         """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
@@ -444,15 +469,19 @@ class _AppBaseV2(_AppBase):
                 f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
                 f"for '{self.framework}-framework'"
             )
-        if "metrics_path" in parsed:
-            metrics_path = parsed["metrics_path"]
+        self._validate_port(parsed, "port")
+        self._validate_port(parsed, "metrics-port")
+        if "metrics-path" in parsed:
+            metrics_path = parsed["metrics-path"]
             if not isinstance(metrics_path, str):
                 raise ExtensionError(
-                    f"metrics_path in {PAAS_CONFIG_FILE} must be a string, got {type(metrics_path).__name__}"
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a string, "
+                    f"got {type(metrics_path).__name__}"
                 )
             if not _VALID_URL_PATH_RE.match(metrics_path):
                 raise ExtensionError(
-                    f"metrics_path in {PAAS_CONFIG_FILE} must be a valid URL path starting with '/', got '{metrics_path}'"
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a valid URL path "
+                    f"starting with '/', got '{metrics_path}'"
                 )
 
     @staticmethod
@@ -475,6 +504,7 @@ class _AppBaseV2(_AppBase):
             },
             **self.get_config_part(),
         }
+        snippet["peers"] = {"peers": {"interface": "peers"}}
         return snippet
 
     def get_config_part(self) -> dict[str, Any]:
@@ -586,7 +616,14 @@ class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
 
     framework = "flask"
-    options = FlaskFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FlaskFrameworkV1.options.items()
+            if key not in {"flask-secret-key", "flask-secret-key-id"}
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 FlaskFrameworkFactory = _FrameworkFactory(FlaskFrameworkV1, FlaskFrameworkV2)
@@ -646,7 +683,14 @@ class DjangoFrameworkV2(_AppBaseV2):
 
     framework = "django"
     actions = {**DjangoFrameworkV1.actions}
-    options = DjangoFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in DjangoFrameworkV1.options.items()
+            if key not in {"django-secret-key", "django-secret-key-id"}
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 DjangoFrameworkFactory = _FrameworkFactory(DjangoFrameworkV1, DjangoFrameworkV2)
@@ -686,7 +730,7 @@ class GoFrameworkV2(_AppBaseV2):
     options = {
         **APP_PORT_OPTION,
         **METRICS_OPTIONS,
-        **SECRET_OPTIONS,
+        **V2_SECRET_OPTIONS,
     }
 
 
@@ -738,7 +782,14 @@ class FastAPIFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor FastAPI applications."""
 
     framework = "fastapi"
-    options = FastAPIFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FastAPIFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFrameworkV1, FastAPIFrameworkV2)
@@ -775,7 +826,14 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = ExpressJSFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in ExpressJSFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 ExpressJSFrameworkFactory = _FrameworkFactory(
@@ -843,7 +901,14 @@ class SpringBootFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
-    options = SpringBootFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in SpringBootFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
     endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options
 
 

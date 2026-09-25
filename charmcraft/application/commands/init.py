@@ -18,15 +18,17 @@
 
 from __future__ import annotations
 
-import argparse
 import contextlib
 import importlib.resources
 import pathlib
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from craft_application.commands import InitCommand as BaseInitCommand
 
 from charmcraft.services.init import CharmcraftInitService
+
+if TYPE_CHECKING:
+    import argparse
 
 DEFAULT_PROFILE = "kubernetes"
 DEFAULT_BASES = {

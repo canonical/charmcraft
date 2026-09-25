@@ -664,7 +664,6 @@ class AdditionalFiles(Linter):
         self, stage_dir: pathlib.Path, prime_dir: pathlib.Path
     ) -> str:
         """Compare the staged files with the prime files."""
-        errors: list[str] = []
         stage_dir = stage_dir.absolute()
         prime_dir = prime_dir.absolute()
 
@@ -673,9 +672,11 @@ class AdditionalFiles(Linter):
 
         prime_files = prime_files - self.IGNORE_FILES
 
-        for prime_file in prime_files:
-            if prime_file not in stage_files:
-                errors.append(f"File '{prime_file}' is not staged but in the charm.")
+        errors: list[str] = [
+            f"File '{prime_file}' is not staged but in the charm."
+            for prime_file in prime_files
+            if prime_file not in stage_files
+        ]
 
         if errors:
             self.text = "Error: Additional files found in the charm:\n" + "\n".join(

@@ -22,7 +22,6 @@ import json
 import os
 import pathlib
 import shutil
-from collections.abc import Iterable
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -43,6 +42,8 @@ from charmcraft.models.project import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from charmcraft.services.analysis import AnalysisService
 
 

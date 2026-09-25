@@ -21,12 +21,16 @@ from __future__ import annotations
 import pathlib
 import tempfile
 import zipfile
-from collections.abc import Container, Iterator
+from typing import TYPE_CHECKING
 
 import craft_application
 
 from charmcraft import errors, linters, models
-from charmcraft.models.lint import CheckResult
+
+if TYPE_CHECKING:
+    from collections.abc import Container, Iterator
+
+    from charmcraft.models.lint import CheckResult
 
 
 class AnalysisService(craft_application.AppService):

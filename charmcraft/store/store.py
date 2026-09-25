@@ -293,18 +293,16 @@ class Store:
         if include_collaborations:
             endpoint += "?include-collaborations=true"
         response = self._client.request_urlpath_json("GET", endpoint)
-        result = []
-        for item in response["results"]:
-            result.append(
-                Entity(
-                    name=item["name"],
-                    private=item["private"],
-                    status=item["status"],
-                    entity_type=item["type"],
-                    publisher_display_name=item["publisher"]["display-name"],
-                )
+        return [
+            Entity(
+                name=item["name"],
+                private=item["private"],
+                status=item["status"],
+                entity_type=item["type"],
+                publisher_display_name=item["publisher"]["display-name"],
             )
-        return result
+            for item in response["results"]
+        ]
 
     def _upload(self, endpoint, filepath, *, extra_fields=None):
         """Upload for all charms, bundles and resources (generic process)."""

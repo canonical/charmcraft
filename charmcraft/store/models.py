@@ -151,7 +151,7 @@ class Release:
 
     revision: int
     channel: str
-    expires_at: datetime.datetime
+    expires_at: datetime.datetime | None
     resources: list[Resource]
     base: Base | None
 

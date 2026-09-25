@@ -206,10 +206,11 @@ class LoginCommand(CharmcraftCommand):
             ("channels", parsed_args.channel),
             ("permissions", parsed_args.permission),
         ]
-        kwargs = {}
-        for arg_name, namespace_value in restrictive_options_map:
-            if namespace_value is not None:
-                kwargs[arg_name] = namespace_value
+        kwargs = {
+            arg_name: namespace_value
+            for arg_name, namespace_value in restrictive_options_map
+            if namespace_value is not None
+        }
 
         packages = (
             utils.get_packages(
@@ -330,8 +331,7 @@ class WhoamiCommand(CharmcraftCommand):
 
         if permissions := macaroon_info.get("permissions"):
             human_msgs.append("permissions:")
-            for item in permissions:
-                human_msgs.append(f"- {item}")
+            human_msgs.extend(f"- {item}" for item in permissions)
             prog_info["permissions"] = permissions
 
         if packages := macaroon_info.get("packages"):
@@ -353,8 +353,7 @@ class WhoamiCommand(CharmcraftCommand):
 
         if channels := macaroon_info.get("channels"):
             human_msgs.append("channels:")
-            for item in channels:
-                human_msgs.append(f"- {item}")
+            human_msgs.extend(f"- {item}" for item in channels)
             prog_info["channels"] = channels
 
         if parsed_args.format:
@@ -1232,7 +1231,7 @@ class StatusCommand(CharmcraftCommand):
                     if release is None:
                         # not for this base!
                         continue
-                    description = "/".join((branch.risk, branch.branch))
+                    description = f"{branch.risk}/{branch.branch}"
                     expiration = utils.format_timestamp(release.expires_at)
                     revision = revisions_by_revno[release.revision]
                     datum = ["", "", description, revision.version, release.revision]

@@ -19,17 +19,19 @@ from __future__ import annotations
 
 import datetime
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import craft_application
-import craft_cli
 from craft_application import util
 from craft_application.errors import ProjectFileMissingError
-from craft_parts.plugins.plugins import PluginType
 from overrides import override
 
 from charmcraft import const, models, parts, services
 from charmcraft.application import commands
+
+if TYPE_CHECKING:
+    import craft_cli
+    from craft_parts.plugins.plugins import PluginType
 
 GENERAL_SUMMARY = """
 Charmcraft helps build, package and publish operators on Charmhub.

@@ -19,8 +19,7 @@ from __future__ import annotations
 
 import os
 import platform
-from collections.abc import Collection, Mapping, Sequence
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib import parse
 
 import craft_application
@@ -33,7 +32,6 @@ from craft_store.login import UbuntuOneLogin
 from overrides import override
 
 from charmcraft import const, env, errors, store
-from charmcraft.models import CharmLib
 from charmcraft.store import AUTH_DEFAULT_PERMISSIONS, AUTH_DEFAULT_TTL
 from charmcraft.store.models import (
     ChannelData,
@@ -41,6 +39,11 @@ from charmcraft.store.models import (
     LibraryMetadataIdRequest,
     LibraryMetadataRequest,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Mapping, Sequence
+
+    from charmcraft.models import CharmLib
 
 
 class BaseStoreService(craft_application.AppService):
@@ -440,7 +443,7 @@ class StoreService(BaseStoreService):
             # Type ignore here because error_list is supposed to have string keys, but
             # for whatever reason the store returns a null code for this one.
             # https://bugs.launchpad.net/snapstore-server/+bug/1925065
-            if exc.error_list[None]["message"] == (  # ty: ignore[invalid-argument-type]
+            if exc.error_list[None]["message"] == (  # type: ignore[index] # ty: ignore[invalid-argument-type]
                 "Items need to include 'library_id' or 'package_id'"
             ):
                 raise errors.LibraryError(

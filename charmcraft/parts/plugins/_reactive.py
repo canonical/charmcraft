@@ -185,7 +185,7 @@ def _get_charm_build_command(charm_build_arguments: list[str], build_dir: Path):
     if not VERBOSITY_PARAMS & set(charm_build_arguments):
         # Check for things like -ldebug or --log-level=debug
         for argument in charm_build_arguments:
-            if argument.startswith("-l") or argument.startswith("--log-level"):
+            if argument.startswith(("-l", "--log-level")):
                 break
         else:
             cmd.append("--verbose")

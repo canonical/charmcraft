@@ -20,22 +20,25 @@ from __future__ import annotations
 
 import contextlib
 import fcntl
-import io
 import os
 import pathlib
-from collections.abc import Callable, Generator
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import craft_application
-import craft_platforms
-import craft_providers
 from craft_application import services
-from craft_application.util import ProServices
 from craft_cli import emit
-from craft_providers import bases
 from typing_extensions import override
 
 from charmcraft import env
+
+if TYPE_CHECKING:
+    import io
+    from collections.abc import Callable, Generator
+
+    import craft_platforms
+    import craft_providers
+    from craft_application.util import ProServices
+    from craft_providers import bases
 
 
 class ProviderService(services.ProviderService):
@@ -124,7 +127,7 @@ class ProviderService(services.ProviderService):
             clean_existing=clean_existing,
             prepare_instance=prepare_instance,
             project_name=project_name,
-            **kwargs,  # ty: ignore[invalid-argument-type]
+            **kwargs,  # type: ignore[arg-type] # ty: ignore[invalid-argument-type]
         ) as instance:
             try:
                 instance.execute_run(["chmod", "a+rwx", "/tmp/craft-state"])

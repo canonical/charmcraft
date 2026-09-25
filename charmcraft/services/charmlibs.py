@@ -18,15 +18,18 @@
 from __future__ import annotations
 
 import dataclasses
-import pathlib
-from collections.abc import Collection
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import craft_application
 
 from charmcraft import utils
 from charmcraft.services.store import StoreService
-from charmcraft.store.models import Library
+
+if TYPE_CHECKING:
+    import pathlib
+    from collections.abc import Collection
+
+    from charmcraft.store.models import Library
 
 
 @dataclasses.dataclass

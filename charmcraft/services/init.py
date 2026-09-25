@@ -19,17 +19,18 @@
 from __future__ import annotations
 
 import os
-import pathlib
 import re
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
-import jinja2
 from craft_application.services import InitService
 from craft_cli import CraftError, emit
 from typing_extensions import override
 
 if TYPE_CHECKING:
+    import pathlib
+
+    import jinja2
     from craft_application.application import AppMetadata
     from craft_application.services import ServiceFactory
 

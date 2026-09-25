@@ -56,9 +56,7 @@ def test_ensure_copyright() -> None:
     for filepath in get_python_filepaths():
         if Path(filepath).stat().st_size == 0:
             continue
-        if filepath.endswith("charmcraft/_version.py") or filepath.endswith(
-            "charmcraft\\_version.py"
-        ):
+        if filepath.endswith(("charmcraft/_version.py", "charmcraft\\_version.py")):
             continue
 
         with open(filepath, encoding="utf8") as fh:

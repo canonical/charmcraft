@@ -227,9 +227,7 @@ class CharmBuilder:
 
     def _calculate_dependencies_hash(self):
         """Calculate a hash for all current dependencies."""
-        all_deps = []
-        for req_file in self.requirement_paths:
-            all_deps.append(req_file.read_text())
+        all_deps = [req_file.read_text() for req_file in self.requirement_paths]
         all_deps.extend(self.binary_python_packages)
         all_deps.extend(self.python_packages)
         all_deps.extend(self.charmlib_deps)

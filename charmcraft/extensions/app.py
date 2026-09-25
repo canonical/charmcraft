@@ -24,7 +24,8 @@ from typing import Any
 import yaml
 from overrides import override
 
-from ..errors import ExtensionError
+from charmcraft.errors import ExtensionError
+
 from .extension import Extension, SinglePlatformExtension, get_project_bases
 
 APP_PORT_OPTION = {

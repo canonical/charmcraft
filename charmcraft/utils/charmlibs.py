@@ -247,7 +247,7 @@ def get_lib_info(
             raise errors.BadLibraryPathError(lib_path)
         if libsdir != "lib" or charmsdir != "charms" or lib_path.suffix != ".py":
             raise errors.BadLibraryPathError(lib_path)
-        full_name = ".".join((charmsdir, importable_charm_name, v_api, lib_path.stem))
+        full_name = f"{charmsdir}.{importable_charm_name}.{v_api}.{lib_path.stem}"
     elif full_name:
         # build the path! convert a lib name with dots to the full path, including lib
         # dir and Python extension.
@@ -322,7 +322,7 @@ def get_libs_from_tree(
 
     This can take charm_name as both importable and normal form.
     """
-    local_libs_data = []
+    local_libs_data: list[LibData] = []
 
     current_directory = os.getcwd()
     if root is not None:
@@ -339,8 +339,10 @@ def get_libs_from_tree(
         for charm_dir in charm_dirs:
             for v_dir in sorted(charm_dir.iterdir()):
                 if v_dir.is_dir() and v_dir.name[0] == "v" and v_dir.name[1:].isdigit():
-                    for libfile in sorted(v_dir.glob("*.py")):
-                        local_libs_data.append(get_lib_info(lib_path=libfile))
+                    local_libs_data.extend(
+                        get_lib_info(lib_path=libfile)
+                        for libfile in sorted(v_dir.glob("*.py"))
+                    )
     finally:
         os.chdir(current_directory)
     return local_libs_data

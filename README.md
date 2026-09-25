@@ -54,7 +54,7 @@ sudo snap install charmcraft --classic
 ```
 
 For information on installing Charmcraft on other platforms, refer to our [installation
-guide](https://documentation.ubuntu.com/charmcraft/stable/howto/set-up-charmcraft).
+guide](https://documentation.ubuntu.com/charmcraft/stable/how-to/manage-charmcraft).
 
 ## Documentation
 

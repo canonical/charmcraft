@@ -232,7 +232,7 @@ prepare: |
   install_charmcraft
 
 suites:
-  docs/howto/code/: &docsuite
+  docs/how-to/code/: &docsuite
     summary: tests howto from the docs
     systems:
       - ubuntu-24.04-64
@@ -280,7 +280,7 @@ suites:
       juju destroy-controller --force --destroy-all-models \
       --destroy-storage --no-prompt --no-wait dev-controller
 
-  docs/tutorial/code/:
+  docs/tutorials/code/:
     <<: *docsuite
     summary: tests tutorial from the docs
 

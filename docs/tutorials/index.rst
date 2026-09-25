@@ -1,3 +1,6 @@
+.. meta::
+    :description: The tutorials for Charmcraft. These tutorials are guided lessons that help you develop skills by using Charmcraft.
+
 .. _tutorial:
 
 Tutorials

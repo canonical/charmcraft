@@ -1,3 +1,6 @@
+.. meta::
+    :description: The practical, goal-oriented documentation for Charmcraft. These guides provide directions for completing tasks and solving problems with Charmcraft.
+
 .. _how-to-guides:
 
 How-to guides

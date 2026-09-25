@@ -4,7 +4,7 @@ PROJECT=charmcraft
 # COVERAGE_SOURCE="starcraft"
 UV_TEST_GROUPS := "--group=dev"
 UV_DOCS_GROUPS := "--group=docs"
-UV_LINT_GROUPS := "--group=lint" "--group=types" "--group=docs"
+UV_LINT_GROUPS := "--group=lint" "--group=types" $(UV_DOCS_GROUPS)
 UV_TICS_GROUPS := "--group=tics"
 
 # If you have dev dependencies that depend on your distro version, uncomment these:
@@ -27,10 +27,13 @@ PRETTIER_FILES="tests/spread/**/task.yaml" "*.yaml" "*.md" "snap/snapcraft.yaml"
 PRETTIER_FILES += "!.github/instructions/**" "!.github/skills/**"
 
 .PHONY: format
-format: format-ruff format-codespell format-prettier  ## Run all automatic formatters
+format: format-ruff format-codespell format-prettier format-shfmt format-tombi format-pre-commit  ## Run all automatic formatters
 
 .PHONY: lint
-lint: lint-ruff lint-codespell lint-ty lint-shellcheck lint-prettier lint-docs lint-twine  ## Run all linters
+lint: lint-code lint-docs lint-twine lint-uv-lockfile lint-actions  ## Run all linters
+
+.PHONY: lint-code
+lint-code: lint-ruff lint-ty lint-codespell lint-mypy lint-prettier lint-pyright lint-shfmt lint-shellcheck lint-tombi  ## Run code-specific linters
 
 .PHONY: pack
 pack: pack-pip  ## Build all packages
@@ -93,7 +96,7 @@ endif
 
 # Used for installing build dependencies in CI.
 .PHONY: install-build-deps
-install-build-deps: install-linux-build-deps install-macos-build-deps
+install-build-deps: install-linux-build-deps install-macos-build-deps install-lint-build-deps
 	# Ensure the system pip is new enough. If we get an error about breaking system packages, it is.
 	sudo pip install 'pip>=22.2' 2> /dev/null || true
 ifeq ($(APT_PACKAGES),)

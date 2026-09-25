@@ -93,8 +93,8 @@ Governance and policies
 .. toctree::
     :hidden:
 
-    tutorial/index
-    howto/index
+    tutorials/index
+    how-to/index
     reference/index
     explanation/index
 

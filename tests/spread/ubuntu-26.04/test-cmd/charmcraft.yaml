@@ -12,7 +12,7 @@ description: |
   Finally, a paragraph that describes whom the charm is useful for.
 
 # Documentation:
-# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/build-guides/select-platforms/
+# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/how-to/select-platforms/
 base: ubuntu@26.04
 build-base: ubuntu@devel
 platforms:

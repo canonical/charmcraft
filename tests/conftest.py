@@ -81,6 +81,14 @@ parts:
 
 
 @pytest.fixture
+def project_main_module() -> types.ModuleType:
+    """Fixture that returns the project's principal package (imported)."""
+    import charmcraft  # noqa: PLC0415
+
+    return charmcraft
+
+
+@pytest.fixture
 def basic_charm_dict() -> dict[str, Any]:
     return {
         "type": "charm",

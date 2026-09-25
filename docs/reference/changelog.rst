@@ -302,7 +302,7 @@ New Features
 * Charmcraft has a new :ref:`ref_commands_fetch-libs` command, which, when
   combined with a ``charm-libs`` key in ``charmcraft.yaml``, allows the
   automatic fetching and updating of multiple
-  :doc:`charm libraries </howto/manage-libraries>`.
+  :doc:`charm libraries </how-to/manage-libraries>`.
 * The new, experimental :ref:`ref_commands_test` command is also included in
   Charmcraft 3.1. Please have a go with it. Documentation is fairly minimal
   right now, as the implementation is still in flux.

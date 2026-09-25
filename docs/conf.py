@@ -121,6 +121,9 @@ templates_path = ["_templates"]
 
 rediraffe_redirects = "redirects.txt"
 
+# Strips '/index.html' from destination URLs when building with 'dirhtml'
+rediraffe_dir_only = True
+
 
 ###########################
 # Link checker exceptions #
@@ -151,6 +154,9 @@ linkcheck_ignore = [
 
 # Give linkcheck multiple tries on failure
 linkcheck_retries = 20
+
+# Report timeouts as 'timeout' instead of 'broken'
+linkcheck_report_timeouts_as_broken = False
 
 
 ########################
@@ -299,6 +305,10 @@ intersphinx_mapping = {
     "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
 }
 
+# Block Intersphinx from looking up external sources with internal references. In other
+# words, only :external+<project>... will search in other projects.
+intersphinx_disabled_reftypes = ["std:*"]
+
 
 ##############################
 # Custom Craft configuration #
@@ -354,8 +364,8 @@ def sub_12f_version(prolog: str, path: str, package: str, variable: str) -> str:
 
     return prolog
 
-rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/django/requirements.txt", "Django==", "conf_django_version")
+rst_prolog = sub_12f_version(rst_prolog, "tutorials/code/django/requirements.txt", "Django==", "conf_django_version")
 
-rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/fastapi/requirements.txt", "fastapi[standard]==", "conf_fastapi_version")
+rst_prolog = sub_12f_version(rst_prolog, "tutorials/code/fastapi/requirements.txt", "fastapi[standard]==", "conf_fastapi_version")
 
-rst_prolog = sub_12f_version(rst_prolog, "tutorial/code/flask/requirements.txt", "Flask==", "conf_flask_version")
+rst_prolog = sub_12f_version(rst_prolog, "tutorials/code/flask/requirements.txt", "Flask==", "conf_flask_version")

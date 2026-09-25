@@ -95,7 +95,7 @@ Created project files for your charm:
 To manage your charm's dependencies, use uv.
 
 To migrate from the Charm plugin to the uv plugin, see:
-https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+https://canonical.com/juju/docs/charmcraft/stable/how-to/migrate-plugins/charm-to-uv/
 
 Next steps:
 

@@ -91,7 +91,7 @@ Documentation improvements
 Across the documentation, we made numerous technical corrections, fixed many links,
 and revised the formatting. We also added:
 
-- :doc:`How to use a database with your 12-factor charm </howto/manage-web-app-charms/use-a-database>`
+- :doc:`How to use a database with your 12-factor charm </how-to/manage-web-app-charms/use-a-database>`
 
 Known issues
 ------------

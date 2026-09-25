@@ -26,6 +26,13 @@ and are not isolated in any way.
 
 ## Release cycle
 
+<!---
+The information under this header may not be strictly accurate for all applications.
+Review the wording carefully and only copy it if the support offered makes sense. If it
+seems wrong, speak with Canonical Security Engineering about refining a version for
+your application.
+-->
+
 Canonical tracks and responds to vulnerabilities in the latest patch of every
 [current major release] of Charmcraft. For a list of supported bases, see the
 [base] documentation.
@@ -42,6 +49,12 @@ base, the previous major release remains supported until the dropped base reache
 end of its extended support lifecycle.
 
 ## Reporting a vulnerability
+
+<!---
+Replace the first link in this section with your repository's advisories board. See
+GitHub's documentation for enabling the security advisory tab on a repository:
+https://docs.github.com/en/code-security/security-advisories/working-with-repository-security-advisories/configuring-private-vulnerability-reporting-for-a-repository
+-->
 
 To report a security issue, file a [Private Security Report] with a description of the
 issue, the steps you took to create the issue, affected versions, and, if known,

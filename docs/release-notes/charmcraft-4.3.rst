@@ -121,7 +121,7 @@ Documentation improvements
 
 Charmcraft 4.3 includes the following new and updated documentation:
 
-- :doc:`How to migrate your charm to Ubuntu 26.04 </howto/migrate-bases/change-to-ubuntu-2604>`
+- :doc:`How to migrate your charm to Ubuntu 26.04 </how-to/migrate-bases/change-to-ubuntu-2604>`
 - Documentation for the ``django-secret-key-id`` configuration option
 - Valkey integration reference, including environment variables and integration metadata
 - Plugin differences noted in the guide on managing charm icons

@@ -23,6 +23,14 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
     juju.wait(jubilant.all_active)
 
 
+def test_pause_and_resume(charm: pathlib.Path, juju: jubilant.Juju):
+    """Take the unit out of service with the pause action, then put it back."""
+    juju.run("{{ name }}/0", "pause")
+    juju.wait(jubilant.all_maintenance)
+    juju.run("{{ name }}/0", "resume")
+    juju.wait(jubilant.all_active)
+
+
 # If you implement {{ workload_module }}.get_version in the charm source,
 # remove the @pytest.mark.skip line to enable this test.
 # Alternatively, remove this test if you don't need it.

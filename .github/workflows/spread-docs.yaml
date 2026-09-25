@@ -46,7 +46,7 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
 
   docs-tests:
     runs-on: [self-hosted, linux, amd64, noble, large]
@@ -95,8 +95,10 @@ jobs:
           go install github.com/canonical/spread/cmd/spread@latest
 
       - name: Run spread
+        env:
+          SPREAD_SYSTEM: ${{ matrix.system }}
         run: |
-          $(go env GOPATH)/bin/spread "${{ matrix.system }}"
+          "$(go env GOPATH)/bin/spread" "${SPREAD_SYSTEM}"
 
       - name: Discard spread workers
         if: always()

@@ -97,10 +97,10 @@ jobs:
   #   runs-on: ${{ matrix.os }}
   #   steps:
   #     # Installing and caching homebrew using the action should speed up subsequent CI:
-  #     # https://github.com/Homebrew/actions/tree/master/setup-homebrew
+  #     # https://github.com/Homebrew/actions/tree/main/setup-homebrew
   #     - name: Set up Homebrew
   #       id: set-up-homebrew
-  #       uses: Homebrew/actions/setup-homebrew@master
+  #       uses: Homebrew/actions/setup-homebrew@main
   #     - name: Cache Homebrew Bundler RubyGems
   #       id: cache
   #       uses: actions/cache@v4

@@ -25,13 +25,15 @@ import subprocess
 import sys
 from unittest import mock
 
+import craft_application
 import pytest
 import pytest_check
 import yaml
+from craft_application.errors import InitError
 
 import charmcraft
 import charmcraft.application
-from charmcraft import errors
+from charmcraft import errors, services
 from charmcraft.application.commands import init
 from charmcraft.utils import S_IXALL
 
@@ -68,12 +70,34 @@ VALID_AUTHORS = [
     pytest.param("Author McAuthorFace", id="ascii-author"),
     pytest.param("فلانة الفلانية", id="non-ascii-author"),
 ]
+FRAMEWORK_PROFILES = [
+    "django-framework",
+    "expressjs-framework",
+    "fastapi-framework",
+    "flask-framework",
+    "go-framework",
+    "spring-boot-framework",
+]
+ALL_PROFILES = [
+    *FRAMEWORK_PROFILES,
+    "kubernetes",
+    "machine",
+    "test-kubernetes",
+    "test-machine",
+]
 
 
 @pytest.fixture
 def init_command():
+    services.register_services()
+    service_factory = craft_application.ServiceFactory(
+        app=charmcraft.application.APP_METADATA
+    )
     return init.InitCommand(
-        {"app": charmcraft.application.APP_METADATA, "services": None}
+        {
+            "app": charmcraft.application.APP_METADATA,
+            "services": service_factory,
+        }
     )
 
 
@@ -83,7 +107,9 @@ def create_namespace(
     author="J Doe",
     force=False,
     profile=init.DEFAULT_PROFILE,
+    base=None,
     project_dir: pathlib.Path | None = None,
+    project_dir_option: pathlib.Path | None = None,
 ):
     """Helper to create a valid namespace."""
     if project_dir is None:
@@ -93,7 +119,9 @@ def create_namespace(
         author=author,
         force=force,
         profile=profile,
+        base=base,
         project_dir=project_dir,
+        project_dir_option=project_dir_option,
     )
 
 
@@ -150,14 +178,7 @@ def test_files_created_correct(
 
 @pytest.mark.parametrize(
     "profile",
-    [
-        "django-framework",
-        "expressjs-framework",
-        "fastapi-framework",
-        "flask-framework",
-        "go-framework",
-        "spring-boot-framework",
-    ],
+    FRAMEWORK_PROFILES,
 )
 def test_framework_profile_charm_user(new_path, init_command, profile):
     v1_dir = new_path / "v1"
@@ -167,12 +188,78 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
     assert "charm-user" not in v1_project
 
     v2_dir = new_path / "v2"
-    v2_template = f"init-{profile}-26.04"
-    with mock.patch.dict(init.PROFILES, {profile: v2_template}):
-        init_command.run(create_namespace(profile=profile, project_dir=v2_dir))
+    init_command.run(
+        create_namespace(
+            profile=profile,
+            base="ubuntu@26.04",
+            project_dir=v2_dir,
+        )
+    )
 
     v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
     assert v2_project["charm-user"] == "non-root"
+
+
+def test_profiles_discovered_from_templates(init_command):
+    assert init_command.profiles == sorted(ALL_PROFILES)
+
+
+@pytest.mark.parametrize(
+    "profile",
+    [
+        "django-framework",
+        "expressjs-framework",
+        "flask-framework",
+        "fastapi-framework",
+        "go-framework",
+        "spring-boot-framework",
+    ],
+)
+@pytest.mark.parametrize("base", ["ubuntu@24.04", "ubuntu@26.04"])
+def test_explicit_base_variant(new_path, init_command, profile: str, base: str):
+    init_command.run(create_namespace(profile=profile, base=base))
+
+    project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
+
+    assert project["base"] == base
+    assert project.get("charm-user") == ("non-root" if base == "ubuntu@26.04" else None)
+    assert (new_path / "pyproject.toml").exists()
+    if base == "ubuntu@26.04":
+        assert not (new_path / "requirements.txt").exists()
+    elif profile in ["django-framework", "flask-framework", "fastapi-framework"]:
+        assert (new_path / "requirements.txt").exists()
+
+
+def test_unavailable_base_variant(new_path, init_command):
+    with pytest.raises(
+        InitError,
+        match="Base variant 'ubuntu@25.04' is not available",
+    ) as exc_info:
+        init_command.run(
+            create_namespace(profile="flask-framework", base="ubuntu@25.04")
+        )
+
+    assert exc_info.value.resolution == (
+        "Choose a different base for this profile.\n"
+        "Available bases are: 'ubuntu@24.04' and 'ubuntu@26.04'"
+    )
+
+
+def test_base_selection_not_available(new_path, init_command):
+    with pytest.raises(
+        InitError,
+        match="Base selection is not available for this profile",
+    ):
+        init_command.run(
+            create_namespace(profile="test-kubernetes", base="ubuntu@26.04")
+        )
+
+
+def test_invalid_base(new_path, init_command):
+    with pytest.raises(InitError, match="invalid base name"):
+        init_command.run(
+            create_namespace(profile="flask-framework", base="../../ubuntu@26.04")
+        )
 
 
 @pytest.mark.parametrize(
@@ -211,6 +298,48 @@ def test_force(new_path, init_command):
     # Check that init did not overwrite files
     with tmp_file.open("r") as f:
         assert f.read() == "This is a nonsense readme"
+
+
+def test_nonoverlapping_file_does_not_require_force(new_path, init_command):
+    unrelated_file = new_path / "unrelated"
+    unrelated_file.touch()
+
+    init_command.run(create_namespace())
+
+    assert unrelated_file.exists()
+    assert (new_path / "charmcraft.yaml").exists()
+
+
+def test_project_dir_alias(new_path, init_command):
+    project_dir = new_path / "project"
+    params = create_namespace(project_dir=new_path)
+    params.project_dir_option = project_dir
+
+    init_command.run(params)
+
+    assert (project_dir / "charmcraft.yaml").exists()
+
+
+def test_project_dir_alias_parser(init_command):
+    parser = argparse.ArgumentParser()
+    init_command.fill_parser(parser)
+
+    params = parser.parse_args(["--project-dir=project"])
+
+    assert params.project_dir is None
+    assert params.project_dir_option == pathlib.Path("project")
+
+
+def test_project_dir_alias_takes_precedence(new_path, init_command):
+    option = new_path / "option"
+    init_command.run(
+        create_namespace(
+            project_dir=new_path / "positional",
+            project_dir_option=option,
+        )
+    )
+
+    assert (option / "charmcraft.yaml").exists()
 
 
 @pytest.mark.parametrize("name", [None, 0, "1234", "yolo swag", "camelCase"])
@@ -305,8 +434,7 @@ def test_create_directory(new_path, init_command, subdir, base_expected_files):
 def test_executable_set(new_path, init_command):
     init_command.run(create_namespace())
 
-    for path in new_path.rglob(".py"):
-        assert path.stat().st_mode & S_IXALL == S_IXALL
+    assert (new_path / "src/charm.py").stat().st_mode & S_IXALL == S_IXALL
 
 
 @pytest.mark.slow
@@ -314,7 +442,7 @@ def test_executable_set(new_path, init_command):
     bool(os.getenv("RUNNING_TOX")) and sys.version_info < (3, 11),
     reason="does not work inside tox in Python3.10 and below",
 )
-@pytest.mark.parametrize("profile", list(init.PROFILES))
+@pytest.mark.parametrize("profile", ALL_PROFILES)
 def test_tox_success(new_path, init_command, profile):
     # fix the PYTHONPATH and PATH so the tests in the initted environment use our own
     # virtualenv libs and bins (if any), as they need them, but we're not creating a

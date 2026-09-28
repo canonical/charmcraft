@@ -347,7 +347,7 @@ def test_get_config_yaml_skips_reactive_generated(
                     build_base=DistroBase("ubuntu", "24.04"),
                 )
             ],
-            "example-charm_ubuntu@24.04-amd64.charm",
+            "example-charm_amd64.charm",
             id="single-base-platform-label",
         ),
     ],

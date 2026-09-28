@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
 
+import os
 import pathlib
 import sys
 import zipfile
@@ -747,6 +748,44 @@ def test_get_manifest_bases_from_platforms_invalid(
 
 # endregion
 # region tests for packing the charm
+
+
+@pytest.mark.parametrize(
+    ("artifact_exists", "dispatch_exists", "dispatch_mtime_ns", "expected"),
+    [
+        pytest.param(False, False, None, True, id="missing-artifact"),
+        pytest.param(True, False, None, False, id="missing-dispatch"),
+        pytest.param(True, True, 300, True, id="newer-dispatch"),
+        pytest.param(True, True, 100, False, id="older-dispatch"),
+    ],
+)
+def test_app_needs_repack(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    fake_path: pathlib.Path,
+    artifact_exists: bool,
+    dispatch_exists: bool,
+    dispatch_mtime_ns: int | None,
+    expected: bool,
+):
+    package_service.set_output_dir(fake_path)
+    artifact_path = package_service.get_artifacts()[None]
+
+    if artifact_exists:
+        artifact_path.write_text("artifact")
+        os.utime(artifact_path, ns=(200, 200))
+
+    prime_dir = service_factory.get("lifecycle").project_info.dirs.prime_dir
+    dispatch_path = prime_dir / const.DISPATCH_FILENAME
+    if dispatch_exists:
+        prime_dir.mkdir(parents=True, exist_ok=True)
+        dispatch_path.write_text("#!/bin/sh\n")
+        assert dispatch_mtime_ns is not None
+        os.utime(dispatch_path, ns=(dispatch_mtime_ns, dispatch_mtime_ns))
+
+    assert package_service._app_needs_repack() is expected
+
+
 # These tests are modified from test_zipbuild
 def test_pack_charm_simple(fake_path, package_service):
     """Build a bunch of files in the zip."""

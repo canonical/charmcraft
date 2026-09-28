@@ -26,6 +26,7 @@ import craft_platforms
 import distro
 import pytest
 import pytest_check
+import yaml
 from craft_application import util
 from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
@@ -99,7 +100,7 @@ def test_get_metadata_yaml_prefers_project_file(
     assert package_service.get_metadata_yaml() == expected
 
 
-def test_get_metadata_yaml_matches_metadata_model_rendering(
+def test_get_metadata_yaml_uses_sorted_serialization(
     package_service,
     service_factory: craft_application.ServiceFactory,
 ):
@@ -107,8 +108,8 @@ def test_get_metadata_yaml_matches_metadata_model_rendering(
     metadata_path = project_dir / const.METADATA_FILENAME
 
     assert not metadata_path.exists()
-    assert (
-        package_service.get_metadata_yaml() == package_service.metadata.to_yaml_string()
+    assert package_service.get_metadata_yaml() == yaml.safe_dump(
+        package_service.metadata.marshal(), sort_keys=True
     )
 
 

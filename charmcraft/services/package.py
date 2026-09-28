@@ -182,12 +182,12 @@ class PackageService(services.PackageService):
                 return False
             if metadata_path.is_file():
                 return metadata_path.read_text()
-            return self.metadata.to_yaml_string()
+            return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
 
         if metadata_path.is_file():
             return metadata_path.read_text()
 
-        return self.metadata.to_yaml_string()
+        return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
 
     @package_file(const.JUJU_ACTIONS_FILENAME)
     def get_actions_yaml(

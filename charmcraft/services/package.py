@@ -264,6 +264,14 @@ class PackageService(services.PackageService):
                 pass
         return None
 
+    def _write_asset_if_changed(
+        self, source: str | bytes | None | pathlib.Path, destination: pathlib.Path
+    ) -> None:
+        """Write an asset only when the destination content actually changes."""
+        if not self._asset_changed(source, destination, partition_name=None):
+            return
+        self._write_asset(source, destination)
+
     def _get_ignored_manifest_checks(
         self, project: BasesCharm | PlatformCharm
     ) -> set[str]:
@@ -357,6 +365,18 @@ class PackageService(services.PackageService):
             image_info=image_info,
             bases=bases,
         )
+
+    @override
+    def write_metadata(self, path: pathlib.Path) -> None:
+        """Materialize mediated package files into the prime directory."""
+        for package_file_entry in self._package_files(partition_name=None):
+            generator = getattr(self, package_file_entry.method_name)
+            content = generator(None)
+            if content is False:
+                continue
+
+            destination = path / package_file_entry.relative_path
+            self._write_asset_if_changed(content, destination)
 
     @override
     def _app_needs_repack(self, partition: str | None = None) -> bool:

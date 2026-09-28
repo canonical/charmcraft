@@ -16,10 +16,8 @@
 """General fixtures for integration tests."""
 
 import pathlib
-from unittest import mock
 
 import craft_application
-import craft_store
 import pytest
 
 from charmcraft import application, services
@@ -47,7 +45,6 @@ def make_service_factory(
     def factory_fn():
         services.register_services()
         factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-        factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
         factory.update_kwargs("charm_libs", project_dir=project_path)
         factory.update_kwargs(
             "lifecycle",

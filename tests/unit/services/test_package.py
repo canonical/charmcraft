@@ -172,6 +172,49 @@ def test_pack_artifacts_overwrites_stale_prime_metadata(
     assert yaml.safe_load(stale_metadata.read_text()) == package_service.metadata.marshal()
 
 
+def test_write_metadata_materializes_mediated_package_files(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.actions = {"test-action": {"description": "A test action"}}
+    project.config = {
+        "options": {"my-option": {"type": "string", "default": "value"}}
+    }
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert (dirs.prime_dir / const.METADATA_FILENAME).read_text() == package_service.get_metadata_yaml()
+    assert (dirs.prime_dir / const.MANIFEST_FILENAME).read_text() == package_service.get_manifest_yaml()
+    assert (dirs.prime_dir / const.JUJU_ACTIONS_FILENAME).read_text() == package_service.get_actions_yaml()
+    assert (dirs.prime_dir / const.JUJU_CONFIG_FILENAME).read_text() == package_service.get_config_yaml()
+
+
+def test_write_metadata_is_idempotent_when_package_files_are_unchanged(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    dirs = service_factory.get("lifecycle").project_info.dirs
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    metadata_path = dirs.prime_dir / const.METADATA_FILENAME
+    manifest_path = dirs.prime_dir / const.MANIFEST_FILENAME
+    first_metadata_mtime = metadata_path.stat().st_mtime_ns
+    first_manifest_mtime = manifest_path.stat().st_mtime_ns
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert metadata_path.stat().st_mtime_ns == first_metadata_mtime
+    assert manifest_path.stat().st_mtime_ns == first_manifest_mtime
+
+
 def test_get_actions_yaml_returns_none_when_no_actions(
     package_service,
     service_factory: craft_application.ServiceFactory,

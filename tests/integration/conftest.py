@@ -16,14 +16,9 @@
 """General fixtures for integration tests."""
 
 import pathlib
-from unittest import mock
-
-import craft_application
-import craft_store
 import pytest
 
-from charmcraft import application, services
-from charmcraft.application import commands
+from tests.integration.factories import create_app, create_service_factory
 
 
 @pytest.fixture
@@ -40,42 +35,27 @@ def service_factory(
     project_path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    services.register_services()
-    factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-    factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
-    factory.update_kwargs(
-        "charm_libs",
+    state_dir = new_path / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+    return create_service_factory(
         project_dir=project_path,
-    )
-    factory.update_kwargs(
-        "lifecycle",
-        work_dir=new_path,
-        cache_dir="~/.cache",
-    )
-    factory.update_kwargs(
-        "project",
-        project_dir=project_path,
-    )
-    factory.update_kwargs(
-        "provider",
         work_dir=new_path,
     )
-    factory.get("project").configure(
-        platform=None,
-        build_for=None,
-    )
-    monkeypatch.setenv("CRAFT_STATE_DIR", str(new_path / "state"))
-    factory.get("state").set(
-        "charmcraft", "started_at", value="2020-03-14T00:00:00+00:00"
-    )
-    return factory
 
 
 @pytest.fixture
-def app(monkeypatch, new_path, service_factory):
+def app(
+    monkeypatch: pytest.MonkeyPatch,
+    new_path: pathlib.Path,
+    fake_project_file,
+    project_path: pathlib.Path,
+):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
-    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
-    app._configure_services(None)
-    commands.fill_command_groups(app)
-
-    return app
+    state_dir = new_path / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+    return create_app(
+        project_dir=project_path,
+        work_dir=new_path,
+    )

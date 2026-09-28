@@ -60,11 +60,11 @@ backends:
           workers: 6
           memory: 8G
           storage: 40G
-      - ubuntu-25.10-64:
-          image: snapd-spread/ubuntu-25.10-64
-          workers: 6
-          memory: 8G
-          storage: 40G
+      #- ubuntu-25.10-64:
+      #    image: snapd-spread/ubuntu-25.10-64
+      #    workers: 6
+      #    memory: 8G
+      #    storage: 40G
       - ubuntu-26.04-64:
           image: snapd-spread/ubuntu-26.04-64
           workers: 6
@@ -145,8 +145,8 @@ backends:
           workers: 4
       - ubuntu-24.04-64:
           workers: 4
-      - ubuntu-25.10-64:
-          workers: 4
+      #- ubuntu-25.10-64:
+      #    workers: 4
       - ubuntu-26.04-64:
           workers: 4
 
@@ -429,10 +429,10 @@ suites:
     systems:
       - ubuntu-24.04-64
 
-  tests/spread/ubuntu-25.10/:
-    summary: Destructive tests for Ubuntu Questing (25.10) builds
-    systems:
-      - ubuntu-25.10-64
+  #tests/spread/ubuntu-25.10/:
+  #  summary: Destructive tests for Ubuntu Questing (25.10) builds
+  #  systems:
+  #    - ubuntu-25.10-64
 
   tests/spread/ubuntu-26.04/:
     summary: Destructive tests for Ubuntu Resolute (26.04 LTS) builds

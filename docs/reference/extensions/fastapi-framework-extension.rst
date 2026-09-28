@@ -13,6 +13,8 @@ keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. include:: /reuse/reference/extensions/non_root_runtime.rst
+
 .. _fastapi-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``

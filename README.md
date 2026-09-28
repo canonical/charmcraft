@@ -65,9 +65,7 @@ new to charming or a seasoned expert, this is the best place to deepen your know
 
 ## Community and support
 
-To get in touch with developers and other
-[charmcraft-badge]: https://snapcraft.io/charmcraft/badge.svg
-[charmcraft-site]: https://snapcraft.io/charmcraft members of the charming community, reach
+To get in touch with developers and other members of the charming community, reach
 out on the [forum](https://discourse.charmhub.io) or in our [Matrix
 channel](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com).
 

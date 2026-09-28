@@ -41,13 +41,6 @@ def _state_dir_for(work_dir: pathlib.Path) -> pathlib.Path:
     return work_dir.parent / f"{work_dir.name}-state"
 
 
-@pytest.fixture
-def pack_project_path(
-    project_path: pathlib.Path, fake_project_file: pathlib.Path
-) -> pathlib.Path:
-    return project_path
-
-
 @pytest.mark.slow
 @pytest.mark.skipif(
     CURRENT_PLATFORM.system != "ubuntu",
@@ -109,7 +102,7 @@ def test_pack_skips_when_inputs_are_unchanged(
     monkeypatch: pytest.MonkeyPatch,
     emitter: RecordingEmitter,
     new_path: pathlib.Path,
-    pack_project_path: pathlib.Path,
+    project_path: pathlib.Path,
     app_factory,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
@@ -117,7 +110,7 @@ def test_pack_skips_when_inputs_are_unchanged(
         "sys.argv",
         ["charmcraft", "pack", "--destructive-mode"],
     )
-    (pack_project_path / "requirements.txt").write_text("distro==1.4.0")
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
     state_dir = _state_dir_for(new_path)
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
@@ -149,7 +142,7 @@ def test_pack_skips_when_inputs_are_unchanged(
 def test_pack_rebuilds_when_project_metadata_changes(
     monkeypatch: pytest.MonkeyPatch,
     new_path: pathlib.Path,
-    pack_project_path: pathlib.Path,
+    project_path: pathlib.Path,
     app_factory,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
@@ -157,7 +150,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
         "sys.argv",
         ["charmcraft", "pack", "--destructive-mode"],
     )
-    (pack_project_path / "requirements.txt").write_text("distro==1.4.0")
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
     state_dir = _state_dir_for(new_path)
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
@@ -171,7 +164,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
     first_mtime_ns = charm_path.stat().st_mtime_ns
 
     time.sleep(1)
-    (pack_project_path / const.METADATA_FILENAME).write_text("subordinate: true\n")
+    (project_path / const.METADATA_FILENAME).write_text("subordinate: true\n")
     _reset_parts_callbacks()
 
     second_app = app_factory()
@@ -189,7 +182,7 @@ def test_pack_rebuilds_when_project_metadata_changes(
 def test_pack_artifact_contains_dispatch_after_repeated_pack(
     monkeypatch: pytest.MonkeyPatch,
     new_path: pathlib.Path,
-    pack_project_path: pathlib.Path,
+    project_path: pathlib.Path,
     app_factory,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
@@ -197,7 +190,7 @@ def test_pack_artifact_contains_dispatch_after_repeated_pack(
         "sys.argv",
         ["charmcraft", "pack", "--destructive-mode"],
     )
-    (pack_project_path / "requirements.txt").write_text("distro==1.4.0")
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
     state_dir = _state_dir_for(new_path)
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))

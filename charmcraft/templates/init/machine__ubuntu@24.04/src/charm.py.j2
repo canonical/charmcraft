@@ -21,6 +21,8 @@ class {{ class_name }}(ops.CharmBase):
         super().__init__(framework)
         framework.observe(self.on.install, self._on_install)
         framework.observe(self.on.start, self._on_start)
+        framework.observe(self.on["pause"].action, self._on_pause_action)
+        framework.observe(self.on["resume"].action, self._on_resume_action)
 
     def _on_install(self, event: ops.InstallEvent):
         """Install the workload on the machine."""
@@ -33,6 +35,17 @@ class {{ class_name }}(ops.CharmBase):
         version = {{ workload_module }}.get_version()
         if version is not None:
             self.unit.set_workload_version(version)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_pause_action(self, event: ops.ActionEvent):
+        """Handle the pause action: stop the workload, but leave the unit deployed."""
+        {{ workload_module }}.stop()
+        self.unit.status = ops.MaintenanceStatus("paused: run the resume action to restart")
+
+    def _on_resume_action(self, event: ops.ActionEvent):
+        """Handle the resume action: start the workload again."""
+        self.unit.status = ops.MaintenanceStatus("starting workload")
+        {{ workload_module }}.start()
         self.unit.status = ops.ActiveStatus()
 
 

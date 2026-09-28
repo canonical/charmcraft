@@ -1,5 +1,6 @@
 summary: pack a simple reactive charm on older systems
 priority: 100
+kill-timeout: 30m # These sometimes take a while to download bases.
 
 systems:
   - ubuntu-20.04-64
@@ -33,5 +34,6 @@ restore: |
 
 execute: |
   cd reactivecharm
-  charmcraft pack
+  # Retry: priming the LXD base instance can hit transient proxy 503s.
+  retry -n 3 --wait 30 charmcraft pack
   test -f reactive-test*.charm

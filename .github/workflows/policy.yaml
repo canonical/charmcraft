@@ -28,6 +28,7 @@ jobs:
   policy:
     permissions:
       contents: read
+      actions: read
       security-events: write
     uses: canonical/starflow/.github/workflows/policy.yaml@main
     needs: filter

@@ -40,29 +40,29 @@ def make_service_factory(
     project_path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    services.register_services()
-    factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-    factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
-    factory.update_kwargs("charm_libs", project_dir=project_path)
-    factory.update_kwargs(
-        "lifecycle",
-        work_dir=new_path,
-        cache_dir=new_path / "cache",
-    )
-    factory.update_kwargs("project", project_dir=project_path)
-    factory.update_kwargs("provider", work_dir=new_path)
-    factory.get("project").configure(platform=None, build_for=None)
     state_dir = new_path / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
-    factory.get("state").set(
-        "charmcraft",
-        "started_at",
-        value="2020-03-14T00:00:00+00:00",
-        overwrite=True,
-    )
 
     def factory_fn():
+        services.register_services()
+        factory = craft_application.ServiceFactory(app=application.APP_METADATA)
+        factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
+        factory.update_kwargs("charm_libs", project_dir=project_path)
+        factory.update_kwargs(
+            "lifecycle",
+            work_dir=new_path,
+            cache_dir=new_path / "cache",
+        )
+        factory.update_kwargs("project", project_dir=project_path)
+        factory.update_kwargs("provider", work_dir=new_path)
+        factory.get("project").configure(platform=None, build_for=None)
+        factory.get("state").set(
+            "charmcraft",
+            "started_at",
+            value="2020-03-14T00:00:00+00:00",
+            overwrite=True,
+        )
         return factory
 
     return factory_fn
@@ -77,7 +77,7 @@ def service_factory(make_service_factory):
 def app_factory(
     monkeypatch: pytest.MonkeyPatch,
     new_path: pathlib.Path,
-    service_factory,
+    make_service_factory,
     fake_project_file,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
@@ -86,6 +86,7 @@ def app_factory(
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
 
     def factory():
+        service_factory = make_service_factory()
         app = application.Charmcraft(
             app=application.APP_METADATA, services=service_factory
         )

@@ -37,6 +37,9 @@ max_line_length = 88
 [{*.toml,Cargo.lock,Cargo.toml.orig,Gopkg.lock,Pipfile,poetry.lock}]
 max_line_length = off
 
+[*.toml]
+indent_size = 2
+
 [{*.ini, *.cfg}]
 max_line_length = off
 

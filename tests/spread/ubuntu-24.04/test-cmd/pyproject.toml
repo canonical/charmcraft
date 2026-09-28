@@ -7,26 +7,29 @@ requires-python = ">=3.10"
 # You should include the dependencies of the code in src/. You should also include the
 # dependencies of any charmlibs that the charm uses (copy the dependencies from PYDEPS).
 dependencies = [
-    "ops>=3,<4",
+  "ops>=3,<4",
 ]
 
 [dependency-groups]
+# Dependencies of integration tests
+integration = [
+  "juju",
+  "pytest",
+  "pytest-operator",
+]
 # Dependencies of static type checks
 static = [
-    "pyright",
+  "pyright",
 ]
 # Dependencies of unit tests
 unit = [
-    "coverage[toml]",
-    "ops[testing]",
-    "pytest",
+  "coverage[toml]",
+  "ops[testing]",
+  "pytest",
 ]
-# Dependencies of integration tests
-integration = [
-    "juju",
-    "pytest",
-    "pytest-operator",
-]
+
+[tool.codespell]
+skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
 
 # Testing tools configuration
 [tool.coverage.run]
@@ -34,6 +37,12 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.pyright]
+include = [
+  "src/**/*.py",
+  "tests/**/*.py",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -44,31 +53,22 @@ log_cli_level = "INFO"
 line-length = 99
 lint.select = ["E", "W", "F", "C", "N", "D", "I001"]
 lint.ignore = [
-    "D105",
-    "D107",
-    "D203",
-    "D204",
-    "D213",
-    "D215",
-    "D400",
-    "D404",
-    "D406",
-    "D407",
-    "D408",
-    "D409",
-    "D413",
+  "D105",
+  "D107",
+  "D203",
+  "D204",
+  "D213",
+  "D215",
+  "D400",
+  "D404",
+  "D406",
+  "D407",
+  "D408",
+  "D409",
+  "D413",
 ]
+lint.per-file-ignores = { "tests/*" = ["D100", "D101", "D102", "D103", "D104"] }
 extend-exclude = ["__pycache__", "*.egg_info"]
-lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
-
-[tool.codespell]
-skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
-
-[tool.pyright]
-include = [
-    "src/**/*.py",
-    "tests/**/*.py",
-]

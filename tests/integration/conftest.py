@@ -18,7 +18,24 @@
 import pathlib
 import pytest
 
-from tests.integration.factories import create_app, create_service_factory
+from charmcraft.application.main import create_app as _create_app
+
+
+def create_app(*, project_dir: pathlib.Path, work_dir: pathlib.Path):
+    app = _create_app()
+    app.services.update_kwargs("project", project_dir=project_dir)
+    app.services.update_kwargs("charm_libs", project_dir=project_dir)
+    app.services.update_kwargs(
+        "lifecycle",
+        work_dir=work_dir,
+        cache_dir=work_dir / "cache",
+    )
+    app.services.update_kwargs("provider", work_dir=work_dir)
+    return app
+
+
+def create_service_factory(*, project_dir: pathlib.Path, work_dir: pathlib.Path):
+    return create_app(project_dir=project_dir, work_dir=work_dir).services
 
 
 @pytest.fixture
@@ -29,7 +46,7 @@ def project_path(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def service_factory(
+def service_factory_factory(
     new_path: pathlib.Path,
     fake_project_file,
     project_path,
@@ -38,14 +55,23 @@ def service_factory(
     state_dir = new_path / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
-    return create_service_factory(
-        project_dir=project_path,
-        work_dir=new_path,
-    )
+
+    def factory():
+        return create_service_factory(
+            project_dir=project_path,
+            work_dir=new_path,
+        )
+
+    return factory
 
 
 @pytest.fixture
-def app(
+def service_factory(service_factory_factory):
+    return service_factory_factory()
+
+
+@pytest.fixture
+def app_factory(
     monkeypatch: pytest.MonkeyPatch,
     new_path: pathlib.Path,
     fake_project_file,
@@ -55,7 +81,16 @@ def app(
     state_dir = new_path / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
-    return create_app(
-        project_dir=project_path,
-        work_dir=new_path,
-    )
+
+    def factory():
+        return create_app(
+            project_dir=project_path,
+            work_dir=new_path,
+        )
+
+    return factory
+
+
+@pytest.fixture
+def app(app_factory):
+    return app_factory()

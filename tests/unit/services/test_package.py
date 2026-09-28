@@ -148,6 +148,30 @@ def test_get_metadata_yaml_reactive_takes_precedence_over_project_file(
     )
 
 
+def test_pack_artifacts_overwrites_stale_prime_metadata(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    fake_path: pathlib.Path,
+):
+    package_service.set_output_dir(fake_path)
+
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.prime_dir.mkdir(parents=True, exist_ok=True)
+    stale_metadata = dirs.prime_dir / const.METADATA_FILENAME
+    stale_metadata.write_text("INVALID!!\n")
+
+    artifact_path = package_service.get_artifacts()[None]
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_path.write_text("existing charm")
+    os.utime(artifact_path, ns=(100, 100))
+    os.utime(stale_metadata, ns=(200, 200))
+
+    packed = package_service.pack_artifacts()
+
+    assert packed == {None: True}
+    assert yaml.safe_load(stale_metadata.read_text()) == package_service.metadata.marshal()
+
+
 def test_get_actions_yaml_returns_none_when_no_actions(
     package_service,
     service_factory: craft_application.ServiceFactory,

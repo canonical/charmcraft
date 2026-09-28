@@ -19,6 +19,7 @@ import pathlib
 
 import craft_application
 import pytest
+from craft_cli import messages, printer
 
 from charmcraft import application, services
 from charmcraft.application import commands
@@ -78,11 +79,19 @@ def app_factory(
     fake_project_file,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
+    monkeypatch.setattr(messages, "TESTMODE", True)
+    monkeypatch.setattr(printer, "TESTMODE", True)
     state_dir = new_path / "state"
     state_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
 
     def factory():
+        messages.emit.init(
+            messages.EmitterMode.QUIET,
+            "test-emitter",
+            "Hello world",
+            log_filepath=new_path / "emitter.log",
+        )
         service_factory = make_service_factory()
         app = application.Charmcraft(
             app=application.APP_METADATA, services=service_factory

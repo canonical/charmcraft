@@ -21,11 +21,11 @@ import zipfile
 from unittest import mock
 
 import craft_application
-from craft_parts import callbacks
 import craft_platforms
 import pytest
 import yaml
 from craft_cli.pytest_plugin import RecordingEmitter
+from craft_parts import callbacks
 
 from charmcraft import application, const, services, utils
 from charmcraft.application import commands

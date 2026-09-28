@@ -107,7 +107,7 @@ def test_set_resource_architectures(
     emitter, service_factory, cmd, args, list_response, expected_output
 ):
     """Test the happy path for set-resource-architectures command."""
-    service_factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
+    service_factory.store.client = mock.Mock(spec_set=craft_store.StoreClient)
     service_factory.store.client.list_resource_revisions.return_value = list_response
 
     parser = argparse.ArgumentParser()

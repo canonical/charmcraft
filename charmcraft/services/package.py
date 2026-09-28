@@ -158,15 +158,6 @@ class PackageService(services.PackageService):
         build_item = self._services.get("build_plan").plan()[0]
         platform = build_item.platform
 
-        if (
-            isinstance(project, PlatformCharm)
-            and project.base
-            and ":" not in platform
-            and "@" not in platform
-            and platform in const.SUPPORTED_ARCHITECTURES | {"all"}
-        ):
-            platform = f"{project.base}:{platform}"
-
         platform = platform.replace(":", "-")
         return f"{name}_{platform}.charm"
 

@@ -323,11 +323,6 @@ class PackageService(services.PackageService):
             self.get_manifest(lint_results, started_at=started_at)
         )
 
-    @override
-    def update_project(self) -> None:
-        """Update project fields with dynamic values set during the lifecycle."""
-        super().update_project()
-
     def get_manifest(
         self,
         lint_results: Iterable[lint.CheckResult],

@@ -7,8 +7,8 @@
 =========================
 
 The optional ``paas-config.yaml`` file configures runtime behavior in experimental
-12-factor app charms targeting Ubuntu 26.04 LTS. Place the file at the project root
-beside ``charmcraft.yaml``.
+12-factor app charms targeting Ubuntu 26.04 LTS. Place the file in the charm folder
+right beside ``charmcraft.yaml``.
 
 When the file exists, the extension adds a ``config`` part that stages
 ``paas-config.yaml`` into the charm. When the file doesn't exist, the extension doesn't
@@ -42,6 +42,6 @@ For example:
     metrics-path: /metrics
     framework_logging_format: json
 
-The `paas-charm reference
-<https://canonical.com/juju/docs/12-factor/>`__ defines runtime defaults, framework
+The `paas-config reference
+<https://canonical.com/juju/docs/12-factor/latest/reference/paas-config/>`__ defines runtime defaults, framework
 behavior, and the rest of the schema.

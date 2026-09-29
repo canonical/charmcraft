@@ -120,6 +120,9 @@ channel](https://matrix.to/#/#charmhub-charmcraft:ubuntu.com). It's possible tha
 on it has been started, or that it fits into an existing plan. Often, you will save time
 and effort by checking for prior work.
 
+For changes that require coordination with the broader community, create a post on
+the [Charmhub forum](https://discourse.charmhub.io), the hub for users and developers.
+
 Once you've found or created an issue you'd like to take on, propose your solution in
 the issue's thread. In your proposal, describe a plan for the change, its tests, and its
 documentation. If the feature warrants a new page in the documentation, propose a
@@ -311,9 +314,12 @@ git push -u origin <branch-name>
 ```
 
 Finally, [open a PR](https://github.com/canonical/charmcraft/compare) for it on GitHub.
-If your branch has one commit, GitHub will title the PR after it. If your branch has
-more than one commit, name the PR after the most significant. Once open, reviewers are
-assigned automatically to your work.
+
+Format the PR title as a conventional commit. If your branch has only one commit, GitHub
+handles this automatically. If your branch has multiple commits, copy the title of the
+most important one.
+
+Once open, reviewers are assigned automatically to your work.
 
 ### Follow up for the review
 

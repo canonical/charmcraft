@@ -48,6 +48,18 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
+    # A config option that points to a user-provided secret containing an API token.
+    # See https://canonical.com/juju/docs/juju-cli/3.6/howto/manage-secrets/
+    api-token:
+      description: |
+        URI of a Juju user secret containing the API token for the workload.
+        The secret must have a 'token' key.
+
+        Create the secret: juju add-secret my-api-token token=<value>
+                           (returns a URI)
+        Grant access:      juju grant-secret <uri> {{ name }}
+        Set this option:   juju config {{ name }} api-token=<uri>
+      type: secret
 
 # Your workload's containers.
 # https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/#containers

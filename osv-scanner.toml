@@ -1,3 +1,4 @@
+# OSV Scanner configuration
 [[PackageOverrides]]
 name = "python-apt"
 ignore = true

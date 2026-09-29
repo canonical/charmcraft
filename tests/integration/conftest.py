@@ -77,8 +77,12 @@ def app_factory(
     new_path: pathlib.Path,
     make_service_factory,
     fake_project_file,
+    tmp_path_factory: pytest.TempPathFactory,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
+    # Keep the log outside the project dir, otherwise it becomes part of the
+    # charm source and invalidates the lifecycle state between runs.
+    log_path = tmp_path_factory.mktemp("emitter-log") / "emitter.log"
     monkeypatch.setattr(messages, "TESTMODE", True)
     monkeypatch.setattr(printer, "TESTMODE", True)
     state_dir = new_path / "state"
@@ -90,7 +94,7 @@ def app_factory(
             messages.EmitterMode.QUIET,
             "test-emitter",
             "Hello world",
-            log_filepath=new_path / "emitter.log",
+            log_filepath=log_path,
         )
         service_factory = make_service_factory()
         app = application.Charmcraft(

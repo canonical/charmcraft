@@ -6,6 +6,10 @@ on:
       # For troubleshooting
       - "work/tiobe**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   TICS:
     permissions:

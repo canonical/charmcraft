@@ -10,7 +10,10 @@ include:
 prepare: |
   tests.pkgs install jq
 
-  # Create a temporary charm directory with a library that has a fake lib_id
+  # Initialize a minimal charm project (fetch-lib requires a loaded project)
+  charmcraft init --project-dir=charm --name=$CHARM_NAME
+
+  # Create a library file with metadata that won't exist in Charmhub
   mkdir -p charm/lib/charms/nonexistent_charm/v0
 
   # Create a library file with metadata that won't exist in Charmhub

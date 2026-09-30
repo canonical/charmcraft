@@ -79,7 +79,7 @@ Both profiles scaffold unit and integration tests for the added behavior.
 Secret handling in the machine and Kubernetes profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Charms created with the ``machine`` and ``kubernetes`` profiles now demonstrate both
+Charms created with the ``machine`` and ``kubernetes`` profiles now implement both
 sides of Juju secrets.
 
 For a user-provided secret, the charm declares an ``api-token`` config option of type
@@ -97,14 +97,10 @@ Removed lockfile from machine and Kubernetes profiles
 The ``machine`` and ``kubernetes`` profiles no longer include a ``uv.lock`` file. You
 need to run ``uv lock`` after creating a charm with ``charmcraft init``.
 
-In addition,  ``charmcraft init`` now has a better description of the created files and
-how to manage them. For example, if the charm requires uv, the description explains
-when to run ``uv lock``.
+Minor init profile improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Other init profile updates
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- The dependencies of the ``machine`` and ``kubernetes`` profiles are now bounded to
+- The dependencies of the ``machine`` and ``kubernetes`` profiles are now bound to
   their current major version. This reduces the risk of breaking changes if you use
   automated dependency updates.
 - The logging configuration of the ``machine`` and ``kubernetes`` profiles now ensure

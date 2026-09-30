@@ -5,8 +5,11 @@ include:
 
 prepare: |
   tests.pkgs install jq
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm --name=$CHARM_DEFAULT_NAME --profile=machine
   cd charm
+  uv lock
 
   cat <<- EOF >> charmcraft.yaml
   charmhub:
@@ -51,7 +54,7 @@ execute: |
   sleep 10
   for i in {1..10}
   do
-    sleep 2
+    sleep 10
     # validate the channel map
     edge_release=$(charmcraft status $CHARM_DEFAULT_NAME --format=json | jq -r '.[] | select(.track=="latest") | .mappings[0].releases | .[] | select(.channel=="latest/edge")')
     edge_revision=$(echo $edge_release | jq -r .revision)

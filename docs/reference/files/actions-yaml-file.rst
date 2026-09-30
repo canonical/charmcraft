@@ -17,7 +17,7 @@ The file contains a YAML map for each defined action. Each map starts with an
 ``<action name>`` key. The rest of this document gives details about this key.
 
 
-.. collapse:: Expand to view the full spec at once
+.. dropdown:: Expand to view the full spec at once
 
    .. code-block:: yaml
 
@@ -34,7 +34,7 @@ The file contains a YAML map for each defined action. Each map starts with an
         …
 
 
-.. collapse:: Expand to view a simple example
+.. dropdown:: Expand to view a simple example
 
    The following shows a simple example of an ``actions.yaml`` file, defining three
    actions named ``pause``, ``resume``, and ``snapshot``. The ``snapshot`` action takes
@@ -58,7 +58,7 @@ The file contains a YAML map for each defined action. Each map starts with an
              description: The filename to write to.
          additionalProperties: false
 
-.. collapse:: Expand to view a complex example
+.. dropdown:: Expand to view a complex example
 
     The following example showcases a more complex configuration file that uses
     features of JSON schema to define detailed options. It also makes the
@@ -143,7 +143,9 @@ validation, defined as follows:
     2. It does not currently support the JSON Schema concepts ``$schema`` and ``$ref``.
     3. The ``additionalProperties`` and ``required`` keys from JSON Schema can be used
        at the top-level of an action (adjacent to ``description`` and ``params``), but
-       also used anywhere within a nested schema.
+       also used anywhere within a nested schema. Note that Juju 4 flips the default
+       used in JSON Schema (Juju 3 and JSON Schema use a ``true`` default, Juju 4 uses
+       a default of ``false``).
 
         See more: `JSON schema <https://www.learnjsonschema.com/>`_
 
@@ -218,12 +220,13 @@ action schema object. For example, ``additionalProperties`` or ``required``.
 Juju will parse additional keywords as a `JSON Schema`_ with some limitations:
 
 - The ``$schema`` and ``$ref`` keys are prohibited
-- `params <action-params>`_ is treated as a single top-level JSON Schema instance of
-  type `object <jsonschema-object>`_ with a map of ``properties`` corresponding to
+- ``params`` is treated as a single top-level JSON Schema instance of
+  type ``object`` with a map of ``properties`` corresponding to
   each key in ``params``. This instance is what Juju uses to validate user input.
 
-It is highly recommended to provide ``additionalProperties: false`` to avoid user
-frustration with accidental typos.
+Explicitly include ``additionalProperties``, which provides consistent
+behaviour between Juju 3 and Juju 4. Using the Juju 4 default, ``additionalProperties: false``,
+avoids user frustration with accidental typos.
 
 .. _JSON-Schema: https://json-schema.org/
 .. _jsonschema-object: https://json-schema.org/understanding-json-schema/reference/object.html

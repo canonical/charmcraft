@@ -77,6 +77,7 @@ class CharmhubConfig:
     api_url: str = "https://api.charmhub.io"
     storage_url: str = "https://storage.snapcraftcontent.com"
     registry_url: str = "https://registry.jujucharms.com"
+    login_url: str = "https://login.ubuntu.com"
 
 
 DEFAULT_CHARMHUB_CONFIG = CharmhubConfig()
@@ -91,6 +92,12 @@ def get_store_config() -> CharmhubConfig:
     registry_url = os.getenv(
         const.STORE_REGISTRY_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.registry_url
     )
+    login_url = os.getenv(
+        const.STORE_SSO_URL_ENV_VAR, DEFAULT_CHARMHUB_CONFIG.login_url
+    )
     return CharmhubConfig(
-        api_url=api_url, storage_url=storage_url, registry_url=registry_url
+        api_url=api_url,
+        storage_url=storage_url,
+        registry_url=registry_url,
+        login_url=login_url,
     )

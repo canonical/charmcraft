@@ -1,5 +1,8 @@
 .. _write-your-first-kubernetes-charm-for-a-go-app:
 
+.. meta::
+    :description: Learn the process of building and deploying a Kubernetes charm for a Go app. In this tutorial, we use the go-framework extension to package and orchestrate the app.
+
 Write your first Kubernetes charm for a Go app
 ==============================================
 
@@ -191,12 +194,12 @@ The top of the file should look similar to the following snippet:
         # ppc64el:
         # s390x:
 
-Verfiy that the ``name`` is ``go-hello-world``.
+Verify that the ``name`` is ``go-hello-world``.
 
 The ``platforms`` key must match the architecture of your host.
 Edit the ``platforms`` key in ``rockcraft.yaml`` if required.
 
-Now let's pack the rock:
+Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -212,10 +215,6 @@ Now let's pack the rock:
 Depending on your system and network, this step can take several
 minutes to finish.
 
-.. admonition:: For more options when packing rocks
-
-    See the :external+rockcraft:ref:`ref_commands_pack` command reference.
-
 Once Rockcraft has finished packing the Go rock,
 the terminal will respond with something similar to
 ``Packed go-hello-world_0.1_<architecture>.rock``. The file name
@@ -223,7 +222,7 @@ reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
 The rock needs to be copied to the MicroK8s registry. This registry acts as a
-temporary Dockerhub, storing OCI archives so they can be downloaded and
+temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/go/task.yaml
@@ -240,11 +239,6 @@ This command contains the following pieces:
   and verify certificates while interacting with the MicroK8s registry.
 - ``oci-archive``: specifies the rock we created for our Go app.
 - ``docker``: specifies the name of the image in the MicroK8s registry.
-
-.. seealso::
-
-    See more: `Ubuntu manpage | skopeo
-    <https://manpages.ubuntu.com/manpages/jammy/man1/skopeo.1.html>`_
 
 
 Create the charm
@@ -320,7 +314,7 @@ project file if required.
     ``go-framework`` profile? Run ``charmcraft expand-extensions``
     from the ``~/go-hello-world/charm/`` directory.
 
-Let's pack the charm:
+Let's :literalref:`pack<ref_commands_pack>` the charm:
 
 .. literalinclude:: code/go/task.yaml
     :language: bash
@@ -341,11 +335,6 @@ respond with something similar to
 ``Packed go-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
-
-.. admonition:: For more options when packing charms
-
-    See the :literalref:`pack<ref_commands_pack>` command reference.
-
 
 Deploy the Go app
 -----------------
@@ -385,8 +374,9 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-go-app-end]
     :dedent: 2
 
-It will take a few minutes to deploy the Go app. You can monitor its
-progress with:
+It will take a few minutes to deploy the Go app. You can run
+:external+juju:ref:`juju status <command-juju-status>` to monitor its
+progress:
 
 .. code-block:: bash
 
@@ -394,21 +384,19 @@ progress with:
 
 It can take a couple of minutes for the app to finish the deployment.
 Once the status of the App has gone to ``active``, you can stop watching
-using :kbd:`Ctrl` + :kbd:`C`.
-
-.. tip::
-
-    To monitor your deployment, keep a ``juju status`` session active in a
-    second terminal.
-
-    See more: :external+juju:ref:`Juju | juju status <command-juju-status>`
+using :kbd:`Ctrl` + :kbd:`C`. To monitor your deployment, keep a
+``juju status`` session active in a second terminal.
 
 The Go app should now be running. We can monitor the status of
 the deployment using ``juju status``, which should be similar to the
 following output:
 
 .. terminal::
-    :input: juju status
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
+
+    juju status
 
     Model           Controller      Cloud/Region        Version  SLA          Timestamp
     go-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  14:35:07+02:00
@@ -622,7 +610,7 @@ Change the permissions of the file ``migrate.sh`` so that it is executable:
     :dedent: 2
 
 For the migrations to work, we need the ``postgresql-client`` package
-installed in the rock. By default, the ``go-framework`` uses the ``base``
+installed in the rock. By default, the ``go-framework`` uses the ``bare``
 base, so we will also need to install a shell interpreter. Let's do it as a
 slice, so that the rock doesn't include unnecessary files. Open the
 ``rockcraft.yaml`` file using a text editor and add the following to the
@@ -632,14 +620,11 @@ end of the file:
     :caption: ~/go-hello-world/rockcraft.yaml
     :language: yaml
 
-.. tip::
-
-    You could also use different tooling for migration, for example
-    `golang-migrate <https://github.com/golang-migrate/migrate/>`__ or
-    `goose <https://github.com/pressly/goose/>`__ .
-
-    See more:
-    :ref:`Go framework extension | Regarding the migrate.sh file <go-migrate-sh>`.
+:ref:`Regarding the migrate.sh file <go-migrate-sh>`
+describes how to use the migrate.sh file and run CLI tools for database
+migration in production. Alternatively, use different tooling for migration,
+for example `golang-migrate <https://github.com/golang-migrate/migrate/>`__
+or `goose <https://github.com/pressly/goose/>`__ .
 
 Update the rock again
 ~~~~~~~~~~~~~~~~~~~~~
@@ -754,10 +739,21 @@ This should be incremented each time the root endpoint is requested. If we
 repeat this process, the output should be as follows:
 
 .. terminal::
-    :input: curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
+
+    curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
 
     Hi!
-    :input: curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+
+.. terminal::
+    :user: ubuntu
+    :host: charm-dev
+    :dir: ~/go-hello-world/charm
+
+    curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+
     Number of visitors 2
 
 Tear things down

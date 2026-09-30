@@ -8,16 +8,17 @@ end_of_line = lf
 indent_size = 4
 indent_style = space
 insert_final_newline = true
+max_line_length = 88
 trim_trailing_whitespace = true
 
 [.editorconfig]
 max_line_length = off
 
-[Makefile]
+[{Makefile,*.mk}]
 indent_style = tab
 
 [{*.py,*.pyi}]
-max_line_length = 99
+max_line_length = 88
 
 [{*.bash,*.sh,*.zsh}]
 indent_size = 2
@@ -27,19 +28,19 @@ tab_width = 2
 indent_size = 2
 max_line_length = off
 
-[{*.markdown,*.md}]
-max_line_length = off
+[{*.markdown,*.md,*.rst}]
 ij_visual_guides = none
-
-[{*.rst}]
-max_line_length = 88
 
 [{*.toml,Cargo.lock,Cargo.toml.orig,Gopkg.lock,Pipfile,poetry.lock}]
 max_line_length = off
 
-[{*.ini, *.cfg}]
-max_line_length = off
-
 [{*.yaml,*.yml}]
 indent_size = 2
+
+[*.toml]
+indent_size = 2
+
+# Repository-specific addition: charmcraft ships INI/CFG config fixtures
+# that shouldn't be reflowed by editors.
+[{*.ini, *.cfg}]
 max_line_length = off

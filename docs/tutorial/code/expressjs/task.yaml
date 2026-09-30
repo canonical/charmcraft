@@ -41,6 +41,7 @@ execute: |
   mv *.yaml *.js *.sh $HOME/expressjs-hello-world
   cd  $HOME/expressjs-hello-world
 
+  # Make sure to update the version in the tutorial if you update express-generator version here.
   # [docs:install-init-expressjs]
   sudo apt update -y && sudo apt install npm -y
   sudo npm install -g express-generator@4

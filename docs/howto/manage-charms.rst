@@ -1,5 +1,8 @@
 .. _manage-charms:
 
+.. meta::
+    :description: How to manage the full life cycle of a Juju charm with Charmcraft. This guide covers initializing, configuring, packing, publishing to Charmhub, and managing channel revisions.
+
 Manage charms
 =============
 
@@ -11,65 +14,82 @@ Manage charms
 Initialise a charm
 ------------------
 
-.. admonition:: Best practice
-    :class: hint
+Before you initialise a charm project, decide what to call your charm.
 
-    If you're setting up a ``git`` repository: name it using the pattern
-    ``<charm name>-operator``. For the charm name, see :ref:`specify-a-name`.
+A charm's name is typically based on the name of the charm's workload. Use a different
+naming convention if your charm doesn't operate a workload. For detailed guidance, see
+:external+ops:ref:`Ops | How to initialise your project <init-charm>`. The Ops guidance
+also explains how to name your charm's Git repository.
 
-To initialise a charm project, create a directory for your charm, enter it, then run
-``charmcraft init`` with the ``--profile`` flag followed by a suitable profile name (for
-machine charms: ``machine``; for Kubernetes charms: ``kubernetes`` or
-``flask-framework``); that will create all the necessary files and even prepopulate them
-with useful content.
+To initialise a charm project, enter the directory that will contain your charm (likely
+in your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 
-    charmcraft init --profile <profile>
+    charmcraft init --name <charm name> --profile <profile> [--base <base>]
 
-.. collapse:: Example session
+This will create all the necessary files and populate them with useful content.
 
-    .. code-block:: bash
+If the charm name you want is different from the current directory name, don't skip the
+``--name`` argument. Otherwise the charm name will match the directory name.
 
-        mkdir my-flask-app-k8s
-        cd my-flask-app-k8s/
-        charmcraft init --profile flask-framework
+``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
+charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
+profile, you get the ``kubernetes`` profile.
+
+Profiles that support multiple bases use Ubuntu 24.04 LTS by default. To select another
+available base variant, provide the base in ``<distribution>@<version>`` format. For
+example, initialize an Ubuntu 26.04 LTS Flask charm with
+``--profile flask-framework --base ubuntu@26.04``.
+
+.. dropdown:: Example session
 
     .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
-        Charmed operator package file and directory tree initialised
-        Now edit the following package files to provide fundamental charm metadata
-        and other information:
+        charmcraft init --name my-flask-app-k8s --profile flask-framework --base ubuntu@26.04
+
+        Created project files for your charm:
 
         charmcraft.yaml
+        pyproject.toml
         src/charm.py
-        README.md
+        ...
 
-    .. code-block:: bash
+        To manage your charm's dependencies, use uv.
+
+        To migrate from the Charm plugin to the uv plugin, see:
+        https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+
+        Next steps:
+
+        1. Run 'uv lock'
+        2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
+        3. Write your charm code and tests
+
+    .. terminal::
+        :dir: ~/my-flask-app-k8s-operator
 
         ls -R
 
-    .. terminal::
-
         .:
-        charmcraft.yaml  requirements.txt  src
+        charmcraft.yaml  pyproject.toml  src  tox.ini
 
         ./src:
         charm.py
 
-The command also allows you to not specify any profile (in that case you get the
-``kubernetes`` profile -- a minimal profile with scaffolding for a Kubernetes charm)
-and has flags that you can use to specify a different directory to operate
-in, a charm name different from the name of the root directory, etc.
+..
 
-    See more: :ref:`ref_commands_revisions`, :ref:`profile`, :ref:`files`
+    See more: :ref:`ref_commands_init`, :ref:`profile`, :ref:`files`
 
     See more: :ref:`manage-extensions`
 
-.. _add-charm-project-metadata-an-icon-docs:
 
-Add charm project metadata, an icon, docs
------------------------------------------
+.. _add-charm-project-metadata-an-icon-docs:
+.. _configure-package-information:
+
+Configure package information
+-----------------------------
 
 
 Specify that the project is a charm
@@ -232,15 +252,18 @@ If you publish your charm on Charmhub, reference documentation about the charm's
 resources, actions, configurations, relations, and libraries is generated and
 published automatically in respective tabs.
 
-To add content to the **Description** tab,
-create a `Discourse <https://discourse.charmhub.io/>`_ topic and include its URL
-in your charm's project file under the
-:ref:`links.documentation <charmcraft-yaml-key-documentation>` key:
+Charmhub supports both `Discourse <https://discourse.charmhub.io/>`__ topics
+and externally-hosted documentation sites. With an externally-hosted site,
+Charmhub displays a **Read documentation** button that redirects users to the specified URL,
+while the **Description** tab displays your charm's basic metadata summary.
+
+To provide your main user documentation, include its URL in your charm's project file
+under the :ref:`links.documentation <charmcraft-yaml-key-documentation>` key. E.g.,
 
 .. code-block:: yaml
 
     links:
-      documentation: https://discourse.charmhub.io/t/traefik-k8s-docs-index/10778
+      documentation: https://documentation.ubuntu.com/traefik-k8s-charm
 
 ..
 
@@ -262,7 +285,7 @@ a full `Diátaxis <https://diataxis.fr/>`_ navigation tree in the **Description*
 .. admonition:: Examples of good documentation in small charms
 
     * `Azure storage integrator <https://charmhub.io/azure-storage-integrator>`_ charm
-    * `Repo policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
+    * `Repository policy compliance <https://charmhub.io/repo-policy-compliance>`_ charm
 
 .. admonition:: Examples of good documentation in big charms
 
@@ -344,6 +367,8 @@ project file, specify the ``base``, and ``platforms`` keys. E.g.,
     # The run time base, the base format is <os-name>@<os-release>,
     # accepted bases are:
     # - ubuntu@24.04
+    # - ubuntu@25.10
+    # - ubuntu@26.04
     base: <base>
     # The build time base, if not defined the base is also the build time
     # base, in addition to valid bases, the build-base can be "devel"
@@ -488,9 +513,22 @@ Manage secrets
     See first: :external+juju:ref:`Juju | Manage secrets <manage-secrets>`,
     :external+juju:ref:`Juju | Secret <secret>`
 
-To make your charm capable of accepting a user secret, in your charm's
-project file, specify the ``config`` key with the ``type`` subkey set to
-``secret``.
+Charms can interact with Juju secrets in three ways:
+
+- **Charm owns a secret**: the charm creates and manages the secret, such as a
+  database credential shared with a related app via relation data.
+- **Charm observes a charm-owned secret**: the charm reads a secret created by
+  another charm, with the secret ID passed via relation data.
+- **Charm observes a user secret**: the charm reads a secret created by a Juju
+  user (``juju add-secret``), with the secret URI passed via a configuration
+  option of ``type: secret``.
+
+    See more: :external+ops:ref:`Ops | Manage secrets <manage-secrets>`,
+    :external+juju:ref:`Juju | Secret <secret>`
+
+The third case — **user secrets** — is the one that requires a Charmcraft
+declaration. To allow a Juju user to provide a secret to your charm, declare a
+configuration option of ``type: secret`` in your charm's project file:
 
     See more: :ref:`charmcraft-yaml-key-config`
 
@@ -500,7 +538,7 @@ project file, specify the ``config`` key with the ``type`` subkey set to
 Specify necessary parts
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-    See more: :ref:`manage-parts`
+    See more: :ref:`parts`
 
 .. _pack-a-charm:
 
@@ -518,15 +556,13 @@ compile any modules, check that all the key files are in place, and produce a
 compressed archive with the extension ``.charm``. As you can verify, this archive
 is just a zip file with metadata and the operator code itself.
 
-.. collapse:: Example session for a charm called microsample-vm
+.. dropdown:: Example session for a charm called microsample-vm
 
     Pack the charm:
 
-    .. code-block:: bash
+    .. terminal::
 
         charmcraft pack
-
-    .. terminal::
 
         Created 'microsample-vm_ubuntu-22.04-amd64.charm'.
         Charms packed:
@@ -534,11 +570,9 @@ is just a zip file with metadata and the operator code itself.
 
     Optionally, verify that this has created a .charm file in your charm's root directory:
 
-    .. code-block:: bash
+    .. terminal::
 
         ls
-
-    .. terminal::
 
         CONTRIBUTING.md  charmcraft.yaml                          requirements.txt  tox.ini
         LICENSE          microsample-vm_ubuntu-22.04-amd64.charm  src
@@ -547,11 +581,9 @@ is just a zip file with metadata and the operator code itself.
     Optionally, verify that the .charm file is simply a zip file that contains
     everything you've packed plus any dependencies:
 
-    .. code-block:: bash
+    .. terminal::
 
         unzip -l microsample-vm_ubuntu-22.04-amd64.charm | { head; tail;}
-
-    .. terminal::
 
         Archive:  microsample-vm_ubuntu-22.04-amd64.charm
           Length      Date    Time    Name
@@ -598,8 +630,8 @@ to pack, whether to force pack if there are linting errors, etc.
 
 .. _publish-a-charm:
 
-Publish a charm on Charmhub
----------------------------
+Publish a charm
+---------------
 
 1. Log in to Charmhub:
 
@@ -629,13 +661,11 @@ Publish a charm on Charmhub
    See more: :ref:`manage-channels`.
 
 3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
-   your charm's filepath. E.g., if you are in the charm's root directory,
-
-   .. code-block:: bash
-
-       charmcraft upload my-awesome-charm.charm
+   your charm's path. E.g., if you are in the charm's root directory,
 
    .. terminal::
+
+       charmcraft upload my-awesome-charm.charm
 
        Revision 1 of my-awesome-charm created
 
@@ -651,12 +681,9 @@ Publish a charm on Charmhub
 4. If your charm has associated resources: These are not packed with the rest of the
    charm project, so you must upload them explicitly to Charmhub as well. For example:
 
-   .. code-block:: bash
-
-       charmcraft upload-resource my-awesome-charm someresource
-       --filepath=/tmp/superdb.bin
-
    .. terminal::
+
+       charmcraft upload-resource my-awesome-charm someresource --filepath=/tmp/superdb.bin
 
        Revision 1 created of resource 'someresource' for charm 'my-awesome-charm'
 
@@ -673,12 +700,9 @@ Publish a charm on Charmhub
    target release channel. For a charm that has a resource, also specify the
    resource and its revision. E.g.,
 
-   .. code-block:: bash
-
-       charmcraft release my-awesome-charm --revision=1 --channel=beta
-       --resource someresource:1
-
    .. terminal::
+
+       charmcraft release my-awesome-charm --revision=1 --channel=beta --resource someresource:1
 
        Revision 1 of charm 'my-awesome-charm' released to beta (attaching resources: 'someresource' r1)
 

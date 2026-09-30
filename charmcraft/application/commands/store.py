@@ -21,7 +21,6 @@ import dataclasses
 import os
 import pathlib
 import re
-import string
 import sys
 import tempfile
 import textwrap
@@ -36,7 +35,7 @@ from craft_application import util
 from craft_cli import ArgumentParsingError, emit
 from craft_cli.errors import CraftError
 from craft_store import attenuations, models, publisher
-from craft_store.errors import CredentialsUnavailable
+from craft_store.errors import CredentialsUnavailable, UbuntuOneOtpRequiredError
 from craft_store.models import ResponseCharmResourceBase
 from humanize import naturalsize
 from tabulate import tabulate
@@ -76,6 +75,19 @@ VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
 BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
+CHARMLIBS_DEPRECATION_URL = "https://ubu.link/charmhub-libraries-deprecation"
+CHARMLIBS_DEPRECATION_WARNING = (
+    "WARNING: Charmhub-hosted charm libraries are deprecated. "
+    f"Go to {CHARMLIBS_DEPRECATION_URL} for more information."
+)
+CREATE_LIB_REMOVAL_MESSAGE = (
+    "ERROR: New libraries can no longer be registered on Charmhub. "
+    f"For rationale and alternatives, consult {CHARMLIBS_DEPRECATION_URL}."
+)
+
+
+def _emit_charmlibs_deprecation_warning() -> None:
+    emit.progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
 
 
 class LoginCommand(CharmcraftCommand):
@@ -87,9 +99,9 @@ class LoginCommand(CharmcraftCommand):
         """
         Login to Charmhub.
 
-        Charmcraft will provide a URL for the Charmhub login. When you have
-        successfully logged in, Charmcraft will store a token for ongoing
-        access to Charmhub at the CLI (if `--export` option was not used
+        Charmcraft will prompt for your Ubuntu One email address and password.
+        When you have successfully logged in, Charmcraft will store a token for
+        ongoing access to Charmhub at the CLI (if `--export` option was not used
         otherwise it will only save the credentials in the indicated file).
 
         If `--export <file>` option is used, a secret credentials file will
@@ -206,17 +218,48 @@ class LoginCommand(CharmcraftCommand):
             or None
         )
 
-        if parsed_args.export:
-            credentials = self._services.store.get_credentials(
-                packages=packages, **kwargs
+        if not parsed_args.export and os.getenv(const.ALTERNATE_AUTH_ENV_VAR):
+            raise CraftError(
+                f"Cannot login when using alternative auth through "
+                f"{const.ALTERNATE_AUTH_ENV_VAR} environment variable."
             )
+
+        email = emit.prompt("Email address: ")
+        password = emit.prompt("Password: ", hide=True)
+
+        store = cast(StoreService, self._services.get("store"))
+        if parsed_args.export:
+            try:
+                credentials = store.get_credentials(
+                    email=email, password=password, packages=packages, **kwargs
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                credentials = store.get_credentials(
+                    email=email, password=password, otp=otp, packages=packages, **kwargs
+                )
             parsed_args.export.write_text(credentials)
             emit.message(
                 f"Login successful. Credentials exported to {str(parsed_args.export)!r}."
             )
         else:
-            self._services.store.login(packages=packages, **kwargs)
-            username = self._services.store.get_account_info()["username"]
+            try:
+                store.login(
+                    email=email,
+                    password=password,
+                    packages=packages,
+                    **kwargs,
+                )
+            except UbuntuOneOtpRequiredError:
+                otp = emit.prompt("One-time password: ")
+                store.login(
+                    email=email,
+                    password=password,
+                    otp=otp,
+                    packages=packages,
+                    **kwargs,
+                )
+            username = store.get_account_info()["username"]
             emit.message(f"Logged in as {username!r}.")
 
 
@@ -240,8 +283,9 @@ class LogoutCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        store = cast(StoreService, self._services.get("store"))
         try:
-            self._services.store.logout()
+            store.logout()
             emit.message("Charmhub token cleared.")
         except CredentialsUnavailable:
             emit.message("You are not logged in to Charmhub.")
@@ -265,7 +309,7 @@ class WhoamiCommand(CharmcraftCommand):
         """Run the command."""
         store = cast("StoreService", self._services.get("store"))
         try:
-            macaroon_info = store.client.whoami()
+            macaroon_info = store.whoami()
         except CredentialsUnavailable:
             if parsed_args.format:
                 info = {"logged": False}
@@ -1219,34 +1263,21 @@ class StatusCommand(CharmcraftCommand):
 
 
 class CreateLibCommand(CharmcraftCommand):
-    """Create a charm library."""
+    """Create a charm library (no longer supported)."""
 
     name = "create-lib"
-    help_msg = "Create a charm library"
+    help_msg = "Create a charm library (no longer supported)"
     overview = textwrap.dedent(
-        """
+        f"""
         Create a Charmhub-hosted library.
 
-        Charmcraft manages charm libraries, which are published by charmers
-        to help other charmers integrate their charms. This command creates
-        a new library in your charm which you are publishing for others.
+        Charmhub no longer accepts the registration of new libraries, so
+        this command exits with an error.
 
-        This command MUST be run inside your charm directory with a valid
-        metadata.yaml. It will create the Python library with API version 0
-        initially:
-
-          lib/charms/<yourcharm>/v0/<name>.py
-
-        Each library has a unique identifier assigned by Charmhub that
-        supports accurate updates of libraries even if charms are renamed.
-        Charmcraft will request a unique ID from Charmhub and initialise a
-        template Python library.
-
-        Creating a charm library will take you through login if needed.
+        See {CHARMLIBS_DEPRECATION_URL} for the rationale behind this
+        change and instructions on what to do instead.
     """
     )
-    format_option = True
-    always_load_project = True
 
     def fill_parser(self, parser):
         """Add own parameters to the general parser."""
@@ -1254,62 +1285,9 @@ class CreateLibCommand(CharmcraftCommand):
         parser.add_argument("name", help="The name of the library file (e.g. 'db')")
 
     def run(self, parsed_args):
-        """Run the command."""
-        lib_name = parsed_args.name
-        valid_all_chars = set(string.ascii_lowercase + string.digits + "_")
-        valid_first_char = string.ascii_lowercase
-        if (
-            set(lib_name) - valid_all_chars
-            or not lib_name
-            or lib_name[0] not in valid_first_char
-        ):
-            raise CraftError(
-                "Invalid library name. Must only use lowercase alphanumeric "
-                "characters and underscore, starting with alpha."
-            )
-
-        charm_name = (
-            self._services.get("project").get().name or utils.get_name_from_yaml()
-        )
-        if charm_name is None:
-            raise CraftError(
-                "Cannot find a valid charm name in charm definition. "
-                "Check that you are using the correct project directory."
-            )
-
-        # '-' is valid in charm names, but not in a python import
-        # mutate the name so the path is a valid import
-        importable_charm_name = utils.create_importable_name(charm_name)
-
-        # all libraries born with API version 0
-        full_name = f"charms.{importable_charm_name}.v0.{lib_name}"
-        lib_data = utils.get_lib_info(full_name=full_name)
-        lib_path = lib_data.path
-        if lib_path.exists():
-            raise CraftError(f"This library already exists: {str(lib_path)!r}.")
-
-        emit.progress(f"Creating library {lib_name}.")
-        store = Store(env.get_store_config())
-        lib_id = store.create_library_id(charm_name, lib_name)
-
-        # create the new library file from the template
-        environment = utils.get_templates_environment("charmlibs")
-        template = environment.get_template("new_library.py.j2")
-        context = {"lib_id": lib_id}
-        try:
-            lib_path.parent.mkdir(parents=True, exist_ok=True)
-            lib_path.write_text(template.render(context))
-        except OSError as exc:
-            raise CraftError(
-                f"Error writing the library in {str(lib_path)!r}: {exc!r}."
-            )
-
-        if parsed_args.format:
-            info = {"library_id": lib_id}
-            emit.message(cli.format_content(info, parsed_args.format))
-        else:
-            emit.message(f"Library {full_name} created with id {lib_id}.")
-            emit.message(f"Consider 'git add {lib_path}'.")
+        """Fail early, as Charmhub no longer accepts new libraries."""
+        emit.progress(CREATE_LIB_REMOVAL_MESSAGE, permanent=True)
+        return 1
 
 
 class PublishLibCommand(CharmcraftCommand):
@@ -1349,6 +1327,7 @@ class PublishLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         charm_name = (
             self._services.get("project").get().name or utils.get_name_from_yaml()
         )
@@ -1457,7 +1436,7 @@ class PublishLibCommand(CharmcraftCommand):
         if parsed_args.format:
             output_data = []
             for lib_data, error_message in analysis:
-                datum = {
+                datum: dict[str, Any] = {
                     "charm_name": lib_data.charm_name,
                     "library_name": lib_data.lib_name,
                     "library_id": lib_data.lib_id,
@@ -1515,6 +1494,7 @@ class FetchLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.library:
             local_libs_data = [utils.get_lib_info(full_name=parsed_args.library)]
         else:
@@ -1670,6 +1650,7 @@ class FetchLibs(CharmcraftCommand):
 
     def run(self, parsed_args: argparse.Namespace) -> None:
         """Fetch libraries."""
+        _emit_charmlibs_deprecation_warning()
         store = cast("StoreService", self._services.get("store"))
         project = cast("CharmcraftProject", self._services.get("project").get())
         charm_libs = project.charm_libs
@@ -1778,6 +1759,7 @@ class ListLibCommand(CharmcraftCommand):
 
     def run(self, parsed_args):
         """Run the command."""
+        _emit_charmlibs_deprecation_warning()
         if parsed_args.name:
             charm_name = parsed_args.name
         else:

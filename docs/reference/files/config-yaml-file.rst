@@ -47,7 +47,7 @@ In these cases, ensure that it is noted in the description of the configuration
 option. It is acceptable to provide ``null`` configuration defaults or omit the
 ``default`` field.
 
-.. collapse:: Example
+.. dropdown:: Example
 
     .. code-block:: yaml
 

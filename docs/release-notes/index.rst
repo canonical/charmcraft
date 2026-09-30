@@ -1,3 +1,6 @@
+.. meta::
+    :description: The release documentation for Charmcraft. These release notes summarize the new features, bug fixes, and backwards-incompatible changes in each version.
+
 .. _release-notes:
 
 Release notes
@@ -14,6 +17,9 @@ Current releases
 Charmcraft 4
 ~~~~~~~~~~~~
 
+- :doc:`Charmcraft 4.4 <charmcraft-4.4>`
+- :doc:`Charmcraft 4.3 <charmcraft-4.3>`
+- :doc:`Charmcraft 4.2 <charmcraft-4.2>`
 - :doc:`Charmcraft 4.1 <charmcraft-4.1>`
 - :doc:`Charmcraft 4.0 <charmcraft-4.0>`
 
@@ -31,7 +37,7 @@ Charmcraft 2
 Charmcraft 2 is supported for older deployments and features. If you require a feature
 that Charmcraft 3 doesn't support, please check the :ref:`3.0 breaking changes
 <release-3.0.0>` and, if your issue isn't listed as a breaking change, please `file a
-bug report <issues>`_.
+bug report <https://github.com/canonical/charmcraft/issues/new>`__.
 
 - :ref:`Charmcraft 2.7.0 <release-2.7.0>`
 
@@ -87,6 +93,9 @@ keeps pace with the OS's new releases and support lifecycle.
     :hidden:
     :maxdepth: 1
 
+    Charmcraft 4.4 <charmcraft-4.4>
+    Charmcraft 4.3 <charmcraft-4.3>
+    Charmcraft 4.2 <charmcraft-4.2>
     Charmcraft 4.1 <charmcraft-4.1>
     Charmcraft 4.0 <charmcraft-4.0>
     Charmcraft 3.5 <charmcraft-3.5>

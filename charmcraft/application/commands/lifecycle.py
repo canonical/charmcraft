@@ -33,6 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import argparse
 
     from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.package import PackageService
     from charmcraft.services.store import StoreService
 
 
@@ -62,10 +63,10 @@ class PackCommand(lifecycle.PackCommand):
         upload it to Charmhub with `charmcraft upload`.
 
         For the charm you must be inside a charm directory with a valid
-        `metadata.yaml`, `requirements.txt` including the `ops` package
-        for the Python operator framework, and an operator entrypoint,
-        usually `src/charm.py`.  See `charmcraft init` to create a
-        template charm directory structure.
+        `charmcraft.yaml` containing the charm metadata, a `requirements.txt`
+        including the `ops` package for the Python operator framework, and an
+        operator entrypoint, usually `src/charm.py`.  See `charmcraft help init`
+        to create a template charm directory structure.
         """
     )
 
@@ -116,7 +117,10 @@ class PackCommand(lifecycle.PackCommand):
         project = cast(models.Charm, self._services.project)
 
         msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        len_configured_bases = len(project.bases)
+        if isinstance(project, models.BasesCharm):
+            len_configured_bases = len(project.bases)
+        else:
+            len_configured_bases = 0
         for bases_index in bases_indices:
             if bases_index < 0:
                 raise CraftError(msg.format(bases_index))
@@ -164,13 +168,21 @@ class PackCommand(lifecycle.PackCommand):
         if project.charm_libs:
             self._update_charm_libs()
 
+        # In managed mode (inside the container), pack to the project directory
+        # instead of the user-specified output directory, which is a host path
+        # that doesn't exist inside the container. The outer instance handles
+        # moving artifacts to the requested output directory after the container
+        # finishes.
+        if is_managed_mode():
+            parsed_args.output = pathlib.Path()
+
         result = super()._run(parsed_args, step_name, **kwargs)
 
         # Move artifacts in the outer instance.
         if not is_managed_mode():
-            state_service = self._services.get("state")
+            package_service = cast("PackageService", self._services.get("package"))
             try:
-                artifacts = cast(dict[str, pathlib.Path], state_service.get("artifact"))
+                artifacts = package_service.read_artifacts_state()
             except KeyError:
                 craft_cli.emit.debug(
                     "Could not find artifacts in the state service. Not moving."
@@ -179,10 +191,11 @@ class PackCommand(lifecycle.PackCommand):
                 project_dir = parsed_args.project_dir or pathlib.Path.cwd()
                 output_dir = parsed_args.output or pathlib.Path.cwd()
 
-                for artifact in artifacts.values():
-                    old_path = project_dir / artifact
-                    new_path = output_dir / artifact
+                for artifact_path in artifacts.values():
+                    old_path = project_dir / artifact_path
+                    new_path = output_dir / artifact_path
                     if old_path != new_path:
+                        new_path.parent.mkdir(parents=True, exist_ok=True)
                         old_path.rename(new_path)
 
         return result

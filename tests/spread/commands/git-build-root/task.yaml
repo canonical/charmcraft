@@ -1,0 +1,42 @@
+summary: Pack a charm from a monorepo using CHARMCRAFT_EXPERIMENTAL_MONOREPO
+
+# Ubuntu 18.04 times out during global prepare (snap installs too slow).
+systems:
+  - ubuntu-20.04-64
+  - ubuntu-22.04-64
+  - ubuntu-24.04-64
+  - ubuntu-25.10-64
+  - ubuntu-26.04-64
+
+kill-timeout: 30m
+
+environment:
+  CHARMCRAFT_EXPERIMENTAL_MONOREPO: "1"
+
+prepare: |
+  . /etc/os-release
+
+  mkdir -p monorepo/shared/mylib monorepo/charm
+  git -C monorepo init
+  git -C monorepo config user.email "test@example.com"
+  git -C monorepo config user.name "Test"
+
+  echo "GREETING = 'hello from shared library'" > monorepo/shared/mylib/__init__.py
+  sed "s/VERSION_ID/${VERSION_ID}/g" charmcraft.yaml > monorepo/charm/charmcraft.yaml
+
+execute: |
+  cd monorepo/charm
+  charmcraft pack
+
+  arch=$(dpkg --print-architecture)
+  artifact="monorepo-test-charm_${arch}.charm"
+  test -f "${artifact}"
+
+  mkdir unpacked
+  unzip -q "${artifact}" -d unpacked
+  test -f unpacked/shared/mylib/__init__.py
+  grep "GREETING" unpacked/shared/mylib/__init__.py
+
+restore: |
+  cd monorepo/charm 2>/dev/null && charmcraft clean || true
+  rm -rf monorepo

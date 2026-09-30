@@ -1,5 +1,8 @@
 .. _howto-migrate-to-python:
 
+.. meta::
+    :description: How to migrate a charm from the Charm plugin to the Python plugin in Charmcraft, including updating project files and flattening requirements.
+
 Migrate from the Charm plugin to the Python plugin
 ==================================================
 
@@ -64,7 +67,7 @@ complete set of packages needed in the charm's virtual environment.
     A few examples include:
 
     - `uv export <https://docs.astral.sh/uv/reference/cli/#uv-export>`_
-    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/cli/pip-compile/>`_
+    - `pip-compile <https://pip-tools.readthedocs.io/en/stable/reference/pip-compile/>`_
     - `pip freeze <https://pip.pypa.io/en/stable/cli/pip_freeze/>`_
 
 A basic ``requirements.txt`` file for a charm with no dependencies other than the
@@ -99,22 +102,25 @@ that can find these is::
     find lib -name "*.py" -exec awk '/PYDEPS = \[/,/\]/' {} +
 
 If run from the base directory of a charm, this will show all the PYDEPS declarations
-from all loaded charm libs, which can be used to help generate the input for a tool
+from all loaded charmlibs, which can be used to help generate the input for a tool
 that generates ``requirements.txt``.
+
+.. _howto-migrate-to-python-include-extra-files:
 
 Include extra files
 -------------------
 
-The Python plugin only includes the contents of the ``src`` and ``lib`` directories
-as well as the generated virtual environment. If other files were previously included
-from the main directory, they can be included again using the
-:ref:`craft_parts_dump_plugin`:
+The Python plugin only includes the contents of the ``src`` and ``lib`` directories as
+well as the generated virtual environment. Other files, such as the
+:ref:`icon-svg-file`, are no longer included by default and need to be explicitly packed
+in the charm with a new part that uses the :ref:`craft_parts_dump_plugin`.
 
 .. code-block:: yaml
-    :emphasize-lines: 7-11
+    :caption: charmcraft.yaml
+    :emphasize-lines: 7-12
 
     parts:
-      my-charm:  # This can be named anything you want
+      my-charm:
         plugin: python
         source: .
         python-requirements:
@@ -124,6 +130,7 @@ from the main directory, they can be included again using the
         source: .
         stage:
           - charm_version
+          - icon.svg
 
 
 .. _pip 22.3: https://pip.pypa.io/en/stable/news/#v22-3

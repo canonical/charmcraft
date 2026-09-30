@@ -1,0 +1,12 @@
+name: reactive-test
+summary: Testing reactive charms
+maintainer: root <root@root.root>
+description: |
+  This is
+  indeed
+  a multi-line description
+tags:
+  # Replace "misc" with one or more whitelisted tags from this list:
+  # https://jujucharms.com/docs/stable/authors-charm-metadata
+  - misc
+subordinate: false

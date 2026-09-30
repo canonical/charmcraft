@@ -1,0 +1,27 @@
+# Copyright 2022 pietro
+# See LICENSE file for licensing details.
+
+name: tester-grpc
+display-name: tester-grpc
+description: tempo tester GRPC charm
+summary: tempo tester GRPC charm
+
+containers:
+  workload:
+    resource: workload
+
+resources:
+  workload:
+    type: oci-image
+    description: OCI image for the workload
+    # Included for simplicity in integration tests
+    upstream-source: python:slim-buster
+
+requires:
+  tracing:
+    interface: tracing
+    limit: 1
+
+peers:
+  replicas:
+    interface: replicas

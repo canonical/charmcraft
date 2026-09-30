@@ -1,11 +1,5 @@
-First, install Multipass.
-
-.. seealso::
-
-    See more: `Multipass |
-    How to install Multipass <https://canonical.com/multipass/docs/install-multipass>`_
-
-Use Multipass to launch an Ubuntu VM with the name ``charm-dev``
+First, :external+multipass:ref:`install multipass <how-to-guides-install-multipass>`.
+Then use Multipass to launch an Ubuntu VM with the name ``charm-dev``
 from the 24.04 blueprint:
 
 .. code-block:: text
@@ -55,12 +49,12 @@ Initialize LXD:
     lxd init --auto
 
 MicroK8s is required to deploy the |12FactorApp| application on Kubernetes.
-Let's install MicroK8s using the ``1.31-strict/stable`` track, add the current
+Let's install MicroK8s using the ``1.34-strict/stable`` channel, add the current
 user to the group, and activate the changes:
 
 .. code-block:: text
 
-    sudo snap install microk8s --channel 1.31-strict/stable
+    sudo snap install microk8s --channel 1.34-strict/stable
     sudo adduser $USER snap_microk8s
     newgrp snap_microk8s
 
@@ -88,7 +82,7 @@ If successful, the terminal will output ``microk8s is running``
 along with a list of enabled and disabled add-ons.
 
 Juju is required to deploy the |12FactorApp| application.
-We'll install Juju using the ``3.6/stable`` track. Since the snap is
+We'll install Juju using the ``3.6/stable`` channel. Since the snap is
 sandboxed, we'll also manually create a directory to contain
 its files. Once Juju is ready, we initialize it by bootstrapping a
 development controller:

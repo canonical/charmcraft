@@ -42,7 +42,7 @@ def service_factory(
 ):
     services.register_services()
     factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-    factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # pyright: ignore[reportAttributeAccessIssue]
+    factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
     factory.update_kwargs(
         "charm_libs",
         project_dir=project_path,

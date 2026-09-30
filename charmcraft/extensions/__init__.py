@@ -18,12 +18,12 @@
 
 from charmcraft.extensions._utils import apply_extensions
 from charmcraft.extensions.app import (
-    DjangoFramework,
-    FastAPIFramework,
-    FlaskFramework,
-    GoFramework,
-    ExpressJSFramework,
-    SpringBootFramework,
+    DjangoFrameworkFactory,
+    ExpressJSFrameworkFactory,
+    FastAPIFrameworkFactory,
+    FlaskFrameworkFactory,
+    GoFrameworkFactory,
+    SpringBootFrameworkFactory,
 )
 from charmcraft.extensions.extension import Extension
 from charmcraft.extensions.registry import (
@@ -35,9 +35,7 @@ from charmcraft.extensions.registry import (
 )
 
 __all__ = [
-    "DjangoFramework",
     "Extension",
-    "FlaskFramework",
     "get_extension_class",
     "get_extension_names",
     "get_extensions",
@@ -46,9 +44,11 @@ __all__ = [
     "unregister",
 ]
 
-register("flask-framework", FlaskFramework)
-register("django-framework", DjangoFramework)
-register("go-framework", GoFramework)
-register("fastapi-framework", FastAPIFramework)
-register("expressjs-framework", ExpressJSFramework)
-register("spring-boot-framework", SpringBootFramework)
+# Factory instances are registered in place of Extension subclasses for the
+# 12-factor app extensions only, until craft-wide extensions land (CRAFT-5152).
+register("flask-framework", FlaskFrameworkFactory)  # type: ignore
+register("django-framework", DjangoFrameworkFactory)  # type: ignore
+register("go-framework", GoFrameworkFactory)  # type: ignore
+register("fastapi-framework", FastAPIFrameworkFactory)  # type: ignore
+register("expressjs-framework", ExpressJSFrameworkFactory)  # type: ignore
+register("spring-boot-framework", SpringBootFrameworkFactory)  # type: ignore

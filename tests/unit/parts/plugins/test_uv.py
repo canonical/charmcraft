@@ -139,6 +139,5 @@ def test_uv_cache_dir_set(uv_plugin: plugins.UvPlugin, tmp_path: Path) -> None:
 
     # The cache dir should point to a uv subdirectory in the part's cache
     cache_dir = Path(env["UV_CACHE_DIR"])
-    assert cache_dir.name == "uv", (
-        f"UV_CACHE_DIR should point to 'uv' subdirectory, got {cache_dir.name}"
-    )
+    expected = uv_plugin._part_info.part_cache_dir / "uv"
+    assert cache_dir == expected, f"UV_CACHE_DIR should be {expected}, got {cache_dir}"

@@ -72,23 +72,25 @@ execute: |
   pushd charm2
   rm -f *.charm
 
-  # Build the second charm with the same UV cache
-  CRAFT_SHARED_CACHE="$CACHE_DIR" charmcraft pack
+  # Build the second charm with the same UV cache, capturing output
+  SECOND_BUILD_LOG=$(CRAFT_SHARED_CACHE="$CACHE_DIR" charmcraft pack 2>&1)
+  echo "$SECOND_BUILD_LOG"
 
   # Verify charm was created
   test -f *.charm
 
-  # Check that cache was reused (size should be same or similar, not doubled)
-  FINAL_CACHE_SIZE=$(du -sb "$UV_CACHE_PATH" | cut -f1)
-  echo "Final cache size: $FINAL_CACHE_SIZE bytes"
+  # Check that the second build did NOT build wheels from source
+  # If caching works, uv should use cached wheels, not rebuild them
+  if echo "$SECOND_BUILD_LOG" | grep -qi "Building wheel"; then
+    echo "ERROR: Second build attempted to build wheels from source"
+    echo "This suggests the cache was not properly reused"
+    exit 1
+  fi
 
-  # The cache size should not have significantly increased if caching worked
-  # Allow for some metadata overhead (25% increase max to account for filesystem variations)
-  MAX_ALLOWED_SIZE=$((INITIAL_CACHE_SIZE * 125 / 100))
-
-  if [ "$FINAL_CACHE_SIZE" -gt "$MAX_ALLOWED_SIZE" ]; then
-    echo "ERROR: Cache size increased too much (from $INITIAL_CACHE_SIZE to $FINAL_CACHE_SIZE)"
-    echo "This suggests wheels were rebuilt instead of being reused from cache"
+  # Also verify cache was actually used (uv should report cached packages)
+  if ! echo "$SECOND_BUILD_LOG" | grep -qi "Cached"; then
+    echo "ERROR: Second build did not report any cached packages"
+    echo "This suggests the cache was not properly reused"
     exit 1
   fi
 

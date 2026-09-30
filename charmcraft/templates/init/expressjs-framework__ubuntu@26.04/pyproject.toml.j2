@@ -13,13 +13,11 @@ requires-python = ">=3.14"
 # 'charm-libs' block in charmcraft.yaml, run `charmcraft fetch-libs` to download the libraries,
 # then inspect the libraries for dependencies specified in PYDEPS. List those dependencies here.
 dependencies = [
-    "paas-charm>=2.0.dev0",
+    "paas-charm>=2.0.dev1,<3",
 ]
 [dependency-groups]
 # PYDEPS from libraries that the charm uses.
-charmlibs-pydeps = [
-    "cosl==1.9.1",
-]
+charmlibs-pydeps = []
 # Dependencies of linting and static type checks
 lint = [
     "ruff",

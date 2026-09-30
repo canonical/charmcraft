@@ -17,6 +17,8 @@
 
 import datetime
 import pathlib
+import shutil
+import zipfile
 
 import freezegun
 import pytest
@@ -153,6 +155,13 @@ def test_reactive_charm_includes_build_manifest(monkeypatch, new_path, package_s
 
     package_service.write_metadata(test_prime_dir)
 
-    # The .build.manifest should be copied from stage to prime (if it exists in stage)
-    # Note: This test just validates metadata writing doesn't interfere with it
-    # The actual copying is done by craft-parts during stage/prime steps
+    # Simulate craft-parts copying .build.manifest from stage to prime
+    shutil.copy2(test_stage_dir / ".build.manifest", test_prime_dir / ".build.manifest")
+
+    assert (test_prime_dir / ".build.manifest").exists()
+    assert "pip:" in (test_prime_dir / ".build.manifest").read_text()
+
+    # Pack the charm and verify .build.manifest is in the artifact
+    charm_path = package_service.pack_charm(test_prime_dir, new_path)
+    with zipfile.ZipFile(charm_path) as zf:
+        assert ".build.manifest" in zf.namelist()

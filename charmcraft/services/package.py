@@ -315,17 +315,7 @@ class PackageService(services.PackageService):
 
         :return: The charm tools version string, or None if not using reactive plugin.
         """
-        project = cast(
-            "BasesCharm | PlatformCharm", self._services.get("project").get()
-        )
-
-        # Check if reactive plugin is explicitly used
-        plugins = {
-            part.get("plugin")
-            for name, part in project.parts.items()
-            if part.get("plugin") is not None
-        }
-        if "reactive" not in plugins:
+        if not self._has_reactive_plugin():
             return None
 
         # Try to get charm tools version

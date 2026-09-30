@@ -215,6 +215,7 @@ extensions = [
     # Custom Craft extensions
     "pydantic_kitbash",
     "sphinx_rerediraffe",
+    "sphinx_structured_toc",
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.viewcode",

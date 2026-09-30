@@ -24,31 +24,137 @@ administrators looking to charm an application for their Juju deployment.
 In this documentation
 ---------------------
 
-.. list-table::
-    :widths: 35 65
-    :header-rows: 0
+First steps
+~~~~~~~~~~~
 
-    * - **Installation and setup**
-      - :ref:`manage-charmcraft`
-    * - **Vocabulary and syntax**
-      - :ref:`configure-package-information` • :ref:`commands` •
-        :ref:`charmcraft.yaml <charmcraft-yaml-file>` •
-        :ref:`Part keys <reference-part-properties>`
-    * - **Platform compatibility**
-      - :ref:`select-platforms` • :ref:`explanation-bases` •
-        :ref:`reference-platforms`
-    * - **Software integration**
-      - :ref:`parts` • :ref:`manage-resources` • :ref:`manage-libraries`
-    * - **12-factor web apps**
-      - :ref:`tutorial` • :ref:`init-12-factor-charms` •
-        :ref:`Configuration <configure-12-factor-charms>` •
-        :ref:`Integration <integrate-12-factor-charms>` •
-        :ref:`Usage <use-12-factor-charms>` • :ref:`extensions`
-    * - **Debugging**
-      - :ref:`charmcraft-analyzers-and-linters`
-    * - **Distribution**
-      - :ref:`publish-a-charm` • :ref:`manage-names` • :ref:`manage-tracks` •
-        :ref:`manage-channels` • :ref:`manage-charm-revisions`
+.. domain::
+
+    .. slice:: Installation
+
+        :doc:`Install Charmcraft <howto/manage-charmcraft>`
+
+    .. slice:: Touchpoints
+
+        :doc:`/reference/commands/index`
+        :doc:`charmcraft.yaml <reference/files/charmcraft-yaml-file>`
+
+
+Charm development
+~~~~~~~~~~~~~~~~~
+
+.. domain::
+
+    .. slice:: Platform compatibility
+
+        :doc:`Select platforms <howto/select-platforms>`
+        :doc:`explanation/bases`
+        :doc:`reference/platforms`
+
+    .. slice:: Parts
+
+        :doc:`YAML keys <common/craft-parts/reference/part_properties>`
+        :doc:`reference/plugins/index`
+        :doc:`Lifecycle reference <reference/parts/lifecycle>`
+        :doc:`common/craft-parts/explanation/filesets`
+        :doc:`Environment variables <common/craft-parts/reference/step_execution_environment>`
+
+    .. slice:: Environment management
+
+        :doc:`Poetry <reference/plugins/poetry_plugin>`
+        :doc:`Python <reference/plugins/python_plugin>`
+        :doc:`uv <reference/plugins/uv_plugin>`
+        :doc:`Migrate from the Charm plugin <howto/migrate-plugins/index>`
+
+    .. slice:: Resources and libraries
+
+        :doc:`howto/manage-resources`
+        :doc:`howto/manage-libraries`
+
+    .. slice:: Debugging
+
+        :doc:`reference/analyzers-and-linters`
+
+
+12-factor app development
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. domain::
+
+    .. slice:: Overview
+
+        :doc:`Initialize <howto/manage-web-app-charms/index>`
+        :doc:`Configure <howto/manage-web-app-charms/configure-web-app-charm>`
+        :doc:`Integrate <howto/manage-web-app-charms/integrate-web-app-charm>`
+        :doc:`Use <howto/manage-web-app-charms/use-web-app-charm>`
+        :doc:`Connect databases <howto/manage-web-app-charms/use-a-database>`
+        :doc:`Manage extensions <howto/manage-extensions>`
+
+    .. slice:: Django
+
+        :doc:`Charm a Django app <tutorial/kubernetes-charm-django>`
+        :doc:`Django extension <reference/extensions/django-framework-extension>`
+
+    .. slice:: Express
+
+        :doc:`Charm an Express app <tutorial/kubernetes-charm-express>`
+        :doc:`Express extension <reference/extensions/express-framework-extension>`
+
+    .. slice:: FastAPI
+
+        :doc:`Charm a FastAPI app <tutorial/kubernetes-charm-fastapi>`
+        :doc:`FastAPI extension <reference/extensions/fastapi-framework-extension>`
+
+    .. slice:: Flask
+
+        :doc:`Charm a Flask app <tutorial/kubernetes-charm-flask>`
+        :doc:`Flask extension <reference/extensions/flask-framework-extension>`
+
+    .. slice:: Go
+
+        :doc:`Charm a Go app <tutorial/kubernetes-charm-go>`
+        :doc:`Go extension <reference/extensions/go-framework-extension>`
+
+    .. slice:: Spring Boot
+
+        :doc:`Charm a Spring Boot app <tutorial/kubernetes-charm-spring-boot>`
+        :doc:`Spring Boot extension <reference/extensions/spring-boot-framework-extension>`
+
+
+Charm builds
+~~~~~~~~~~~~
+
+.. domain::
+
+    .. slice:: Optimization
+
+        :doc:`howto/shared-cache`
+
+    .. slice:: Scaling
+
+        :doc:`howto/build-remotely`
+        :doc:`Remote build reference <reference/remote-builds>`
+
+    .. slice:: Legacy support
+
+        :doc:`howto/pack-a-reactive-charm-with-charmcraft`
+        :doc:`howto/pack-a-hooks-based-charm-with-charmcraft`
+
+
+Publication
+~~~~~~~~~~~
+
+.. domain::
+
+    .. slice:: Accounts
+
+        :doc:`howto/manage-the-current-charmhub-user`
+
+    .. slice:: Registration and releases
+
+        :doc:`Register a charm <howto/manage-names>`
+        :doc:`howto/manage-tracks`
+        :doc:`howto/manage-channels`
+        :doc:`howto/manage-revisions`
 
 
 How this documentation is organized

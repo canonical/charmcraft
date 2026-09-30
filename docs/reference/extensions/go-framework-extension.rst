@@ -12,6 +12,8 @@ application. This document describes all the keys that a user may interact with.
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
 
+.. include:: /reuse/reference/extensions/non_root_runtime.rst
+
 .. _go-framework-extension-config-options:
 
 ``charmcraft.yaml`` > ``config`` > ``options``
@@ -26,7 +28,7 @@ The predefined configuration options for the ``go-framework`` are:
   configured using this port. The environment variable passed to the app is
   ``APP_PORT``. Default value is 8080.
 
-* **app-secret-key**: Long secret you can use for sessions, csrf or any other thing
+* **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
   where you need a random secret shared by all units. The environment variable passed
   to the app is ``APP_METRICS_PORT``. The default value is random.
 
@@ -162,6 +164,27 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. tab-set::
+
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
+        :sync: base-22-24
+
+        The extension automatically adds the secret-typed ``app-secret-key-id``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Go app secret key and is exposed as the ``APP_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``APP_SECRET_KEY`` is automatically assigned a random value.
+
+
+    .. tab-item:: Ubuntu 26.04 LTS and higher
+        :sync: base-26
+
+        The extension automatically adds the secret-typed ``app-secret-key``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Go app secret key and is exposed as the ``APP_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 .. _go-grafana-graphs:
 

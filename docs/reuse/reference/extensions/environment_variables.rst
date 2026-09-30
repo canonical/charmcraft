@@ -71,6 +71,24 @@ Ingress relation.
         - ``REDIS_DB_HOSTNAME``
         - ``REDIS_DB_PORT``
         - ``REDIS_DB_NAME``
+  * - Valkey
+    -
+        - ``VALKEY_DB_CONNECT_STRING``
+        - ``VALKEY_DB_SCHEME``
+        - ``VALKEY_DB_NETLOC``
+        - ``VALKEY_DB_PATH``
+        - ``VALKEY_DB_PARAMS``
+        - ``VALKEY_DB_QUERY``
+        - ``VALKEY_DB_FRAGMENT``
+        - ``VALKEY_DB_USERNAME``
+        - ``VALKEY_DB_PASSWORD``
+        - ``VALKEY_DB_HOSTNAME``
+        - ``VALKEY_DB_PORT``
+        - ``VALKEY_DB_NAME``
+        - ``VALKEY_DB_TLS``
+        - ``VALKEY_DB_MODE``
+        - ``VALKEY_DB_TLS_CA``
+        - ``VALKEY_DB_VERSION``
   * - SAML
     -
         - ``SAML_ENTITY_ID`` (required)

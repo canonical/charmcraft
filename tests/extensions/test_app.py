@@ -14,18 +14,25 @@
 #
 # For further info, check https://github.com/canonical/charmcraft
 import copy
+import pathlib
 
 import pytest
 
-from charmcraft import extensions
+from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
-    DjangoFramework,
-    ExpressJSFramework,
-    FastAPIFramework,
-    FlaskFramework,
-    GoFramework,
-    SpringBootFramework,
+    DjangoFrameworkV1,
+    DjangoFrameworkV2,
+    ExpressJSFrameworkFactory,
+    ExpressJSFrameworkV1,
+    FastAPIFrameworkFactory,
+    FastAPIFrameworkV1,
+    FlaskFrameworkFactory,
+    FlaskFrameworkV1,
+    FlaskFrameworkV2,
+    GoFrameworkFactory,
+    GoFrameworkV1,
+    SpringBootFrameworkV1,
 )
 
 NON_OPTIONAL_OPTIONS = {
@@ -76,7 +83,7 @@ def make_spring_boot_input_yaml():
             make_flask_input_yaml(),
             False,
             {
-                "actions": FlaskFramework.actions,
+                "actions": FlaskFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "bases": [{"channel": "22.04", "name": "ubuntu"}],
                 "containers": {
@@ -102,7 +109,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **FlaskFramework.options,
+                        **FlaskFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -153,7 +160,7 @@ def make_spring_boot_input_yaml():
             },
             False,
             {
-                "actions": DjangoFramework.actions,
+                "actions": DjangoFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@22.04",
                 "platforms": {
@@ -187,7 +194,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **DjangoFramework.options,
+                        **DjangoFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -231,9 +238,9 @@ def make_spring_boot_input_yaml():
                 "extensions": ["go-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
-                "actions": GoFramework.actions,
+                "actions": GoFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -262,7 +269,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **GoFramework.options,
+                        **GoFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -306,9 +313,9 @@ def make_spring_boot_input_yaml():
                 "extensions": ["fastapi-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
-                "actions": FastAPIFramework.actions,
+                "actions": FastAPIFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -337,7 +344,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **FastAPIFramework.options,
+                        **FastAPIFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -381,9 +388,9 @@ def make_spring_boot_input_yaml():
                 "extensions": ["expressjs-framework"],
                 "config": NON_OPTIONAL_OPTIONS,
             },
-            True,
+            False,
             {
-                "actions": ExpressJSFramework.actions,
+                "actions": ExpressJSFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -412,7 +419,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **ExpressJSFramework.options,
+                        **ExpressJSFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -447,7 +454,7 @@ def make_spring_boot_input_yaml():
             make_spring_boot_input_yaml(),
             True,
             {
-                "actions": SpringBootFramework.actions,
+                "actions": SpringBootFrameworkV1.actions,
                 "assumes": ["k8s-api"],
                 "base": "ubuntu@24.04",
                 "platforms": {
@@ -476,7 +483,7 @@ def make_spring_boot_input_yaml():
                 ],
                 "config": {
                     "options": {
-                        **SpringBootFramework.options,
+                        **SpringBootFrameworkV1.options,
                         **NON_OPTIONAL_OPTIONS["options"],
                     },
                 },
@@ -519,6 +526,417 @@ def test_apply_extensions_correct(
     assert applied == expected
 
 
+def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-go-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["go-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "go application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-flask-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "flask application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "flask-secret-key" not in applied["config"]["options"]
+    assert "flask-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-django-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["django-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "django application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "django-secret-key" not in applied["config"]["options"]
+    assert "django-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-fastapi-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["fastapi-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "fastapi application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-expressjs-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["expressjs-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "expressjs application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-springboot-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["spring-boot-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert applied["containers"] == {"app": {"resource": "app-image"}}
+    assert applied["resources"] == {
+        "app-image": {
+            "type": "oci-image",
+            "description": "spring-boot application image.",
+        }
+    }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert applied["parts"]["charm"] == {
+        "plugin": "uv",
+        "source": ".",
+        "build-snaps": ["astral-uv", "rustup"],
+        "override-build": "rustup default stable\ncraftctl default",
+        "uv-groups": ["charmlibs-pydeps"],
+    }
+
+
+def test_go_framework_platforms_only_routes_to_v2(monkeypatch, tmp_path):
+    """Test that go on 26.04 via platforms (no top-level base) routes to V2 (defect 3 fix)."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-go-platforms-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "platforms": {"ubuntu@26.04:amd64": None},
+        "extensions": ["go-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    # V2 uses uv plugin and different image name
+    assert applied["parts"]["charm"]["plugin"] == "uv"
+
+
+def test_go_framework_24_04_still_routes_to_v1(monkeypatch, tmp_path):
+    """Test that go on 24.04 still routes to V1 with charm plugin."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-go-v1",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {"amd64": None},
+        "extensions": ["go-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    # V1 uses charm plugin
+    assert applied["parts"]["charm"]["plugin"] == "charm"
+
+
+def test_12factor_extension_rejects_multi_base(monkeypatch, tmp_path):
+    """Test that 12-factor extensions reject projects with multiple bases."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-multibase",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {"ubuntu@26.04:amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match="does not support multiple bases",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_extension_experimental_gating_enforced(monkeypatch, tmp_path):
+    """Test that V2 extensions require CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS env var."""
+    monkeypatch.delenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", raising=False)
+    input_yaml = {
+        "type": "charm",
+        "name": "test-flask-v2-no-env",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*experimental on base.*ubuntu@26.04.*",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_extension_experimental_gating_passes_with_env(monkeypatch, tmp_path):
+    """Test that V2 extensions work with CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS env var."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-flask-v2-with-env",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    # Should succeed and produce V2 output
+    assert applied["parts"]["charm"]["plugin"] == "uv"
+
+
+def test_flask_framework_factory_get_supported_bases_no_duplicates():
+    """Test that flask factory supported bases are deduped (defect 1 fix)."""
+    bases = FlaskFrameworkFactory.get_supported_bases()
+    assert bases == [("ubuntu", "22.04"), ("ubuntu", "24.04"), ("ubuntu", "26.04")]
+    assert len(bases) == len(set(bases)), "Supported bases should not have duplicates"
+
+
+def test_go_framework_factory_is_experimental_correct(monkeypatch):
+    """Test that go factory is_experimental delegates to correct class per base (defect 2 fix)."""
+    # Go V1 on 24.04 is now stable (not experimental)
+    assert GoFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
+    # Go V2 on 26.04 should be experimental
+    assert GoFrameworkFactory.is_experimental(("ubuntu", "26.04")) is True
+
+
+def test_fastapi_framework_factory_is_experimental_24_04(monkeypatch):
+    """Test that fastapi on 24.04 is stable (was experimental, now GA)."""
+    # FastAPI V1 on 24.04 is now stable
+    assert FastAPIFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
+
+
+def test_expressjs_framework_factory_is_experimental_24_04(monkeypatch):
+    """Test that expressjs on 24.04 is stable (was experimental, now GA)."""
+    # ExpressJS V1 on 24.04 is now stable
+    assert ExpressJSFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
+
+
+def test_v2_check_input_rejects_non_charm_type(monkeypatch, tmp_path):
+    """Test that V2 _check_input validates type == charm."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "bundle",  # Invalid: not a charm
+        "name": "test-bundle",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*incompatible with type 'bundle'",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_check_input_rejects_customized_charm_part(monkeypatch, tmp_path):
+    """Test that V2 _check_input rejects customized charm part."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-custom-charm",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "parts": {"charm": {"plugin": "dump", "source": "."}},  # Custom
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*incompatible with customized charm part",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_paas_config_part_present(monkeypatch, tmp_path):
+    """Test that V2 generates paas-config dump part when paas-config.yaml exists."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    # Create paas-config.yaml in the project
+    (tmp_path / "paas-config.yaml").write_text("key: value\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    # V2 should include config part for paas-config.yaml
+    assert "config" in applied["parts"]
+    assert applied["parts"]["config"]["plugin"] == "dump"
+    assert applied["parts"]["config"]["stage"] == ["paas-config.yaml"]
+
+
+def test_v2_paas_config_part_absent_when_no_file(monkeypatch, tmp_path):
+    """Test that V2 does not generate paas-config part when file is absent."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-no-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    # V2 should not include config part when paas-config.yaml is absent
+    assert "config" not in applied["parts"]
+
+
 PROTECTED_FIELDS_TEST_PARAMETERS = [
     pytest.param({"type": "bundle"}, id="type"),
     pytest.param({"containers": {"foobar": {"resource": "foobar"}}}, id="containers"),
@@ -540,7 +958,7 @@ def test_flask_merge_options(flask_input_yaml, tmp_path):
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
     assert applied["config"] == {
         "options": {
-            **FlaskFramework.options,
+            **FlaskFrameworkV1.options,
             **added_options,
         }
     }
@@ -550,7 +968,7 @@ def test_flask_merge_action(flask_input_yaml, tmp_path):
     added_actions = {"foobar": {}}
     flask_input_yaml["actions"] = added_actions
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["actions"] == {**FlaskFramework.actions, **added_actions}
+    assert applied["actions"] == {**FlaskFrameworkV1.actions, **added_actions}
 
 
 def test_flask_merge_relation(flask_input_yaml, tmp_path):
@@ -575,7 +993,7 @@ def test_flask_merge_charm_libs(flask_input_yaml, tmp_path):
     added_charm_libs = [{"lib": "smtp_integrator.smtp", "version": "0"}]
     flask_input_yaml["charm-libs"] = added_charm_libs
     applied = extensions.apply_extensions(tmp_path, flask_input_yaml)
-    assert applied["charm-libs"] == [*FlaskFramework._CHARM_LIBS, *added_charm_libs]
+    assert applied["charm-libs"] == [*FlaskFrameworkV1._CHARM_LIBS, *added_charm_libs]
 
 
 INCOMPATIBLE_FIELDS_TEST_PARAMETERS = [
@@ -627,6 +1045,45 @@ def test_flask_incompatible_fields(modification, flask_input_yaml, tmp_path):
         extensions.apply_extensions(tmp_path, copy.deepcopy(charm))
 
 
+def test_cos_custom_rejects_root_file(flask_input_yaml, tmp_path: pathlib.Path):
+    cos_dir = tmp_path / "cos_custom"
+    cos_dir.mkdir()
+    (cos_dir / "bad.txt").write_text("oops")
+
+    with pytest.raises(ExtensionError) as exc:
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+    error = str(exc.value)
+    assert "custom COS directory must only contain" in error
+    assert "root files: bad.txt" in error
+
+
+def test_cos_custom_rejects_unknown_subdir(flask_input_yaml, tmp_path: pathlib.Path):
+    cos_dir = tmp_path / "cos_custom"
+    (cos_dir / "unknown").mkdir(parents=True)
+
+    with pytest.raises(ExtensionError) as exc:
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+    error = str(exc.value)
+    assert "custom COS directory must only contain" in error
+    assert "invalid subdirectories: unknown" in error
+
+
+def test_cos_custom_allows_known_subdir(flask_input_yaml, tmp_path: pathlib.Path):
+    grafana_dir = tmp_path / "cos_custom" / "grafana_dashboards"
+    loki_dir = tmp_path / "cos_custom" / "loki_alert_rules"
+    prometheus_dir = tmp_path / "cos_custom" / "prometheus_alert_rules"
+    grafana_dir.mkdir(parents=True)
+    loki_dir.mkdir()
+    prometheus_dir.mkdir()
+    (grafana_dir / "dash.json").write_text("{}")
+    (loki_dir / "rules.yaml").write_text("groups: []")
+    (prometheus_dir / "rules.yaml").write_text("groups: []")
+
+    extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+
 def test_handle_charm_part_requires_no_parts(flask_input_yaml, tmp_path):
     # Currently, in the flask-framework extension, we will reject any project that
     # includes a charm part. This is to prevent issues where a non-default charm part is
@@ -647,6 +1104,46 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
     }
 
 
+def test_invalid_paas_config_yaml_fails_pack(flask_input_yaml, tmp_path):
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: [json", encoding="utf-8"
+    )
+
+    with pytest.raises(ExtensionError, match=r"invalid YAML in paas-config.yaml"):
+        extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+
+def test_json_framework_logging_disallowed_framework_fails_pack(tmp_path):
+    go_input_yaml = {
+        "type": "charm",
+        "name": "test-go",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@24.04",
+        "platforms": {
+            "amd64": None,
+        },
+        "extensions": ["go-framework"],
+        "config": NON_OPTIONAL_OPTIONS,
+    }
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: json\n", encoding="utf-8"
+    )
+
+    with pytest.raises(
+        ExtensionError,
+        match=r"framework_logging_format: json in paas-config.yaml is not supported for 'go-framework'",
+    ):
+        extensions.apply_extensions(tmp_path, go_input_yaml)
+
+
+def test_json_framework_logging_supported_framework_passes(flask_input_yaml, tmp_path):
+    (tmp_path / "paas-config.yaml").write_text(
+        "framework_logging_format: json\n", encoding="utf-8"
+    )
+    extensions.apply_extensions(tmp_path, flask_input_yaml)
+
+
 @pytest.mark.parametrize(
     ("input_yaml", "requires", "expected_options"),
     [
@@ -654,7 +1151,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
             make_flask_input_yaml(),
             {"oidc-foobar": {"interface": "oauth"}},
             {
-                **FlaskFramework.options,
+                **FlaskFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",
@@ -673,7 +1170,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
             make_spring_boot_input_yaml(),
             {"oidc-foobar": {"interface": "oauth"}},
             {
-                **SpringBootFramework.options,
+                **SpringBootFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",
@@ -701,7 +1198,7 @@ def test_handle_charm_part_adds_part(flask_input_yaml, tmp_path):
                 "other-oidc": {"interface": "oauth"},
             },
             {
-                **FlaskFramework.options,
+                **FlaskFrameworkV1.options,
                 **NON_OPTIONAL_OPTIONS["options"],
                 "oidc-foobar-redirect-path": {
                     "type": "string",
@@ -736,3 +1233,88 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
             **expected_options,
         }
     }
+
+
+def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
+    """Test that invalid metrics-path in paas-config.yaml raises ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        ExtensionError,
+        match=r"metrics-path in paas-config.yaml must be a valid URL path starting with '/'",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
+    """Test that valid metrics-path in paas-config.yaml does not raise ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: /something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    extensions.apply_extensions(tmp_path, input_yaml)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        pytest.param("port", "'8080'", "must be an integer", id="port-type"),
+        pytest.param("port", "0", "must be between 1 and 65535", id="port-minimum"),
+        pytest.param(
+            "metrics-port",
+            "65536",
+            "must be between 1 and 65535",
+            id="metrics-port-maximum",
+        ),
+    ],
+)
+def test_v2_paas_config_port_invalid(monkeypatch, tmp_path, key, value, message):
+    """Test that invalid top-level ports fail extension expansion."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    (tmp_path / "paas-config.yaml").write_text(f"{key}: {value}\n")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(ExtensionError, match=rf"{key} .* {message}"):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v1_secret_option_names_unchanged():
+    """Test that V2 option renames do not change V1 compatibility."""
+    assert "flask-secret-key" in FlaskFrameworkV1.options
+    assert "flask-secret-key-id" in FlaskFrameworkV1.options
+    assert "app-secret-key" not in FlaskFrameworkV1.options
+    assert "django-secret-key" in DjangoFrameworkV1.options
+    assert "django-secret-key-id" in DjangoFrameworkV1.options
+    assert "app-secret-key" not in DjangoFrameworkV1.options
+    assert "app-secret-key" in FlaskFrameworkV2.options
+    assert "app-secret-key" in DjangoFrameworkV2.options

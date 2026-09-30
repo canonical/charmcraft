@@ -1,0 +1,49 @@
+add-trusted-client:
+  description: The client certificate to add to the trusted list
+  params:
+    cert:
+      description: |
+        The raw X.509 PEM client certificate (required if cert-url isn't set).
+        -----BEGIN CERTIFICATE-----
+        <Client cert in PEM format to add to trust>
+        -----END CERTIFICATE-----
+        Pass the file with the certificate above as:
+        $ juju run --wait=2m lxd/leader add-trusted-client cert="$(cat client.crt)"
+      type: string
+    cert-url:
+      description: "The HTTP/HTTPS URL to fetch the client certificate from (required\
+        \ if cert isn\u2019t set)"
+      type: string
+    name:
+      description: The user-specified identifier (optional)
+      type: string
+    projects:
+      description: A comma separated list of projects to restrict the client certificate
+        to (optional)
+      type: string
+debug:
+  description: Collect useful information for bug reports (calls lxd.buginfo)
+get-client-token:
+  description: Return a client certificate add token to use by the client as `lxc
+    remote add <remote-name> <token>`
+  params:
+    name:
+      description: The user-specified identifier
+      type: string
+    projects:
+      description: A comma separated list of projects to restrict the client certificate
+        to (optional)
+      type: string
+remove-trusted-client:
+  description: The client certificate fingerprint (SHA256) to remove from the trusted
+    list
+  params:
+    fingerprint:
+      description: |
+        The fingerprint of the X.509 PEM client certificate. This will automatically ignore
+        `openssl`'s unneeded prefix (`sha256 Fingerprint=`) and extract the fingerprint.
+        $ juju run --wait=2m lxd/leader remove-trusted-client fingerprint="$(openssl x509 -noout -fingerprint -sha256 -in client.crt)"
+      type: string
+show-pending-config:
+  description: Show the currently pending configuration changes (queued for after
+    the reboot)

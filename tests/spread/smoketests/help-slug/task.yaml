@@ -8,7 +8,6 @@ prepare: |
 
   # change requirements to be invalid
   sed -e 's/"ops/"this-is-not-a-valid-replacement-for-ops/' -i charm/pyproject.toml
-  rm charm/uv.lock
 
 restore: |
   pushd charm

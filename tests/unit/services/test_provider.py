@@ -66,6 +66,7 @@ def mock_register(monkeypatch) -> Iterator[mock.Mock]:
         bases.BaseName("ubuntu", "20.04"),
         bases.BaseName("ubuntu", "22.04"),
         bases.BaseName("ubuntu", "24.04"),
+        bases.BaseName("ubuntu", "26.04"),
         bases.BaseName("ubuntu", "devel"),
         bases.BaseName("almalinux", "9"),
     ],
@@ -94,6 +95,7 @@ def test_get_base_forwards_cache(
         bases.BaseName("ubuntu", "20.04"),
         bases.BaseName("ubuntu", "22.04"),
         bases.BaseName("ubuntu", "24.04"),
+        bases.BaseName("ubuntu", "26.04"),
         bases.BaseName("ubuntu", "devel"),
         bases.BaseName("almalinux", "9"),
     ],
@@ -120,7 +122,7 @@ def test_get_base_no_cache_if_locked(
     # Can't use the fixture as pyfakefs doesn't handle locks.
     provider_service = ProviderService(
         app=APP_METADATA,
-        services=None,  # pyright: ignore[reportArgumentType]
+        services=None,  # ty: ignore[invalid-argument-type]
         work_dir=tmp_path,
     )
 

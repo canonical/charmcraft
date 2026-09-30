@@ -1,11 +1,13 @@
 # Client-side page redirects. Each mapping takes the format:
-#     `"<old path>" "<current path>"
+#     "<old path>" "<current path>"
 # Paths must be represented as source files relative to the root of the `docs` dir.
 # The old path must be a file that _doesn't exist_ in the source. The current path
 # must be a file that _does exist_ in the source.
 
 "howto/set-up-charmcraft.rst" "howto/manage-charmcraft.rst"
 "howto/install-charmcraft.rst" "howto/manage-charmcraft.rst"
+"howto/manage-icons.rst" "howto/add-an-icon.rst"
+"howto/manage-parts.rst" "reference/parts/index.rst"
 "tutorial/write-your-first-kubernetes-charm-for-a-django-app.rst" "tutorial/kubernetes-charm-django.rst"
 "tutorial/write-your-first-kubernetes-charm-for-a-flask-app.rst" "tutorial/kubernetes-charm-flask.rst"
 "tutorial/flask.rst" "tutorial/kubernetes-charm-flask.rst"
@@ -27,3 +29,9 @@
 # Charmcraft.yaml file reference modernisation
 "reference/models/bases-charm.rst" "reference/files/charmcraft-yaml-file.rst"
 "reference/models/index.rst" "reference/files/charmcraft-yaml-file.rst"
+
+# Remove build-guides index
+"howto/build-guides/pack-a-hooks-based-charm-with-charmcraft" "howto/pack-a-hooks-based-charm-with-charmcraft"
+"howto/build-guides/pack-a-reactive-charm-with-charmcraft" "howto/pack-a-reactive-charm-with-charmcraft"
+"howto/build-guides/select-platforms" "howto/select-platforms"
+"howto/build-guides/shared-cache" "howto/shared-cache"

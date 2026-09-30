@@ -1,3 +1,6 @@
+.. meta::
+    :description: The explanatory documentation for Charmcraft. These explanations aid in understanding the concepts and relationships of Charmcraft as a complete system.
+
 .. _explanation:
 
 Explanation
@@ -5,6 +8,15 @@ Explanation
 
 Explanations provide a wider perspective of Charmcraft. They aid in understanding the
 concepts and relationships of Charmcraft as a complete system.
+
+
+Bases
+-----
+
+Charms run on a baseline software system, known as a *base*. This primarily determines
+what Python version the charm runs on.
+
+- :ref:`explanation-bases`
 
 
 Cryptography

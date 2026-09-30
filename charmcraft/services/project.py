@@ -26,9 +26,19 @@ from typing_extensions import Any, override
 from charmcraft import const, extensions, preprocess
 from charmcraft.models.charmcraft import BasesConfiguration
 
+_project_dir = pathlib.Path.cwd()
+
 
 class ProjectService(BaseProjectService):
     """Charmcraft-specific project service."""
+
+    @override
+    def setup(self) -> None:
+        super().setup()
+
+        # Workaround to allow the static _app_preprocess_project method access to the project dir.
+        global _project_dir  # noqa: PLW0603
+        _project_dir = self._project_dir
 
     @override
     def _app_render_legacy_platforms(self) -> dict[str, craft_platforms.PlatformDict]:
@@ -89,8 +99,9 @@ class ProjectService(BaseProjectService):
         platform: str,
     ) -> None:
         """Run Charmcraft-specific pre-processing on the project."""
+        ## Workaround so if the user passes a different project directory we find it.
+        project_dir = _project_dir
         # Extensions get applied on as close as possible to what the user provided.
-        project_dir = pathlib.Path.cwd()
         extensions.apply_extensions(project_dir, project)
         # Preprocessing "magic" to create a fully-formed charm.
         preprocess.add_default_parts(project)

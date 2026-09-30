@@ -1,0 +1,80 @@
+.. _pack-a-hooks-based-charm-with-charmcraft:
+
+Pack a hooks-based charm
+========================
+
+    Introduced in Charmcraft 1.4
+
+    See first: :external+ops:ref:`Ops | Turn a hooks-based charm into an ops charm
+    <turn-a-hooks-based-charm-into-an-ops-charm>`
+
+Suppose you have a legacy hooks-only charm, for example, `tiny-bash
+<https://github.com/erik78se/tiny-bash>`_, which you can clone with:
+
+.. code-block:: bash
+
+    git clone https://github.com/erik78se/tiny-bash
+
+To make it packable by Charmcraft, all you need to do is navigate inside the charm
+directory and create a ``charmcraft.yaml`` file with the part definition for a
+hooks-based charm, as shown below:
+
+.. code-block:: yaml
+
+    type: charm
+
+    bases:
+      - build-on:
+        - name: "ubuntu"
+          channel: "20.04"
+        run-on:
+        - name: "ubuntu"
+          channel: "20.04"
+
+    parts:
+      tiny-bash:
+        plugin: dump
+        source: .
+        prime:
+          - LICENSE
+          - README.md
+          - config.yaml
+          - copyright
+          - hooks
+          - icon.svg
+          - metadata.yaml
+
+Then, pack the charm by running:
+
+.. code-block:: bash
+
+   charmcraft pack
+
+The charm file should contain all the files listed in the ``prime`` section of the
+``tiny-bash`` part and the charm manifest.
+
+.. terminal::
+
+    unzip -l tiny-bash_ubuntu-20.04-amd64.charm
+
+    Archive:  tiny-bash_ubuntu-20.04-amd64.charm
+      Length      Date    Time    Name
+    ---------  ---------- -----   ----
+          423  2021-11-12 19:37   metadata.yaml
+          431  2021-11-12 19:37   README.md
+           12  2021-11-12 19:37   config.yaml
+         3693  2021-11-12 19:37   icon.svg
+           38  2021-11-12 19:37   copyright
+          261  2021-11-12 20:08   manifest.yaml
+        34523  2021-11-12 19:37   LICENSE
+          381  2021-11-12 19:37   hooks/update-status
+          346  2021-11-12 19:37   hooks/start
+         1294  2021-11-12 19:37   hooks/shared-fs-relation-changed
+          563  2021-11-12 19:37   hooks/stop
+          497  2021-11-12 19:37   hooks/leader-elected
+          447  2021-11-12 19:37   hooks/install
+          417  2021-11-12 19:37   hooks/leader-settings-changed
+          811  2021-11-12 19:37   hooks/upgrade-charm
+          625  2021-11-12 19:37   hooks/config-changed
+    ---------                     -------
+        44762                     16 files

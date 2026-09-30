@@ -11,10 +11,14 @@ environment:
   # PROFILE/kubernetes: kubernetes
 
 execute: |
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
+
   mkdir charm-$PROFILE
   cd charm-$PROFILE
 
   charmcraft init --profile=$PROFILE
+  uv lock
   charmcraft init --profile=test-$PROFILE --force
 
   # Yo dawg, I heard you like spread tests. So I put a spread test in your spread

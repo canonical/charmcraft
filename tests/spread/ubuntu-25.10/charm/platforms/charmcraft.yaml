@@ -6,7 +6,7 @@ description: |
   A single sentence that says what the charm is, concisely and memorably.
 
 base: ubuntu@25.10
-build-base: ubuntu@devel
+build-base: ubuntu@25.10
 platforms:
   amd64:
   arm64:

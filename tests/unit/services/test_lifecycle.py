@@ -52,7 +52,7 @@ def test_get_build_for_values(
                 build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
                 platform="something",
                 build_on=HOST_ARCH,
-                build_for=plan_build_for,  # pyright: ignore[reportArgumentType]
+                build_for=plan_build_for,  # ty: ignore[invalid-argument-type]
             )
         ]
     )
@@ -91,7 +91,7 @@ def test_build_for_warns_on_multi(
                 build_base=craft_platforms.DistroBase("ubuntu", "22.04"),
                 platform="something",
                 build_on=HOST_ARCH,
-                build_for=f"{HOST_ARCH}-foreign",  # pyright: ignore[reportArgumentType]
+                build_for=f"{HOST_ARCH}-foreign",  # ty: ignore[invalid-argument-type]
             )
         ]
     )

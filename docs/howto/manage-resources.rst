@@ -3,19 +3,16 @@
 Manage resources
 ================
 
-    See first: :external+juju:ref:`Juju | Resource (charm) <charm-resource>`,
-    :external+juju:ref:`Juju | Manage resources <manage-charm-resources>`
-
+This guide shows how to declare, publish, view, and manage
+charm :external+juju:ref:`resource <charm-resource>` revisions. To learn more
+about managing charm resources, visit
+:external+juju:ref:`manage-charm-resources`.
 
 Declare a resource
 ------------------
 
 To declare a resource required by your charm, set the
 :ref:`charmcraft-yaml-key-resources` key in its project file.
-
-    See more: :ref:`charmcraft-yaml-key-resources`
-
-    See next: :external+ops:ref:`Ops | Manage resources <manage-resources>`
 
 .. tip::
 
@@ -30,7 +27,6 @@ To declare a resource required by your charm, set the
     charmcraft pack
     juju deploy ./my-charm.charm --resource my-resource=/tmp/somefile.txt
 
-
 .. _publish-a-resource:
 
 Publish a resource on Charmhub
@@ -38,35 +34,27 @@ Publish a resource on Charmhub
 
 .. note::
 
-    You must have already published the charm. See more: :ref:`publish-a-charm`.
+    You must have already :ref:`published the charm <publish-a-charm>`.
 
-To publish a resource on its charm's Charmhub page, run ``charmcraft upload-resource``
-followed by the name of the charm, the name of the resource (cf. ``charmcraft.yaml``),
-and ``--filepath=<path to file resource>`` / ``--image=<OCI image>``. For example:
-
-.. note::
-
-    The option ``--image`` must indicate an OCI image's digest, being it in the short or
-    long form (e.g.: ``70aa8983ec5c`` or
-    ``sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249``). When
-    using the "short form" of the digest, the image needs to be present locally so its
-    proper ID (the "long form") can be retrieved.
-
-.. code-block:: bash
-
-   charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
+To publish a resource for a charm, run the :ref:`charmcraft upload-resource
+<ref_commands_upload-resource>` command followed by the name of the charm, the name of
+the resource (cf. ``charmcraft.yaml``), and ``--filepath=<path to file resource>`` /
+``--image=<OCI image>``. For example:
 
 .. terminal::
+
+    charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
 
     Revision 1 created of resource 'someresource' for charm 'my-super-charm'
 
-.. code-block:: bash
-
-    charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
+The ``--image`` option must be passed an OCI image digest, prefixed with ``sha256:``, or
+a local image ID.
 
 .. terminal::
 
-   Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
+    charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
+
+    Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
 
 Charmcraft will first check if that specific image is available in Canonical's Registry,
 and just use it if that's the case. If not, it will try to get it from the developer's
@@ -77,20 +65,17 @@ end up with a resource revision.
 To update a pre-uploaded resource, run the ``upload-resource`` command again. The result
 will be a new revision.
 
-    See more: :ref:`ref_commands_upload-resource`
-
 .. admonition:: Best practice
     :class: hint
 
     For resources that are binary files, provide binaries for all the CPU
     architectures you intend to support.
 
-
 View all the resources published on Charmhub
 --------------------------------------------
 
-To view all the resources published on Charmhub for a charm, run ``charmcraft
-resources`` followed by the charm name:
+To view all the resources published on Charmhub for a charm, run
+:ref:`charmcraft resources <ref_commands_resources>` followed by the charm name:
 
 .. important::
 
@@ -101,45 +86,35 @@ resources`` followed by the charm name:
 
     charmcraft resources mycharm
 
-..
-
-    See more: :ref:`ref_commands_resources`
-
-
 .. _manage-resource-revisions:
 
 Manage resource revisions
 -------------------------
 
+You can list available resource revisions and set architectures for
+specific revisions.
 
 List all the available resource revisions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To view all the revisions for a resource associated with a charm you've uploaded to
-Charmhub, run ``charmcraft resource-revisions`` followed by the charm name and the
-resource name. For example:
+Charmhub, run :ref:`charmcraft resource-revisions <ref_commands_resource-revisions>`
+followed by the charm name and the resource name. For example:
 
 .. code-block:: bash
 
     charmcraft resource-revisions mycharm myresource
 
-..
-
-    See more: :ref:`ref_commands_resource-revisions`
-
-
 Set the architectures for a resource revision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To set the architectures for a revision of a resource associated with a charm you've
-uploaded to Charmhub, run ``charmcraft set-resource-architectures`` followed by the name
-of the charm, the name of the resource, and the architecture(s), using the
-``--resources`` flag to specify the target resource revision. For example:
+uploaded to Charmhub, run
+:ref:`charmcraft set-resource-architectures <ref_commands_set-resource-architectures>`
+followed by the name of the charm, the name of the resource, and
+the architecture(s), using the ``--resources`` flag to specify the target
+resource revision. For example:
 
 .. code-block:: bash
 
     charmcraft set-resource-architectures mycharm myresource --revision=1 arm64,armhf
-
-..
-
-    See more: :ref:`ref_commands_set-resource-architectures`

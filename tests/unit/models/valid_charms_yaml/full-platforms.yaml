@@ -28,7 +28,7 @@ charm-libs:
   - lib: other-charm.lib
     version: '0.123'
 base: ubuntu@24.04
-build-base: ubuntu@devel
+build-base: ubuntu@24.04
 platforms:
   all:
     build-on:

@@ -1,0 +1,66 @@
+description: |
+  LXD is a modern, secure and powerful system container and virtual machine manager.
+  It provides a unified experience for running and managing full Linux systems
+  inside containers or virtual machines.
+extra-bindings:
+  fan: null
+issues:
+- https://github.com/canonical/charm-lxd/issues
+name: lxd
+peers:
+  cluster:
+    interface: lxd-cluster
+provides:
+  bgp:
+    interface: lxd-bgp
+  dns:
+    interface: lxd-dns
+  grafana-dashboard:
+    interface: grafana-dashboard
+  grafana-dashboard-k8s:
+    interface: grafana_dashboard
+  https:
+    interface: lxd-https
+  metrics:
+    interface: lxd-metrics
+  metrics-endpoint:
+    interface: prometheus_scrape
+  prometheus-manual:
+    interface: prometheus-manual
+requires:
+  ceph:
+    interface: ceph-client
+    optional: true
+  certificates:
+    interface: tls-certificates
+  logging:
+    interface: loki_push_api
+  ovsdb-cms:
+    interface: ovsdb-cms
+resources:
+  lxd-binary:
+    description: |
+      A debug version of the LXD binary or a tarball of architecture specific
+      binaries. In the case of a tarball, the binaries should be at the root
+      and be named as "lxd_${ARCH}".
+
+      Attaching an empty file will undo the sideloading.
+    filename: lxd
+    type: file
+  lxd-snap:
+    description: |
+      A custom LXD snap or tarball of architecture specific snaps to install.
+      In the case of a tarball, the snaps should be at the root and be
+      named as "lxd_${ARCH}.snap".
+
+      Attaching an empty file will undo the sideloading.
+    filename: lxd.snap
+    type: file
+storage:
+  local:
+    description: Local storage pool for LXD
+    minimum-size: 10G
+    multiple:
+      range: 0-1
+    type: block
+summary: Powerful system container and virtual machine manager

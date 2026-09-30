@@ -93,7 +93,7 @@ execute: |
   juju set-model-constraints -m flask-async-app arch=$(dpkg --print-architecture)
 
   # [docs:deploy-juju-model]
-  juju deploy ./flask-async-app_ubuntu-22.04-$(dpkg --print-architecture).charm \
+  juju deploy ./flask-async-app_$(dpkg --print-architecture).charm \
     flask-async-app --resource \
     flask-app-image=localhost:32000/flask-async-app:0.1
   # [docs:deploy-juju-model-end]

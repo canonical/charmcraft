@@ -8,9 +8,12 @@ systems:
 
 prepare: |
   apt install --yes build-essential
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm
   cd charm
-  sed -i "s/22.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
+  uv lock
+  sed -i "s/24.04/$(echo $SPREAD_SYSTEM | cut -c 8-12)/g" charmcraft.yaml
 
 restore: |
   pushd charm

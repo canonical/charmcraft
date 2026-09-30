@@ -24,10 +24,10 @@ from unittest import mock
 
 import craft_application
 import craft_cli.pytest_plugin
-import craft_store
 import pytest
 from craft_cli import CraftError
 from craft_store import models, publisher
+from craft_store.errors import UbuntuOneOtpRequiredError
 from craft_store.publisher import Releases
 
 from charmcraft import errors, store
@@ -35,7 +35,11 @@ from charmcraft.application import commands
 from charmcraft.application.commands import SetResourceArchitecturesCommand
 from charmcraft.application.commands import store as store_commands
 from charmcraft.application.commands.store import (
+    CHARMLIBS_DEPRECATION_WARNING,
+    CREATE_LIB_REMOVAL_MESSAGE,
+    CreateLibCommand,
     FetchLibs,
+    ListLibCommand,
     LoginCommand,
     PublishLibCommand,
 )
@@ -50,9 +54,16 @@ type: charm
 """
 
 
-def test_login_basic_no_export(service_factory, mock_store_client):
-    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+def test_login_basic_no_export(mocker, monkeypatch, service_factory, mock_store_client):
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: (
+            "test@example.com" if not kw.get("hide") else "test-password"
+        ),
+    )
 
+    mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(
             charm=None,
@@ -71,20 +82,36 @@ def test_login_basic_no_export(service_factory, mock_store_client):
 @pytest.mark.parametrize("permission", [None, [], ["package-manage"]])
 @pytest.mark.parametrize("ttl", [None, 0, 2**65])
 def test_login_export(
+    mocker,
+    *,
     monkeypatch,
     service_factory,
     mock_store_client,
+    fake_path,
     charm,
     bundle,
     channel,
     permission,
     ttl,
 ):
-    mock_client_cls = mock.Mock(return_value=mock_store_client)
-    monkeypatch.setattr(craft_store, "StoreClient", mock_client_cls)
-    mock_store_client.login.return_value = "Some store credentials"
-    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: (
+            "test@example.com" if not kw.get("hide") else "test-password"
+        ),
+    )
 
+    export_file = fake_path / "charmhub.login"
+    fake_encoded = "base64encodedcreds=="
+
+    mock_auth = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
+    mock_auth.encode_credentials.return_value = fake_encoded
+
+    mocker.patch("charmcraft.services.store.UbuntuOneLogin.login_with")
+    mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
     cmd.run(
         argparse.Namespace(
             charm=charm,
@@ -92,12 +119,48 @@ def test_login_export(
             channel=channel,
             permission=permission,
             ttl=ttl,
-            export=pathlib.Path("charmhub.login"),
+            export=export_file,
         )
     )
 
-    assert pathlib.Path("charmhub.login").read_text() == "Some store credentials"
-    mock_store_client.login.assert_called_once()
+    assert export_file.read_text() == fake_encoded
+
+
+def test_login_export_otp(
+    mocker, monkeypatch, service_factory, mock_store_client, fake_path
+):
+    prompts = iter(["test@example.com", "test-password", "123456"])
+    monkeypatch.setattr(
+        "craft_cli.messages.Emitter.prompt",
+        lambda self, *a, **kw: next(prompts),
+    )
+
+    export_file = fake_path / "charmhub.login"
+    fake_encoded = "base64encodedcreds=="
+
+    mock_auth = mock.Mock()
+    mock_auth.get_credentials.return_value = "store-token"
+    mock_auth.encode_credentials.return_value = fake_encoded
+
+    mocker.patch(
+        "charmcraft.services.store.UbuntuOneLogin.login_with",
+        side_effect=[UbuntuOneOtpRequiredError(), None],
+    )
+    mocker.patch("charmcraft.services.store.craft_store.Auth", return_value=mock_auth)
+    mocker.patch("charmcraft.services.store.craft_store.UbuntuOneAuth")
+    cmd = LoginCommand({"app": APP_METADATA, "services": service_factory})
+    cmd.run(
+        argparse.Namespace(
+            charm=None,
+            bundle=None,
+            channel=None,
+            permission=None,
+            ttl=None,
+            export=export_file,
+        )
+    )
+
+    assert export_file.read_text() == fake_encoded
 
 
 @pytest.mark.parametrize(
@@ -162,7 +225,7 @@ def test_publish_lib_error(monkeypatch, new_path: pathlib.Path) -> None:
     )
 
 
-def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
+def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path, emitter) -> None:
     # Publishing the same version of a library with the same hash should not result
     # in an error return.
     mock_service_factory = mock.Mock(spec=craft_application.ServiceFactory)
@@ -196,6 +259,29 @@ def test_publish_lib_same_is_noop(monkeypatch, new_path: pathlib.Path) -> None:
         )
         == 0
     )
+
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+
+
+def test_create_lib_fails_early(emitter, service_factory) -> None:
+    cmd = CreateLibCommand({"app": APP_METADATA, "services": service_factory})
+
+    assert cmd.run(argparse.Namespace(name="my_lib")) == 1
+
+    emitter.assert_progress(CREATE_LIB_REMOVAL_MESSAGE, permanent=True)
+
+
+def test_list_lib_warns_deprecation(monkeypatch, emitter, service_factory) -> None:
+    mock_store = mock.Mock()
+    mock_store.return_value.get_libraries_tips.return_value = {}
+    monkeypatch.setattr(store_commands, "Store", mock_store)
+
+    cmd = ListLibCommand({"app": APP_METADATA, "services": service_factory})
+
+    cmd.run(argparse.Namespace(name="test-charm", format=False))
+
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
+    emitter.assert_message("No libraries found for charm test-charm.")
 
 
 @pytest.mark.parametrize(
@@ -233,6 +319,7 @@ def test_fetch_libs_no_charm_libs(
     with pytest.raises(errors.LibraryError) as exc_info:
         fetch_libs.run(argparse.Namespace())
 
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
     assert exc_info.value.resolution == "Add a 'charm-libs' section to charmcraft.yaml."
 
 
@@ -366,6 +453,7 @@ def test_fetch_libs_success(
 
     fetch_libs.run(argparse.Namespace())
 
+    emitter.assert_progress(CHARMLIBS_DEPRECATION_WARNING, permanent=True)
     emitter.assert_progress("Getting library metadata from charmhub")
     emitter.assert_message("Downloaded 1 charm libraries.")
 

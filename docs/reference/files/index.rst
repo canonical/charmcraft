@@ -3,11 +3,56 @@
 Files
 =====
 
-In the context of Charmcraft, a *file* refers to any file in a project that can be
-initialised or packed.
+The following files are initialized and packed in a Charmcraft project:
+
+
+Project file
+------------
+
+- :ref:`charmcraft-yaml-file`
+
+
+Project information
+-------------------
+
+- :ref:`license-file`
+- :ref:`readme-md-file`
+- :ref:`contributing-md-file`
+- :ref:`icon-svg-file`
+
+
+12-factor app configuration
+---------------------------
+
+- :ref:`paas-config-yaml-file`
+
+
+Python modules
+--------------
+
+- :ref:`src-charm-py-file`
+- :ref:`src-workload-py-file`
+- :ref:`libname-py-file`
+
+
+Dependency management
+---------------------
+
+- :ref:`pyproject-toml-file`
+- :ref:`requirements-txt-file`
+- :ref:`uv-lock-file`
+
+
+Testing
+-------
+
+- :ref:`tests-integration-conftest-py-file`
+- :ref:`tests-integration-test-charm-py-file`
+- :ref:`tests-unit-test-charm-py-file`
+
 
 .. toctree::
-    :maxdepth: 1
+    :hidden:
 
     actions-yaml-file
     charmcraft-yaml-file
@@ -20,6 +65,7 @@ initialised or packed.
     lxd-profile-yaml-file
     manifest-yaml-file
     metadata-yaml-file
+    paas-config-yaml-file
     pyproject-toml-file
     readme-md-file
     requirements-txt-file

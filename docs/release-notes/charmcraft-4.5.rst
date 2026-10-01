@@ -120,9 +120,8 @@ The following issues have been resolved in Charmcraft 4.5.
   secret, configuration, and dependency contracts while preserving V1 output. The V2
   profiles use the PyPI charmlibs interface packages for OAuth, OpenFGA, and tracing
   instead of fetching the corresponding libraries from Charmhub.
-- V2 12-factor extensions now accept every string value that paas-charm supports for
-  ``metrics-path``, including empty and relative strings. The Ubuntu 26.04 LTS migration
-  guide now covers the complete generated project contract.
+- The Ubuntu 26.04 LTS migration guide now covers the complete generated project
+  contract.
 
 
 Known issues

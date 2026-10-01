@@ -17,6 +17,7 @@
 """Gunicorn based extensions."""
 
 import copy
+import re
 from pathlib import Path
 from typing import Any
 
@@ -79,6 +80,11 @@ OAUTH_DYNAMIC_OPTIONS = {
         "default": "openid profile email",
     },
 }
+
+# RFC 3986 path: must start with '/' and contain only unreserved, sub-delim, ':', '@', '/', or percent-encoded chars.
+_VALID_URL_PATH_RE = re.compile(
+    r"^/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/]|%[0-9A-Fa-f]{2})*$"
+)
 
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 PAAS_CONFIG_FILE = "paas-config.yaml"
@@ -482,6 +488,11 @@ class _AppBaseV2(_AppBase):
                 raise ExtensionError(
                     f"metrics-path in {PAAS_CONFIG_FILE} must be a string, "
                     f"got {type(metrics_path).__name__}"
+                )
+            if not _VALID_URL_PATH_RE.match(metrics_path):
+                raise ExtensionError(
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a valid URL path "
+                    f"starting with '/', got '{metrics_path}'"
                 )
 
     @staticmethod

@@ -4,6 +4,7 @@ import os
 import pathlib
 import sys
 import re
+import textwrap
 
 import craft_parts_docs
 import craft_application_docs
@@ -34,7 +35,7 @@ major, minor, *_ = charmcraft.__version__.split(".")
 release = "dev" if os.environ.get("READTHEDOCS_VERSION") == "latest" else f"{major}.{minor}"
 
 # Copyright string; shown at the bottom of the page
-copyright = "2023-%s, %s" % (datetime.date.today().year, author)
+copyright = f"2023-{datetime.date.today().year}"
 
 # Documentation website URL
 ogp_site_url = "https://canonical.com/juju/docs/charmcraft"
@@ -48,7 +49,7 @@ ogp_site_name = project
 ogp_image = "https://assets.ubuntu.com/v1/cc828679-docs_illustration.svg"
 
 # Product favicon; shown in bookmarks, browser tabs, etc.
-# html_favicon = '.sphinx/_static/favicon.png'
+# html_favicon = '_static/favicon.png'
 
 # Dictionary of values to pass into the Sphinx context for all pages:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-html_context
@@ -73,6 +74,13 @@ html_context = {
     "display_contributors": False,
     # Required for feedback button
     'github_issues': 'enabled',
+    # Passes the top-level 'author' value to the theme
+    "author": author,
+    # Documentation license information
+    "license": {
+        "name": "Apache-2.0",
+        "url": "https://github.com/canonical/charmcraft/blob/main/LICENSE",
+    },
 }
 
 #html_extra_path = []
@@ -121,6 +129,27 @@ templates_path = ["_templates"]
 
 rediraffe_redirects = "redirects.txt"
 
+# Strips '/index.html' from destination URLs when building with 'dirhtml'
+rediraffe_dir_only = True
+
+
+############################
+# sphinx-llm configuration #
+############################
+
+# This description is included in llms.txt to provide some initial context for your
+# product docs.
+llms_txt_description = textwrap.dedent(
+    """\
+    This is the documentation for Charmcraft, the CLI tool for initialising,
+    packaging, and publishing charms, the software operators used by Juju.
+    """
+)
+
+# The base URL for references built by sphinx-markdown-builder.
+if os.environ.get("READTHEDOCS"):
+    markdown_http_base = html_baseurl
+
 
 ###########################
 # Link checker exceptions #
@@ -152,6 +181,9 @@ linkcheck_ignore = [
 # Give linkcheck multiple tries on failure
 linkcheck_retries = 20
 
+# Report timeouts as 'timeout' instead of 'broken'
+linkcheck_report_timeouts_as_broken = False
+
 
 ########################
 # Configuration extras #
@@ -170,6 +202,7 @@ extensions = [
     # "sphinx_config_options",
     # "sphinx_contributor_listing",
     # "sphinx_filtered_toctree",
+    "sphinx_llm.txt",
     "sphinx_related_links",
     "sphinx_roles",
     "sphinx_terminal",
@@ -181,7 +214,7 @@ extensions = [
     "sphinx_sitemap",
     # Custom Craft extensions
     "pydantic_kitbash",
-    "sphinxext.rediraffe",
+    "sphinx_rerediraffe",
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.viewcode",
@@ -298,6 +331,10 @@ intersphinx_mapping = {
     "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
     "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
 }
+
+# Block Intersphinx from looking up external sources with internal references. In other
+# words, only :external+<project>... will search in other projects.
+intersphinx_disabled_reftypes = ["std:*"]
 
 
 ##############################

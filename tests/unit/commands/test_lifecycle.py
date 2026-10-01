@@ -200,8 +200,9 @@ class TestPackMoveArtifacts:
         artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
         (project_dir / artifact_name).write_text("charm content")
 
-        state_service = service_factory.get("state")
-        state_service.set("artifact", "test-platform", value=artifact_name)
+        service_factory.get("package").write_artifacts_state(
+            {None: pathlib.Path(artifact_name)}
+        )
 
         parsed_args = argparse.Namespace(
             output=output_dir,
@@ -244,8 +245,9 @@ class TestPackMoveArtifacts:
         artifact_name = "my-charm_ubuntu-22.04-amd64.charm"
         (project_dir / artifact_name).write_text("charm content")
 
-        state_service = service_factory.get("state")
-        state_service.set("artifact", "test-platform", value=artifact_name)
+        service_factory.get("package").write_artifacts_state(
+            {None: pathlib.Path(artifact_name)}
+        )
 
         parsed_args = argparse.Namespace(
             output=output_dir,
@@ -288,8 +290,9 @@ class TestPackMoveArtifacts:
         # The artifact exists in the project dir (as it would after a real managed build).
         (project_dir / artifact_name).write_text("charm content")
 
-        state_service = service_factory.get("state")
-        state_service.set("artifact", "test-platform", value=artifact_name)
+        service_factory.get("package").write_artifacts_state(
+            {None: pathlib.Path(artifact_name)}
+        )
 
         parsed_args = argparse.Namespace(
             output=output_dir,

@@ -78,6 +78,12 @@ FRAMEWORK_PROFILES = [
     "go-framework",
     "spring-boot-framework",
 ]
+V2_PROJECT_DEPENDENCIES = {
+    "charmlibs-interfaces-oauth==1.1.0",
+    "charmlibs-interfaces-openfga==1.0.0",
+    "charmlibs-interfaces-tracing==1.0.0",
+    "paas-charm>=2.0.dev1,<3",
+}
 ALL_PROFILES = [
     *FRAMEWORK_PROFILES,
     "kubernetes",
@@ -199,7 +205,22 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
     v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
     assert v2_project["charm-user"] == "non-root"
     v2_pyproject = (v2_dir / "pyproject.toml").read_text()
-    assert '"paas-charm>=2.0.dev1,<3",' in v2_pyproject
+    dependencies = re.search(
+        r"^dependencies = \[(.*?)^]$", v2_pyproject, re.MULTILINE | re.DOTALL
+    )
+    assert dependencies
+    assert (
+        set(re.findall(r'"([^"]+)"', dependencies.group(1))) == V2_PROJECT_DEPENDENCIES
+    )
+
+
+@pytest.mark.parametrize("profile", FRAMEWORK_PROFILES)
+def test_framework_profile_v1_dependencies_unchanged(new_path, init_command, profile):
+    init_command.run(create_namespace(profile=profile))
+
+    project = (new_path / "pyproject.toml").read_text()
+    assert "[project]" not in project
+    assert (new_path / "requirements.txt").read_text() == "paas-charm>=1.0,<2\n"
 
 
 def test_profiles_discovered_from_templates(init_command):

@@ -27,7 +27,12 @@ There is no version key in ``charmcraft.yaml``.
   framework supports the base.
 * Ubuntu 26.04 LTS generates an experimental contract. It requires
   ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or packs the
-  project. The lower bases don't require the environment variable.
+  project. Charmcraft doesn't require the environment variable for lower bases.
+
+Rockcraft has its own extension stability and environment variable. In particular, its
+Spring Boot extension on Ubuntu 24.04 LTS remains experimental. The
+:ref:`Spring Boot tutorial <write-your-first-kubernetes-charm-for-a-spring-boot-app>`
+shows the required Rockcraft setting.
 
 On Ubuntu 26.04 LTS, all six framework extensions generate the following contract:
 
@@ -55,9 +60,14 @@ On Ubuntu 26.04 LTS, all six framework extensions generate the following contrac
     * - Optional build input
       - None
       - :ref:`paas-config-yaml-file`
+    * - OAuth, OpenFGA, and tracing libraries
+      - Libraries fetched from Charmhub
+      - Versioned ``charmlibs-interfaces-*`` dependencies from PyPI
 
 Charmcraft stages ``paas-config.yaml`` only when the file exists in an Ubuntu 26.04 LTS
-project. Changing the base of an existing project partially migrates it to the other
+project. Changing the base or packing an existing project only partially migrates it to
+the other contract. :ref:`Migrate a 12-factor charm to Ubuntu 26.04 LTS
+<howto-change-to-ubuntu-26-04-12-factor>` describes how to generate and merge a complete
 contract.
 
 

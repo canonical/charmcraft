@@ -25,8 +25,8 @@ Charmcraft validates the following properties when it expands the extension with
 * The top-level value is a mapping.
 * ``framework_logging_format: json`` is used only with Flask, Django, or FastAPI.
 * ``port`` and ``metrics-port`` are integers from 1 through 65535.
-* ``metrics-path`` is a string that starts with ``/`` and is a valid RFC 3986 URL
-  path.
+* ``metrics-path`` is a string. paas-charm passes an explicitly configured value to
+  the workload unchanged, including an empty or relative string.
 
 The public top-level spellings are ``port``, ``metrics-port``, and ``metrics-path``.
 Charmcraft doesn't validate other paas-charm settings beyond YAML structure and the

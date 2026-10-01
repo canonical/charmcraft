@@ -17,6 +17,7 @@ import copy
 import pathlib
 
 import pytest
+import yaml
 
 from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
@@ -728,6 +729,36 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     }
 
 
+@pytest.mark.parametrize(
+    "framework",
+    ["django", "expressjs", "fastapi", "flask", "go", "spring-boot"],
+)
+def test_v2_frameworks_do_not_fetch_replaced_charm_libs(
+    monkeypatch, tmp_path, framework
+):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": f"test-{framework}-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": [f"{framework}-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+    generated_libraries = {library["lib"] for library in applied["charm-libs"]}
+
+    assert generated_libraries.isdisjoint(
+        {
+            "hydra.oauth",
+            "openfga_k8s.openfga",
+            "tempo_coordinator_k8s.tracing",
+        }
+    )
+
+
 def test_go_framework_platforms_only_routes_to_v2(monkeypatch, tmp_path):
     """Test that go on 26.04 via platforms (no top-level base) routes to V2 (defect 3 fix)."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
@@ -1235,11 +1266,11 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
     }
 
 
-def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
-    """Test that invalid metrics-path in paas-config.yaml raises ExtensionError."""
+def test_v2_paas_config_metrics_path_invalid_type(monkeypatch, tmp_path):
+    """Test that a non-string metrics-path raises ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
-    (tmp_path / "paas-config.yaml").write_text("metrics-path: something\n")
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: 123\n")
 
     input_yaml = {
         "type": "charm",
@@ -1253,16 +1284,19 @@ def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
 
     with pytest.raises(
         ExtensionError,
-        match=r"metrics-path in paas-config.yaml must be a valid URL path starting with '/'",
+        match=r"metrics-path in paas-config.yaml must be a string, got int",
     ):
         extensions.apply_extensions(tmp_path, input_yaml)
 
 
-def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
+@pytest.mark.parametrize("metrics_path", ["", "metrics", "/metrics"])
+def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path, metrics_path):
     """Test that valid metrics-path in paas-config.yaml does not raise ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
-    (tmp_path / "paas-config.yaml").write_text("metrics-path: /something\n")
+    (tmp_path / "paas-config.yaml").write_text(
+        yaml.safe_dump({"metrics-path": metrics_path})
+    )
 
     input_yaml = {
         "type": "charm",

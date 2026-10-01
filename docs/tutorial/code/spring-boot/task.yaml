@@ -29,7 +29,6 @@ execute: |
 
   # [docs:export-experimental-env-vars]
   export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
-  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
   # [docs:export-experimental-env-vars-end]
 
   # [docs:install-devpack-for-spring]
@@ -94,7 +93,7 @@ execute: |
   # [docs:create-charm-dir]
   mkdir charm
   cd charm
-  # [docs:create-charm-dir-end]  
+  # [docs:create-charm-dir-end]
 
   # [docs:charm-init]
   charmcraft init --profile spring-boot-framework --name spring-boot-hello-world
@@ -210,7 +209,7 @@ execute: |
     oci-archive:spring-boot-hello-world_0.3_$(dpkg --print-architecture).rock \
     docker://localhost:32000/spring-boot-hello-world:0.3
   # [docs:skopeo-2nd-update-end]
-  
+
   cat $HOME/tmp/visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
   cd charm
 

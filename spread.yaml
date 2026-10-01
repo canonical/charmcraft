@@ -299,16 +299,47 @@ suites:
       refresh_or_install_snap k8s "$k8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
 
-      # Canonical Kubernetes runs its own containerd using the standard host paths,
-      # so the docker.io pull-through mirror lives under /etc/containerd/hosts.d.
-      # It must be written before bootstrap so containerd picks it up on startup.
-      if [[ -v CONTAINER_REGISTRY_URL ]]; then
-        CONTAINER_REGISTRY_HOSTPORT=$(echo "$CONTAINER_REGISTRY_URL" | awk -F/ '{print $3}')
-        mkdir -p /etc/containerd/hosts.d/docker.io
-        echo "server = \"$CONTAINER_REGISTRY_URL\"" > /etc/containerd/hosts.d/docker.io/hosts.toml
-        echo "[host.\"$CONTAINER_REGISTRY_HOSTPORT\"]" >> /etc/containerd/hosts.d/docker.io/hosts.toml
-        echo 'capabilities = ["pull", "resolve"]' >> /etc/containerd/hosts.d/docker.io/hosts.toml
-      fi
+      # The tutorial pushes the application image to a local OCI registry. Run it
+      # as a plain systemd service (no Docker, which would conflict with the k8s
+      # snap's own containerd), as done in the k8s-snap integration test harness.
+      ARCH=$(dpkg --print-architecture)
+      curl -sSL -o /tmp/registry.tar.gz \
+        "https://github.com/distribution/distribution/releases/download/v2.8.3/registry_2.8.3_linux_${ARCH}.tar.gz"
+      tar -xzf /tmp/registry.tar.gz -C /usr/local/bin registry
+      mkdir -p /etc/distribution
+      cat <<'EOF' > /etc/distribution/config.yml
+      version: 0.1
+      storage:
+        filesystem:
+          rootdirectory: /var/lib/registry
+      http:
+        addr: :5000
+      EOF
+      cat <<'EOF' > /etc/systemd/system/registry.service
+      [Unit]
+      Description=OCI registry
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/registry serve /etc/distribution/config.yml
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+      systemctl enable --now registry
+      retry -n 10 --wait 1 curl -sf http://localhost:5000/v2/
+
+      # Let Canonical Kubernetes pull from the insecure local registry. The k8s
+      # snap uses the standard containerd hosts.d path; it is read per-pull, so no
+      # restart is required.
+      mkdir -p "/etc/containerd/hosts.d/localhost:5000"
+      cat <<'EOF' > "/etc/containerd/hosts.d/localhost:5000/hosts.toml"
+      server = "http://localhost:5000"
+
+      [host."http://localhost:5000"]
+        capabilities = ["pull", "resolve"]
+      EOF
 
       k8s bootstrap
       k8s status --wait-ready --timeout 5m

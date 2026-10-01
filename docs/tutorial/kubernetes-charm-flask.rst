@@ -225,9 +225,9 @@ the terminal will respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be imported into the Canonical Kubernetes cluster so
-that the image is available to Juju. Import the rock directly into the
-cluster's containerd image store:
+The rock needs to be copied to the local registry. This registry acts as a
+temporary Docker Hub, storing OCI archives so they can be downloaded and
+deployed in the Kubernetes cluster. Copy the rock:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -237,13 +237,12 @@ cluster's containerd image store:
 
 This command contains the following pieces:
 
-- ``--address``: points to the containerd socket that
-  Canonical Kubernetes uses.
-- ``--namespace k8s.io``: imports the image into the containerd
-  namespace that Kubernetes reads from.
-- ``images import``: imports the rock we created for our Flask app.
-- ``--base-name``: sets the image name that the charm references. The
-  image tag is taken from the rock's version.
+- ``--insecure-policy``: adopts a permissive policy that
+  removes the need for a dedicated policy file.
+- ``--dest-tls-verify=false``: disables the need for HTTPS
+  and certificate verification while interacting with the local registry.
+- ``oci-archive``: specifies the rock we created for our Flask app.
+- ``docker``: specifies the name of the image in the local registry.
 
 
 Create the charm

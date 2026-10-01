@@ -36,7 +36,7 @@ In order to create the charm, you'll need to install Charmcraft:
     sudo snap install charmcraft --channel latest/edge --classic
 
 Install LXD, Canonical Kubernetes, and Juju
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LXD will be required for building the rock.
 Make sure it is installed:
@@ -80,6 +80,55 @@ Check the status of Canonical Kubernetes:
 
 If successful, the terminal will output ``status: ready``
 along with a list of enabled and disabled features.
+
+Set up a local registry
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Canonical Kubernetes pulls application images from an OCI registry. Unlike
+MicroK8s, it doesn't bundle a registry, so we run a small local one. Download
+the registry and start it as a service:
+
+.. code-block:: bash
+
+    ARCH=$(dpkg --print-architecture)
+    sudo curl -sSL -o /tmp/registry.tar.gz \
+      "https://github.com/distribution/distribution/releases/download/v2.8.3/registry_2.8.3_linux_${ARCH}.tar.gz"
+    sudo tar -xzf /tmp/registry.tar.gz -C /usr/local/bin registry
+    sudo mkdir -p /etc/distribution
+    sudo tee /etc/distribution/config.yml > /dev/null <<'EOF'
+    version: 0.1
+    storage:
+      filesystem:
+        rootdirectory: /var/lib/registry
+    http:
+      addr: :5000
+    EOF
+    sudo tee /etc/systemd/system/registry.service > /dev/null <<'EOF'
+    [Unit]
+    Description=OCI registry
+    After=network.target
+
+    [Service]
+    ExecStart=/usr/local/bin/registry serve /etc/distribution/config.yml
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    sudo systemctl enable --now registry
+
+Finally, let Canonical Kubernetes pull from this registry over plain HTTP by
+adding a containerd hosts configuration:
+
+.. code-block:: bash
+
+    sudo mkdir -p /etc/containerd/hosts.d/localhost:5000
+    sudo tee /etc/containerd/hosts.d/localhost:5000/hosts.toml > /dev/null <<'EOF'
+    server = "http://localhost:5000"
+
+    [host."http://localhost:5000"]
+      capabilities = ["pull", "resolve"]
+    EOF
 
 Juju is required to deploy the |12FactorApp| application.
 We'll install Juju using the ``3.6/stable`` channel. Since the snap is

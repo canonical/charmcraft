@@ -77,11 +77,9 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  sudo /snap/k8s/current/bin/ctr \
-    --address /run/containerd/containerd.sock \
-    --namespace k8s.io images import \
-    --base-name docker.io/library/expressjs-hello-world \
-    ./expressjs-hello-world_0.1_$(dpkg --print-architecture).rock
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.1_$(dpkg --print-architecture).rock \
+    docker://localhost:5000/expressjs-hello-world:0.1
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -113,7 +111,7 @@ execute: |
   juju deploy \
     ./expressjs-hello-world_$(dpkg --print-architecture).charm \
     expressjs-hello-world \
-    --resource app-image=expressjs-hello-world:0.1
+    --resource app-image=localhost:5000/expressjs-hello-world:0.1
   # [docs:deploy-expressjs-app-end]
 
   # [docs:deploy-nginx]
@@ -142,11 +140,9 @@ execute: |
 
   # [docs:docker-update]
   rockcraft pack
-  sudo /snap/k8s/current/bin/ctr \
-    --address /run/containerd/containerd.sock \
-    --namespace k8s.io images import \
-    --base-name docker.io/library/expressjs-hello-world \
-    ./expressjs-hello-world_0.2_$(dpkg --print-architecture).rock
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.2_$(dpkg --print-architecture).rock \
+    docker://localhost:5000/expressjs-hello-world:0.2
   # [docs:docker-update-end]
 
   cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -156,7 +152,7 @@ execute: |
   charmcraft pack
   juju refresh expressjs-hello-world \
     --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=expressjs-hello-world:0.2
+    --resource app-image=localhost:5000/expressjs-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
@@ -201,11 +197,9 @@ execute: |
 
   # [docs:docker-2nd-update]
   rockcraft pack
-  sudo /snap/k8s/current/bin/ctr \
-    --address /run/containerd/containerd.sock \
-    --namespace k8s.io images import \
-    --base-name docker.io/library/expressjs-hello-world \
-    ./expressjs-hello-world_0.3_$(dpkg --print-architecture).rock
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
+    oci-archive:expressjs-hello-world_0.3_$(dpkg --print-architecture).rock \
+    docker://localhost:5000/expressjs-hello-world:0.3
   # [docs:docker-2nd-update-end]
 
   cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -215,7 +209,7 @@ execute: |
   charmcraft pack
   juju refresh expressjs-hello-world \
     --path=./expressjs-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=expressjs-hello-world:0.3
+    --resource app-image=localhost:5000/expressjs-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
   # In the relation with postgresql-k8s test we may hit the issue

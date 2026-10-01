@@ -116,6 +116,8 @@ The following issues have been resolved in Charmcraft 4.5.
   Packing a charm sometimes fails with "Too many levels of symbolic links"
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
+- Experimental V2 12-factor extensions now generate the paas-charm 2.x peer,
+  secret, configuration, and dependency contracts while preserving V1 output.
 
 
 Known issues

@@ -468,12 +468,13 @@ charm as a certificate provider.
 First, :ref:`integrate your web app with ingress
 <integrate-web-app-charm-integrate-ingress>`.
 
-Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
-charm as an ingress provider, set the hostname with:
+Using the `Gateway API integrator
+<https://charmhub.io/gateway-api-integrator>`__ charm as an ingress provider,
+set the hostname with:
 
 .. code-block:: bash
 
-    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
+    juju config gateway-api-integrator external-hostname=<YOUR_DOMAIN>
 
 Deploy the `Self Signed X.509 Certificates
 <https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
@@ -481,22 +482,23 @@ Deploy the `Self Signed X.509 Certificates
 .. code-block:: bash
 
     juju deploy self-signed-certificates
-    juju integrate self-signed-certificates nginx-ingress-integrator
+    juju integrate self-signed-certificates:certificates \
+      gateway-api-integrator:certificates
 
 Your 12-factor app is now accessible over HTTPS. If you access the external URL of your
-app using HTTP, it returns an HTTP ``308 Permanent Redirect`` status and a redirect to
+app using HTTP, it returns an HTTP ``301 Moved Permanently`` status and a redirect to
 the HTTPS URL. You can access the HTTPS URL of your app with a command like:
 
 .. code-block:: bash
 
-   curl -v --insecure https://<yourdomain.example.com> \
-     --resolve <yourdomain.example.com>:443:<ingress-ip>
+   curl -v --insecure https://<YOUR_DOMAIN> \
+     --resolve <YOUR_DOMAIN>:443:<INGRESS_IP>
 
 .. note::
 
     The ``--insecure`` option is needed because the certificate authority in the
-    ``self-signed-certificate`` charm is not trusted.
-    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option is a way of
+    ``self-signed-certificates`` charm is not trusted.
+    The ``--resolve <YOUR_DOMAIN>:443:<INGRESS_IP>`` option is a way of
     resolving the hostname of the request without
     setting a DNS record.
 

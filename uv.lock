@@ -624,7 +624,7 @@ docs = [
     { name = "sphinx-rerediraffe", specifier = ">=0.0.3,<1.0.0" },
     { name = "sphinx-roles", specifier = "~=0.1" },
     { name = "sphinx-sitemap", specifier = "~=2.6.0" },
-    { name = "sphinx-structured-toc", specifier = ">=0.2.0" },
+    { name = "sphinx-structured-toc", specifier = "==0.2.0" },
     { name = "sphinx-substitution-extensions" },
     { name = "sphinx-terminal", specifier = "~=1.0" },
     { name = "sphinxcontrib-jquery", specifier = "~=4.1" },

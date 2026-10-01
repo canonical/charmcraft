@@ -138,8 +138,8 @@ else
 	brew install skopeo
 	brew install gnutls
 	brew postinstall gnutls
-	brew install libgit2@1.7  # For building pygit2
-	sudo cp -R /usr/local/opt/libgit2@1.7/* /usr/local
+	# libgit2 is provided by the pygit2 macOS wheel; do not brew install libgit2@1.7
+	# (deprecated/unavailable). See https://github.com/canonical/charmcraft/issues/2605
 endif
 
 .PHONY: schema

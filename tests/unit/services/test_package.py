@@ -15,6 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for package service."""
 
+import os
 import pathlib
 import sys
 import zipfile
@@ -26,6 +27,7 @@ import craft_platforms
 import distro
 import pytest
 import pytest_check
+import yaml
 from craft_application import util
 from craft_platforms import BuildInfo, DebianArchitecture, DistroBase
 
@@ -88,10 +90,6 @@ def test_get_metadata(
     assert package_service.metadata == metadata
 
 
-def test_supports_conditional_repack(package_service):
-    assert package_service.supports_conditional_repack is True
-
-
 def test_get_metadata_yaml_prefers_project_file(
     package_service,
     service_factory: craft_application.ServiceFactory,
@@ -101,6 +99,19 @@ def test_get_metadata_yaml_prefers_project_file(
     (project_dir / const.METADATA_FILENAME).write_text(expected)
 
     assert package_service.get_metadata_yaml() == expected
+
+
+def test_get_metadata_yaml_uses_sorted_serialization(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    metadata_path = project_dir / const.METADATA_FILENAME
+
+    assert not metadata_path.exists()
+    assert package_service.get_metadata_yaml() == yaml.safe_dump(
+        package_service.metadata.marshal(), sort_keys=True
+    )
 
 
 def test_get_metadata_yaml_skips_reactive_generated_metadata(
@@ -137,22 +148,219 @@ def test_get_metadata_yaml_reactive_takes_precedence_over_project_file(
     )
 
 
+def test_pack_artifacts_overwrites_stale_prime_metadata(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    fake_path: pathlib.Path,
+):
+    package_service.set_output_dir(fake_path)
+
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.prime_dir.mkdir(parents=True, exist_ok=True)
+    stale_metadata = dirs.prime_dir / const.METADATA_FILENAME
+    stale_metadata.write_text("INVALID!!\n")
+
+    artifact_path = package_service.get_artifacts()[None]
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_path.write_text("existing charm")
+    os.utime(artifact_path, ns=(100, 100))
+    os.utime(stale_metadata, ns=(200, 200))
+
+    packed = package_service.pack_artifacts()
+
+    assert packed == {None: True}
+    assert yaml.safe_load(stale_metadata.read_text()) == package_service.metadata.marshal()
+
+
+def test_write_metadata_materializes_mediated_package_files(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.actions = {"test-action": {"description": "A test action"}}
+    project.config = {
+        "options": {"my-option": {"type": "string", "default": "value"}}
+    }
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert (dirs.prime_dir / const.METADATA_FILENAME).read_text() == package_service.get_metadata_yaml()
+    assert (dirs.prime_dir / const.MANIFEST_FILENAME).read_text() == package_service.get_manifest_yaml()
+    assert (dirs.prime_dir / const.JUJU_ACTIONS_FILENAME).read_text() == package_service.get_actions_yaml()
+    assert (dirs.prime_dir / const.JUJU_CONFIG_FILENAME).read_text() == package_service.get_config_yaml()
+
+
+def test_write_metadata_is_idempotent_when_package_files_are_unchanged(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    dirs = service_factory.get("lifecycle").project_info.dirs
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    metadata_path = dirs.prime_dir / const.METADATA_FILENAME
+    manifest_path = dirs.prime_dir / const.MANIFEST_FILENAME
+    first_metadata_mtime = metadata_path.stat().st_mtime_ns
+    first_manifest_mtime = manifest_path.stat().st_mtime_ns
+
+    package_service.write_metadata(dirs.prime_dir)
+
+    assert metadata_path.stat().st_mtime_ns == first_metadata_mtime
+    assert manifest_path.stat().st_mtime_ns == first_manifest_mtime
+
+
+def test_get_actions_yaml_returns_none_when_no_actions(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """When no actions are defined and no project file exists, return None so stale prime files are removed."""
+    assert package_service.get_actions_yaml() is None
+
+
+def test_get_actions_yaml_generates_from_model(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Actions defined in the project model are generated as YAML."""
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.actions = {"test-action": {"description": "A test action"}}
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+
+    result = package_service.get_actions_yaml()
+
+    assert result is not None
+    assert "test-action" in result
+    assert "A test action" in result
+
+
+def test_get_actions_yaml_prefers_project_file(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """A project-local actions.yaml is preferred over model data."""
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    expected = "test-action:\n  description: From file\n"
+    (project_dir / const.JUJU_ACTIONS_FILENAME).write_text(expected)
+
+    assert package_service.get_actions_yaml() == expected
+
+
+def test_get_actions_yaml_skips_reactive_generated(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """When reactive charm generates actions.yaml, skip generation."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.stage_dir.mkdir(exist_ok=True)
+    (dirs.stage_dir / const.JUJU_ACTIONS_FILENAME).write_text("actions: from-charm\n")
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
+
+    assert package_service.get_actions_yaml() is False
+    emitter.assert_debug("'actions.yaml' generated by charm. Skipping generation.")
+
+
+def test_get_config_yaml_returns_none_when_no_config(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """When no config is defined and no project file exists, return None so stale prime files are removed."""
+    assert package_service.get_config_yaml() is None
+
+
+def test_get_config_yaml_generates_from_model(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Config defined in the project model is generated as YAML."""
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.config = {"options": {"my-option": {"type": "string", "default": "value"}}}
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+
+    result = package_service.get_config_yaml()
+
+    assert result is not None
+    assert "my-option" in result
+    assert "string" in result
+
+
+def test_get_config_yaml_prefers_project_file(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """A project-local config.yaml is preferred over model data."""
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    expected = "options:\n  my-option:\n    type: string\n"
+    (project_dir / const.JUJU_CONFIG_FILENAME).write_text(expected)
+
+    assert package_service.get_config_yaml() == expected
+
+
+def test_get_config_yaml_skips_reactive_generated(
+    emitter: craft_cli.pytest_plugin.RecordingEmitter,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """When reactive charm generates config.yaml, skip generation."""
+    dirs = service_factory.get("lifecycle").project_info.dirs
+    dirs.stage_dir.mkdir(exist_ok=True)
+    (dirs.stage_dir / const.JUJU_CONFIG_FILENAME).write_text("options: from-charm\n")
+    service_factory.get("project").get().parts["reactive"] = {"source": "."}
+
+    assert package_service.get_config_yaml() is False
+    emitter.assert_debug("'config.yaml' generated by charm. Skipping generation.")
+
+
 @pytest.mark.parametrize(
-    ("build_plan", "expected_name"),
+    ("project_data", "build_plan", "expected_name"),
     [
         pytest.param(
+            {
+                "type": "charm",
+                "name": "example-charm",
+                "summary": "",
+                "description": "",
+                "bases": [
+                    {
+                        "build-on": [{"name": "ubuntu", "channel": "22.04"}],
+                        "run-on": [{"name": "ubuntu", "channel": "22.04"}],
+                    }
+                ],
+            },
             [
                 BuildInfo(
                     platform="distro-1-test64",
                     build_on=DebianArchitecture.RISCV64,
                     build_for=DebianArchitecture.RISCV64,
-                    build_base=DistroBase("ubuntu", "24.04"),
+                    build_base=DistroBase("ubuntu", "22.04"),
                 )
             ],
             "example-charm_distro-1-test64.charm",
             id="simple",
         ),
         pytest.param(
+            {
+                "type": "charm",
+                "name": "example-charm",
+                "summary": "",
+                "description": "",
+                "platforms": {"ubuntu@24.04:riscv64": None},
+                "parts": {"charm": {"plugin": "nil"}},
+            },
             [
                 BuildInfo(
                     platform="ubuntu@24.04:riscv64",
@@ -164,15 +372,43 @@ def test_get_metadata_yaml_reactive_takes_precedence_over_project_file(
             "example-charm_ubuntu@24.04-riscv64.charm",
             id="multi-base",
         ),
+        pytest.param(
+            {
+                "type": "charm",
+                "name": "example-charm",
+                "summary": "",
+                "description": "",
+                "base": "ubuntu@24.04",
+                "platforms": {"amd64": None},
+                "parts": {"charm": {"plugin": "nil"}},
+            },
+            [
+                BuildInfo(
+                    platform="amd64",
+                    build_on=DebianArchitecture.AMD64,
+                    build_for=DebianArchitecture.AMD64,
+                    build_base=DistroBase("ubuntu", "24.04"),
+                )
+            ],
+            "example-charm_amd64.charm",
+            id="single-base-platform-label",
+        ),
     ],
 )
 def test_get_charm_name(
     monkeypatch: pytest.MonkeyPatch,
     package_service,
     service_factory: craft_application.ServiceFactory,
+    project_data,
     build_plan,
     expected_name,
 ):
+    if "bases" in project_data:
+        project = models.BasesCharm.model_validate(project_data)
+    else:
+        project = models.PlatformCharm.model_validate(project_data)
+
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
     monkeypatch.setattr(service_factory.get("build_plan"), "plan", lambda: build_plan)
 
     assert package_service.get_charm_name() == expected_name
@@ -237,6 +473,21 @@ def test_get_manifest_yaml_basic(
     assert "bases" in result
 
 
+def test_get_manifest_yaml_ignores_project_file(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """Manifest output is always rendered, not read from a project-local file."""
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    stale_manifest = "charmcraft-started-at: project-file\n"
+    (project_dir / const.MANIFEST_FILENAME).write_text(stale_manifest)
+
+    result = package_service.get_manifest_yaml()
+
+    assert result != stale_manifest
+    assert "project-file" not in result
+
+
 def test_get_manifest_yaml_reuses_timestamp(
     package_service,
     service_factory: craft_application.ServiceFactory,
@@ -271,34 +522,6 @@ def test_get_manifest_yaml_reuses_unquoted_timestamp(
     assert existing_timestamp in result
 
 
-def test_write_metadata_does_not_write_manifest_yaml(
-    package_service,
-    service_factory: craft_application.ServiceFactory,
-):
-    """Test that manifest.yaml stays under ST160 package-file mediation."""
-    dirs = service_factory.get("lifecycle").project_info.dirs
-    service_factory.get("project").get_platforms()
-
-    package_service.write_metadata(dirs.prime_dir)
-
-    assert not (dirs.prime_dir / const.MANIFEST_FILENAME).exists()
-
-
-def test_write_metadata_does_not_overwrite_existing_manifest_yaml(
-    package_service,
-    service_factory: craft_application.ServiceFactory,
-):
-    """Test that legacy metadata writes do not touch manifest.yaml."""
-    dirs = service_factory.get("lifecycle").project_info.dirs
-    manifest_path = dirs.prime_dir / const.MANIFEST_FILENAME
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text("old: manifest\n")
-
-    package_service.write_metadata(dirs.prime_dir)
-
-    assert manifest_path.read_text() == "old: manifest\n"
-
-
 def test_get_manifest_yaml_uses_state_timestamp_when_no_manifest(
     package_service,
     service_factory: craft_application.ServiceFactory,
@@ -314,63 +537,6 @@ def test_get_manifest_yaml_uses_state_timestamp_when_no_manifest(
     result = package_service.get_manifest_yaml()
 
     assert state_timestamp in result
-
-
-def test_do_not_overwrite_metadata_yaml(
-    emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    package_service,
-    service_factory: craft_application.ServiceFactory,
-    simple_charm,
-):
-    dirs = service_factory.get("lifecycle").project_info.dirs
-    stage_dir = dirs.stage_dir
-    stage_dir.mkdir(exist_ok=True)
-    fake_staged_metadata = stage_dir / const.METADATA_FILENAME
-    fake_staged_metadata.touch()
-    service_factory.get("project").get().parts["reactive"] = {"source": "."}
-
-    package_service.write_metadata(dirs.prime_dir)
-
-    emitter.assert_debug(
-        "'metadata.yaml' generated by charm. Not using original project metadata."
-    )
-
-
-def test_do_not_overwrite_actions_yaml(
-    emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    package_service,
-    service_factory,
-    simple_charm,
-):
-    dirs = service_factory.get("lifecycle").project_info.dirs
-    stage_dir = dirs.stage_dir
-    stage_dir.mkdir(exist_ok=True)
-    fake_staged_metadata = stage_dir / const.JUJU_ACTIONS_FILENAME
-    fake_staged_metadata.touch()
-    service_factory.get("project").get().parts["reactive"] = {"source": "."}
-
-    package_service.write_metadata(dirs.prime_dir)
-
-    emitter.assert_debug("'actions.yaml' generated by charm. Skipping generation.")
-
-
-def test_do_not_overwrite_config_yaml(
-    emitter: craft_cli.pytest_plugin.RecordingEmitter,
-    fake_path,
-    package_service,
-    service_factory: craft_application.ServiceFactory,
-    simple_charm,
-):
-    dirs = service_factory.get("lifecycle").project_info.dirs
-    stage_dir = dirs.stage_dir
-    stage_dir.mkdir(exist_ok=True)
-    fake_staged_metadata = stage_dir / const.JUJU_CONFIG_FILENAME
-    fake_staged_metadata.touch()
-    service_factory.get("project").get().parts["reactive"] = {"source": "."}
-
-    package_service.write_metadata(dirs.prime_dir)
-
-    emitter.assert_debug("'config.yaml' generated by charm. Skipping generation.")
 
 
 # region Tests for getting bases for manifest.yaml
@@ -518,7 +684,6 @@ def test_get_manifest_bases_from_bases(
                 build_base=DistroBase("not-to-be-used", "100"),
             ),
             models.Base(
-                # uses the project base
                 name="ubuntu",
                 channel="24.04",
                 architectures=["riscv64"],
@@ -533,7 +698,6 @@ def test_get_manifest_bases_from_bases(
                 platform="test-platform",
                 build_on=craft_platforms.DebianArchitecture.AMD64,
                 build_for=craft_platforms.DebianArchitecture.RISCV64,
-                # the BuildInfo will use the build-base, which shouldn't go in the manifest
                 build_base=DistroBase("ubuntu", "devel"),
             ),
             models.Base(
@@ -651,6 +815,44 @@ def test_get_manifest_bases_from_platforms_invalid(
 
 # endregion
 # region tests for packing the charm
+
+
+@pytest.mark.parametrize(
+    ("artifact_exists", "dispatch_exists", "dispatch_mtime_ns", "expected"),
+    [
+        pytest.param(False, False, None, True, id="missing-artifact"),
+        pytest.param(True, False, None, False, id="missing-dispatch"),
+        pytest.param(True, True, 300, True, id="newer-dispatch"),
+        pytest.param(True, True, 100, False, id="older-dispatch"),
+    ],
+)
+def test_app_needs_repack(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    fake_path: pathlib.Path,
+    artifact_exists: bool,
+    dispatch_exists: bool,
+    dispatch_mtime_ns: int | None,
+    expected: bool,
+):
+    package_service.set_output_dir(fake_path)
+    artifact_path = package_service.get_artifacts()[None]
+
+    if artifact_exists:
+        artifact_path.write_text("artifact")
+        os.utime(artifact_path, ns=(200, 200))
+
+    prime_dir = service_factory.get("lifecycle").project_info.dirs.prime_dir
+    dispatch_path = prime_dir / const.DISPATCH_FILENAME
+    if dispatch_exists:
+        prime_dir.mkdir(parents=True, exist_ok=True)
+        dispatch_path.write_text("#!/bin/sh\n")
+        assert dispatch_mtime_ns is not None
+        os.utime(dispatch_path, ns=(dispatch_mtime_ns, dispatch_mtime_ns))
+
+    assert package_service._app_needs_repack() is expected
+
+
 # These tests are modified from test_zipbuild
 def test_pack_charm_simple(fake_path, package_service):
     """Build a bunch of files in the zip."""
@@ -692,11 +894,9 @@ def test_zipbuild_symlink_simple(fake_path, package_service):
 
 def test_zipbuild_symlink_outside(fake_path, package_service):
     """No matter where the symlink points to."""
-    # outside the build dir
     testfile1 = fake_path / "real.txt"
     testfile1.write_bytes(b"123\x00456")
 
-    # inside the build dir
     build_dir = fake_path / "somedir"
     build_dir.mkdir()
     testfile2 = build_dir / "link.txt"

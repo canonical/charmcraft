@@ -33,7 +33,7 @@ First steps
 
         :doc:`Install Charmcraft <howto/manage-charmcraft>`
 
-    .. slice:: :vale-ignore:`Touchpoints`
+    .. slice:: Crafting language
 
         :doc:`/reference/commands/index`
         :doc:`charmcraft.yaml <reference/files/charmcraft-yaml-file>`

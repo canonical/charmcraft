@@ -17,21 +17,23 @@ Ubuntu 26.04 LTS uses the experimental version of each 12-factor Charmcraft exte
 Changing only the ``base`` key, or running ``charmcraft pack``, applies parts of the new
 extension but can't convert the complete project contract.
 
-Generate a clean project from the Ubuntu 26.04 LTS profile in a temporary directory.
-Replace ``<framework>`` with ``django``, ``expressjs``, ``fastapi``, ``flask``, ``go``,
+Generate a clean project from the Ubuntu 26.04 LTS profile in a new directory.
+Replace ``<FRAMEWORK>`` with ``django``, ``expressjs``, ``fastapi``, ``flask``, ``go``,
 or ``spring-boot``:
 
 .. code-block:: bash
 
-    mkdir /tmp/charmcraft-26-04-profile
-    cd /tmp/charmcraft-26-04-profile
-    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft init --profile <framework>-framework --base ubuntu@26.04
+    mkdir charm-26-04
+    cd charm-26-04
+    CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft init --profile <FRAMEWORK>-framework --base ubuntu@26.04
 
 Don't run the command in the existing charm directory. The init command doesn't
 overwrite existing files, so it can't safely update an existing project in place.
 
-Merge the generated project files into the existing charm. Carry over the following
-generated contract:
+Use the newly generated project as the migrated charm. Carry only your manual changes
+from the corresponding files in the old charm into the generated project. Don't replace
+the generated files with their old versions, because the generated files contain the new
+contract:
 
 * The uv charm part and generated uv project files.
 * The ``app`` workload container and ``app-image`` resource.
@@ -43,9 +45,16 @@ generated contract:
 * A Valkey relation instead of the obsolete Redis relation.
 * The optional ``paas-config.yaml`` file when the app needs runtime customization.
 
-Preserve the existing charm's app-specific metadata, configuration, actions, and
-relations while merging. The :ref:`extension contract reference <extensions>` compares
-the generated contracts for lower bases and Ubuntu 26.04 LTS.
+Carry over the old charm's app-specific metadata, configuration, actions, relations,
+source code, and tests. After updating ``pyproject.toml``, create the lock file and keep
+it with the migrated project:
+
+.. code-block:: bash
+
+    uv lock
+
+The :ref:`extension contract reference <extensions>` compares the generated contracts
+for lower bases and Ubuntu 26.04 LTS.
 
 Migrate from the charm plugin
 -----------------------------

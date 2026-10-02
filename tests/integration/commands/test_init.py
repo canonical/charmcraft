@@ -79,9 +79,6 @@ FRAMEWORK_PROFILES = [
     "spring-boot-framework",
 ]
 V2_PROJECT_DEPENDENCIES = {
-    "charmlibs-interfaces-oauth==1.1.0",
-    "charmlibs-interfaces-openfga==1.0.0",
-    "charmlibs-interfaces-tracing==1.0.0",
     "paas-charm>=2.0.dev1,<3",
 }
 ALL_PROFILES = [

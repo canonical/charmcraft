@@ -63,7 +63,7 @@ On Ubuntu 26.04 LTS, all six framework extensions generate the following contrac
       - :ref:`paas-config-yaml-file`
     * - OAuth, OpenFGA, and tracing libraries
       - Libraries fetched from Charmhub
-      - Versioned ``charmlibs-interfaces-*`` dependencies from PyPI
+      - PyPI interface packages provided transitively by ``paas-charm``
     * - Cache relations
       - Redis and Valkey
       - Valkey

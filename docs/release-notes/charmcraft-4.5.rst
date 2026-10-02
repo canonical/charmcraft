@@ -121,8 +121,7 @@ The following issues have been resolved in Charmcraft 4.5.
   profiles use the PyPI charmlibs interface packages for OAuth, OpenFGA, and tracing
   instead of fetching the corresponding libraries from Charmhub. V2 profiles no longer
   generate the obsolete Redis relation or library and retain Valkey support.
-- The Ubuntu 26.04 LTS migration guide now covers the complete generated project
-  contract.
+- The Spring Boot extension on Ubuntu 24.04 LTS is experimental, matching Rockcraft.
 
 
 Known issues

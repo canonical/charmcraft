@@ -1,5 +1,8 @@
 .. _spring-boot-framework-extension:
 
+.. meta::
+    :description: Reference for the Charmcraft Spring Boot framework extension,
+        including its experimental status, configuration, relations, and generated content.
 
 Spring Boot framework extension
 ===============================
@@ -7,6 +10,10 @@ Spring Boot framework extension
 The ``spring-boot-framework`` extension includes configuration options customised for a
 Spring Boot application. This document describes all the keys that a user may interact
 with.
+
+The extension is experimental on Ubuntu 24.04 LTS and Ubuntu 26.04 LTS. Set
+``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or packs a
+project that uses the extension.
 
 .. tip::
 

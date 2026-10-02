@@ -28,7 +28,8 @@ execute: |
   unset CHARMCRAFT_REGISTRY_URL
 
   # [docs:export-experimental-env-vars]
-  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1
+  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1
   # [docs:export-experimental-env-vars-end]
 
   # [docs:install-devpack-for-spring]

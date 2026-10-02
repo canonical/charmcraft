@@ -33,7 +33,7 @@ from craft_application.errors import InitError
 
 import charmcraft
 import charmcraft.application
-from charmcraft import errors, services
+from charmcraft import errors, extensions, services
 from charmcraft.application.commands import init
 from charmcraft.utils import S_IXALL
 
@@ -272,6 +272,27 @@ def test_explicit_base_variant(new_path, init_command, profile: str, base: str):
         assert not (new_path / "requirements.txt").exists()
     elif profile in ["django-framework", "flask-framework", "fastapi-framework"]:
         assert (new_path / "requirements.txt").exists()
+
+
+def test_spring_boot_24_profile_requires_experimental_flag(
+    new_path, init_command, monkeypatch
+):
+    init_command.run(
+        create_namespace(profile="spring-boot-framework", base="ubuntu@24.04")
+    )
+    project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
+    monkeypatch.delenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", raising=False)
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*experimental on base.*ubuntu@24.04.*",
+    ):
+        extensions.apply_extensions(new_path, project)
+
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
+    expanded = extensions.apply_extensions(new_path, project)
+    assert expanded["parts"]["charm"]["plugin"] == "charm"
 
 
 def test_unavailable_base_variant(new_path, init_command):

@@ -117,7 +117,11 @@ The following issues have been resolved in Charmcraft 4.5.
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
 - Experimental V2 12-factor extensions now generate the paas-charm 2.x peer,
-  secret, configuration, and dependency contracts while preserving V1 output.
+  secret, configuration, and dependency contracts while preserving V1 output. The V2
+  profiles rely on ``paas-charm`` for the PyPI OAuth, OpenFGA, and tracing interfaces
+  instead of fetching the corresponding libraries from Charmhub. V2 profiles no longer
+  generate the obsolete Redis relation or library and retain Valkey support.
+- The Spring Boot extension on Ubuntu 24.04 LTS is experimental, matching Rockcraft.
 
 
 Known issues

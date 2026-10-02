@@ -62,8 +62,8 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: Spring Boot
 
-As the ``spring-boot-framework`` extensions for Rockcraft and Charmcraft are
-still in development, we must enable experimental extensions for each:
+The ``spring-boot-framework`` extensions for Rockcraft and Charmcraft are still in
+development, so enable experimental extensions for both tools:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash

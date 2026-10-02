@@ -32,6 +32,7 @@ from charmcraft.extensions.app import (
     FlaskFrameworkV2,
     GoFrameworkFactory,
     GoFrameworkV1,
+    SpringBootFrameworkFactory,
     SpringBootFrameworkV1,
 )
 
@@ -728,6 +729,37 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
     }
 
 
+@pytest.mark.parametrize(
+    "framework",
+    ["django", "expressjs", "fastapi", "flask", "go", "spring-boot"],
+)
+def test_v2_frameworks_do_not_fetch_replaced_charm_libs(
+    monkeypatch, tmp_path, framework
+):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": f"test-{framework}-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": [f"{framework}-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+    generated_libraries = {library["lib"] for library in applied["charm-libs"]}
+
+    assert generated_libraries.isdisjoint(
+        {
+            "hydra.oauth",
+            "openfga_k8s.openfga",
+            "redis_k8s.redis",
+            "tempo_coordinator_k8s.tracing",
+        }
+    )
+
+
 def test_go_framework_platforms_only_routes_to_v2(monkeypatch, tmp_path):
     """Test that go on 26.04 via platforms (no top-level base) routes to V2 (defect 3 fix)."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
@@ -849,6 +881,20 @@ def test_expressjs_framework_factory_is_experimental_24_04(monkeypatch):
     """Test that expressjs on 24.04 is stable (was experimental, now GA)."""
     # ExpressJS V1 on 24.04 is now stable
     assert ExpressJSFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
+
+
+def test_spring_boot_framework_factory_is_experimental_24_04():
+    assert SpringBootFrameworkFactory.is_experimental(("ubuntu", "24.04")) is True
+
+
+def test_spring_boot_framework_experimental_gating_enforced(monkeypatch, tmp_path):
+    monkeypatch.delenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", raising=False)
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*experimental on base.*ubuntu@24.04.*",
+    ):
+        extensions.apply_extensions(tmp_path, make_spring_boot_input_yaml())
 
 
 def test_v2_check_input_rejects_non_charm_type(monkeypatch, tmp_path):
@@ -1225,7 +1271,9 @@ def test_json_framework_logging_supported_framework_passes(flask_input_yaml, tmp
         ),
     ],
 )
-def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
+def test_oauth_relation(monkeypatch, tmp_path, input_yaml, requires, expected_options):
+    if input_yaml["extensions"] == ["spring-boot-framework"]:
+        monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
     input_yaml["requires"] = requires
     applied = extensions.apply_extensions(tmp_path, input_yaml)
     assert applied["config"] == {

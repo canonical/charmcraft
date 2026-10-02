@@ -426,6 +426,18 @@ class _AppBase(SinglePlatformExtension):
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
 
+    _CHARM_LIBS = [
+        charm_lib
+        for charm_lib in _AppBase._CHARM_LIBS
+        if charm_lib["lib"]
+        not in {
+            "hydra.oauth",
+            "openfga_k8s.openfga",
+            "redis_k8s.redis",
+            "tempo_coordinator_k8s.tracing",
+        }
+    ]
+
     @staticmethod
     def _validate_port(parsed: dict[str, Any], key: str) -> None:
         """Validate a top-level port in ``paas-config.yaml``."""
@@ -885,6 +897,12 @@ class SpringBootFrameworkV1(_AppBase):
     def get_supported_bases() -> list[tuple[str, str]]:
         """Return supported bases."""
         return [("ubuntu", "24.04")]
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return True
 
     @override
     def get_image_name(self) -> str:

@@ -119,7 +119,8 @@ The following issues have been resolved in Charmcraft 4.5.
 - Experimental V2 12-factor extensions now generate the paas-charm 2.x peer,
   secret, configuration, and dependency contracts while preserving V1 output. The V2
   profiles use the PyPI charmlibs interface packages for OAuth, OpenFGA, and tracing
-  instead of fetching the corresponding libraries from Charmhub.
+  instead of fetching the corresponding libraries from Charmhub. V2 profiles no longer
+  generate the obsolete Redis relation or library and retain Valkey support.
 - The Ubuntu 26.04 LTS migration guide now covers the complete generated project
   contract.
 

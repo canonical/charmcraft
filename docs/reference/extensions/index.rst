@@ -63,6 +63,9 @@ On Ubuntu 26.04 LTS, all six framework extensions generate the following contrac
     * - OAuth, OpenFGA, and tracing libraries
       - Libraries fetched from Charmhub
       - Versioned ``charmlibs-interfaces-*`` dependencies from PyPI
+    * - Cache relations
+      - Redis and Valkey
+      - Valkey
 
 Charmcraft stages ``paas-config.yaml`` only when the file exists in an Ubuntu 26.04 LTS
 project. Changing the base or packing an existing project only partially migrates it to

@@ -223,6 +223,27 @@ def test_framework_profile_v1_dependencies_unchanged(new_path, init_command, pro
     assert (new_path / "requirements.txt").read_text() == "paas-charm>=1.0,<2\n"
 
 
+@pytest.mark.parametrize("profile", FRAMEWORK_PROFILES)
+def test_framework_profile_cache_relations(new_path, init_command, profile):
+    v1_dir = new_path / "v1"
+    init_command.run(create_namespace(profile=profile, project_dir=v1_dir))
+    v1_project = (v1_dir / "charmcraft.yaml").read_text()
+    assert "#   redis:" in v1_project
+    assert "#   valkey:" in v1_project
+
+    v2_dir = new_path / "v2"
+    init_command.run(
+        create_namespace(
+            profile=profile,
+            base="ubuntu@26.04",
+            project_dir=v2_dir,
+        )
+    )
+    v2_project = (v2_dir / "charmcraft.yaml").read_text()
+    assert "#   redis:" not in v2_project
+    assert "#   valkey:" in v2_project
+
+
 def test_profiles_discovered_from_templates(init_command):
     assert init_command.profiles == sorted(ALL_PROFILES)
 

@@ -753,6 +753,7 @@ def test_v2_frameworks_do_not_fetch_replaced_charm_libs(
         {
             "hydra.oauth",
             "openfga_k8s.openfga",
+            "redis_k8s.redis",
             "tempo_coordinator_k8s.tracing",
         }
     )

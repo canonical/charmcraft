@@ -433,6 +433,7 @@ class _AppBaseV2(_AppBase):
         not in {
             "hydra.oauth",
             "openfga_k8s.openfga",
+            "redis_k8s.redis",
             "tempo_coordinator_k8s.tracing",
         }
     ]

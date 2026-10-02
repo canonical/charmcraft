@@ -40,6 +40,7 @@ generated contract:
 * The ``paas-charm>=2.0.dev1,<3`` dependency and the generated charmlibs interface
   dependencies for OAuth, OpenFGA, and tracing. These PyPI packages replace the
   corresponding libraries fetched from Charmhub in the generated project.
+* A Valkey relation instead of the obsolete Redis relation.
 * The optional ``paas-config.yaml`` file when the app needs runtime customization.
 
 Preserve the existing charm's app-specific metadata, configuration, actions, and

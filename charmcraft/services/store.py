@@ -420,8 +420,12 @@ class StoreService(BaseStoreService):
         :returns: A sequence of the libraries' metadata in the store.
         """
         store_libs = []
+        lib_names = []
         for lib in libraries:
             charm_name, _, lib_name = lib.lib.partition(".")
+            lib_names.append(
+                f"charms.{charm_name.replace('-', '_')}.v{lib.api_version}.{lib_name}"
+            )
             store_lib = LibraryMetadataRequest(
                 {
                     "charm-name": charm_name,
@@ -436,7 +440,6 @@ class StoreService(BaseStoreService):
         try:
             return self.anonymous_client.fetch_libraries_metadata(store_libs)
         except StoreServerError as exc:
-            lib_names = [lib.lib for lib in libraries]
             # Type ignore here because error_list is supposed to have string keys, but
             # for whatever reason the store returns a null code for this one.
             # https://bugs.launchpad.net/snapstore-server/+bug/1925065
@@ -444,8 +447,7 @@ class StoreService(BaseStoreService):
                 "Items need to include 'library_id' or 'package_id'"
             ):
                 raise errors.LibraryError(
-                    "One or more declared charm-libs could not be found in the store.",
-                    details="Declared charm-libs: " + ", ".join(lib_names),
+                    f"Library {', '.join(lib_names)} not found in Charmhub.",
                     resolution="Check the charm and library names in charmcraft.yaml",
                 ) from exc
             raise

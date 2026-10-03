@@ -281,8 +281,100 @@ suites:
       --destroy-storage --no-prompt --no-wait dev-controller
 
   docs/tutorial/code/:
-    <<: *docsuite
     summary: tests tutorial from the docs
+    systems:
+      - ubuntu-24.04-64
+    manual: true
+    prepare: |
+      juju_channel=3.6/stable
+      k8s_channel=1.34-classic/stable
+
+      lxc network set lxdbr0 ipv6.address none
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+
+      #shellcheck source=tests/spread/tools/prepare.sh
+      . "/charmcraft/tests/spread/tools/prepare.sh"
+
+      refresh_or_install_snap juju "$juju_channel"
+      refresh_or_install_snap k8s "$k8s_channel" --classic
+      refresh_or_install_snap rockcraft latest/edge --classic
+
+      # The tutorial pushes the application image to a local OCI registry. Run it
+      # as a plain systemd service (no Docker, which would conflict with the k8s
+      # snap's own containerd), as done in the k8s-snap integration test harness.
+      ARCH=$(dpkg --print-architecture)
+      curl -sSL -o /tmp/registry.tar.gz \
+        "https://github.com/distribution/distribution/releases/download/v2.8.3/registry_2.8.3_linux_${ARCH}.tar.gz"
+      tar -xzf /tmp/registry.tar.gz -C /usr/local/bin registry
+      mkdir -p /etc/distribution
+      cat <<'EOF' > /etc/distribution/config.yml
+      version: 0.1
+      storage:
+        filesystem:
+          rootdirectory: /var/lib/registry
+      http:
+        addr: :5000
+      EOF
+      cat <<'EOF' > /etc/systemd/system/registry.service
+      [Unit]
+      Description=OCI registry
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/registry serve /etc/distribution/config.yml
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+      systemctl enable --now registry
+      retry -n 10 --wait 1 curl -sf http://localhost:5000/v2/
+
+      # Let Canonical Kubernetes pull from the insecure local registry. The k8s
+      # snap uses the standard containerd hosts.d path; it is read per-pull, so no
+      # restart is required.
+      mkdir -p "/etc/containerd/hosts.d/localhost:5000"
+      cat <<'EOF' > "/etc/containerd/hosts.d/localhost:5000/hosts.toml"
+      server = "http://localhost:5000"
+
+      [host."http://localhost:5000"]
+        capabilities = ["pull", "resolve"]
+      EOF
+
+      k8s bootstrap
+      k8s status --wait-ready --timeout 5m
+
+      k8s enable local-storage
+      k8s enable ingress
+
+      # Unlike the MicroK8s ingress addon (which binds the node's host ports), the
+      # Canonical Kubernetes ingress is exposed through a LoadBalancer service, so a
+      # load balancer with an address pool is required for the ingress to be reachable.
+      IPADDR=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$IPADDR-$IPADDR"
+      k8s enable load-balancer
+
+      k8s status --wait-ready --timeout 5m
+      k8s kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=10m
+
+      # The tutorial reaches the app at 127.0.0.1; redirect loopback :80/:443 to the
+      # load balancer address so the documented commands work in the test suite.
+      iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination "$IPADDR:80"
+      iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j DNAT --to-destination "$IPADDR:443"
+
+      # Canonical Kubernetes isn't autodetected by Juju, so register it as a cloud.
+      k8s config | juju add-k8s k8s-cloud --client
+      juju bootstrap k8s-cloud dev-controller --config bootstrap-timeout=500
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
+    debug-each: |
+      k8s kubectl get all,ingress -A
+      juju status --relations
+      juju debug-log --no-tail --limit 1000
+    restore: |
+      juju destroy-controller --force --destroy-all-models \
+      --destroy-storage --no-prompt --no-wait dev-controller
 
   tests/spread/commands/:
     summary: simple charmcraft commands

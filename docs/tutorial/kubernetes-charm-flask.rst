@@ -225,7 +225,7 @@ the terminal will respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry. This registry acts as a
+The rock needs to be copied to the local registry. This registry acts as a
 temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
@@ -240,9 +240,9 @@ This command contains the following pieces:
 - ``--insecure-policy``: adopts a permissive policy that
   removes the need for a dedicated policy file.
 - ``--dest-tls-verify=false``: disables the need for HTTPS
-  and verify certificates while interacting with the MicroK8s registry.
+  and certificate verification while interacting with the local registry.
 - ``oci-archive``: specifies the rock we created for our Flask app.
-- ``docker``: specifies the name of the image in the MicroK8s registry.
+- ``docker``: specifies the name of the image in the local registry.
 
 
 Create the charm
@@ -362,7 +362,7 @@ following output:
     juju status
 
     Model              Controller      Cloud/Region        Version  SLA          Timestamp
-    flask-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  17:04:11+10:00
+    flask-hello-world  dev-controller  k8s-cloud  3.6.2    unsupported  17:04:11+10:00
 
     App           Version  Status  Scale  Charm              Channel  Rev  Address         Exposed  Message
     flask-hello-world      active      1  flask-hello-world             0  10.152.183.166  no

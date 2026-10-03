@@ -9,6 +9,7 @@ environment:
   CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "1"
 
 prepare: |
+  tests.pkgs install unzip
   cd reactivecharm
 
   git init
@@ -30,3 +31,6 @@ execute: |
   # Retry: priming the LXD base instance can hit transient proxy 503s.
   retry -n 3 --wait 30 charmcraft pack
   test -f reactive-test*.charm
+
+  # Verify that .build.manifest file is present in the charm
+  unzip -l reactive-test*.charm | MATCH ".build.manifest"

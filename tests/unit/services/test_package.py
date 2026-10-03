@@ -16,6 +16,7 @@
 """Tests for package service."""
 
 import pathlib
+import subprocess
 import sys
 import zipfile
 from typing import TYPE_CHECKING, Any, cast
@@ -650,7 +651,58 @@ def test_get_manifest_bases_from_platforms_invalid(
 
 
 # endregion
-# region tests for packing the charm
+
+
+class TestGetCharmtoolVersion:
+    """Tests for PackageService._get_charmtool_version."""
+
+    @pytest.fixture
+    def reactive_package_service(
+        self, package_service, service_factory: craft_application.ServiceFactory
+    ):
+        service_factory.get("project").get().parts["reactive"] = {"source": "."}
+        return package_service
+
+    def test_non_reactive_returns_none(self, package_service):
+        assert package_service._get_charmtool_version() is None
+
+    def test_reactive_success(self, reactive_package_service, mocker):
+        mock_run = mocker.patch("subprocess.run")
+        mock_run.return_value = mocker.Mock(
+            stdout='{"charm-tools": {"version": "2.8.4", "git": "+git-7-6126e17"}}'
+        )
+
+        result = reactive_package_service._get_charmtool_version()
+
+        assert result == "charm-tools 2.8.4 (+git-7-6126e17)"
+
+    def test_reactive_command_failure_returns_none(
+        self, reactive_package_service, mocker
+    ):
+        mocker.patch(
+            "subprocess.run", side_effect=subprocess.CalledProcessError(1, "charm")
+        )
+
+        assert reactive_package_service._get_charmtool_version() is None
+
+    def test_reactive_malformed_output_returns_none(
+        self, reactive_package_service, mocker
+    ):
+        mock_run = mocker.patch("subprocess.run")
+        mock_run.return_value = mocker.Mock(stdout="not json")
+
+        assert reactive_package_service._get_charmtool_version() is None
+
+    def test_reactive_missing_version_key_returns_none(
+        self, reactive_package_service, mocker
+    ):
+        mock_run = mocker.patch("subprocess.run")
+        mock_run.return_value = mocker.Mock(stdout='{"charm-tools": {}}')
+
+        assert reactive_package_service._get_charmtool_version() is None
+
+
+# region Tests for packing the charm
 # These tests are modified from test_zipbuild
 def test_pack_charm_simple(fake_path, package_service):
     """Build a bunch of files in the zip."""

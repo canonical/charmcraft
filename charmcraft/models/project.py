@@ -211,7 +211,7 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
             Currently the only options are to ignore attributes or linters."""
         ),
     )
-    charmhub: Charmhub | None = pydantic.Field(
+    charmhub: SkipJsonSchema[Charmhub | None] = pydantic.Field(
         default=None,
         description="(DEPRECATED): Configuration for accessing charmhub.",
         deprecated=(

@@ -89,10 +89,10 @@ jobs:
       # https://github.com/Homebrew/actions/tree/main/setup-homebrew
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@main
+        uses: Homebrew/actions/setup-homebrew@9f17989bd508c794353d974d1756f23b0bcf10c1 # main
       - name: Cache Homebrew Bundler RubyGems
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ steps.set-up-homebrew.outputs.gems-path }}
           key: ${{ runner.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
@@ -101,14 +101,14 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: brew install-bundler-gems
       - name: Install dependencies with homebrew
-        run: brew install multipass
+        run: brew install --cask multipass
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up uv with caching
         id: setup-uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7.1.2
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
           cache: "pip"
@@ -128,9 +128,24 @@ jobs:
           "
       - name: Check for fully-configured multipass
         run: |
-          while ! multipass version; do
+          echo Waiting until Multipass is up...
+          while ! multipass list; do
             sleep 1
           done
+          echo Updating multipass remotes...
+          multipass find --force-update
+      - name: Configure runner to run multipass as root
+        # Workaround for https://github.com/canonical/multipass/issues/4588
+        # https://github.com/lengau/setup-multipass/blob/d7ac69cac08d7d82da2518868b1ffe742a607e33/action.yaml#L35-L46
+        run: |
+          multipass_passphrase=$(uuidgen)
+          multipass set local.passphrase="$multipass_passphrase"
+          while ! sudo multipass authenticate "$multipass_passphrase"; do
+            sleep 1
+          done
+          sudo mv /usr/local/bin/multipass /usr/local/bin/multipass-real
+          printf '#!/bin/bash\nexec /usr/bin/sudo -E /usr/local/bin/multipass-real $@' | sudo tee /usr/local/bin/multipass
+          sudo chmod a+x /usr/local/bin/multipass
       - name: Init and pack
         run: |
           source .venv/bin/activate
@@ -141,4 +156,4 @@ jobs:
           # Machine profile uses the uv plugin, which requires a lockfile to pack.
           uv lock
           charmcraft pack
-          test -f *.charm
+          test -f ./*.charm

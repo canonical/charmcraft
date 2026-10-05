@@ -1,0 +1,2 @@
+test-charm_ubuntu@22.04-amd64.charm
+test-charm_ubuntu@24.04-amd64.charm

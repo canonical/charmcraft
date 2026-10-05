@@ -99,14 +99,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -184,14 +184,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -259,14 +259,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -334,14 +334,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -409,14 +409,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -473,14 +473,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -748,6 +748,18 @@ def test_v2_frameworks_do_not_fetch_replaced_charm_libs(
     }
 
     applied = extensions.apply_extensions(tmp_path, input_yaml)
+    assert applied["charm-libs"] == [
+        {"lib": "traefik_k8s.ingress", "version": "2"},
+        {"lib": "observability_libs.juju_topology", "version": "0"},
+        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "1"},
+        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        {"lib": "data_platform_libs.s3", "version": "0"},
+        {"lib": "saml_integrator.saml", "version": "0"},
+        {"lib": "smtp_integrator.smtp", "version": "0"},
+        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+    ]
     generated_libraries = {library["lib"] for library in applied["charm-libs"]}
 
     assert generated_libraries.isdisjoint(

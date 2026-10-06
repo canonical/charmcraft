@@ -169,7 +169,9 @@ def test_pack_artifacts_overwrites_stale_prime_metadata(
     packed = package_service.pack_artifacts()
 
     assert packed == {None: True}
-    assert yaml.safe_load(stale_metadata.read_text()) == package_service.metadata.marshal()
+    assert (
+        yaml.safe_load(stale_metadata.read_text()) == package_service.metadata.marshal()
+    )
 
 
 def test_write_metadata_materializes_mediated_package_files(
@@ -183,17 +185,23 @@ def test_write_metadata_materializes_mediated_package_files(
         service_factory.get("project").get(),
     )
     project.actions = {"test-action": {"description": "A test action"}}
-    project.config = {
-        "options": {"my-option": {"type": "string", "default": "value"}}
-    }
+    project.config = {"options": {"my-option": {"type": "string", "default": "value"}}}
     monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
 
     package_service.write_metadata(dirs.prime_dir)
 
-    assert (dirs.prime_dir / const.METADATA_FILENAME).read_text() == package_service.get_metadata_yaml()
-    assert (dirs.prime_dir / const.MANIFEST_FILENAME).read_text() == package_service.get_manifest_yaml()
-    assert (dirs.prime_dir / const.JUJU_ACTIONS_FILENAME).read_text() == package_service.get_actions_yaml()
-    assert (dirs.prime_dir / const.JUJU_CONFIG_FILENAME).read_text() == package_service.get_config_yaml()
+    assert (
+        dirs.prime_dir / const.METADATA_FILENAME
+    ).read_text() == package_service.get_metadata_yaml()
+    assert (
+        dirs.prime_dir / const.MANIFEST_FILENAME
+    ).read_text() == package_service.get_manifest_yaml()
+    assert (
+        dirs.prime_dir / const.JUJU_ACTIONS_FILENAME
+    ).read_text() == package_service.get_actions_yaml()
+    assert (
+        dirs.prime_dir / const.JUJU_CONFIG_FILENAME
+    ).read_text() == package_service.get_config_yaml()
 
 
 def test_write_metadata_is_idempotent_when_package_files_are_unchanged(

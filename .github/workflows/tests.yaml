@@ -33,18 +33,6 @@ on:
       - "*.md"
       - spread.yaml
   merge_group:
-    paths-ignore:
-      - .github/**
-      - "!.github/workflows/tests.yaml" # Run on this file getting changed
-      - docs/**
-      - schema/**
-      - tests/spread/**
-      - .editorconfig
-      - .pre-commit-config.yaml
-      - .readthedocs.yaml
-      - "**/*.md"
-      - "*.md"
-      - spread.yaml
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -79,7 +67,7 @@ jobs:
       - name: Get snap filename
         id: snap-name
         run: |
-          echo "snap=$(find . -type f -name '*.snap')" >> $GITHUB_OUTPUT
+          echo "snap=$(find . -type f -name '*.snap')" >> "$GITHUB_OUTPUT"
       - name: Publish feature branch to edge/pr-${{ github.event.number }}
         if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
         uses: canonical/action-publish@v1

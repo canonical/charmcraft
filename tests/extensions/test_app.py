@@ -22,12 +22,14 @@ from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
     DjangoFrameworkV1,
+    DjangoFrameworkV2,
     ExpressJSFrameworkFactory,
     ExpressJSFrameworkV1,
     FastAPIFrameworkFactory,
     FastAPIFrameworkV1,
     FlaskFrameworkFactory,
     FlaskFrameworkV1,
+    FlaskFrameworkV2,
     GoFrameworkFactory,
     GoFrameworkV1,
     SpringBootFrameworkV1,
@@ -545,6 +547,9 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "go application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -575,6 +580,11 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "flask application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "flask-secret-key" not in applied["config"]["options"]
+    assert "flask-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -605,6 +615,11 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "django application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "django-secret-key" not in applied["config"]["options"]
+    assert "django-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -635,6 +650,9 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "fastapi application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -665,6 +683,9 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "expressjs application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -695,6 +716,9 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "spring-boot application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -1212,11 +1236,10 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
 
 
 def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
-    """Test that invalid metrics_path in paas-config.yaml raises ExtensionError."""
+    """Test that invalid metrics-path in paas-config.yaml raises ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
-    # Create paas-config.yaml in the project
-    (tmp_path / "paas-config.yaml").write_text("metrics_path: something\n")
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: something\n")
 
     input_yaml = {
         "type": "charm",
@@ -1230,17 +1253,16 @@ def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
 
     with pytest.raises(
         ExtensionError,
-        match=r"metrics_path in paas-config.yaml must be a valid URL path starting with '/'",
+        match=r"metrics-path in paas-config.yaml must be a valid URL path starting with '/'",
     ):
         extensions.apply_extensions(tmp_path, input_yaml)
 
 
 def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
-    """Test that valid metrics_path in paas-config.yaml does not raise ExtensionError."""
+    """Test that valid metrics-path in paas-config.yaml does not raise ExtensionError."""
     monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
 
-    # Create paas-config.yaml in the project
-    (tmp_path / "paas-config.yaml").write_text("metrics_path: /something\n")
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: /something\n")
 
     input_yaml = {
         "type": "charm",
@@ -1253,3 +1275,46 @@ def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
     }
 
     extensions.apply_extensions(tmp_path, input_yaml)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        pytest.param("port", "'8080'", "must be an integer", id="port-type"),
+        pytest.param("port", "0", "must be between 1 and 65535", id="port-minimum"),
+        pytest.param(
+            "metrics-port",
+            "65536",
+            "must be between 1 and 65535",
+            id="metrics-port-maximum",
+        ),
+    ],
+)
+def test_v2_paas_config_port_invalid(monkeypatch, tmp_path, key, value, message):
+    """Test that invalid top-level ports fail extension expansion."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    (tmp_path / "paas-config.yaml").write_text(f"{key}: {value}\n")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(ExtensionError, match=rf"{key} .* {message}"):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v1_secret_option_names_unchanged():
+    """Test that V2 option renames do not change V1 compatibility."""
+    assert "flask-secret-key" in FlaskFrameworkV1.options
+    assert "flask-secret-key-id" in FlaskFrameworkV1.options
+    assert "app-secret-key" not in FlaskFrameworkV1.options
+    assert "django-secret-key" in DjangoFrameworkV1.options
+    assert "django-secret-key-id" in DjangoFrameworkV1.options
+    assert "app-secret-key" not in DjangoFrameworkV1.options
+    assert "app-secret-key" in FlaskFrameworkV2.options
+    assert "app-secret-key" in DjangoFrameworkV2.options

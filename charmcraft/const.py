@@ -42,6 +42,7 @@ JUJU_CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.yaml"
 JUJU_ACTIONS_FILENAME = "actions.yaml"
 
+BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
 STAGING_VENV_DIRNAME = "staging-venv"
 # endregion

@@ -1,0 +1,14 @@
+name: skip-repack
+type: charm
+title: A charm
+summary: A charm
+description: A charm built and running on jammy.
+base: ubuntu@24.04
+platforms:
+  amd64:
+  arm64:
+  riscv64:
+
+parts:
+  charm:
+    plugin: nil

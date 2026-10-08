@@ -39,13 +39,17 @@ Non-snap installations of Charmcraft have the following dependencies:
 What's new
 ----------
 
-Charmcraft 4.5 brings the following features, integrations, and improvements.
+Charmcraft 4.5 brings the following new features.
 
+Monorepo support
+~~~~~~~~~~~~~~~~
 
-<Important change>
-~~~~~~~~~~~~~~~~~~
-
-<Describe the most important change in this release and how it affects users.>
+Charmcraft now supports packing charms located within monorepos when the
+``CHARMCRAFT_EXPERIMENTAL_MONOREPO`` environment variable is enabled. In this mode,
+Charmcraft mounts the root of the enclosing Git repository into the build instance.
+Charms can then access shared dependencies located in parent or sibling directories.
+The necessary project file changes and commands to enable this feature are
+described in :ref:`pack-a-charm-in-a-monorepo`.
 
 
 Minor features
@@ -54,10 +58,55 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
-<Feature A>
-~~~~~~~~~~~
+Base-specific init profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- <Add a short description of a minor change.>
+The ``charmcraft init`` command now accepts ``--base`` for profiles that provide
+base-specific variants. The 12-factor framework profiles (Django, Flask, FastAPI, Go,
+ExpressJS, and Spring Boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
+All profiles use Ubuntu 24.04 LTS when ``--base`` isn't provided.
+
+Example actions in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` profile now declare ``pause`` and ``resume``
+actions, which stop and start the workload without removing the unit. Charms created
+with the ``kubernetes`` profile now declare a ``restart`` action, which restarts the
+workload's Pebble service.
+
+Both profiles scaffold unit and integration tests for the added behavior.
+
+Secret handling in the machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charms created with the ``machine`` and ``kubernetes`` profiles now implement both
+sides of Juju secrets.
+
+For a user-provided secret, the charm declares an ``api-token`` config option of type
+``secret``, resolves it, and re-reads it when the operator adds a new revision.
+
+For an app-managed secret, the leader creates a workload password with a rotation
+policy and an expiry, replaces it when Juju asks for rotation or reports expiry, and
+removes unused revisions.
+
+Both profiles scaffold unit and integration tests for the added behavior.
+
+Removed lockfile from machine and Kubernetes profiles
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``machine`` and ``kubernetes`` profiles no longer include a ``uv.lock`` file. You
+need to run ``uv lock`` after creating a charm with ``charmcraft init``.
+
+Minor init profile improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The dependencies of the ``machine`` and ``kubernetes`` profiles are now bound to
+  their current major version. This reduces the risk of breaking changes if you use
+  automated dependency updates.
+- The logging configuration of the ``machine`` and ``kubernetes`` profiles now ensure
+  that live logs are not emitted from the charm code during unit tests.
+- Charms created with the ``kubernetes`` profile now use an Ubuntu image as a
+  placeholder for the charm's real image, so that integration tests pass by default.
 
 
 Backwards-incompatible changes
@@ -78,10 +127,14 @@ Feature deprecations
 The following features are deprecated in Charmcraft 4.5.
 
 
-<Deprecated feature C>
-~~~~~~~~~~~~~~~~~~~~~~
+Library registration
+~~~~~~~~~~~~~~~~~~~~
 
-<Describe the deprecation status, alternatives, and migration guidance.>
+Charmhub no longer accepts the registration of new libraries, so the ``charmcraft
+create-lib`` command now exits with an error that points to the `Charmhub-hosted charm
+libraries deprecation notice <https://ubu.link/charmhub-libraries-deprecation>`__, which
+explains what to do instead. New and existing charm libraries should now be distributed
+as Python packages.
 
 
 Scheduled feature deprecations
@@ -101,8 +154,12 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.5.
 
+- `#2661 <https://github.com/canonical/charmcraft/issues/2661>`__
+  Packing a charm sometimes fails with "Too many levels of symbolic links"
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
+- Experimental V2 12-factor extensions now generate the paas-charm 2.x peer,
+  secret, configuration, and dependency contracts while preserving V1 output.
 
 
 Known issues

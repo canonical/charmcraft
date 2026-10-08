@@ -28,6 +28,7 @@ to include any libraries, parts, or other assets your application may require.
 - :ref:`manage-resources`
 - :ref:`manage-libraries`
 - :ref:`manage-extensions`
+- :ref:`pack-a-charm-in-a-monorepo`
 
 
 Publish and release
@@ -79,6 +80,7 @@ update a charm to the new base:
     shared-cache
     pack-a-hooks-based-charm-with-charmcraft
     pack-a-reactive-charm-with-charmcraft
+    pack-a-charm-in-a-monorepo
     manage-the-current-charmhub-user
     manage-names
     manage-revisions

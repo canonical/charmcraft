@@ -32,6 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import argparse
 
     from charmcraft.services.charmlibs import CharmLibsService
+    from charmcraft.services.package import PackageService
     from charmcraft.services.store import StoreService
 
 
@@ -160,22 +161,28 @@ class PackCommand(lifecycle.PackCommand):
 
         # Move artifacts in the outer instance.
         if not is_managed_mode():
-            state_service = self._services.get("state")
-            try:
-                artifacts = cast(dict[str, pathlib.Path], state_service.get("artifact"))
-            except KeyError:
-                craft_cli.emit.debug(
-                    "Could not find artifacts in the state service. Not moving."
-                )
-            else:
+            package_service = cast("PackageService", self._services.get("package"))
+            found_any = False
+            for build_info in self._services.get("build_plan").plan():
+                try:
+                    artifacts = package_service.read_artifacts_state(
+                        build_info.platform
+                    )
+                except KeyError:
+                    continue
+                found_any = True
                 project_dir = parsed_args.project_dir or pathlib.Path.cwd()
                 output_dir = parsed_args.output or pathlib.Path.cwd()
 
-                for artifact in artifacts.values():
-                    old_path = project_dir / artifact
-                    new_path = output_dir / artifact
+                for artifact_path in artifacts.values():
+                    old_path = project_dir / artifact_path
+                    new_path = output_dir / artifact_path
                     if old_path != new_path:
                         new_path.parent.mkdir(parents=True, exist_ok=True)
                         old_path.rename(new_path)
+            if not found_any:
+                craft_cli.emit.debug(
+                    "Could not find artifacts in the state service. Not moving."
+                )
 
         return result

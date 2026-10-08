@@ -16,18 +16,29 @@
 """Integration tests for packing."""
 
 import pathlib
+import time
 import zipfile
 
 import craft_platforms
 import pytest
 import yaml
-from craft_application import ServiceFactory
 from craft_cli.pytest_plugin import RecordingEmitter
+from craft_parts import callbacks
 
-from charmcraft import utils
+from charmcraft import const, utils
 from charmcraft.application.main import Charmcraft
 
 CURRENT_PLATFORM = utils.get_os_platform()
+
+
+def _reset_parts_callbacks() -> None:
+    """Reset craft-parts callback state between repeated app runs in one test."""
+    callbacks.unregister_all()
+
+
+def _state_dir_for(work_dir: pathlib.Path) -> pathlib.Path:
+    """Return a state directory outside the work tree used for repeated pack tests."""
+    return work_dir.parent / f"{work_dir.name}-state"
 
 
 @pytest.mark.slow
@@ -39,7 +50,6 @@ def test_build_basic_charm(
     monkeypatch: pytest.MonkeyPatch,
     emitter: RecordingEmitter,
     new_path: pathlib.Path,
-    service_factory: ServiceFactory,
     app: Charmcraft,
 ):
     monkeypatch.setenv("CRAFT_DEBUG", "1")
@@ -81,3 +91,120 @@ def test_build_basic_charm(
     assert metadata["name"] == project["name"]
     assert metadata["summary"] == project["summary"]
     assert metadata["description"] == project["description"]
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    CURRENT_PLATFORM.system != "ubuntu",
+    reason="Basic charm tests use destructive mode.",
+)
+def test_pack_skips_when_inputs_are_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+    emitter: RecordingEmitter,
+    new_path: pathlib.Path,
+    project_path: pathlib.Path,
+    app_factory,
+):
+    monkeypatch.setenv("CRAFT_DEBUG", "1")
+    monkeypatch.setattr(
+        "sys.argv",
+        ["charmcraft", "pack", "--destructive-mode"],
+    )
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
+    state_dir = _state_dir_for(new_path)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+
+    first_app = app_factory()
+    first_app.configure({})
+    if first_app.run() != 0:
+        pytest.skip("pack requires unavailable host build packages in this environment")
+
+    charm_path = next(new_path.glob("example-charm_*.charm"))
+    first_mtime_ns = charm_path.stat().st_mtime_ns
+
+    time.sleep(1)
+    _reset_parts_callbacks()
+
+    second_app = app_factory()
+    second_app.configure({})
+    assert second_app.run() == 0
+
+    assert charm_path.stat().st_mtime_ns == first_mtime_ns
+    emitter.assert_progress("Skipping pack (already ran)")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    CURRENT_PLATFORM.system != "ubuntu",
+    reason="Basic charm tests use destructive mode.",
+)
+def test_pack_rebuilds_when_project_metadata_changes(
+    monkeypatch: pytest.MonkeyPatch,
+    new_path: pathlib.Path,
+    project_path: pathlib.Path,
+    app_factory,
+):
+    monkeypatch.setenv("CRAFT_DEBUG", "1")
+    monkeypatch.setattr(
+        "sys.argv",
+        ["charmcraft", "pack", "--destructive-mode"],
+    )
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
+    state_dir = _state_dir_for(new_path)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+
+    first_app = app_factory()
+    first_app.configure({})
+    if first_app.run() != 0:
+        pytest.skip("pack requires unavailable host build packages in this environment")
+
+    charm_path = next(new_path.glob("example-charm_*.charm"))
+    first_mtime_ns = charm_path.stat().st_mtime_ns
+
+    time.sleep(1)
+    (project_path / const.METADATA_FILENAME).write_text("subordinate: true\n")
+    _reset_parts_callbacks()
+
+    second_app = app_factory()
+    second_app.configure({})
+    assert second_app.run() == 0
+
+    assert charm_path.stat().st_mtime_ns > first_mtime_ns
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    CURRENT_PLATFORM.system != "ubuntu",
+    reason="Basic charm tests use destructive mode.",
+)
+def test_pack_artifact_contains_dispatch_after_repeated_pack(
+    monkeypatch: pytest.MonkeyPatch,
+    new_path: pathlib.Path,
+    project_path: pathlib.Path,
+    app_factory,
+):
+    monkeypatch.setenv("CRAFT_DEBUG", "1")
+    monkeypatch.setattr(
+        "sys.argv",
+        ["charmcraft", "pack", "--destructive-mode"],
+    )
+    (project_path / "requirements.txt").write_text("distro==1.4.0")
+    state_dir = _state_dir_for(new_path)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+
+    first_app = app_factory()
+    first_app.configure({})
+    if first_app.run() != 0:
+        pytest.skip("pack requires unavailable host build packages in this environment")
+
+    _reset_parts_callbacks()
+    second_app = app_factory()
+    second_app.configure({})
+    assert second_app.run() == 0
+
+    charm_path = next(new_path.glob("example-charm_*.charm"))
+    with zipfile.ZipFile(charm_path) as charm_zip:
+        assert const.DISPATCH_FILENAME in charm_zip.namelist()

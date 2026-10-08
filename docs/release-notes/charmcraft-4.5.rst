@@ -124,6 +124,13 @@ The following issues have been resolved in Charmcraft 4.5.
 - The Spring Boot extension on Ubuntu 24.04 LTS is experimental, matching Rockcraft.
 
 
+Spring Boot extension
+~~~~~~~~~~~~~~~~~~~~~
+In prior versions of Charmcraft, the Spring Boot extension was mistakenly marked 
+as stable for Ubuntu 24.04 LTS. Charmcraft 4.5 corrects its state to experimental,
+matching Rockcraft.
+
+
 Known issues
 ------------
 

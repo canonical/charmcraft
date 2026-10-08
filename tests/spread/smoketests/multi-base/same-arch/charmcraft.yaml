@@ -1,0 +1,15 @@
+name: test-charm
+type: charm
+title: test
+summary: test
+description: |
+  A charm recipe that builds multiple bases for the same architecture.
+
+platforms:
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
+
+parts:
+  my-charm:
+    plugin: dump
+    source: .

@@ -49,6 +49,7 @@ BASIC_INIT_FILES = frozenset(
         ".github/workflows",
         ".github/workflows/ci.yaml",
         ".github/workflows/dependency-review.yaml",
+        ".github/workflows/integration.yaml",
         ".github/workflows/security.yaml",
         ".github/workflows/zizmor.yaml",
         "charmcraft.yaml",

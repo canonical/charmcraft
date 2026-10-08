@@ -41,3 +41,8 @@ jobs:
 
       - name: Run tests
         run: uv run --frozen --only-group ci tox -e unit
+
+  integration:
+    name: Integration Tests
+    needs: [lint, unit]
+    uses: $/.github/workflows/integration.yaml

@@ -32,11 +32,6 @@ execute: |
   cd expressjs-hello-world
   # [docs:create-working-dir-end]
 
-  # [docs:export-experimental-env-vars]
-  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
-  export CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true
-  # [docs:export-experimental-env-vars-end]
-
   cd $HOME/tmp
   mv *.yaml *.js *.sh $HOME/expressjs-hello-world
   cd  $HOME/expressjs-hello-world

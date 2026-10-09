@@ -30,6 +30,8 @@ class {{ class_name }}(ops.CharmBase):
         super().__init__(framework)
         framework.observe(self.on.install, self._on_install)
         framework.observe(self.on.start, self._on_start)
+        framework.observe(self.on["pause"].action, self._on_pause_action)
+        framework.observe(self.on["resume"].action, self._on_resume_action)
         framework.observe(self.on.config_changed, self._on_config_changed)
         framework.observe(self.on.secret_changed, self._on_secret_changed)
         framework.observe(self.on.secret_rotate, self._on_secret_rotate)
@@ -56,6 +58,17 @@ class {{ class_name }}(ops.CharmBase):
         # A non-leader unit should get the secret ID from a peer relation, then use
         # 'get_content' to read the latest revision. This charm doesn't demonstrate that; see
         # https://canonical.com/juju/docs/ops/latest/howto/manage-secrets/
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_pause_action(self, event: ops.ActionEvent):
+        """Handle the pause action: stop the workload, but leave the unit deployed."""
+        {{ workload_module }}.stop()
+        self.unit.status = ops.MaintenanceStatus("paused: run the resume action to restart")
+
+    def _on_resume_action(self, event: ops.ActionEvent):
+        """Handle the resume action: start the workload again."""
+        self.unit.status = ops.MaintenanceStatus("starting workload")
+        {{ workload_module }}.start()
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):

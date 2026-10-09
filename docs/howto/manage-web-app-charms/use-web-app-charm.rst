@@ -474,7 +474,7 @@ set the hostname with:
 
 .. code-block:: bash
 
-    juju config gateway-api-integrator external-hostname=<YOUR_DOMAIN>
+    juju config gateway-api-integrator external-hostname=<YOUR-DOMAIN>
 
 Deploy the `Self Signed X.509 Certificates
 <https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
@@ -491,14 +491,14 @@ the HTTPS URL. You can access the HTTPS URL of your app with a command like:
 
 .. code-block:: bash
 
-   curl -v --insecure https://<YOUR_DOMAIN> \
-     --resolve <YOUR_DOMAIN>:443:<INGRESS_IP>
+   curl -v --insecure https://<YOUR-DOMAIN> \
+     --resolve <YOUR-DOMAIN>:443:<INGRESS-IP>
 
 .. note::
 
     The ``--insecure`` option is needed because the certificate authority in the
     ``self-signed-certificates`` charm is not trusted.
-    The ``--resolve <YOUR_DOMAIN>:443:<INGRESS_IP>`` option is a way of
+    The ``--resolve <YOUR-DOMAIN>:443:<INGRESS-IP>`` option is a way of
     resolving the hostname of the request without
     setting a DNS record.
 

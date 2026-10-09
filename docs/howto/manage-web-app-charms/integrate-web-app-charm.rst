@@ -91,7 +91,7 @@ Then, integrate it with your deployed app:
 
 .. code-block:: bash
 
-    juju integrate <APP_CHARM> gateway-api-integrator
+    juju integrate <APP-CHARM> gateway-api-integrator
 
 You don't need to add an endpoint definition to your charm's
 project file.

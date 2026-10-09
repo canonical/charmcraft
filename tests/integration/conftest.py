@@ -16,11 +16,10 @@
 """General fixtures for integration tests."""
 
 import pathlib
-from unittest import mock
 
 import craft_application
-import craft_store
 import pytest
+from craft_cli import messages, printer
 
 from charmcraft import application, services
 from charmcraft.application import commands
@@ -34,48 +33,80 @@ def project_path(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def service_factory(
+def make_service_factory(
     new_path: pathlib.Path,
     fake_project_file,
     project_path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    services.register_services()
-    factory = craft_application.ServiceFactory(app=application.APP_METADATA)
-    factory.get("store").client = mock.Mock(spec_set=craft_store.StoreClient)  # ty: ignore[unresolved-attribute]
-    factory.update_kwargs(
-        "charm_libs",
-        project_dir=project_path,
-    )
-    factory.update_kwargs(
-        "lifecycle",
-        work_dir=new_path,
-        cache_dir="~/.cache",
-    )
-    factory.update_kwargs(
-        "project",
-        project_dir=project_path,
-    )
-    factory.update_kwargs(
-        "provider",
-        work_dir=new_path,
-    )
-    factory.get("project").configure(
-        platform=None,
-        build_for=None,
-    )
-    monkeypatch.setenv("CRAFT_STATE_DIR", str(new_path / "state"))
-    factory.get("state").set(
-        "charmcraft", "started_at", value="2020-03-14T00:00:00+00:00"
-    )
+    state_dir = new_path / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+
+    def factory_fn():
+        services.register_services()
+        factory = craft_application.ServiceFactory(app=application.APP_METADATA)
+        factory.update_kwargs("charm_libs", project_dir=project_path)
+        factory.update_kwargs(
+            "lifecycle",
+            work_dir=new_path,
+            cache_dir=new_path / "cache",
+        )
+        factory.update_kwargs("project", project_dir=project_path)
+        factory.update_kwargs("provider", work_dir=new_path)
+        factory.get("project").configure(platform=None, build_for=None)
+        factory.get("state").set(
+            "charmcraft",
+            "started_at",
+            value="2020-03-14T00:00:00+00:00",
+            overwrite=True,
+        )
+        return factory
+
+    return factory_fn
+
+
+@pytest.fixture
+def service_factory(make_service_factory):
+    return make_service_factory()
+
+
+@pytest.fixture
+def app_factory(
+    monkeypatch: pytest.MonkeyPatch,
+    new_path: pathlib.Path,
+    make_service_factory,
+    fake_project_file,
+    tmp_path_factory: pytest.TempPathFactory,
+):
+    monkeypatch.setenv("CRAFT_DEBUG", "1")
+    # Keep the log outside the project dir, otherwise it becomes part of the
+    # charm source and invalidates the lifecycle state between runs.
+    log_path = tmp_path_factory.mktemp("emitter-log") / "emitter.log"
+    monkeypatch.setattr(messages, "TESTMODE", True)
+    monkeypatch.setattr(printer, "TESTMODE", True)
+    state_dir = new_path / "state"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("CRAFT_STATE_DIR", str(state_dir))
+
+    def factory():
+        messages.emit.init(
+            messages.EmitterMode.QUIET,
+            "test-emitter",
+            "Hello world",
+            log_filepath=log_path,
+        )
+        service_factory = make_service_factory()
+        app = application.Charmcraft(
+            app=application.APP_METADATA, services=service_factory
+        )
+        app._configure_services(None)
+        commands.fill_command_groups(app)
+        return app
+
     return factory
 
 
 @pytest.fixture
-def app(monkeypatch, new_path, service_factory):
-    monkeypatch.setenv("CRAFT_DEBUG", "1")
-    app = application.Charmcraft(app=application.APP_METADATA, services=service_factory)
-    app._configure_services(None)
-    commands.fill_command_groups(app)
-
-    return app
+def app(app_factory):
+    return app_factory()

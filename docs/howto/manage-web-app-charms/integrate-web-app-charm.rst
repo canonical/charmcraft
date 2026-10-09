@@ -84,8 +84,8 @@ Use an actively maintained ingress implementation,
 such as the `Gateway API integrator
 <https://charmhub.io/gateway-api-integrator>`__,
 to expose your 12-factor web app outside the Kubernetes cluster.
-First, follow the `Gateway API integrator deployment guide
-<https://canonical.com/juju/docs/gateway-api-integrator-charm/latest/tutorial/getting-started/>`__
+First, follow the :external+gateway-api-integrator-charm:ref:`
+Gateway API integrator deployment guide <tutorial_getting_started>`
 to deploy and configure the ingress charm.
 Then, integrate it with your deployed app:
 
@@ -107,7 +107,8 @@ links, static asset locations, and framework user interface URLs.
 Ingress implementations communicate a stripped prefix differently.
 Gateway API integrator and Traefik pass the stripped prefix in the
 ``X-Forwarded-Prefix`` header.
-Nginx Ingress Integrator does not pass this header.
+`Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`__
+does not pass this header.
 ``X-Forwarded-Prefix`` is a commonly used proxy header,
 not part of the standardized ``Forwarded`` header.
 

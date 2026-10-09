@@ -1,0 +1,52 @@
+name: Integration Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-version: ["3.6", "4.0"]
+    concurrency:
+      group: {% raw %}${{ github.workflow }}-${{ github.ref }}-${{ matrix.juju-version }}{% endraw %}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+
+      - name: Set up tools to run the integration tests
+        run: uv sync --frozen --only-group ci
+
+      - name: Set up Concierge
+        run: sudo snap install --classic concierge
+
+      - name: Set up Juju and charm development tools
+        run: sudo concierge prepare -p k8s --juju-channel {% raw %}${{ matrix.juju-version }}{% endraw %}/stable
+
+      - name: Pack the charm
+        # The integration tests don't pack the charm. Instead, they look for a .charm
+        # file in the project dir (or use CHARM_PATH, if set).
+        run: charmcraft pack
+
+      - name: Run integration tests
+        timeout-minutes: 60
+        run: uv run --frozen tox -e integration -- --juju-dump-logs logs --log-file logs/verbose.log
+
+      - name: Upload logs
+        if: {% raw %}${{ !cancelled() }}{% endraw %}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: integration-test-logs-juju-{% raw %}${{ matrix.juju-version }}{% endraw %}
+          path: logs

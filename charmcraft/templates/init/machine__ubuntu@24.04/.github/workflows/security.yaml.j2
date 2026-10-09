@@ -1,0 +1,29 @@
+name: Dependency vulnerability scan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+
+      - name: Export locked dependencies (excluding this project)
+        run: uv export --no-dev --frozen --no-emit-project --format requirements-txt -o requirements.txt
+
+      - name: Run pip-audit
+        run: uv run --frozen --only-group ci pip-audit --disable-pip -r requirements.txt

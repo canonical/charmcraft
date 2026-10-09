@@ -1,0 +1,58 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 100
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 100
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    groups:
+      # Canonical's packages (we trust the release).
+      canonical:
+        patterns:
+          - "charmlibs-*"
+          - "jubilant"
+          - "ops"
+          - "ops-scenario"
+          - "ops-tracing"
+          - "pytest-jubilant"
+      # Linters / type-checkers / formatters. Majors ride along; we do not
+      # pin these and a major ruff/pyright is low-risk to review in a batch.
+      dev-tooling:
+        patterns:
+          - "ruff"
+          - "pyright"
+          - "codespell"
+          - "coverage"
+      # Test runner + other shared test deps.
+      test-deps:
+        patterns:
+          - "pytest"
+          - "pytest-*"
+      # Everything else, minor + patch only. A runtime major falls through
+      # to its own ungrouped PR so it never silently rides a patch bundle.
+      runtime:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

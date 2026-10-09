@@ -1,0 +1,41 @@
+name: Publish to edge
+
+on:
+  workflow_call:
+    secrets:
+      CHARMHUB_TOKEN:
+        required: true
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish-edge:
+    name: Publish to latest/edge
+    runs-on: ubuntu-latest
+    # Required to access secrets.CHARMHUB_TOKEN
+    environment: publish
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up LXD
+        uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee  # v1
+        with:
+          channel: 5.21/stable
+
+      - name: Install charmcraft
+        run: sudo snap install --classic charmcraft
+
+      - name: Pack the charm
+        run: charmcraft pack
+
+      - name: Upload charm to latest/edge
+        run: |
+          for charm in *.charm; do
+            charmcraft upload "$charm" --release latest/edge
+          done
+        env:
+          CHARMCRAFT_AUTH: {% raw %}${{ secrets.CHARMHUB_TOKEN }}{% endraw %}

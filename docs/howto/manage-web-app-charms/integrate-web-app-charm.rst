@@ -120,47 +120,67 @@ the app can extract its path component from this environment variable.
 
 Configure your framework to account for the stripped prefix:
 
-* **FastAPI with Uvicorn**: Extract the path from ``APP_BASE_URL``
-  and pass it as the ASGI ``root_path``.
-  Configure it on Uvicorn or the FastAPI app.
-  FastAPI doesn't derive ``root_path`` from ``X-Forwarded-Prefix``.
-  Setting ``root_path`` corrects generated URLs and the Swagger UI.
+.. tab-set::
 
-* **Django**: Extract the path from ``DJANGO_BASE_URL``
-  and use it as ``FORCE_SCRIPT_NAME``.
-  Django doesn't read ``X-Forwarded-Prefix`` by default,
-  so header-driven configuration requires middleware.
-  ``FORCE_SCRIPT_NAME`` takes precedence over a prefix supplied by the
-  WSGI or ASGI server.
+    .. tab-item:: Django
+        :sync: django
 
-* **Flask with Gunicorn**: Extract the path from ``FLASK_BASE_URL``
-  and supply it as the standard WSGI ``SCRIPT_NAME``,
-  which Gunicorn accepts as an environment variable.
-  For header-driven configuration, use Werkzeug ``ProxyFix`` with
-  ``x_prefix`` set to the number of trusted proxies.
-  ``ProxyFix`` converts ``X-Forwarded-Prefix`` to ``SCRIPT_NAME``,
-  avoiding app-specific prefix code.
+        Extract the path from ``DJANGO_BASE_URL``
+        and use it as ``FORCE_SCRIPT_NAME``.
+        Django doesn't read ``X-Forwarded-Prefix`` by default,
+        so header-driven configuration requires middleware.
+        ``FORCE_SCRIPT_NAME`` takes precedence over a prefix supplied by the
+        WSGI or ASGI server.
 
-* **Spring Boot**: Set ``server.forward-headers-strategy=framework`` to use
-  Spring's forwarded-header support.
-  On Spring Boot versions that provide the setting,
-  also set ``spring.mvc.forwarded-headers.use-forwarded-prefix=true``
-  or ``spring.webflux.forwarded-headers.use-forwarded-prefix=true``.
-  Other versions may require a configured ``ForwardedHeaderFilter``,
-  ``ForwardedHeaderTransformer``, or custom ``WebFilter``.
-  ``APP_BASE_URL`` provides the external URL for custom handling.
-  Don't set ``server.servlet.context-path`` when the ingress strips the prefix,
-  because the app then expects a prefix that the ingress removed
-  and can return HTTP 404 errors.
+    .. tab-item:: Express
+        :sync: express
 
-* **Express**: Express has no native equivalent.
-  Custom middleware can add the prefix to redirect ``Location`` headers.
-  Use the path from ``APP_BASE_URL`` when handling redirects,
-  static assets, and template links.
+        Express has no native equivalent.
+        Custom middleware can add the prefix to redirect ``Location`` headers.
+        Use the path from ``APP_BASE_URL`` when handling redirects,
+        static assets, and template links.
 
-* **Go with ``net/http``**: The standard library has no native equivalent.
-  Add middleware that wraps ``http.ResponseWriter`` and rewrites the
-  ``Location`` header for redirects using the path from ``APP_BASE_URL``.
+    .. tab-item:: FastAPI
+        :sync: fastapi
+
+        Extract the path from ``APP_BASE_URL``
+        and pass it as the ASGI ``root_path``.
+        Configure it on Uvicorn or the FastAPI app.
+        FastAPI doesn't derive ``root_path`` from ``X-Forwarded-Prefix``.
+        Setting ``root_path`` corrects generated URLs and the Swagger UI.
+
+    .. tab-item:: Flask
+        :sync: flask
+
+        Extract the path from ``FLASK_BASE_URL``
+        and supply it as the standard WSGI ``SCRIPT_NAME``,
+        which Gunicorn accepts as an environment variable.
+        For header-driven configuration, use Werkzeug ``ProxyFix`` with
+        ``x_prefix`` set to the number of trusted proxies.
+        ``ProxyFix`` converts ``X-Forwarded-Prefix`` to ``SCRIPT_NAME``,
+        avoiding app-specific prefix code.
+
+    .. tab-item:: Go
+        :sync: go
+
+        The standard library ``net/http`` has no native equivalent.
+        Add middleware that wraps ``http.ResponseWriter`` and rewrites the
+        ``Location`` header for redirects using the path from ``APP_BASE_URL``.
+
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
+
+        Set ``server.forward-headers-strategy=framework`` to use
+        Spring's forwarded-header support.
+        On Spring Boot versions that provide the setting,
+        also set ``spring.mvc.forwarded-headers.use-forwarded-prefix=true``
+        or ``spring.webflux.forwarded-headers.use-forwarded-prefix=true``.
+        Other versions may require a configured ``ForwardedHeaderFilter``,
+        ``ForwardedHeaderTransformer``, or custom ``WebFilter``.
+        ``APP_BASE_URL`` provides the external URL for custom handling.
+        Don't set ``server.servlet.context-path`` when the ingress strips the prefix,
+        because the app then expects a prefix that the ingress removed
+        and can return HTTP 404 errors.
 
 .. _integrate_web_app_cos:
 

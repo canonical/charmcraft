@@ -26,6 +26,27 @@ def test_start(monkeypatch: pytest.MonkeyPatch):
     assert state_out.unit_status == testing.ActiveStatus()
 
 
+def test_pause_action():
+    """Test that the unit reports being paused after the pause action runs."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    # Act:
+    state_out = ctx.run(ctx.on.action("pause"), testing.State())
+    # Assert:
+    assert isinstance(state_out.unit_status, testing.MaintenanceStatus)
+
+
+def test_resume_action():
+    """Test that the unit is active again after the resume action runs."""
+    # Arrange:
+    ctx = testing.Context({{ class_name }})
+    state_in = testing.State(unit_status=testing.MaintenanceStatus("paused"))
+    # Act:
+    state_out = ctx.run(ctx.on.action("resume"), state_in)
+    # Assert:
+    assert state_out.unit_status == testing.ActiveStatus()
+
+
 def test_start_creates_app_secret(monkeypatch: pytest.MonkeyPatch):
     """Test that the charm creates an app-managed workload secret on start (leader)."""
     # Arrange:

@@ -331,6 +331,7 @@ intersphinx_mapping = {
     "12-factor": ("https://canonical.com/juju/docs/12-factor/latest", None),
     "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
     "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
+    "gateway-api-integrator-charm": ("https://canonical.com/juju/docs/gateway-api-integrator-charm/latest/", None),
 }
 
 # Block Intersphinx from looking up external sources with internal references. In other

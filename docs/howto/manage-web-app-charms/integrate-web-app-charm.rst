@@ -80,17 +80,107 @@ configure your 12-factor application.
 Integrate with ingress
 ----------------------
 
-If you wish to integrate your 12-factor web app with an ingress,
-for instance
-`Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_,
-provide the integration to your deployed app with:
+Use an actively maintained ingress implementation,
+such as the `Gateway API integrator
+<https://charmhub.io/gateway-api-integrator>`__,
+to expose your 12-factor web app outside the Kubernetes cluster.
+First, follow the :external+gateway-api-integrator-charm:ref:`
+Gateway API integrator deployment guide <tutorial_getting_started>`
+to deploy and configure the ingress charm.
+Then, integrate it with your deployed app:
 
 .. code-block:: bash
 
-    juju integrate <app charm> nginx-ingress-integrator
+    juju integrate <APP-CHARM> gateway-api-integrator
 
 You don't need to add an endpoint definition to your charm's
 project file.
+
+Handle a stripped URL prefix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An ingress implementation can expose an app under a URL prefix
+and strip the prefix before forwarding the request to the app.
+The app must still know the external prefix to generate correct redirects,
+links, static asset locations, and framework user interface URLs.
+
+Ingress implementations communicate a stripped prefix differently.
+Gateway API integrator and Traefik pass the stripped prefix in the
+``X-Forwarded-Prefix`` header.
+`Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`__
+does not pass this header.
+``X-Forwarded-Prefix`` is a commonly used proxy header,
+not part of the standardized ``Forwarded`` header.
+
+The generated charm also exposes the full external URL from the ingress relation
+as ``DJANGO_BASE_URL`` for Django, ``FLASK_BASE_URL`` for Flask,
+and ``APP_BASE_URL`` for the other frameworks.
+When the ingress URL contains a prefix,
+the app can extract its path component from this environment variable.
+
+Configure your framework to account for the stripped prefix:
+
+.. tab-set::
+
+    .. tab-item:: Django
+        :sync: django
+
+        Extract the path from ``DJANGO_BASE_URL``
+        and use it as ``FORCE_SCRIPT_NAME``.
+        Django doesn't read ``X-Forwarded-Prefix`` by default,
+        so header-driven configuration requires middleware.
+        ``FORCE_SCRIPT_NAME`` takes precedence over a prefix supplied by the
+        WSGI or ASGI server.
+
+    .. tab-item:: Express
+        :sync: express
+
+        Express has no native equivalent.
+        Custom middleware can add the prefix to redirect ``Location`` headers.
+        Use the path from ``APP_BASE_URL`` when handling redirects,
+        static assets, and template links.
+
+    .. tab-item:: FastAPI
+        :sync: fastapi
+
+        Extract the path from ``APP_BASE_URL``
+        and pass it as the ASGI ``root_path``.
+        Configure it on Uvicorn or the FastAPI app.
+        FastAPI doesn't derive ``root_path`` from ``X-Forwarded-Prefix``.
+        Setting ``root_path`` corrects generated URLs and the Swagger UI.
+
+    .. tab-item:: Flask
+        :sync: flask
+
+        Extract the path from ``FLASK_BASE_URL``
+        and supply it as the standard WSGI ``SCRIPT_NAME``,
+        which Gunicorn accepts as an environment variable.
+        For header-driven configuration, use Werkzeug ``ProxyFix`` with
+        ``x_prefix`` set to the number of trusted proxies.
+        ``ProxyFix`` converts ``X-Forwarded-Prefix`` to ``SCRIPT_NAME``,
+        avoiding app-specific prefix code.
+
+    .. tab-item:: Go
+        :sync: go
+
+        The standard library ``net/http`` has no native equivalent.
+        Add middleware that wraps ``http.ResponseWriter`` and rewrites the
+        ``Location`` header for redirects using the path from ``APP_BASE_URL``.
+
+    .. tab-item:: Spring Boot
+        :sync: spring-boot
+
+        Set ``server.forward-headers-strategy=framework`` to use
+        Spring's forwarded-header support.
+        On Spring Boot versions that provide the setting,
+        also set ``spring.mvc.forwarded-headers.use-forwarded-prefix=true``
+        or ``spring.webflux.forwarded-headers.use-forwarded-prefix=true``.
+        Other versions may require a configured ``ForwardedHeaderFilter``,
+        ``ForwardedHeaderTransformer``, or custom ``WebFilter``.
+        ``APP_BASE_URL`` provides the external URL for custom handling.
+        Don't set ``server.servlet.context-path`` when the ingress strips the prefix,
+        because the app then expects a prefix that the ingress removed
+        and can return HTTP 404 errors.
 
 .. _integrate_web_app_cos:
 

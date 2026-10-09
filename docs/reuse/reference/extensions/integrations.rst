@@ -31,8 +31,9 @@ the following charms:
 
   * - Relation
     - Endpoint definition
-  * - Ingress `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
-      ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
+  * - Ingress `Gateway API integrator
+      <https://charmhub.io/gateway-api-integrator>`__ and
+      `Traefik <https://charmhub.io/traefik-k8s>`__
     - Already available in the charm
   * - MySQL `machine <https://charmhub.io/mysql>`__ and
       `Kubernetes <https://charmhub.io/mysql-k8s>`__ charm

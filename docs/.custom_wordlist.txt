@@ -64,6 +64,7 @@ lcm
 likeminded
 Makefile
 Makefiles?
+middleware
 mitigations?
 monorepos?
 MSBuild
@@ -136,6 +137,7 @@ unregister(ed|s|ing)?
 URIs?
 URL
 utils
+Uvicorn
 uv
 validator
 Valkey
@@ -143,6 +145,7 @@ venv
 VM's
 VMs
 WCAG
+Werkzeug
 whitespace
 whitespaces
 whoami

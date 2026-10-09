@@ -33,7 +33,7 @@ from craft_application.errors import InitError
 
 import charmcraft
 import charmcraft.application
-from charmcraft import errors, services
+from charmcraft import errors, extensions, services
 from charmcraft.application.commands import init
 from charmcraft.utils import S_IXALL
 
@@ -88,6 +88,9 @@ FRAMEWORK_PROFILES = [
     "go-framework",
     "spring-boot-framework",
 ]
+V2_PROJECT_DEPENDENCIES = {
+    "paas-charm>=2.0.dev1,<3",
+}
 ALL_PROFILES = [
     *FRAMEWORK_PROFILES,
     "kubernetes",
@@ -209,7 +212,43 @@ def test_framework_profile_charm_user(new_path, init_command, profile):
     v2_project = yaml.safe_load((v2_dir / "charmcraft.yaml").read_text())
     assert v2_project["charm-user"] == "non-root"
     v2_pyproject = (v2_dir / "pyproject.toml").read_text()
-    assert '"paas-charm>=2.0.dev1,<3",' in v2_pyproject
+    dependencies = re.search(
+        r"^dependencies = \[(.*?)^]$", v2_pyproject, re.MULTILINE | re.DOTALL
+    )
+    assert dependencies
+    assert (
+        set(re.findall(r'"([^"]+)"', dependencies.group(1))) == V2_PROJECT_DEPENDENCIES
+    )
+
+
+@pytest.mark.parametrize("profile", FRAMEWORK_PROFILES)
+def test_framework_profile_v1_dependencies_unchanged(new_path, init_command, profile):
+    init_command.run(create_namespace(profile=profile))
+
+    project = (new_path / "pyproject.toml").read_text()
+    assert "[project]" not in project
+    assert (new_path / "requirements.txt").read_text() == "paas-charm>=1.0,<2\n"
+
+
+@pytest.mark.parametrize("profile", FRAMEWORK_PROFILES)
+def test_framework_profile_cache_relations(new_path, init_command, profile):
+    v1_dir = new_path / "v1"
+    init_command.run(create_namespace(profile=profile, project_dir=v1_dir))
+    v1_project = (v1_dir / "charmcraft.yaml").read_text()
+    assert "#   redis:" in v1_project
+    assert "#   valkey:" in v1_project
+
+    v2_dir = new_path / "v2"
+    init_command.run(
+        create_namespace(
+            profile=profile,
+            base="ubuntu@26.04",
+            project_dir=v2_dir,
+        )
+    )
+    v2_project = (v2_dir / "charmcraft.yaml").read_text()
+    assert "#   redis:" not in v2_project
+    assert "#   valkey:" in v2_project
 
 
 def test_profiles_discovered_from_templates(init_command):
@@ -240,6 +279,27 @@ def test_explicit_base_variant(new_path, init_command, profile: str, base: str):
         assert not (new_path / "requirements.txt").exists()
     elif profile in ["django-framework", "flask-framework", "fastapi-framework"]:
         assert (new_path / "requirements.txt").exists()
+
+
+def test_spring_boot_24_profile_requires_experimental_flag(
+    new_path, init_command, monkeypatch
+):
+    init_command.run(
+        create_namespace(profile="spring-boot-framework", base="ubuntu@24.04")
+    )
+    project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
+    monkeypatch.delenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", raising=False)
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*experimental on base.*ubuntu@24.04.*",
+    ):
+        extensions.apply_extensions(new_path, project)
+
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    project = yaml.safe_load((new_path / "charmcraft.yaml").read_text())
+    expanded = extensions.apply_extensions(new_path, project)
+    assert expanded["parts"]["charm"]["plugin"] == "charm"
 
 
 def test_unavailable_base_variant(new_path, init_command):

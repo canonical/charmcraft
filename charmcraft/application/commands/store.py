@@ -74,7 +74,6 @@ ResourceType = _ResourceType()
 VALID_ATTENUATIONS = {
     getattr(attenuations, x) for x in dir(attenuations) if x.isupper()
 }
-BUNDLE_REGISTRATION_REMOVAL_URL = "https://discourse.charmhub.io/t/15344"
 CHARMLIBS_DEPRECATION_URL = "https://ubu.link/charmhub-libraries-deprecation"
 CHARMLIBS_DEPRECATION_WARNING = (
     "WARNING: Charmhub-hosted charm libraries are deprecated. "

@@ -24,11 +24,9 @@ from craft_providers.bases import BaseName
 
 # region Environment variables
 ALTERNATE_AUTH_ENV_VAR = "CHARMCRAFT_AUTH"
-DEVELOPER_MODE_ENV_VAR = "CHARMCRAFT_DEVELOPER"
 EXPERIMENTAL_EXTENSIONS_ENV_VAR = "CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS"
 EXPERIMENTAL_MONOREPO_ENV_VAR = "CHARMCRAFT_EXPERIMENTAL_MONOREPO"
 IMAGE_INFO_ENV_VAR = "CHARMCRAFT_IMAGE_INFO"
-PROVIDER_ENV_VAR = "CHARMCRAFT_PROVIDER"
 SHARED_CACHE_ENV_VAR = "CRAFT_SHARED_CACHE"
 STORE_API_ENV_VAR = "CHARMCRAFT_STORE_API_URL"
 STORE_STORAGE_ENV_VAR = "CHARMCRAFT_UPLOAD_URL"
@@ -44,7 +42,6 @@ JUJU_CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.yaml"
 JUJU_ACTIONS_FILENAME = "actions.yaml"
 
-WORK_DIRNAME = "work_dir"
 BUILD_DIRNAME = "build"
 VENV_DIRNAME = "venv"
 STAGING_VENV_DIRNAME = "staging-venv"
@@ -140,8 +137,6 @@ SUPPORTED_BASES = frozenset(
     for base in (DistroBase.from_str(base_str) for base_str in SUPPORTED_BASE_STRINGS)
 )
 
-SUPPORTED_OSES = frozenset(base.name for base in SUPPORTED_BASES)
-
 
 class CharmArch(str, enum.Enum):
     """An architecture for a charm."""
@@ -212,73 +207,6 @@ DISPATCH_CONTENT = """#!/bin/sh
 JUJU_DISPATCH_PATH="${{JUJU_DISPATCH_PATH:-$0}}" PYTHONPATH=lib:venv \\
   exec ./{entrypoint_relative_path}
 """
-
-UBUNTU_LTS_STABLE = frozenset(
-    (
-        "18.04",
-        "20.04",
-        "22.04",
-        "24.04",
-    )
-)
-
-# Metadata keys that are defined in the metadata.yaml file, for backwards compatible
-METADATA_YAML_KEYS = frozenset(
-    (
-        "assumes",
-        "containers",
-        "description",
-        "devices",
-        "display-name",
-        "docs",
-        "extra-bindings",
-        "issues",
-        "maintainers",
-        "name",
-        "peers",
-        "provides",
-        "requires",
-        "resources",
-        "series",
-        "storage",
-        "subordinate",
-        "summary",
-        "terms",
-        "website",
-    )
-)
-
-CHARM_METADATA_LEGARY_KEYS_ALIAS = frozenset(
-    (
-        "display_name",
-        "extra_bindings",
-    )
-)
-
-# Metadata keys that are allowed in the charmcraft.yaml file
-CHARM_METADATA_KEYS = frozenset(
-    (
-        "assumes",
-        "containers",
-        "description",
-        "devices",
-        "title",
-        "documentation",
-        "extra-bindings",
-        "links",
-        "name",
-        "peers",
-        "provides",
-        "requires",
-        "resources",
-        "storage",
-        "subordinate",
-        "summary",
-        "terms",
-    )
-)
-
-CHARM_METADATA_KEYS_ALIAS = frozenset(("extra_bindings",))
 
 METADATA_YAML_MIGRATE_FIELDS = ("name", "summary", "description")
 """Fields that can exist in metadata.yaml or charmcraft.yaml, but not both."""

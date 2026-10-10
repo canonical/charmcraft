@@ -58,11 +58,9 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.1_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/fastapi-hello-world:0.1
+    docker://localhost:5000/fastapi-hello-world:0.1
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -94,7 +92,7 @@ execute: |
   juju deploy \
     ./fastapi-hello-world_$(dpkg --print-architecture).charm \
     fastapi-hello-world --resource \
-    app-image=localhost:32000/fastapi-hello-world:0.1
+    app-image=localhost:5000/fastapi-hello-world:0.1
   # [docs:deploy-fastapi-app-end]
 
   # [docs:deploy-nginx]
@@ -126,7 +124,7 @@ execute: |
   rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/fastapi-hello-world:0.2
+    docker://localhost:5000/fastapi-hello-world:0.2
   # [docs:docker-update-end]
 
   cat greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -136,7 +134,7 @@ execute: |
   charmcraft pack
   juju refresh fastapi-hello-world \
     --path=./fastapi-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/fastapi-hello-world:0.2
+    --resource app-image=localhost:5000/fastapi-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
@@ -164,7 +162,7 @@ execute: |
   rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/fastapi-hello-world:0.3
+    docker://localhost:5000/fastapi-hello-world:0.3
   # [docs:docker-2nd-update-end]
 
   cat visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -174,7 +172,7 @@ execute: |
   charmcraft pack
   juju refresh fastapi-hello-world \
     --path=./fastapi-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/fastapi-hello-world:0.3
+    --resource app-image=localhost:5000/fastapi-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
   # In the relation with postgresql-k8s test we may hit, so we have to wait before integrating.

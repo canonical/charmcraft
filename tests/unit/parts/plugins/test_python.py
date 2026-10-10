@@ -19,11 +19,12 @@ import pathlib
 import shlex
 import typing
 
-import craft_parts
 import pytest
-import pytest_check
 
+from charmcraft import utils
 from charmcraft.parts import plugins
+
+PIP = "/python -m pip"
 
 
 def test_get_build_environment(
@@ -40,107 +41,110 @@ def test_get_venv_directory(
     assert python_plugin._get_venv_directory() == install_path / "venv"
 
 
+@pytest.fixture
+def make_python_plugin(make_plugin):
+    """Build a python plugin whose pip command is pinned to a known string."""
+
+    def _make(**spec):
+        plugin, part_info = make_plugin("python", **spec)
+        plugin = typing.cast(plugins.PythonPlugin, plugin)
+        plugin._get_pip = lambda: PIP  # ty: ignore[invalid-assignment]
+        return plugin, part_info
+
+    return _make
+
+
 @pytest.mark.parametrize("constraints", [[], ["constraints.txt"]])
 @pytest.mark.parametrize("requirements", [[], ["requirements.txt"]])
 @pytest.mark.parametrize("packages", [[], ["distro==1.4.0"]])
-@pytest.mark.parametrize("source_subdir", [None, "subdir"])
-def test_get_package_install_commands(
-    tmp_path: pathlib.Path,
-    install_path: pathlib.Path,
+def test_pip_install_command_carries_part_options(
+    make_python_plugin,
     constraints: list[str],
     requirements: list[str],
     packages: list[str],
-    source_subdir: str | None,
-    check,
 ):
-    project_dirs = craft_parts.ProjectDirs(work_dir=tmp_path)
-    spec: dict[str, typing.Any] = {
-        "plugin": "python",
-        "source": str(tmp_path),
-        "python-constraints": constraints,
-        "python-requirements": requirements,
-        "python-packages": packages,
-    }
-    if source_subdir:
-        spec["source-subdir"] = source_subdir
-    plugin_properties = plugins.PythonPluginProperties.unmarshal(spec)
-    part_spec = craft_parts.plugins.extract_part_properties(spec, plugin_name="python")
-    part = craft_parts.Part(
-        "foo", part_spec, project_dirs=project_dirs, plugin_properties=plugin_properties
-    )
-    project_info = craft_parts.ProjectInfo(
-        application_name="test",
-        project_dirs=project_dirs,
-        cache_dir=tmp_path,
-    )
-    part_info = craft_parts.PartInfo(project_info=project_info, part=part)
-    plugin = typing.cast(
-        plugins.PythonPlugin,
-        craft_parts.plugins.get_plugin(
-            part=part, part_info=part_info, properties=plugin_properties
-        ),
-    )
-    plugin._get_pip = lambda: "/python -m pip"  # ty: ignore[invalid-assignment]
-
-    build_path = part_info.part_build_dir
-    build_subdir = part_info.part_build_subdir
-    if source_subdir:
-        assert build_subdir != build_path
-    else:
-        assert build_subdir == build_path
-
-    copy_src_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_subdir}/src {install_path}"
-    )
-    copy_lib_cmd = (
-        f"cp --archive --recursive --reflink=auto {build_subdir}/lib {install_path}"
+    plugin, _ = make_python_plugin(
+        **{
+            "python-constraints": constraints,
+            "python-requirements": requirements,
+            "python-packages": packages,
+        }
     )
 
-    actual = plugin._get_package_install_commands()
+    install_command, check_command, *_ = plugin._get_package_install_commands()
 
-    with check():
-        assert actual[0].startswith("/python -m pip")
-    with check():
-        assert actual[1].startswith("/python -m pip")
-    split_install_command = shlex.split(actual[0])
+    assert install_command.startswith(PIP)
+    assert check_command.startswith(PIP)
+    split_install_command = shlex.split(install_command)
     for constraints_file in constraints:
-        pytest_check.is_in(f"--constraint={constraints_file}", split_install_command)
+        assert f"--constraint={constraints_file}" in split_install_command
     for requirements_file in requirements:
-        pytest_check.is_in(f"--requirement={requirements_file}", split_install_command)
+        assert f"--requirement={requirements_file}" in split_install_command
     for package in packages:
-        pytest_check.is_in(package, split_install_command)
-    pytest_check.is_not_in(copy_src_cmd, actual)
-    pytest_check.is_not_in(copy_lib_cmd, actual)
+        assert package in split_install_command
+
+
+@pytest.mark.parametrize("source_subdir", [None, "subdir"])
+def test_build_subdir_follows_source_subdir(
+    make_python_plugin, source_subdir: str | None
+):
+    _, part_info = make_python_plugin(source_subdir=source_subdir)
 
     if source_subdir:
-        (build_path / "src").mkdir(parents=True)
-        (build_path / "lib" / "charm").mkdir(parents=True)
-        wrong_copy_src_cmd = (
-            f"cp --archive --recursive --reflink=auto {build_path}/src {install_path}"
+        assert part_info.part_build_subdir != part_info.part_build_dir
+    else:
+        assert part_info.part_build_subdir == part_info.part_build_dir
+
+
+@pytest.mark.parametrize("source_subdir", [None, "subdir"])
+@pytest.mark.parametrize(
+    ("has_src", "has_lib"),
+    [
+        (False, False),
+        (True, False),
+        (True, True),
+        (False, True),
+    ],
+)
+def test_copy_commands_follow_existing_directories(
+    make_python_plugin,
+    split_copy_commands,
+    source_subdir: str | None,
+    has_src: bool,
+    has_lib: bool,
+):
+    plugin, part_info = make_python_plugin(source_subdir=source_subdir)
+    build_subdir = part_info.part_build_subdir
+    if has_src:
+        (build_subdir / "src").mkdir(parents=True)
+    if has_lib:
+        (build_subdir / "lib" / "charm").mkdir(parents=True)
+
+    expected_copies = list(
+        utils.get_charm_copy_commands(
+            part_info.part_build_subdir,
+            part_info.part_install_dir,
         )
-        wrong_copy_lib_cmd = (
-            f"cp --archive --recursive --reflink=auto {build_path}/lib {install_path}"
-        )
-        commands_with_parent_dirs = plugin._get_package_install_commands()
-        pytest_check.is_not_in(wrong_copy_src_cmd, commands_with_parent_dirs)
-        pytest_check.is_not_in(wrong_copy_lib_cmd, commands_with_parent_dirs)
-        pytest_check.is_not_in(copy_src_cmd, commands_with_parent_dirs)
-        pytest_check.is_not_in(copy_lib_cmd, commands_with_parent_dirs)
+    )
 
-    (build_subdir / "src").mkdir(parents=True)
+    commands = plugin._get_package_install_commands()
 
-    pytest_check.is_in(copy_src_cmd, plugin._get_package_install_commands())
-    pytest_check.is_not_in(copy_lib_cmd, plugin._get_package_install_commands())
+    install_commands, copies = split_copy_commands(commands)
+    assert copies == expected_copies
+    assert commands == [*install_commands, *copies]
 
-    (build_subdir / "lib" / "charm").mkdir(parents=True)
 
-    pytest_check.is_in(copy_src_cmd, plugin._get_package_install_commands())
-    pytest_check.is_in(copy_lib_cmd, plugin._get_package_install_commands())
+def test_copy_commands_ignore_parent_of_source_subdir(
+    make_python_plugin, split_copy_commands
+):
+    plugin, part_info = make_python_plugin(source_subdir="subdir")
+    build_path = part_info.part_build_dir
+    (build_path / "src").mkdir(parents=True)
+    (build_path / "lib" / "charm").mkdir(parents=True)
 
-    (build_subdir / "src").rmdir()
+    _, copies = split_copy_commands(plugin._get_package_install_commands())
 
-    pytest_check.is_not_in(copy_src_cmd, plugin._get_package_install_commands())
-    pytest_check.is_in(copy_lib_cmd, plugin._get_package_install_commands())
+    assert copies == []
 
 
 def test_get_rm_command(

@@ -64,7 +64,6 @@ class Charmcraft(craft_application.Application):
         services: craft_application.ServiceFactory,
     ) -> None:
         super().__init__(app=app, services=services, extra_loggers={"charmcraft"})
-        self._global_args: dict[str, Any] = {}
         self._dispatcher: craft_cli.Dispatcher | None = None
         self._cli_loggers |= {"charmcraft"}
 
@@ -87,7 +86,6 @@ class Charmcraft(craft_application.Application):
     def configure(self, global_args: dict[str, Any]) -> None:
         """Configure the application using any global arguments."""
         super().configure(global_args)
-        self._global_args = global_args
         if not util.is_managed_mode():
             self.services.get("state").set(
                 "charmcraft",

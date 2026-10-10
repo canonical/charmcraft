@@ -107,7 +107,16 @@ def main(docs_dir):
 
             for action in sorted(p._actions, key=lambda a: a.dest):
                 if action.required:
-                    required.append((action.dest, ([action.metavar], action.help)))
+                    # Fall back to dest-derived name if metavar is not explicitly set,
+                    # matching argparse's own behaviour: positional args use dest,
+                    # optional args use dest.upper().
+                    if action.metavar is not None:
+                        metavar = action.metavar
+                    elif action.option_strings:
+                        metavar = action.dest.upper()
+                    else:
+                        metavar = action.dest
+                    required.append((action.dest, ([metavar], action.help)))
                 elif action.option_strings and action.dest not in global_options:
                     options[action.dest] = (action.option_strings, action.help)
 

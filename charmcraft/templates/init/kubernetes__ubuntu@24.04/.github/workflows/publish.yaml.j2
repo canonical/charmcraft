@@ -40,6 +40,9 @@ jobs:
           charm_name=$(yq -r '.name' charmcraft.yaml)
 
           # Latest uploaded revisions of the resource, as JSON
+          # This assumes the resource is a multi-arch OCI image, so the latest
+          # revision works for every platform. If the resource is per-arch or a
+          # binary, you need to build and upload it per platform instead.
           revisions=$(charmcraft resource-revisions "$charm_name" "$RESOURCE_NAME" --format json)
 
           # Highest revision number, empty if none has been uploaded

@@ -23,7 +23,7 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
 
       - name: Export locked dependencies (excluding this project)
-        run: uv export --no-dev --frozen --no-emit-project --format requirements-txt -o requirements.txt
+        run: uv export --no-default-groups --frozen --no-emit-project --format requirements-txt -o requirements.txt
 
       - name: Run pip-audit
         run: uv run --frozen --only-group ci pip-audit --disable-pip -r requirements.txt

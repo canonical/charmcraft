@@ -26,9 +26,6 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
 
-      - name: Set up tools to run the integration tests
-        run: uv sync --frozen --only-group ci
-
       - name: Set up Concierge
         run: sudo snap install --classic concierge
 
@@ -42,7 +39,7 @@ jobs:
 
       - name: Run integration tests
         timeout-minutes: 60
-        run: uv run --frozen tox -e integration -- --juju-dump-logs logs --log-file logs/verbose.log
+        run: uv run --frozen --only-group ci tox -e integration -- --juju-dump-logs logs --log-file logs/verbose.log
 
       - name: Upload logs
         if: {% raw %}${{ !cancelled() }}{% endraw %}

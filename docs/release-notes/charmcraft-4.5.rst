@@ -104,7 +104,11 @@ Minor init profile improvements
   their current major version. This reduces the risk of breaking changes if you use
   automated dependency updates.
 - The logging configuration of the ``machine`` and ``kubernetes`` profiles now ensure
-  that live logs are not emitted from the charm code during unit tests.
+  that live logs are not emitted from the charm code during unit tests, and ready for
+  putting verbose logs to a file in CI.
+- The ``machine`` and ``kubernetes`` profiles now include a ``.github`` directory
+  with GitHub Actions and Dependabot configuration. A ``SECURITY.md`` file is also
+  added to mention the security policy for a charm.
 - Charms created with the ``kubernetes`` profile now use an Ubuntu image as a
   placeholder for the charm's real image, so that integration tests pass by default.
 

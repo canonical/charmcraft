@@ -31,8 +31,9 @@ the following charms:
 
   * - Relation
     - Endpoint definition
-  * - Ingress `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
-      ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
+  * - Ingress `Gateway API integrator
+      <https://charmhub.io/gateway-api-integrator>`__ and
+      `Traefik <https://charmhub.io/traefik-k8s>`__
     - Already available in the charm
   * - MySQL `machine <https://charmhub.io/mysql>`__ and
       `Kubernetes <https://charmhub.io/mysql-k8s>`__ charm
@@ -66,7 +67,8 @@ the following charms:
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
     - Already available in the charm
-  * - `Redis <https://charmhub.io/redis-k8s>`__ charm
+  * - `Redis <https://charmhub.io/redis-k8s>`__ charm (not generated on Ubuntu 26.04
+      LTS)
     - .. code-block:: yaml
 
           requires:
@@ -171,6 +173,11 @@ the following charms:
 
     The key ``optional`` with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
+
+.. note::
+
+    Ubuntu 26.04 LTS generates only the Valkey relation, not the Redis relation.
+    See :ref:`extensions` for the full list of contract differences by base.
 
 To add one of these relations, e.g., PostgreSQL, in the
 project file, include the appropriate ``requires`` block and

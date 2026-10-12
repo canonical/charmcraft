@@ -207,11 +207,6 @@ Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
-    extension is experimental.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 
@@ -321,11 +316,6 @@ Let's :literalref:`pack<ref_commands_pack>` the charm:
     :start-after: [docs:charm-pack]
     :end-before: [docs:charm-pack-end]
     :dedent: 2
-
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the Go
-    extension is experimental.
 
 Depending on your system and network, this step can take several
 minutes to finish.

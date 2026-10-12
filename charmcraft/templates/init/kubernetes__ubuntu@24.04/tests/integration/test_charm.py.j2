@@ -29,6 +29,11 @@ def test_deploy(charm: pathlib.Path, juju: jubilant.Juju):
     juju.wait(jubilant.all_active)
 
 
+def test_restart(charm: pathlib.Path, juju: jubilant.Juju):
+    """Restart the workload with the restart action."""
+    juju.run("{{ name }}/0", "restart")
+
+
 def test_app_managed_secret_created(charm: pathlib.Path, juju: jubilant.Juju):
     """Check that the charm created the app-managed workload password on pebble-ready."""
     labels = [secret.label for secret in juju.secrets()]

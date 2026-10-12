@@ -65,6 +65,7 @@ dev-stonking = ["python-apt~=3.0.0;sys_platform=='linux'"]
 docs = [
   "pydantic-kitbash~=1.0",
   "sphinx-lint~=1.0",
+  "sphinx-structured-toc==0.2.0",
   "sphinx-substitution-extensions",
   { include-group = "docs-sphinx-stack" },
 ]

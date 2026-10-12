@@ -90,6 +90,19 @@ COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules
 PAAS_CONFIG_FILE = "paas-config.yaml"
 JSON_LOGGING_SUPPORTED_FRAMEWORKS = {"fastapi", "flask", "django"}
 
+_COMMON_CHARM_LIBS = [
+    {"lib": "traefik_k8s.ingress", "version": "2"},
+    {"lib": "observability_libs.juju_topology", "version": "0"},
+    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+    {"lib": "loki_k8s.loki_push_api", "version": "1"},
+    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+    {"lib": "data_platform_libs.s3", "version": "0"},
+    {"lib": "saml_integrator.saml", "version": "0"},
+    {"lib": "smtp_integrator.smtp", "version": "0"},
+    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+]
+
 
 class _FrameworkFactory:
     """Route to a V1 or V2 extension class based on the project's target bases.
@@ -147,20 +160,11 @@ class _AppBase(SinglePlatformExtension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
-        {"lib": "traefik_k8s.ingress", "version": "2"},
-        {"lib": "observability_libs.juju_topology", "version": "0"},
-        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "1"},
-        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
-        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        *_COMMON_CHARM_LIBS,
         {"lib": "redis_k8s.redis", "version": "0"},
-        {"lib": "data_platform_libs.s3", "version": "0"},
-        {"lib": "saml_integrator.saml", "version": "0"},
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
-        {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
         {"lib": "hydra.oauth", "version": "0"},
-        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
     ]
 
     @staticmethod
@@ -425,6 +429,8 @@ class _AppBase(SinglePlatformExtension):
 
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
+
+    _CHARM_LIBS = [*_COMMON_CHARM_LIBS]
 
     @staticmethod
     def _validate_port(parsed: dict[str, Any], key: str) -> None:
@@ -885,6 +891,12 @@ class SpringBootFrameworkV1(_AppBase):
     def get_supported_bases() -> list[tuple[str, str]]:
         """Return supported bases."""
         return [("ubuntu", "24.04")]
+
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return True
 
     @override
     def get_image_name(self) -> str:

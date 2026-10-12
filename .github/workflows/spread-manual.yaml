@@ -16,9 +16,10 @@ on:
       - tests/spread/smoketests/parallel-build/*
       - tests/spread/smoketests/remote-build/*
 
-# Only ever run one of this test at a time.
+# Only ever run one of this test at a time per branch/PR/schedule, so that
+# e.g. a scheduled run on main doesn't cancel an in-progress PR run (or vice versa).
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -68,7 +68,6 @@ Enable the necessary features:
     sudo k8s enable local-storage
     sudo k8s enable ingress
 
-Unlike the MicroK8s ingress add-on, which binds the node's ports directly,
 Canonical Kubernetes exposes ingress through a load-balancer service. Enable
 the built-in load balancer and point its address pool at the VM's own IP so
 the ingress is assigned a reachable address:
@@ -91,8 +90,8 @@ along with a list of enabled and disabled features.
 Set up a local registry
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Canonical Kubernetes pulls application images from an OCI registry. Unlike
-MicroK8s, it doesn't bundle a registry, so we run a small local one. Download
+Canonical Kubernetes pulls application images from an OCI registry.
+It doesn't bundle a registry, so we run a small local one. Download
 the registry and start it as a service:
 
 .. code-block:: bash

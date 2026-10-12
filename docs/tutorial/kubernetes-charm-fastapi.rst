@@ -438,13 +438,15 @@ Test the deployment by sending a request via the ingress:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+    # Canonical Kubernetes serves the ingress at the VM's address
+    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
 It should return the ``{"message":"Hello, world!"}`` greeting.
 
 .. note::
 
-    The ``--resolve fastapi-hello-world:80:127.0.0.1`` option to the ``curl``
+    The ``--resolve fastapi-hello-world:80:$INGRESS_IP`` option to the ``curl``
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
@@ -553,7 +555,7 @@ Check that the response is still ``{"message":"Hello, world!"}`` using:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
 Now let's change the greeting:
 
@@ -567,7 +569,7 @@ Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
 The response should now return the updated ``{"message":"Hi!"}`` greeting.
 
@@ -696,7 +698,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
 It should still return the ``{"message":"Hi!"}`` greeting.
 
@@ -704,7 +706,7 @@ Check the local visitors:
 
 .. code-block:: bash
 
-    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:$INGRESS_IP
 
 This request should return
 ``{"count":1}`` after the previous request to the root endpoint. This should
@@ -716,7 +718,7 @@ this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/fastapi-hello-world/charm
 
-    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
     {"message":"Hi!"}
 
@@ -725,7 +727,7 @@ this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/fastapi-hello-world/charm
 
-    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+    curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:$INGRESS_IP
 
     {"count":2}
 

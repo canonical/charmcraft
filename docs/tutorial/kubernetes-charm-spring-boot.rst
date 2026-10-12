@@ -430,13 +430,15 @@ Send a request via the ingress:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    # Canonical Kubernetes serves the ingress at the VM's address
+    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
-    The ``--resolve spring-boot-hello-world:80:127.0.0.1`` option to the ``curl``
+    The ``--resolve spring-boot-hello-world:80:$INGRESS_IP`` option to the ``curl``
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
@@ -545,7 +547,7 @@ Check that the response is still ``Hello, world!`` using:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1``
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP``
 
 Now let's change the greeting:
 
@@ -559,7 +561,7 @@ Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world  --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world  --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 The response should now return the updated ``Hi!`` greeting.
 
@@ -725,7 +727,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 It should still return the ``Hi!`` greeting.
 
@@ -733,7 +735,7 @@ Check the local visitors:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 This request should return ``Number of visitors 1`` after the
 previous request to the root endpoint.
@@ -745,7 +747,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/spring-boot-hello-world/charm
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
     Hi!
 
@@ -754,7 +756,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/spring-boot-hello-world/charm
 
-    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP
 
     Number of visitors 2
 

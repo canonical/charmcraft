@@ -126,7 +126,9 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
-  curl -I http://expressjs-hello-world --resolve expressjs-hello-world:80:127.0.0.1
+  # Canonical Kubernetes serves the ingress at the VM's address
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  curl -I http://expressjs-hello-world --resolve expressjs-hello-world:80:$INGRESS_IP
   # [docs:curl-init-deployment-end]
 
   cd ..
@@ -156,7 +158,7 @@ execute: |
 
   # curl and check that the response is Hello
   retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hello"
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config expressjs-hello-world greeting='Hi!'
@@ -168,7 +170,7 @@ execute: |
 
   # curl and check that the response is now Hi
   retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi"
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> app/migrate.sh
@@ -224,13 +226,13 @@ execute: |
   juju status --relations
 
   retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi "
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hi "
   curl http://expressjs-hello-world/visitors \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep 1
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep 1
   curl http://expressjs-hello-world \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep Hi
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hi
   curl http://expressjs-hello-world/visitors \
-  --resolve expressjs-hello-world:80:127.0.0.1 | grep 2
+  --resolve expressjs-hello-world:80:$INGRESS_IP | grep 2
 
   # [docs:clean-environment]
   charmcraft clean

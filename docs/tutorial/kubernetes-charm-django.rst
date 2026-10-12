@@ -688,7 +688,9 @@ inside the Multipass VM run:
 
 .. code-block:: bash
 
-    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+    # Canonical Kubernetes serves the ingress at the VM's address
+    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+    curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP
 
 Either way, the Django app should respond with ``Hello, world!``.
 
@@ -786,7 +788,7 @@ web browser or send a request to the root endpoint using:
 
 .. code-block:: bash
 
-    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+    curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP
 
 Either action should result in the Django app responding with
 ``Hello, world!`` again.
@@ -803,7 +805,7 @@ Wait for the app to restart, and then visit http://django-hello-world or use:
 
 .. code-block:: bash
 
-    curl http://django-hello-world --resolve django-hello-world:80:127.0.0.1
+    curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP
 
 The web app should now respond with ``Hi!``.
 

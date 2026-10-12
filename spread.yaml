@@ -350,17 +350,12 @@ suites:
       # Unlike the MicroK8s ingress addon (which binds the node's host ports), the
       # Canonical Kubernetes ingress is exposed through a LoadBalancer service, so a
       # load balancer with an address pool is required for the ingress to be reachable.
-      IPADDR=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
-      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$IPADDR-$IPADDR"
       k8s enable load-balancer
+      IPADDR=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$IPADDR/32"
 
       k8s status --wait-ready --timeout 5m
       k8s kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=10m
-
-      # The tutorial reaches the app at 127.0.0.1; redirect loopback :80/:443 to the
-      # load balancer address so the documented commands work in the test suite.
-      iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination "$IPADDR:80"
-      iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 443 -j DNAT --to-destination "$IPADDR:443"
 
       # Canonical Kubernetes isn't autodetected by Juju, so register it as a cloud.
       k8s config | juju add-k8s k8s-cloud --client

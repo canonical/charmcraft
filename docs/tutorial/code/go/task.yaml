@@ -118,10 +118,12 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+  # Canonical Kubernetes serves the ingress at the VM's address
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  retry -n 5 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
 
   # [docs:curl-init-deployment]
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
   # [docs:curl-init-deployment-end]
 
   cd ..
@@ -149,7 +151,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config go-hello-world greeting='Hi!'
@@ -159,7 +161,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi"
+  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> migrate.sh
@@ -210,12 +212,12 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 20m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+  retry -n 5 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP
 
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 1
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 2
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP | grep 1
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP | grep 2
 
   # [docs:clean-environment]
   charmcraft clean

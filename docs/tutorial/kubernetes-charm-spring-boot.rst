@@ -547,7 +547,7 @@ Check that the response is still ``Hello, world!`` using:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP``
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 Now let's change the greeting:
 

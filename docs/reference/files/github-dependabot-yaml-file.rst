@@ -9,8 +9,7 @@ that update the charm's dependencies. Charmcraft creates this file only when the
 profile is ``machine`` or ``kubernetes``.
 
 Dependabot updates are grouped into separate pull requests, so that they're easier to
-review. Charmers need to enable Dependabot in their GitHub repo settings to receive
-updates.
+review. To receive updates, enable Dependabot in your charm's GitHub repository.
 
     See more:
 

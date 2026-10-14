@@ -58,6 +58,12 @@ On Ubuntu 26.04 LTS, all six framework extensions generate the following contrac
     * - Secret options
       - A string secret key and a separate secret-ID option
       - One ``app-secret-key`` option of type ``secret``
+    * - Port and metrics options
+      - Go, ExpressJS, FastAPI, and Spring Boot generate ``app-port`` (``webserver-port``
+        for FastAPI), ``metrics-port``, and ``metrics-path`` options. Django and Flask
+        don't generate them.
+      - Not generated for any framework. Set ``port``, ``metrics-port``, and
+        ``metrics-path`` in :ref:`paas-config-yaml-file`
     * - Optional build input
       - None
       - :ref:`paas-config-yaml-file`

@@ -46,6 +46,26 @@ METRICS_OPTIONS = {
         "description": "Path where the prometheus metrics will be scraped.",
     },
 }
+FASTAPI_WORKERS_OPTION = {
+    "webserver-workers": {
+        "type": "int",
+        "default": 1,
+        "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
+    }
+}
+FASTAPI_LOG_LEVEL_OPTION = {
+    "webserver-log-level": {
+        "type": "string",
+        "default": "info",
+        "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
+    }
+}
+SPRING_BOOT_PROFILES_OPTION = {
+    "app-profiles": {
+        "type": "string",
+        "description": "Comma-separated list of Spring Boot active profiles.",
+    }
+}
 SECRET_OPTIONS = {
     "app-secret-key": {
         "type": "string",
@@ -733,11 +753,7 @@ class GoFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Go applications."""
 
     framework = "go"
-    options = {
-        **APP_PORT_OPTION,
-        **METRICS_OPTIONS,
-        **V2_SECRET_OPTIONS,
-    }
+    options = {**V2_SECRET_OPTIONS}
 
 
 GoFrameworkFactory = _FrameworkFactory(GoFrameworkV1, GoFrameworkV2)
@@ -748,21 +764,13 @@ class FastAPIFrameworkV1(_AppBase):
 
     framework = "fastapi"
     options = {
-        "webserver-workers": {
-            "type": "int",
-            "default": 1,
-            "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
-        },
+        **FASTAPI_WORKERS_OPTION,
         "webserver-port": {
             "type": "int",
             "default": 8080,
             "description": "Bind to a socket with this port. Default: 8080. Sets env variable  UVICORN_PORT.",
         },
-        "webserver-log-level": {
-            "type": "string",
-            "default": "info",
-            "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
-        },
+        **FASTAPI_LOG_LEVEL_OPTION,
         **METRICS_OPTIONS,
         **SECRET_OPTIONS,
     }
@@ -789,11 +797,8 @@ class FastAPIFrameworkV2(_AppBaseV2):
 
     framework = "fastapi"
     options = {
-        **{
-            key: value
-            for key, value in FastAPIFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
+        **FASTAPI_WORKERS_OPTION,
+        **FASTAPI_LOG_LEVEL_OPTION,
         **V2_SECRET_OPTIONS,
     }
 
@@ -832,14 +837,7 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = {
-        **{
-            key: value
-            for key, value in ExpressJSFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
-        **V2_SECRET_OPTIONS,
-    }
+    options = {**V2_SECRET_OPTIONS}
 
 
 ExpressJSFrameworkFactory = _FrameworkFactory(
@@ -853,10 +851,7 @@ class SpringBootFrameworkV1(_AppBase):
     framework = "spring-boot"
     options = {
         **APP_PORT_OPTION,
-        "app-profiles": {
-            "type": "string",
-            "description": "Comma-separated list of Spring Boot active profiles.",
-        },
+        **SPRING_BOOT_PROFILES_OPTION,
         "metrics-port": {
             "type": "int",
             "default": 8080,
@@ -914,11 +909,7 @@ class SpringBootFrameworkV2(_AppBaseV2):
 
     framework = "spring-boot"
     options = {
-        **{
-            key: value
-            for key, value in SpringBootFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
+        **SPRING_BOOT_PROFILES_OPTION,
         **V2_SECRET_OPTIONS,
     }
     endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options

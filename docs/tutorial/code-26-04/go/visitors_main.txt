@@ -1,0 +1,63 @@
+package main
+
+import (
+        "database/sql"
+        "fmt"
+        "log"
+        "net/http"
+        "os"
+        "time"
+
+        _ "github.com/jackc/pgx/v5/stdlib"
+)
+
+func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
+        log.Printf("new hello world request")
+        postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
+        db, err := sql.Open("pgx", postgresqlURL)
+        if err != nil {
+                log.Printf("An error occurred while connecting to postgresql: %v", err)
+                return
+        }
+        defer db.Close()
+
+        ua := req.Header.Get("User-Agent")
+        timestamp := time.Now()
+        _, err = db.Exec("INSERT into visitors (timestamp, user_agent) VALUES ($1, $2)", timestamp, ua)
+        if err != nil {
+                log.Printf("An error occurred while executing query: %v", err)
+                return
+        }
+
+        greeting, found := os.LookupEnv("APP_GREETING")
+        if !found {
+                greeting = "Hello, world!"
+        }
+
+        fmt.Fprintln(w, greeting)
+}
+
+func visitorsHandler(w http.ResponseWriter, req *http.Request) {
+        log.Printf("visitors request")
+        postgresqlURL := os.Getenv("POSTGRESQL_DB_CONNECT_STRING")
+        db, err := sql.Open("pgx", postgresqlURL)
+        if err != nil {
+                return
+        }
+        defer db.Close()
+
+        var numVisitors int
+        err = db.QueryRow("SELECT count(*) from visitors").Scan(&numVisitors)
+        if err != nil {
+                log.Printf("An error occurred while executing query: %v", err)
+                return
+        }
+        fmt.Fprintf(w, "Number of visitors %d\n", numVisitors)
+}
+
+func main() {
+        log.Printf("starting hello world application")
+        http.HandleFunc("/", helloWorldHandler)
+        http.HandleFunc("/visitors", visitorsHandler)
+        http.ListenAndServe(":8080", nil)
+}

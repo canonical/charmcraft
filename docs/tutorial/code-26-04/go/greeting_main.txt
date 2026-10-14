@@ -1,0 +1,23 @@
+package main
+
+import (
+  "fmt"
+  "log"
+  "os"
+  "net/http"
+)
+
+func helloWorldHandler(w http.ResponseWriter, req *http.Request) {
+  log.Printf("new hello world request")
+  greeting, found := os.LookupEnv("APP_GREETING")
+  if !found {
+        greeting = "Hello, world!"
+  }
+  fmt.Fprintln(w, greeting)
+}
+
+func main() {
+  log.Printf("starting hello world application")
+  http.HandleFunc("/", helloWorldHandler)
+  http.ListenAndServe(":8080", nil)
+}

@@ -7,12 +7,13 @@ on:
 
 permissions: {}
 
+env:
+  UV_PYTHON: "3.12"
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    container:
-      image: python:3.12
     steps:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -28,8 +29,6 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
-    container:
-      image: python:3.12
     steps:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1

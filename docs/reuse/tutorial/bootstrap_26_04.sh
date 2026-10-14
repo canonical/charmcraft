@@ -13,7 +13,7 @@ sudo k8s enable gateway
 # [docs:cluster-addresses]
 NODE_IP=$(sudo k8s kubectl get nodes \
   -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-REGISTRY="${NODE_IP}:32000"
+REGISTRY="localhost:32000"
 export NODE_IP REGISTRY
 # [docs:cluster-addresses-end]
 
@@ -31,11 +31,11 @@ curl --fail --retry 30 --retry-connrefused --retry-delay 2 "http://${REGISTRY}/v
 # [docs:deploy-registry-end]
 
 # [docs:configure-registry]
-sudo mkdir -p "/etc/containerd/hosts.d/${REGISTRY}"
-cat <<EOF | sudo tee "/etc/containerd/hosts.d/${REGISTRY}/hosts.toml"
-server = "http://${REGISTRY}"
+sudo mkdir -p /etc/containerd/hosts.d/localhost:32000
+cat <<EOF | sudo tee /etc/containerd/hosts.d/localhost:32000/hosts.toml
+server = "http://localhost:32000"
 
-[host."http://${REGISTRY}"]
+[host."http://localhost:32000"]
 capabilities = ["pull", "resolve"]
 EOF
 # [docs:configure-registry-end]

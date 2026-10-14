@@ -20,7 +20,7 @@ Install both tools with classic confinement:
     sudo snap install charmcraft --channel latest/edge --classic
 
 Install LXD, Canonical Kubernetes, and Juju
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LXD provides the build environment for the rock and charm. If it isn't installed,
 install it with ``sudo snap install lxd``. Initialize it:
@@ -84,8 +84,9 @@ Deploy the registry and wait for it to be ready:
     :start-after: [docs:deploy-registry]
     :end-before: [docs:deploy-registry-end]
 
-The registry is exposed on the VM's address at port 32000, rather than on
-loopback. It uses a persistent volume so its images survive pod restarts.
+Access the registry at ``localhost:32000`` from within the VM.
+It uses a persistent volume so its images survive pod restarts.
+The NodePort service also exposes port 32000 on the VM's network interfaces.
 
 This registry uses unauthenticated HTTP for an isolated development VM only.
 Don't expose it to an untrusted network or use it in production.

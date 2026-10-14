@@ -19,7 +19,7 @@ environment:
 execute: |
   NODE_IP=$(sudo k8s kubectl get nodes \
     -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-  REGISTRY="${NODE_IP}:32000"
+  REGISTRY="localhost:32000"
 
   # [docs:export-experimental-env-vars]
   export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1

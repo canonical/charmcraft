@@ -23,6 +23,7 @@ jobs:
       osv-extra-args: "--config=osv-scanner.toml"
       osv-exclude-paths: |
         docs
+        tests
       uv-export-no-groups: |
         docs
         docs-sphinx-stack

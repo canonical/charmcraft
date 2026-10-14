@@ -69,15 +69,6 @@ Create a directory for the app:
     :end-before: [docs:create-working-dir-end]
     :dedent: 2
 
-As the ``expressjs-framework`` extensions for Rockcraft and Charmcraft are
-still in development, we must enable experimental extensions for each:
-
-.. literalinclude:: code/expressjs/task.yaml
-    :language: bash
-    :start-after: [docs:export-experimental-env-vars]
-    :end-before: [docs:export-experimental-env-vars-end]
-    :dedent: 2
-
 Create the Express app
 ----------------------
 

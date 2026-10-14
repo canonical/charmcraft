@@ -14,18 +14,6 @@ on:
       - "**/*.md"
       - "*.md"
   merge_group:
-    paths-ignore:
-      - .github/**
-      - "!.github/workflows/spread.yaml" # Run on this file getting changed
-      - docs/**
-      - schema/**
-      - tests/** # Don't run if only tests changed, unless a spread test changed.
-      - "!tests/spread/**"
-      - .editorconfig
-      - .pre-commit-config.yaml
-      - .readthedocs.yaml
-      - "**/*.md"
-      - "*.md"
   push:
     branches:
       - main
@@ -71,7 +59,7 @@ jobs:
       - name: Find spread systems
         id: select
         run: |
-          echo systems=$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output) | tee -a "${GITHUB_OUTPUT}"
+          echo systems="$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
     runs-on: [self-hosted, spread-enabled]

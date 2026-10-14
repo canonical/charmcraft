@@ -52,6 +52,7 @@ maintained separately from Charmcraft.
     ``3.6/candidate``.)
 
     .. terminal::
+       :output-only:
 
        channels: |
         5/stable:       117  2023-04-20  (117)  12MB  amd64  ubuntu@22.04
@@ -68,15 +69,13 @@ maintained separately from Charmcraft.
 Release a charm revision into a channel
 ---------------------------------------
 
-To :ref:`ref_commands_release` a specific charm revision to a channel, run ``charmcraft release``,
-followed by the name of the charm and flags specifying the revision and
-its target channel. For example,
-
-.. code-block:: bash
-
-    charmcraft release my-awesome-charm --revision=1 --channel=beta
+To release a charm revision to a channel, run :ref:`charmcraft release
+<ref_commands_release>` followed by the name of the charm, the revision number, and the
+target channel. For example:
 
 .. terminal::
+
+    charmcraft release my-awesome-charm --revision=1 --channel=beta
 
     Revision 1 of charm 'my-awesome-charm' released to beta
 

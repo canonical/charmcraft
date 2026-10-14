@@ -22,14 +22,17 @@ from charmcraft import errors, extensions
 from charmcraft.errors import ExtensionError
 from charmcraft.extensions.app import (
     DjangoFrameworkV1,
+    DjangoFrameworkV2,
     ExpressJSFrameworkFactory,
     ExpressJSFrameworkV1,
     FastAPIFrameworkFactory,
     FastAPIFrameworkV1,
     FlaskFrameworkFactory,
     FlaskFrameworkV1,
+    FlaskFrameworkV2,
     GoFrameworkFactory,
     GoFrameworkV1,
+    SpringBootFrameworkFactory,
     SpringBootFrameworkV1,
 )
 
@@ -96,14 +99,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -181,14 +184,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -256,14 +259,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -331,14 +334,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -406,14 +409,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -470,14 +473,14 @@ def make_spring_boot_input_yaml():
                     {"lib": "loki_k8s.loki_push_api", "version": "1"},
                     {"lib": "data_platform_libs.data_interfaces", "version": "0"},
                     {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
-                    {"lib": "redis_k8s.redis", "version": "0"},
                     {"lib": "data_platform_libs.s3", "version": "0"},
                     {"lib": "saml_integrator.saml", "version": "0"},
-                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "smtp_integrator.smtp", "version": "0"},
+                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+                    {"lib": "redis_k8s.redis", "version": "0"},
+                    {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
                     {"lib": "openfga_k8s.openfga", "version": "1"},
                     {"lib": "hydra.oauth", "version": "0"},
-                    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
                 ],
                 "config": {
                     "options": {
@@ -545,6 +548,9 @@ def test_go_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "go application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -575,6 +581,11 @@ def test_flask_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "flask application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "flask-secret-key" not in applied["config"]["options"]
+    assert "flask-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -605,6 +616,11 @@ def test_django_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "django application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
+    assert "django-secret-key" not in applied["config"]["options"]
+    assert "django-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -635,6 +651,9 @@ def test_fastapi_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "fastapi application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -665,6 +684,9 @@ def test_expressjs_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "expressjs application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -695,6 +717,9 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
             "description": "spring-boot application image.",
         }
     }
+    assert applied["peers"] == {"peers": {"interface": "peers"}}
+    assert applied["config"]["options"]["app-secret-key"]["type"] == "secret"
+    assert "app-secret-key-id" not in applied["config"]["options"]
     assert applied["parts"]["charm"] == {
         "plugin": "uv",
         "source": ".",
@@ -702,6 +727,49 @@ def test_spring_boot_framework_26_04_uses_v2_snippet(monkeypatch, tmp_path):
         "override-build": "rustup default stable\ncraftctl default",
         "uv-groups": ["charmlibs-pydeps"],
     }
+
+
+@pytest.mark.parametrize(
+    "framework",
+    ["django", "expressjs", "fastapi", "flask", "go", "spring-boot"],
+)
+def test_v2_frameworks_do_not_fetch_replaced_charm_libs(
+    monkeypatch, tmp_path, framework
+):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": f"test-{framework}-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": [f"{framework}-framework"],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+    assert applied["charm-libs"] == [
+        {"lib": "traefik_k8s.ingress", "version": "2"},
+        {"lib": "observability_libs.juju_topology", "version": "0"},
+        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+        {"lib": "loki_k8s.loki_push_api", "version": "1"},
+        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        {"lib": "data_platform_libs.s3", "version": "0"},
+        {"lib": "saml_integrator.saml", "version": "0"},
+        {"lib": "smtp_integrator.smtp", "version": "0"},
+        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+    ]
+    generated_libraries = {library["lib"] for library in applied["charm-libs"]}
+
+    assert generated_libraries.isdisjoint(
+        {
+            "hydra.oauth",
+            "openfga_k8s.openfga",
+            "redis_k8s.redis",
+            "tempo_coordinator_k8s.tracing",
+        }
+    )
 
 
 def test_go_framework_platforms_only_routes_to_v2(monkeypatch, tmp_path):
@@ -825,6 +893,20 @@ def test_expressjs_framework_factory_is_experimental_24_04(monkeypatch):
     """Test that expressjs on 24.04 is stable (was experimental, now GA)."""
     # ExpressJS V1 on 24.04 is now stable
     assert ExpressJSFrameworkFactory.is_experimental(("ubuntu", "24.04")) is False
+
+
+def test_spring_boot_framework_factory_is_experimental_24_04():
+    assert SpringBootFrameworkFactory.is_experimental(("ubuntu", "24.04")) is True
+
+
+def test_spring_boot_framework_experimental_gating_enforced(monkeypatch, tmp_path):
+    monkeypatch.delenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", raising=False)
+
+    with pytest.raises(
+        errors.ExtensionError,
+        match=".*experimental on base.*ubuntu@24.04.*",
+    ):
+        extensions.apply_extensions(tmp_path, make_spring_boot_input_yaml())
 
 
 def test_v2_check_input_rejects_non_charm_type(monkeypatch, tmp_path):
@@ -1201,7 +1283,9 @@ def test_json_framework_logging_supported_framework_passes(flask_input_yaml, tmp
         ),
     ],
 )
-def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
+def test_oauth_relation(monkeypatch, tmp_path, input_yaml, requires, expected_options):
+    if input_yaml["extensions"] == ["spring-boot-framework"]:
+        monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
     input_yaml["requires"] = requires
     applied = extensions.apply_extensions(tmp_path, input_yaml)
     assert applied["config"] == {
@@ -1209,3 +1293,88 @@ def test_oauth_relation(tmp_path, input_yaml, requires, expected_options):
             **expected_options,
         }
     }
+
+
+def test_v2_paas_config_metrics_path_invalid(monkeypatch, tmp_path):
+    """Test that invalid metrics-path in paas-config.yaml raises ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(
+        ExtensionError,
+        match=r"metrics-path in paas-config.yaml must be a valid URL path starting with '/'",
+    ):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v2_paas_config_metrics_path_valid(monkeypatch, tmp_path):
+    """Test that valid metrics-path in paas-config.yaml does not raise ExtensionError."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+
+    (tmp_path / "paas-config.yaml").write_text("metrics-path: /something\n")
+
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    extensions.apply_extensions(tmp_path, input_yaml)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        pytest.param("port", "'8080'", "must be an integer", id="port-type"),
+        pytest.param("port", "0", "must be between 1 and 65535", id="port-minimum"),
+        pytest.param(
+            "metrics-port",
+            "65536",
+            "must be between 1 and 65535",
+            id="metrics-port-maximum",
+        ),
+    ],
+)
+def test_v2_paas_config_port_invalid(monkeypatch, tmp_path, key, value, message):
+    """Test that invalid top-level ports fail extension expansion."""
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    (tmp_path / "paas-config.yaml").write_text(f"{key}: {value}\n")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-paas-config",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": ["flask-framework"],
+    }
+
+    with pytest.raises(ExtensionError, match=rf"{key} .* {message}"):
+        extensions.apply_extensions(tmp_path, input_yaml)
+
+
+def test_v1_secret_option_names_unchanged():
+    """Test that V2 option renames do not change V1 compatibility."""
+    assert "flask-secret-key" in FlaskFrameworkV1.options
+    assert "flask-secret-key-id" in FlaskFrameworkV1.options
+    assert "app-secret-key" not in FlaskFrameworkV1.options
+    assert "django-secret-key" in DjangoFrameworkV1.options
+    assert "django-secret-key-id" in DjangoFrameworkV1.options
+    assert "app-secret-key" not in DjangoFrameworkV1.options
+    assert "app-secret-key" in FlaskFrameworkV2.options
+    assert "app-secret-key" in DjangoFrameworkV2.options

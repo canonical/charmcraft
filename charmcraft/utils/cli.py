@@ -20,7 +20,7 @@ import enum
 import json
 import numbers
 import sys
-from collections.abc import Collection, Iterable
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any, overload
 
@@ -140,7 +140,7 @@ def confirm_with_user(prompt: str, default: bool = False) -> bool:
         return default
 
 
-def humanize_list(items: Iterable[str], conjunction: str) -> str:
+def humanize_list(items: Collection[str], conjunction: str) -> str:
     """Format a list into a human-readable string.
 
     :param items: list to humanize, must not be empty

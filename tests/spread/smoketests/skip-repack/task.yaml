@@ -1,0 +1,10 @@
+summary: Check if repacking is skipped
+
+execute: |
+  rm -f *.charm
+  charmcraft pack 2>&1 | MATCH "Packed"
+  test -f skip-repack_*.charm
+  charmcraft pack 2>&1 | MATCH "Skipping pack"
+  rm -f *.charm
+  charmcraft pack 2>&1 | MATCH "Packed"
+  rm -f *.charm

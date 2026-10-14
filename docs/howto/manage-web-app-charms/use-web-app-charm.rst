@@ -76,101 +76,49 @@ To view the Pebble logs for a deployed web app, run:
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
-        .. tab-set::
+        **Django**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container django-app <APP-NAME>/0 pebble logs
 
-                    juju ssh --container django-app <django-app-name>/0 pebble logs
+        **Express, FastAPI, and Go**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 pebble logs
 
-                    juju ssh --container app <express-app-name>/0 pebble logs
+        **Flask**
 
-            .. tab-item:: FastAPI
-                :sync: fastapi
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container flask-app <APP-NAME>/0 pebble logs
 
-                    juju ssh --container app <fastapi-app-name>/0 pebble logs
+        **Spring Boot**
 
-            .. tab-item:: Flask
-                :sync: flask
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
-                    juju ssh --container flask-app <flask-app-name>/0 pebble logs
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 pebble logs
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
-
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
-        .. tab-set::
+        **Django, Express, FastAPI, Flask, and Go**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 pebble logs
 
-                    juju ssh --container app <django-app-name>/0 pebble logs
+        **Spring Boot**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
-
-                    juju ssh --container app <express-app-name>/0 pebble logs
-
-            .. tab-item:: FastAPI
-                :sync: fastapi
-
-                .. code-block:: bash
-
-                    juju ssh --container app <fastapi-app-name>/0 pebble logs
-
-            .. tab-item:: Flask
-                :sync: flask
-
-                .. code-block:: bash
-
-                    juju ssh --container app <flask-app-name>/0 pebble logs
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 pebble logs
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
 .. seealso::
 
@@ -184,101 +132,49 @@ To view more details about the web app itself, run:
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
-        .. tab-set::
+        **Django**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container django-app <APP-NAME>/0 pebble plan
 
-                    juju ssh --container django-app <django-app-name>/0 pebble plan
+        **Express, FastAPI, and Go**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 pebble plan
 
-                    juju ssh --container app <express-app-name>/0 pebble plan
+        **Flask**
 
-            .. tab-item:: FastAPI
-                :sync: fastapi
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container flask-app <APP-NAME>/0 pebble plan
 
-                    juju ssh --container app <fastapi-app-name>/0 pebble plan
+        **Spring Boot**
 
-            .. tab-item:: Flask
-                :sync: flask
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
-                    juju ssh --container flask-app <flask-app-name>/0 pebble plan
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 pebble plan
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
-
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
-        .. tab-set::
+        **Django, Express, FastAPI, Flask, and Go**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 pebble plan
 
-                    juju ssh --container app <django-app-name>/0 pebble plan
+        **Spring Boot**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
-
-                    juju ssh --container app <express-app-name>/0 pebble plan
-
-            .. tab-item:: FastAPI
-                :sync: fastapi
-
-                .. code-block:: bash
-
-                    juju ssh --container app <fastapi-app-name>/0 pebble plan
-
-            .. tab-item:: Flask
-                :sync: flask
-
-                .. code-block:: bash
-
-                    juju ssh --container app <flask-app-name>/0 pebble plan
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 pebble plan
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
 This command provides information on what services you may start in your app
 and what environment variables exist (i.e., what is available for the app to
@@ -295,116 +191,60 @@ SSH into the Juju container
 You can debug the app directly and monitor its status by :vale-ignore:`SSHing` into the
 Juju container:
 
+For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
+``go``.
+
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
-        .. tab-set::
+        **Django**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container django-app <APP-NAME>/0 \
+            pebble exec --context=django -- bash
 
-                    juju ssh --container django-app <django-app-name>/0 \
-                    pebble exec --context=django -- bash
+        **Express, FastAPI, and Go**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 \
+            pebble exec --context=<FRAMEWORK> -- bash
 
-                    juju ssh --container app <express-app-name>/0 \
-                    pebble exec --context=expressjs -- bash
+        **Flask**
 
-            .. tab-item:: FastAPI
-                :sync: fastapi
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container flask-app <APP-NAME>/0 \
+            pebble exec --context=flask -- bash
 
-                    juju ssh --container app <fastapi-app-name>/0 \
-                    pebble exec --context=fastapi -- bash
+        **Spring Boot**
 
-            .. tab-item:: Flask
-                :sync: flask
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
+            /charm/bin/pebble  exec --context=spring-boot -- bash
 
-                    juju ssh --container flask-app <flask-app-name>/0 \
-                    pebble exec --context=flask -- bash
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 \
-                    pebble exec --context=go -- bash
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
-                    /charm/bin/pebble  exec --context=spring-boot -- bash
-
-
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
-        .. tab-set::
+        **Django, Express, FastAPI, Flask, and Go**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            juju ssh --container app <APP-NAME>/0 \
+            pebble exec --context=<FRAMEWORK> -- bash
 
-                    juju ssh --container app <django-app-name>/0 \
-                    pebble exec --context=django -- bash
+        **Spring Boot**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
-
-                    juju ssh --container app <express-app-name>/0 \
-                    pebble exec --context=expressjs -- bash
-
-            .. tab-item:: FastAPI
-                :sync: fastapi
-
-                .. code-block:: bash
-
-                    juju ssh --container app <fastapi-app-name>/0 \
-                    pebble exec --context=fastapi -- bash
-
-            .. tab-item:: Flask
-                :sync: flask
-
-                .. code-block:: bash
-
-                    juju ssh --container app <flask-app-name>/0 \
-                    pebble exec --context=flask -- bash
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    juju ssh --container app <go-app-name>/0 \
-                    pebble exec --context=go -- bash
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    juju ssh <spring-boot-app-name>/0 \
-                    PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
-                    /charm/bin/pebble  exec --context=spring-boot -- bash
+            juju ssh <APP-NAME>/0 \
+            PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
+            /charm/bin/pebble  exec --context=spring-boot -- bash
 
 .. important::
 
@@ -474,171 +314,41 @@ name of the web app with the ``-c`` option.
 
 .. tab-set::
 
-    .. tab-item:: Ubuntu 22.04 and 24.04
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
         :sync: base-22-24
 
-        .. tab-set::
+        **Django**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. code-block:: bash
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c django-app
+        **Express, FastAPI, Go, and Spring Boot**
 
-            .. tab-item:: Express
-                :sync: express
+        .. code-block:: bash
 
-                .. code-block:: bash
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
+        **Flask**
 
-            .. tab-item:: FastAPI
-                :sync: fastapi
+        .. code-block:: bash
 
-                .. code-block:: bash
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Flask
-                :sync: flask
-
-                .. code-block:: bash
-
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. code-block:: bash
-
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. code-block:: bash
-
-                    microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-    .. tab-item:: Ubuntu 26.04 and higher
+    .. tab-item:: Ubuntu 26.04 LTS and higher
         :sync: base-26-plus
 
-        .. tab-set::
+        **All frameworks on MicroK8s**
 
-            .. tab-item:: Django
-                :sync: django
+        .. code-block:: bash
 
-                .. tab-set::
+            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
 
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
+        **All frameworks on Canonical K8s**
 
-                        .. code-block:: bash
+        .. code-block:: bash
 
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Express
-                :sync: express
-
-                .. tab-set::
-
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
-
-                        .. code-block:: bash
-
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: FastAPI
-                :sync: fastapi
-
-                .. tab-set::
-
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
-
-                        .. code-block:: bash
-
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Flask
-                :sync: flask
-
-                .. tab-set::
-
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
-
-                        .. code-block:: bash
-
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Go
-                :sync: go
-
-                .. tab-set::
-
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
-
-                        .. code-block:: bash
-
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-            .. tab-item:: Spring Boot
-                :sync: spring-boot
-
-                .. tab-set::
-
-                    .. tab-item:: MicroK8s
-                        :sync: microk8s
-
-                        .. code-block:: bash
-
-                            microk8s kubectl logs <pod-name> -n <model-namespace> -c app
-
-                    .. tab-item:: Canonical K8s
-                        :sync: canonical-k8s
-
-                        .. code-block:: bash
-
-                            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
+            sudo k8s kubectl logs <pod-name> -n <model-namespace> -c app
 
 .. seealso::
 
@@ -702,6 +412,7 @@ From the list of URLs, look for the endpoint that contains a ``grafana``
 suffix. This URL has the format:
 
 .. terminal::
+    :output-only:
 
     http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana
 
@@ -757,12 +468,13 @@ charm as a certificate provider.
 First, :ref:`integrate your web app with ingress
 <integrate-web-app-charm-integrate-ingress>`.
 
-Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
-charm as an ingress provider, set the hostname with:
+Using the `Gateway API integrator
+<https://charmhub.io/gateway-api-integrator>`__ charm as an ingress provider,
+set the hostname with:
 
 .. code-block:: bash
 
-    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
+    juju config gateway-api-integrator external-hostname=<YOUR-DOMAIN>
 
 Deploy the `Self Signed X.509 Certificates
 <https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
@@ -770,22 +482,23 @@ Deploy the `Self Signed X.509 Certificates
 .. code-block:: bash
 
     juju deploy self-signed-certificates
-    juju integrate self-signed-certificates nginx-ingress-integrator
+    juju integrate self-signed-certificates:certificates \
+      gateway-api-integrator:certificates
 
 Your 12-factor app is now accessible over HTTPS. If you access the external URL of your
-app using HTTP, it returns an HTTP ``308 Permanent Redirect`` status and a redirect to
+app using HTTP, it returns an HTTP ``301 Moved Permanently`` status and a redirect to
 the HTTPS URL. You can access the HTTPS URL of your app with a command like:
 
 .. code-block:: bash
 
-   curl -v --insecure https://<yourdomain.example.com> \
-     --resolve <yourdomain.example.com>:443:<ingress-ip>
+   curl -v --insecure https://<YOUR-DOMAIN> \
+     --resolve <YOUR-DOMAIN>:443:<INGRESS-IP>
 
 .. note::
 
     The ``--insecure`` option is needed because the certificate authority in the
-    ``self-signed-certificate`` charm is not trusted.
-    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option is a way of
+    ``self-signed-certificates`` charm is not trusted.
+    The ``--resolve <YOUR-DOMAIN>:443:<INGRESS-IP>`` option is a way of
     resolving the hostname of the request without
     setting a DNS record.
 

@@ -4,13 +4,11 @@ summary: pack a init-created charm with lxd
 priority: -10
 
 prepare: |
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm
   cd charm
-
-  # The charm itself doesn't matter, so replace the dependencies with something
-  # simple and small so we don't have to build pyyaml.
-  # NOTE: We still do need at least one dependency here so we can trigger the cache.
-  echo "distro" > requirements.txt
+  uv lock
 
   # delete charmcraft instances
   ALL_INSTANCES="$(lxc list --project=charmcraft --format=csv --columns="n")"

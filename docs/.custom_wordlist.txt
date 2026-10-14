@@ -64,7 +64,9 @@ lcm
 likeminded
 Makefile
 Makefiles?
+middleware
 mitigations?
+monorepos?
 MSBuild
 Multipass
 mvn
@@ -75,6 +77,7 @@ npm
 Numpy
 Open Graph
 openapi
+OAuth
 otf
 PDF
 plantuml
@@ -109,6 +112,7 @@ Sphinx
 Spread
 spread_test_example
 SQLAlchemy
+Starbase
 Starcraft
 storages
 subkeys?
@@ -133,12 +137,15 @@ unregister(ed|s|ing)?
 URIs?
 URL
 utils
+Uvicorn
 uv
+validator
 Valkey
 venv
 VM's
 VMs
 WCAG
+Werkzeug
 whitespace
 whitespaces
 whoami

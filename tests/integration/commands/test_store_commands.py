@@ -36,7 +36,6 @@ from tests import factory
 
 OPERATOR_LIBS_LINUX_APT_ID = "7c3dbc9c2ad44a47bd6fcb25caa270e5"
 OPERATOR_LIBS_LINUX_SNAP_ID = "05394e5893f94f2d90feb7cbe6b633cd"
-MYSQL_MYSQL_ID = "8c1428f06b1b4ec8bf98b7d980a38a8c"
 
 
 # region fetch-lib tests
@@ -129,7 +128,9 @@ def test_fetchlib_all(
         patch=1,
         lib_id=OPERATOR_LIBS_LINUX_SNAP_ID,
     )
-    factory.create_lib_filepath("mysql", "mysql", api=0, patch=1, lib_id=MYSQL_MYSQL_ID)
+    factory.create_lib_filepath(
+        "operator_libs_linux", "apt", api=0, patch=1, lib_id=OPERATOR_LIBS_LINUX_APT_ID
+    )
 
     args = argparse.Namespace(library=None, format=formatted)
     FetchLibCommand(config).run(args)
@@ -143,9 +144,9 @@ def test_fetchlib_all(
             del message_dict["fetched"]
         assert message_list == [
             {
-                "charm_name": "mysql",
-                "library_name": "mysql",
-                "library_id": MYSQL_MYSQL_ID,
+                "charm_name": "operator-libs-linux",
+                "library_name": "apt",
+                "library_id": OPERATOR_LIBS_LINUX_APT_ID,
                 "api": 0,
             },
             {
@@ -161,20 +162,20 @@ def test_fetchlib_all(
             message,
         )
 
+    saved_file = new_path / utils.get_lib_path("operator_libs_linux", "apt", 0)
+    lib = utils.get_lib_info(lib_path=saved_file)
+    assert lib.api == 0
+    assert lib.charm_name == "operator-libs-linux"
+    assert lib.lib_name == "apt"
+    assert lib.lib_id == OPERATOR_LIBS_LINUX_APT_ID
+    assert lib.patch > 1
+
     saved_file = new_path / utils.get_lib_path("operator_libs_linux", "snap", 0)
     lib = utils.get_lib_info(lib_path=saved_file)
     assert lib.api == 0
     assert lib.charm_name == "operator-libs-linux"
     assert lib.lib_name == "snap"
     assert lib.lib_id == OPERATOR_LIBS_LINUX_SNAP_ID
-    assert lib.patch > 1
-
-    saved_file = new_path / utils.get_lib_path("mysql", "mysql", 0)
-    lib = utils.get_lib_info(lib_path=saved_file)
-    assert lib.api == 0
-    assert lib.charm_name == "mysql"
-    assert lib.lib_name == "mysql"
-    assert lib.lib_id == MYSQL_MYSQL_ID
     assert lib.patch > 1
 
 
@@ -207,21 +208,25 @@ def test_fetchlib_store_is_old(
 ):
     """The store has an older version that what is found locally."""
     factory.create_lib_filepath(
-        "mysql", "mysql", api=0, patch=2**63, lib_id=MYSQL_MYSQL_ID
+        "operator_libs_linux",
+        "apt",
+        api=0,
+        patch=2**63,
+        lib_id=OPERATOR_LIBS_LINUX_APT_ID,
     )
 
-    args = argparse.Namespace(library="charms.mysql.v0.mysql", format=formatted)
+    args = argparse.Namespace(
+        library="charms.operator_libs_linux.v0.apt", format=formatted
+    )
     FetchLibCommand(config).run(args)
 
-    error_message = (
-        "Library charms.mysql.v0.mysql has local changes, cannot be updated."
-    )
+    error_message = "Library charms.operator_libs_linux.v0.apt has local changes, cannot be updated."
     if formatted:
         expected = [
             {
-                "charm_name": "mysql",
-                "library_name": "mysql",
-                "library_id": MYSQL_MYSQL_ID,
+                "charm_name": "operator-libs-linux",
+                "library_name": "apt",
+                "library_id": OPERATOR_LIBS_LINUX_APT_ID,
                 "api": 0,
                 "error_message": error_message,
             },

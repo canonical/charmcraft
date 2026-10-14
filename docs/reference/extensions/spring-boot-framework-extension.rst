@@ -1,5 +1,8 @@
 .. _spring-boot-framework-extension:
 
+.. meta::
+    :description: Reference for the Charmcraft Spring Boot framework extension,
+        including its experimental status, configuration, relations, and generated content.
 
 Spring Boot framework extension
 ===============================
@@ -8,10 +11,16 @@ The ``spring-boot-framework`` extension includes configuration options customise
 Spring Boot application. This document describes all the keys that a user may interact
 with.
 
+The extension is experimental on Ubuntu 24.04 LTS and Ubuntu 26.04 LTS. Set
+``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or packs a
+project that uses the extension.
+
 .. tip::
 
     If you'd like to see the full contents contributed by this extension,
     see :ref:`How to manage extensions <manage-extensions>`.
+
+.. include:: /reuse/reference/extensions/non_root_runtime.rst
 
 .. _spring-boot-framework-extension-config-options:
 
@@ -151,6 +160,27 @@ variable name will have the hyphens replaced by underscores and all the letters
 capitalised.
 
    See more: :external+juju:ref:`Juju | Secret <secret>`
+
+.. tab-set::
+
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
+        :sync: base-22-24
+
+        The extension automatically adds the secret-typed ``app-secret-key-id``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Spring Boot app secret key and is exposed as the ``APP_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``APP_SECRET_KEY`` is automatically assigned a random value.
+
+
+    .. tab-item:: Ubuntu 26.04 LTS and higher
+        :sync: base-26
+
+        The extension automatically adds the secret-typed ``app-secret-key``
+        configuration option. The secret must contain a single key ``value``, which
+        holds the actual Spring Boot app secret key and is exposed as the ``APP_SECRET_KEY``
+        environment variable. If this configuration option is not set,
+        ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 .. _spring-boot-grafana-graphs:
 

@@ -193,8 +193,7 @@ Finally, call the action using:
 If successful, the terminal will output something like:
 
 .. terminal::
-
-    juju run django-app/0 clearsession
+    :output-only:
 
     Running operation 1 with 1 task
       - task 2 on unit-django-app-0
@@ -244,8 +243,7 @@ Finally, call the action using:
 If successful, the terminal will output something like:
 
 .. terminal::
-
-    juju run flask-app/0 updatelogfile logfile="/tmp/example.log"
+    :output-only:
 
     Running operation 1 with 1 task
       - task 2 on unit-flask-app-0
@@ -417,21 +415,22 @@ simultaneous requests with curl:
 
 .. code:: bash
 
-  curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
-  http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
-  http://flask-async-app/io http://flask-async-app/io
+    curl --parallel --parallel-immediate --resolve flask-async-app:80:127.0.0.1 \
+    http://flask-async-app/io http://flask-async-app/io http://flask-async-app/io \
+    http://flask-async-app/io http://flask-async-app/io
 
 and they will all return at the same time.
 
 The results should arrive simultaneously and contain five instances of ``ok``:
 
 .. terminal::
+    :output-only:
 
-   ok
-   ok
-   ok
-   ok
-   ok
+    ok
+    ok
+    ok
+    ok
+    ok
 
 It can take up to a minute for the configuration to take effect. When the
 configuration changes, the charm will re-enter the active state, which you

@@ -16,6 +16,7 @@ kill-timeout: 30m
 
 prepare: |
   snap install --classic --no-wait astral-uv
+  snap watch --last=install
   tests.pkgs install python3-venv
   rm -rf charm
   charmcraft init --project-dir=charm --profile=${PROFILE}
@@ -23,11 +24,11 @@ prepare: |
   cp charmcraft-${PROFILE}.yaml charm/charmcraft.yaml
 
   cd charm
+  uv lock
   echo "ignore me" > secrets.txt
   touch extra_file.txt
 
-  # Our templates use tox's uv runner, so we install both.
-  snap watch --last=install
+  # Our templates use tox's uv runner.
   uv tool install --force --with tox-uv tox
 
 restore: |

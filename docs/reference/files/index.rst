@@ -21,6 +21,12 @@ Project information
 - :ref:`icon-svg-file`
 
 
+12-factor app configuration
+---------------------------
+
+- :ref:`paas-config-yaml-file`
+
+
 Python modules
 --------------
 
@@ -59,6 +65,7 @@ Testing
     lxd-profile-yaml-file
     manifest-yaml-file
     metadata-yaml-file
+    paas-config-yaml-file
     pyproject-toml-file
     readme-md-file
     requirements-txt-file

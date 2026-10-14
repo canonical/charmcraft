@@ -42,7 +42,7 @@ than the sufficient resources, the tutorial will take longer to complete.
 What you'll do
 --------------
 
-#. Create a Spring Boot 3.5.10 app.
+#. Create a Spring Boot 4.1.0 app.
 #. Use that to create a rock with Rockcraft.
 #. Use that to create a charm with Charmcraft.
 #. Use that to test, deploy, configure, etc., your Spring Boot app on a local
@@ -62,8 +62,8 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: Spring Boot
 
-As the ``spring-boot-framework`` extensions for Rockcraft and Charmcraft are
-still in development, we must enable experimental extensions for each:
+The ``spring-boot-framework`` extensions for Rockcraft and Charmcraft are still in
+development, so enable experimental extensions for both tools:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash

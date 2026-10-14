@@ -17,6 +17,7 @@
 """Gunicorn based extensions."""
 
 import copy
+import re
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +59,15 @@ SECRET_OPTIONS = {
         "and use the output secret ID to configure this option.",
     },
 }
+V2_SECRET_OPTIONS = {
+    "app-secret-key": {
+        "type": "secret",
+        "description": "Long secret you can use for sessions, csrf or any other thing where you need a random secret shared by all units. "
+        'The secret should contain a single key, "value", which maps to the actual application secret key. '
+        "To create the secret, run the following command: `juju add-secret my-app-secret-key value=<secret-string> && juju grant-secret my-app-secret-key my-app`, "
+        "and use the output secret ID to configure this option.",
+    }
+}
 OAUTH_DYNAMIC_OPTIONS = {
     "{endpoint_name}-redirect-path": {
         "type": "string",
@@ -71,9 +81,27 @@ OAUTH_DYNAMIC_OPTIONS = {
     },
 }
 
+# RFC 3986 path: must start with '/' and contain only unreserved, sub-delim, ':', '@', '/', or percent-encoded chars.
+_VALID_URL_PATH_RE = re.compile(
+    r"^/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/]|%[0-9A-Fa-f]{2})*$"
+)
+
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 PAAS_CONFIG_FILE = "paas-config.yaml"
 JSON_LOGGING_SUPPORTED_FRAMEWORKS = {"fastapi", "flask", "django"}
+
+_COMMON_CHARM_LIBS = [
+    {"lib": "traefik_k8s.ingress", "version": "2"},
+    {"lib": "observability_libs.juju_topology", "version": "0"},
+    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+    {"lib": "loki_k8s.loki_push_api", "version": "1"},
+    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+    {"lib": "data_platform_libs.s3", "version": "0"},
+    {"lib": "saml_integrator.saml", "version": "0"},
+    {"lib": "smtp_integrator.smtp", "version": "0"},
+    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+]
 
 
 class _FrameworkFactory:
@@ -132,20 +160,11 @@ class _AppBase(SinglePlatformExtension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
-        {"lib": "traefik_k8s.ingress", "version": "2"},
-        {"lib": "observability_libs.juju_topology", "version": "0"},
-        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "1"},
-        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
-        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        *_COMMON_CHARM_LIBS,
         {"lib": "redis_k8s.redis", "version": "0"},
-        {"lib": "data_platform_libs.s3", "version": "0"},
-        {"lib": "saml_integrator.saml", "version": "0"},
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
-        {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
         {"lib": "hydra.oauth", "version": "0"},
-        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
     ]
 
     @staticmethod
@@ -411,6 +430,66 @@ class _AppBase(SinglePlatformExtension):
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
 
+    _CHARM_LIBS = [*_COMMON_CHARM_LIBS]
+
+    @staticmethod
+    def _validate_port(parsed: dict[str, Any], key: str) -> None:
+        """Validate a top-level port in ``paas-config.yaml``."""
+        if key not in parsed:
+            return
+        value = parsed[key]
+        if type(value) is not int:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be an integer, "
+                f"got {type(value).__name__}"
+            )
+        if not 1 <= value <= 65535:
+            raise ExtensionError(
+                f"{key} in {PAAS_CONFIG_FILE} must be between 1 and 65535, got {value}"
+            )
+
+    @override
+    def _check_paas_config(self) -> None:
+        """Validate ``paas-config.yaml`` syntax and framework logging compatibility."""
+        config_path = self.project_root / PAAS_CONFIG_FILE
+        if not config_path.exists():
+            return
+
+        try:
+            parsed = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ExtensionError(f"invalid YAML in {PAAS_CONFIG_FILE}: {exc}") from exc
+
+        if parsed is None:
+            return
+        if not isinstance(parsed, dict):
+            raise ExtensionError(f"{PAAS_CONFIG_FILE} must contain a top-level mapping")
+
+        framework_logging_format = parsed.get("framework_logging_format")
+        if (
+            isinstance(framework_logging_format, str)
+            and framework_logging_format.lower() == "json"
+            and self.framework not in JSON_LOGGING_SUPPORTED_FRAMEWORKS
+        ):
+            raise ExtensionError(
+                f"framework_logging_format: json in {PAAS_CONFIG_FILE} is not supported "
+                f"for '{self.framework}-framework'"
+            )
+        self._validate_port(parsed, "port")
+        self._validate_port(parsed, "metrics-port")
+        if "metrics-path" in parsed:
+            metrics_path = parsed["metrics-path"]
+            if not isinstance(metrics_path, str):
+                raise ExtensionError(
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a string, "
+                    f"got {type(metrics_path).__name__}"
+                )
+            if not _VALID_URL_PATH_RE.match(metrics_path):
+                raise ExtensionError(
+                    f"metrics-path in {PAAS_CONFIG_FILE} must be a valid URL path "
+                    f"starting with '/', got '{metrics_path}'"
+                )
+
     @staticmethod
     @override
     def get_supported_bases() -> list[tuple[str, str]]:
@@ -431,6 +510,7 @@ class _AppBaseV2(_AppBase):
             },
             **self.get_config_part(),
         }
+        snippet["peers"] = {"peers": {"interface": "peers"}}
         return snippet
 
     def get_config_part(self) -> dict[str, Any]:
@@ -542,7 +622,14 @@ class FlaskFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Flask applications."""
 
     framework = "flask"
-    options = FlaskFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FlaskFrameworkV1.options.items()
+            if key not in {"flask-secret-key", "flask-secret-key-id"}
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 FlaskFrameworkFactory = _FrameworkFactory(FlaskFrameworkV1, FlaskFrameworkV2)
@@ -602,7 +689,14 @@ class DjangoFrameworkV2(_AppBaseV2):
 
     framework = "django"
     actions = {**DjangoFrameworkV1.actions}
-    options = DjangoFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in DjangoFrameworkV1.options.items()
+            if key not in {"django-secret-key", "django-secret-key-id"}
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 DjangoFrameworkFactory = _FrameworkFactory(DjangoFrameworkV1, DjangoFrameworkV2)
@@ -642,7 +736,7 @@ class GoFrameworkV2(_AppBaseV2):
     options = {
         **APP_PORT_OPTION,
         **METRICS_OPTIONS,
-        **SECRET_OPTIONS,
+        **V2_SECRET_OPTIONS,
     }
 
 
@@ -694,7 +788,14 @@ class FastAPIFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor FastAPI applications."""
 
     framework = "fastapi"
-    options = FastAPIFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in FastAPIFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 FastAPIFrameworkFactory = _FrameworkFactory(FastAPIFrameworkV1, FastAPIFrameworkV2)
@@ -731,7 +832,14 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = ExpressJSFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in ExpressJSFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
 
 
 ExpressJSFrameworkFactory = _FrameworkFactory(
@@ -784,6 +892,12 @@ class SpringBootFrameworkV1(_AppBase):
         """Return supported bases."""
         return [("ubuntu", "24.04")]
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return True
+
     @override
     def get_image_name(self) -> str:
         """Return name of the app image."""
@@ -799,7 +913,14 @@ class SpringBootFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Spring Boot applications."""
 
     framework = "spring-boot"
-    options = SpringBootFrameworkV1.options
+    options = {
+        **{
+            key: value
+            for key, value in SpringBootFrameworkV1.options.items()
+            if key not in SECRET_OPTIONS
+        },
+        **V2_SECRET_OPTIONS,
+    }
     endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options
 
 

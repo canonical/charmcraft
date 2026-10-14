@@ -79,7 +79,7 @@ class PythonPlugin(python_plugin.PythonPlugin):
             f"{pip} install --no-deps {install_params}",
             f"{pip} check",
             *utils.get_charm_copy_commands(
-                self._part_info.part_build_dir, self._part_info.part_install_dir
+                self._part_info.part_build_subdir, self._part_info.part_install_dir
             ),
         ]
 

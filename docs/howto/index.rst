@@ -28,6 +28,7 @@ to include any libraries, parts, or other assets your application may require.
 - :ref:`manage-resources`
 - :ref:`manage-libraries`
 - :ref:`manage-extensions`
+- :ref:`pack-a-charm-in-a-monorepo`
 
 
 Publish and release
@@ -39,7 +40,7 @@ publish it to Charmhub, and manage its releases.
 - :ref:`how-to-build-remotely`
 - :ref:`manage-the-current-charmhub-user`
 - :ref:`manage-names`
-- :ref:`manage-icons`
+- :ref:`how-to-add-an-icon`
 - :ref:`manage-charm-revisions`
 - :ref:`manage-tracks`
 - :ref:`manage-channels`
@@ -79,11 +80,12 @@ update a charm to the new base:
     shared-cache
     pack-a-hooks-based-charm-with-charmcraft
     pack-a-reactive-charm-with-charmcraft
+    pack-a-charm-in-a-monorepo
     manage-the-current-charmhub-user
     manage-names
     manage-revisions
     manage-channels
     manage-tracks
-    manage-icons
+    add-an-icon
     Migrate plugins <migrate-plugins/index>
     Migrate bases <migrate-bases/index>

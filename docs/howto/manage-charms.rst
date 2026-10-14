@@ -26,7 +26,7 @@ in your charm's repository), then run ``charmcraft init``:
 
 .. code-block:: bash
 
-    charmcraft init --name <charm name> --profile <profile>
+    charmcraft init --name <charm name> --profile <profile> [--base <base>]
 
 This will create all the necessary files and populate them with useful content.
 
@@ -34,24 +34,38 @@ If the charm name you want is different from the current directory name, don't s
 ``--name`` argument. Otherwise the charm name will match the directory name.
 
 ``<profile>`` can be ``kubernetes`` for a Kubernetes charm, ``machine`` for a machine
-charm, or a 12-factor app profile such as ``flask-framework``. If you don't specify a
+charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
+
+Profiles that support multiple bases use Ubuntu 24.04 LTS by default. To select another
+available base variant, provide the base in ``<distribution>@<version>`` format. For
+example, initialize an Ubuntu 26.04 LTS Flask charm with
+``--profile flask-framework --base ubuntu@26.04``.
 
 .. dropdown:: Example session
 
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
 
-        charmcraft init --name my-flask-app-k8s --profile flask-framework
+        charmcraft init --name my-flask-app-k8s --profile flask-framework --base ubuntu@26.04
 
-        Charmed operator package file and directory tree initialised.
-
-        Now edit the following package files to provide fundamental charm metadata
-        and other information:
+        Created project files for your charm:
 
         charmcraft.yaml
+        pyproject.toml
         src/charm.py
-        README.md
+        ...
+
+        To manage your charm's dependencies, use uv.
+
+        To migrate from the Charm plugin to the uv plugin, see:
+        https://canonical.com/juju/docs/charmcraft/stable/howto/migrate-plugins/charm-to-uv/
+
+        Next steps:
+
+        1. Run 'uv lock'
+        2. Edit charmcraft.yaml and pyproject.toml to provide metadata, then commit (including uv.lock)
+        3. Write your charm code and tests
 
     .. terminal::
         :dir: ~/my-flask-app-k8s-operator
@@ -63,6 +77,8 @@ profile, you get the ``kubernetes`` profile.
 
         ./src:
         charm.py
+
+..
 
     See more: :ref:`ref_commands_init`, :ref:`profile`, :ref:`files`
 
@@ -544,11 +560,9 @@ is just a zip file with metadata and the operator code itself.
 
     Pack the charm:
 
-    .. code-block:: bash
+    .. terminal::
 
         charmcraft pack
-
-    .. terminal::
 
         Created 'microsample-vm_ubuntu-22.04-amd64.charm'.
         Charms packed:
@@ -556,11 +570,9 @@ is just a zip file with metadata and the operator code itself.
 
     Optionally, verify that this has created a .charm file in your charm's root directory:
 
-    .. code-block:: bash
+    .. terminal::
 
         ls
-
-    .. terminal::
 
         CONTRIBUTING.md  charmcraft.yaml                          requirements.txt  tox.ini
         LICENSE          microsample-vm_ubuntu-22.04-amd64.charm  src
@@ -569,11 +581,9 @@ is just a zip file with metadata and the operator code itself.
     Optionally, verify that the .charm file is simply a zip file that contains
     everything you've packed plus any dependencies:
 
-    .. code-block:: bash
+    .. terminal::
 
         unzip -l microsample-vm_ubuntu-22.04-amd64.charm | { head; tail;}
-
-    .. terminal::
 
         Archive:  microsample-vm_ubuntu-22.04-amd64.charm
           Length      Date    Time    Name
@@ -653,11 +663,9 @@ Publish a charm
 3. Upload the charm to Charmhub: Use the ``charmcraft upload`` command followed by the
    your charm's path. E.g., if you are in the charm's root directory,
 
-   .. code-block:: bash
+   .. terminal::
 
        charmcraft upload my-awesome-charm.charm
-
-   .. terminal::
 
        Revision 1 of my-awesome-charm created
 
@@ -673,12 +681,9 @@ Publish a charm
 4. If your charm has associated resources: These are not packed with the rest of the
    charm project, so you must upload them explicitly to Charmhub as well. For example:
 
-   .. code-block:: bash
-
-       charmcraft upload-resource my-awesome-charm someresource
-       --filepath=/tmp/superdb.bin
-
    .. terminal::
+
+       charmcraft upload-resource my-awesome-charm someresource --filepath=/tmp/superdb.bin
 
        Revision 1 created of resource 'someresource' for charm 'my-awesome-charm'
 
@@ -695,12 +700,9 @@ Publish a charm
    target release channel. For a charm that has a resource, also specify the
    resource and its revision. E.g.,
 
-   .. code-block:: bash
-
-       charmcraft release my-awesome-charm --revision=1 --channel=beta
-       --resource someresource:1
-
    .. terminal::
+
+       charmcraft release my-awesome-charm --revision=1 --channel=beta --resource someresource:1
 
        Revision 1 of charm 'my-awesome-charm' released to beta (attaching resources: 'someresource' r1)
 

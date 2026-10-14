@@ -26,6 +26,7 @@ _SERVICES: dict[str, str] = {
     "build_plan": "CharmBuildPlanService",
     "charm_libs": "CharmLibsService",
     "image": "ImageService",
+    "init": "CharmcraftInitService",
     "lifecycle": "LifecycleService",
     "package": "PackageService",
     "project": "ProjectService",

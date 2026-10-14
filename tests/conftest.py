@@ -179,6 +179,7 @@ def mock_publisher_gateway() -> mock.Mock:
 @pytest.fixture
 def service_factory(
     fake_project_yaml,  # Needs the real filesystem.
+    *,
     fs,
     fake_project_file,
     fake_prime_dir,

@@ -6,6 +6,7 @@ environment:
   CHARM/all: all
   CHARM/basic: basic
   CHARM/one_platform: one-platform
+  CHARM/same_arch: same-arch
 
 # test only on amd64
 systems:

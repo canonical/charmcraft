@@ -1,7 +1,11 @@
 summary: pack a init-created charm from a different directory
 
 prepare: |
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm
+  cd charm
+  uv lock
 
 restore: |
   pushd charm

@@ -23,58 +23,38 @@ The meta description must be one line, because Sphinx options don't support line
 
 ## Write a meta description
 
-**Do** write the meta description *after* the page is written. The meta description is a reflection of what's actually on the page.
+Write the meta description after the page is written. The meta description is a reflection of what's actually on the page, not what the page aspires to be.
 
-**Do** reuse text from the page itself when it's convenient.
+Start with the Diátaxis category or action, such as *How to* or *Reference for*. Next, describe what the user will find on the page. Reuse text from the page itself where it's appropriate.
 
-**Do** share descriptions between documents with the same formats. For example, use the same meta description for every page of release notes, but replace the version number.
+Include a focus term or phrase, the key string that users are likely to search for. It can be a single word like *security*, or a short phrase such as *create an Ubuntu Core image*. Prefer widely recognized terminology. If your product isn't yet well known, then it's safer to use terms familiar to a global technical audience over product-specific ones.
 
-**Do** frame sentences in terms of *actions* and *facts*.
+Make every word count. There is no hard minimum length, but it should be longer and more descriptive than the title, and it should not merely repeat the wording of the title. The maximum length is 160 characters, because search engines truncate the snippet after 160 characters. This includes spaces.
 
-<table>
-<thead>
-<tr class="header">
-<th>Type</th>
-<th>Starts with phrases like...</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><p>Action</p></td>
-<td><p>Get started with</p>
-<p>Learn about</p>
-<p>Find information about</p></td>
-</tr>
-<tr class="even">
-<td><p>Fact</p></td>
-<td><p>The encabulator is a circuit that</p>
-<p>The Chef init profile sets up a basic project file for</p>
-<p>Starcraft is compatible with</p></td>
-</tr>
-</tbody>
-</table>
+For pages with the same format, share descriptions between them. For example, use the same meta description for every page of release notes, but change the version number.
 
-**Do** put key terms near the start.
+### Avoid these mistakes
 
-**Do** aim for an average of 140 characters. Cut any detail about the topic that isn't essential to helping the user make a decision.
+Avoid calls to action like *find*, *discover*, *explore*, or *read*. These are so overused that they have become noise words. The user's needs and actions in the moment are out of your control; the snippet should be a glimpse of the information on the page. Tutorials are the exception, where *learn* is appropriate.
 
-**Don't** exceed 160 characters. Search engines will cut the snippet short.
+Avoid qualities or claims about the product and its features, like *simple*, *easy*, or *best-in-class*. Marketing rhetoric, sales pitches, and business clichés like the following aren't appropriate for documentation:
 
-**Don't** write to market, motivate, or compel. Marketing prose with rhetoric like the following isn't appropriate for documentation.
+*Don't just write code; deliver a product. Start your journey today and turn your project into a production-ready, evergreen, blazing-fast, full-stack app.*
 
-> Don't just write code; deliver a product. Start your journey today and turn your project into a production-ready snap.
+### Examples
 
-**Don't** include qualities or claims like *simple*, *easy*, or *best-in-class*.
+For _Tutorial_ > _Craft a snap_ in Snapcraft:
 
-**Don't** include key terms that aren't on the page.
+> Learn the essentials of Snapcraft. In this tutorial, we package a small Python app into a snap.
 
-**Don't** use pronouns such as *you*, *your*, *we*, or *our*. These waste space and don't match the tone of a description.
+For _How to_ > _Change from core24 to core26_ in Snapcraft:
 
-## Example
+> How to migrate a snap from core24 to core26.
 
-This is an example of a good meta description for *Set up Starcraft*.
+For the _Reference_ > _GNOME extension_ in Snapcraft:
 
-``` rst
-.. meta::
-    :description: Learn how to install Starcraft on a local system. Starcraft is available as a snap on all GNU/Linux systems that support systemd.
-```
+> Reference documentation for the GNOME extension, which adds the components for desktop apps that require GTK 3, GNOME 42 and higher, and GLib.
+
+For _Explanation_ > _Parts lifecycle_ in Snapcraft:
+
+> Explanation of the build process of a part in Snapcraft, with a breakdown of the individual steps and the effect each has on the snap filesystem.

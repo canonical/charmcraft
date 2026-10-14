@@ -36,34 +36,25 @@ Publish a resource on Charmhub
 
     You must have already :ref:`published the charm <publish-a-charm>`.
 
-To publish a resource on its charm's Charmhub page, run
-:ref:`charmcraft upload-resource <ref_commands_upload-resource>`
-followed by the name of the charm, the name of the resource (cf. ``charmcraft.yaml``),
-and ``--filepath=<path to file resource>`` / ``--image=<OCI image>``. For example:
-
-.. note::
-
-    The option ``--image`` must indicate an OCI image's digest, being it in the short or
-    long form (e.g.: ``70aa8983ec5c`` or
-    ``sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249``). When
-    using the "short form" of the digest, the image needs to be present locally so its
-    proper ID (the "long form") can be retrieved.
-
-.. code-block:: bash
-
-   charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
+To publish a resource for a charm, run the :ref:`charmcraft upload-resource
+<ref_commands_upload-resource>` command followed by the name of the charm, the name of
+the resource (cf. ``charmcraft.yaml``), and ``--filepath=<path to file resource>`` /
+``--image=<OCI image>``. For example:
 
 .. terminal::
+
+    charmcraft upload-resource my-super-charm someresource --filepath=/tmp/superdb.bin
 
     Revision 1 created of resource 'someresource' for charm 'my-super-charm'
 
-.. code-block:: bash
-
-    charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
+The ``--image`` option must be passed an OCI image digest, prefixed with ``sha256:``, or
+a local image ID.
 
 .. terminal::
 
-   Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
+    charmcraft upload-resource my-super-charm redis-image --image=sha256:64aa8983ec5cea7bc143af18829836914fa405184d56dcbdfd9df672ade85249
+
+    Revision 1 created of resource 'redis-image' for charm 'my-super-charm'
 
 Charmcraft will first check if that specific image is available in Canonical's Registry,
 and just use it if that's the case. If not, it will try to get it from the developer's

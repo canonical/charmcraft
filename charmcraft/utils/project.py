@@ -16,14 +16,11 @@
 """Charm project related utilities."""
 
 import itertools
-import os
 import pathlib
-import sys
 from collections import defaultdict
 from collections.abc import Container
 
 from craft_cli import emit
-from jinja2 import Environment, FileSystemLoader, PackageLoader, StrictUndefined
 
 from charmcraft import const
 from charmcraft.errors import DuplicateCharmsError, InvalidCharmPathError
@@ -89,25 +86,3 @@ def get_charm_name_from_path(path: pathlib.Path) -> str:
     if metadata_yaml is None or "name" not in metadata_yaml:
         raise InvalidCharmPathError(path)
     return metadata_yaml["name"]
-
-
-def get_templates_environment(templates_dir):
-    """Create and return a Jinja environment to deal with the templates."""
-    templates_dir = os.path.join("templates", templates_dir)
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        # Running as PyInstaller bundle. For more information:
-        # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html
-        # In this scenario we need to load from the data location that is unpacked
-        # into the temporary directory at runtime (sys._MEIPASS).
-        emit.debug(f"Bundle directory: {sys._MEIPASS}")
-        loader = FileSystemLoader(os.path.join(sys._MEIPASS, templates_dir))
-    else:
-        loader = PackageLoader("charmcraft", templates_dir)
-
-    return Environment(
-        loader=loader,
-        autoescape=False,  # no need to escape things here :-)
-        keep_trailing_newline=True,  # they're not text files if they don't end in newline!
-        optimized=False,  # optimization doesn't make sense for one-offs
-        undefined=StrictUndefined,
-    )  # fail on undefined

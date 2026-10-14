@@ -14,7 +14,12 @@ include:
 
 prepare: |
   tests.pkgs install unzip
+  snap install --classic --no-wait astral-uv
+  snap watch --last=install
   charmcraft init --project-dir=charm
+  pushd charm
+  uv lock
+  popd
 
   # Workaround for https://github.com/canonical/craft-application/issues/248
   date --utc +%Y-%m-%dT%R:%S.%N > charm/build_time.txt  # Ensure we get a unique build name

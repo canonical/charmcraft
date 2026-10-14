@@ -173,7 +173,7 @@ jobs:
           sudo snap set charmcraft provider=lxd
 
   windows-build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -207,27 +207,38 @@ jobs:
       - name: Build installer(s)
         env:
           INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
-          MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
-          SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
           TIMESTAMP_SERVICE: http://timestamp.digicert.com
         run: |
+          # The Windows SDK directory is versioned and the image does not ship
+          # every version, so resolve the newest SDK version that is installed.
+          # Compare parsed versions, not names: as strings "10.0.9.0" sorts
+          # above "10.0.22621.0".
+          $kitsBin = 'C:\Program Files (x86)\Windows Kits\10\bin'
+          $sdkVersion = (Get-ChildItem $kitsBin -Directory |
+            Where-Object { $_.Name -match '^\d+(\.\d+){3}$' } |
+            Sort-Object { [Version] $_.Name } -Descending |
+            Select-Object -First 1).Name
+          $sdkBin = Join-Path $kitsBin "$sdkVersion\x64"
+          $signtool = Join-Path $sdkBin 'signtool.exe'
+          $makeappx = Join-Path $sdkBin 'makeappx.exe'
+
           windows\generate-self-signed-cert.ps1
 
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
+          & $signtool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft.exe
           & $Env:INNOCC windows\charmcraft.iss
           copy dist\charmcraft-installer.exe dist\charmcraft-installer-self-signed.exe
           echo "Test signing charmcraft inno installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
+          & $signtool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer-self-signed.exe
 
           echo "Building charmcraft msix installer..."
           mkdir dist\msix
           copy dist\charmcraft.exe dist\msix\
           copy windows\charmcraft.png dist\msix\
           copy windows\AppxManifest.xml dist\msix\
-          & $Env:MAKEAPPX pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
+          & $makeappx pack /h SHA256 /d dist\msix /p dist\charmcraft-installer.msix
 
           echo "Test signing charmcraft msix installer..."
-          & $Env:SIGNTOOL sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
+          & $signtool sign /fd SHA256 /td SHA256 /tr $Env:TIMESTAMP_SERVICE /f test-signing.pfx /p Password1234 dist\charmcraft-installer.msix
       - name: Upload installer(s)
         uses: actions/upload-artifact@v5
         with:

@@ -108,7 +108,7 @@ class BasesConfiguration(CraftBaseModel):
         """Expand short-form bases into long-form bases."""
         if "build-on" in base:  # Assume long-form base already.
             return cast(LongFormBasesDict, base)
-        return cast(LongFormBasesDict, {"build-on": [base], "run-on": [base]})
+        return {"build-on": [base], "run-on": [base]}
 
 
 class Ignore(CraftBaseModel):

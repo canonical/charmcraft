@@ -23,9 +23,9 @@ may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``expressjs-framework`` on Ubuntu 24.04 LTS
-are listed below. For the secret key option on Ubuntu 26.04 LTS, see
-:ref:`expressjs-framework-extension-secrets`.
+The predefined configuration options for the ``expressjs-framework`` are listed below.
+The secret key options listed apply to Ubuntu 24.04 LTS. For Ubuntu 26.04 LTS,
+see :ref:`expressjs-framework-extension-secrets`.
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
@@ -192,7 +192,7 @@ capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
+    .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
 
         The extension automatically adds the secret-typed ``app-secret-key``

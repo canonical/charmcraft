@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """CLI-related utilities for Charmcraft."""
 
-import datetime
+import datetime as dt
 import enum
 import json
 import numbers
@@ -155,7 +155,7 @@ def humanize_list(items: Collection[str], conjunction: str) -> str:
     return f"{', '.join(initials)} {conjunction} {final}"
 
 
-def format_timestamp(dt: datetime.datetime) -> str:
+def format_timestamp(timestamp: dt.datetime) -> str:
     """Convert a datetime object (with or without timezone) to a string.
 
     The format is
@@ -164,12 +164,12 @@ def format_timestamp(dt: datetime.datetime) -> str:
 
     Always in UTC.
     """
-    if dt.tzinfo is not None and dt.tzinfo.utcoffset(None) is not None:
+    if timestamp.tzinfo is not None and timestamp.tzinfo.utcoffset(None) is not None:
         # timezone aware
-        dtz = dt.astimezone(datetime.timezone.utc)
+        dtz = timestamp.astimezone(dt.timezone.utc)
     else:
         # timezone naive, assume it's UTC
-        dtz = dt
+        dtz = timestamp
     return dtz.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 

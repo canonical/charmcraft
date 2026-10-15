@@ -59,7 +59,7 @@ Update part names
 -----------------
 
 If you update a charm to use the Ubuntu 26.04 LTS base, then you must also verify its
-part names. Part names on 26.04 and later bases can't contain any forward slashes (/).
+part names. Part names on the Ubuntu 26.04 LTS base can't contain any forward slashes (/).
 We recommend replacing them with a dot (.), for example:
 
 .. code-block:: diff

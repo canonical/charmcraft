@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for resource-revisions command."""
 
-import datetime
+import datetime as dt
 from argparse import Namespace
 from unittest import mock
 
@@ -54,9 +54,7 @@ def test_resourcerevisions_simple(emitter, store_mock, config, formatted):
         CharmResourceRevision(
             revision=1,
             size=pydantic.ByteSize(50),
-            created_at=datetime.datetime(
-                2020, 7, 3, 2, 30, 40, tzinfo=datetime.timezone.utc
-            ),
+            created_at=dt.datetime(2020, 7, 3, 2, 30, 40, tzinfo=dt.timezone.utc),
             bases=[ResponseCharmResourceBase()],
             name="testresource",
             sha256="",
@@ -116,7 +114,7 @@ def test_resourcerevisions_ordered_by_revision(emitter, store_mock, config, form
     """Results are presented ordered by revision in the table."""
     # three Revisions with all values weirdly similar, the only difference is revision, so
     # we really assert later that it was used for ordering
-    tstamp = datetime.datetime(2020, 7, 3, 20, 30, 40, tzinfo=datetime.timezone.utc)
+    tstamp = dt.datetime(2020, 7, 3, 20, 30, 40, tzinfo=dt.timezone.utc)
     store_response = [
         CharmResourceRevision(
             revision=1,

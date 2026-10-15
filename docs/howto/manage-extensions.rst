@@ -54,7 +54,7 @@ extension.
           amd64:
 
         # (Required)
-        summary: A very short one-line summary of the flask application.
+        summary: A very short one-line summary of the Flask application.
 
         # (Required)
         description: |
@@ -83,7 +83,7 @@ then run  ``charmcraft expand-extensions``. For example:
         CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1 charmcraft expand-extensions
 
         name: my-flask-app-k8s
-        summary: A very short one-line summary of the flask application.
+        summary: A very short one-line summary of the Flask application.
         description: |
           A comprehensive overview of your Flask application.
         base: ubuntu@24.04
@@ -181,7 +181,7 @@ then run  ``charmcraft expand-extensions``. For example:
             flask-application-root:
               type: string
               description: Path in which the application / web server is mounted. This configuration
-                will set the FLASK_APPLICATION_ROOT environment variable. Run app.config.from_prefixed_env()
+                will set the FLASK_APPLICATION_ROOT environment variable. Run `app.config.from_prefixed_env()`
                 in your Flask application in order to receive this configuration.
             flask-debug:
               type: boolean
@@ -193,20 +193,20 @@ then run  ``charmcraft expand-extensions``. For example:
               type: int
               description: Time in seconds for the cookie to expire in the Flask application
                 permanent sessions. This configuration will set the FLASK_PERMANENT_SESSION_LIFETIME
-                environment variable. Run app.config.from_prefixed_env() in your Flask application
+                environment variable. Run `app.config.from_prefixed_env()` in your Flask application
                 in order to receive this configuration.
             flask-preferred-url-scheme:
               type: string
               default: HTTPS
               description: Scheme for generating external URLs when not in a request context
                 in the Flask application. By default, it's "HTTPS". This configuration will
-                set the FLASK_PREFERRED_URL_SCHEME environment variable. Run app.config.from_prefixed_env()
+                set the FLASK_PREFERRED_URL_SCHEME environment variable. Run `app.config.from_prefixed_env()`
                 in your Flask application in order to receive this configuration.
             flask-secret-key:
               type: string
               description: The secret key used for securely signing the session cookie and
                 for any other security related needs by your Flask application. This configuration
-                will set the FLASK_SECRET_KEY environment variable. Run app.config.from_prefixed_env()
+                will set the FLASK_SECRET_KEY environment variable. Run `app.config.from_prefixed_env()`
                 in your Flask application in order to receive this configuration.
             flask-secret-key-id:
               type: secret
@@ -220,7 +220,7 @@ then run  ``charmcraft expand-extensions``. For example:
               type: boolean
               description: Set the secure attribute in the Flask application cookies. This
                 configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
-                Run app.config.from_prefixed_env() in your Flask application in order to
+                Run `app.config.from_prefixed_env()` in your Flask application in order to
                 receive this configuration.
 
 With ``base: ubuntu@26.04``, the main differences in the expanded output are:
@@ -248,6 +248,8 @@ With ``base: ubuntu@26.04``, the main differences in the expanded output are:
         - lib: traefik-k8s.ingress
           version: '2'
         # ...
+        # Set by default in the charmcraft.yaml file that charmcraft init generates.
+        charm-user: non-root
         containers:
           app:
             resource: app-image
@@ -261,6 +263,7 @@ With ``base: ubuntu@26.04``, the main differences in the expanded output are:
         config:
           options:
             # ...
+            # The flask-secret-key and flask-secret-key-id options are replaced by:
             app-secret-key:
               type: secret
               description: 'Long secret you can use for sessions, csrf or any other thing

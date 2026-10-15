@@ -1,4 +1,0 @@
-requires:
-  postgresql:
-    interface: postgresql_client
-    optional: false

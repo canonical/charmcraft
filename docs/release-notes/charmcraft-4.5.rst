@@ -66,16 +66,6 @@ base-specific variants. The 12-factor framework profiles (Django, Flask, FastAPI
 ExpressJS, and Spring Boot) support ``ubuntu@24.04`` and ``ubuntu@26.04``.
 All profiles use Ubuntu 24.04 LTS when ``--base`` isn't provided.
 
-Ubuntu 26.04 extension tutorials
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The :ref:`tutorials <tutorial>` now include separate Ubuntu 26.04 lessons for all
-six framework extensions. They preserve the original app development,
-configuration, and PostgreSQL integration workflows, while using Canonical Kubernetes,
-base-specific profiles, uv dependency locking, and packaged settings in
-``paas-config.yaml``.
-The existing tutorials for lower bases remain available.
-
 Example actions in the machine and Kubernetes profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

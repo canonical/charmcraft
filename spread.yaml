@@ -284,33 +284,6 @@ suites:
     <<: *docsuite
     summary: tests tutorial from the docs
 
-  docs/tutorial/code-26-04/:
-    summary: tests Ubuntu 26.04 tutorials with Canonical Kubernetes
-    systems:
-      - ubuntu-26.04-64
-    manual: true
-    prepare: |
-      lxc network set lxdbr0 ipv6.address none
-
-      #shellcheck source=tests/spread/tools/prepare.sh
-      . "$PROJECT_PATH/tests/spread/tools/prepare.sh"
-      refresh_or_install_snap juju 3.6/stable
-      refresh_or_install_snap k8s 1.34-classic/stable --classic
-      refresh_or_install_snap rockcraft latest/edge --classic
-
-      cp "$PROJECT_PATH/docs/reuse/tutorial/registry_26_04.yaml" registry.yaml
-      #shellcheck source=docs/reuse/tutorial/bootstrap_26_04.sh
-      . "$PROJECT_PATH/docs/reuse/tutorial/bootstrap_26_04.sh"
-    debug-each: |
-      k8s kubectl get all -A
-      juju status
-      juju debug-log --no-tail --limit 1000
-    restore: |
-      juju destroy-controller --force --destroy-all-models \
-        --destroy-storage --no-prompt dev-controller
-      snap remove k8s --purge
-      rm registry.yaml
-
   tests/spread/commands/:
     summary: simple charmcraft commands
   tests/spread/charms/:

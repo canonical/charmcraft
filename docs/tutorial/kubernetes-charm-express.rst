@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for an Express app
 ======================================================
 
+.. note::
+
+    For Ubuntu 26.04, follow the
+    `Express tutorial <https://canonical.com/juju/docs/12-factor/latest/tutorial/kubernetes-charm-express-26-04/>`__
+    in the paas-charm documentation.
+
 Imagine you have an Express app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find

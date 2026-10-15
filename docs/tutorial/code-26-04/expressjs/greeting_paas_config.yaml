@@ -1,5 +1,0 @@
-port: 8080
-config:
-  options:
-    greeting:
-      env-var: APP_GREETING

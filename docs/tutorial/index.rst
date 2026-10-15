@@ -9,19 +9,8 @@ an opportunity for further exploration. If you're a newcomer to Charmcraft, this
 best way to start.
 
 
-12-factor app extensions on Ubuntu 26.04
-----------------------------------------
-
-These tutorials port the original development workflows to the experimental
-Ubuntu 26.04 extensions. Each lesson creates and tests an app, builds its rock
-and charm, and deploys it with Juju. You'll then update the app, configure it
-through ``paas-config.yaml``, and integrate it with PostgreSQL:
-
-Choose your framework in the :ref:`Ubuntu 26.04 tutorials <tutorial-ubuntu-26-04>`.
-
-
-12-factor app extensions on lower bases
----------------------------------------
+12-factor app extensions
+------------------------
 
 With Charmcraft extensions, you can charm 12-factor web applications with just a few
 modifications to the YAML template content. To get started, check out the tutorial for
@@ -38,7 +27,6 @@ your desired web framework:
 .. toctree::
     :hidden:
 
-    ubuntu-26-04
     kubernetes-charm-django
     kubernetes-charm-express
     kubernetes-charm-fastapi

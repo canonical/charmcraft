@@ -1,9 +1,0 @@
-# configuration snippet for Go application
-
-config:
-  options:
-    greeting:
-      description: |
-        The greeting to be returned by the Go application.
-      default: "Hello, world!"
-      type: string

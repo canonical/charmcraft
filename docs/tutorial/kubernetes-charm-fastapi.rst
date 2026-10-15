@@ -189,7 +189,7 @@ The top of the file should look similar to the following snippet:
     :caption: ~/fastapi-hello-world/rockcraft.yaml
 
     name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@24.04 # the base environment for this FastAPI app
     version: '0.1' # just for humans. Semantic versioning is recommended
@@ -482,7 +482,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 5
 
     name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@24.04 # the base environment for this FastAPI app
     version: '0.2' # just for humans. Semantic versioning is recommended
@@ -620,7 +620,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 5
 
     name: fastapi-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@24.04 # the base environment for this FastAPI app
     version: '0.3' # just for humans. Semantic versioning is recommended

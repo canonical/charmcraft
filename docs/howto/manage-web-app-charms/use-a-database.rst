@@ -208,7 +208,7 @@ the Alembic related files and packages needed to run the database migrations.
     :caption: rockcraft.yaml
     :emphasize-lines: 6,24-37
 
-    # See https://documentation.ubuntu.com/rockcraft/1.16.0/reference/extensions/fastapi-framework
+    # See https://ubuntu.com/containers/rockcraft/docs/latest/reference/extensions/fastapi-framework
     # For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
 
     name: fastapi-hello-world

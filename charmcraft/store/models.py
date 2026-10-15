@@ -17,7 +17,7 @@
 
 import contextlib
 import dataclasses
-import datetime
+import datetime as dt
 import enum
 import functools
 from dataclasses import dataclass
@@ -123,7 +123,7 @@ class Revision:
 
     revision: int
     version: str | None
-    created_at: datetime.datetime
+    created_at: dt.datetime
     status: str
     errors: list[Error]
     bases: list[Base | None]
@@ -151,7 +151,7 @@ class Release:
 
     revision: int
     channel: str
-    expires_at: datetime.datetime
+    expires_at: dt.datetime
     resources: list[Resource]
     base: Base | None
 

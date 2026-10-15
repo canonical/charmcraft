@@ -16,7 +16,7 @@
 """Project-related models for Charmcraft."""
 
 import abc
-import datetime
+import datetime as dt
 import os
 import pathlib
 import re
@@ -239,13 +239,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
-    _started_at: datetime.datetime = pydantic.PrivateAttr(
-        default_factory=lambda: datetime.datetime.now(tz=datetime.timezone.utc)
+    _started_at: dt.datetime = pydantic.PrivateAttr(
+        default_factory=lambda: dt.datetime.now(tz=dt.timezone.utc)
     )
     _valid: bool = pydantic.PrivateAttr(default=False)
 
     @property
-    def started_at(self) -> datetime.datetime:
+    def started_at(self) -> dt.datetime:
         """Get the time that Charmcraft started running."""
         return self._started_at
 

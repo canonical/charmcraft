@@ -22,13 +22,13 @@ For example:
     charmcraft list-extensions
 
     Extension name         Supported bases             Experimental bases
-    ---------------------  --------------------------  --------------------
+    ---------------------  --------------------------  --------------------------
     django-framework       ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
     expressjs-framework    ubuntu@24.04                ubuntu@26.04
     fastapi-framework      ubuntu@24.04                ubuntu@26.04
     flask-framework        ubuntu@22.04, ubuntu@24.04  ubuntu@26.04
     go-framework           ubuntu@24.04                ubuntu@26.04
-    spring-boot-framework  ubuntu@24.04                ubuntu@26.04
+    spring-boot-framework                              ubuntu@24.04, ubuntu@26.04
 
 
 View details about the extension in use
@@ -48,13 +48,10 @@ extension.
 
         type: charm
 
-        bases:
-          - build-on:
-            - name: ubuntu
-              channel: "22.04"
-            run-on:
-            - name: ubuntu
-              channel: "22.04"
+        base: ubuntu@24.04
+
+        platforms:
+          amd64:
 
         # (Required)
         summary: A very short one-line summary of the flask application.
@@ -89,28 +86,56 @@ then run  ``charmcraft expand-extensions``. For example:
         summary: A very short one-line summary of the flask application.
         description: |
           A comprehensive overview of your Flask application.
+        base: ubuntu@24.04
+        platforms:
+          amd64:
+            build-on:
+            - amd64
+            build-for:
+            - amd64
         parts:
           charm:
-            source: .
-            charm-entrypoint: src/charm.py
-            charm-binary-python-packages: []
-            charm-python-packages: []
-            charm-requirements:
-            - requirements.txt
-            charm-strict-dependencies: false
             plugin: charm
+            source: .
+            build-snaps:
+            - rustup
+            override-build: |-
+              rustup default stable
+              craftctl default
         type: charm
-        bases:
-        - build-on:
-          - name: ubuntu
-            channel: '22.04'
-          run-on:
-          - name: ubuntu
-            channel: '22.04'
+        charm-libs:
+        - lib: traefik-k8s.ingress
+          version: '2'
+        - lib: observability-libs.juju_topology
+          version: '0'
+        - lib: grafana-k8s.grafana_dashboard
+          version: '0'
+        - lib: loki-k8s.loki_push_api
+          version: '1'
+        - lib: data-platform-libs.data_interfaces
+          version: '0'
+        - lib: prometheus-k8s.prometheus_scrape
+          version: '0'
+        - lib: data-platform-libs.s3
+          version: '0'
+        - lib: saml-integrator.saml
+          version: '0'
+        - lib: smtp-integrator.smtp
+          version: '0'
+        - lib: squid-forward-proxy.http_proxy
+          version: '0'
+        - lib: redis-k8s.redis
+          version: '0'
+        - lib: tempo-coordinator-k8s.tracing
+          version: '0'
+        - lib: openfga-k8s.openfga
+          version: '1'
+        - lib: hydra.oauth
+          version: '0'
         actions:
           rotate-secret-key:
-            description: Rotate the flask secret key. Users will be forced to log in again.
-              This might be useful if a security breach occurs.
+            description: Rotate the secret key. Users will be forced to log in again. This
+              might be useful if a security breach occurs.
         assumes:
         - k8s-api
         containers:
@@ -149,6 +174,10 @@ then run  ``charmcraft expand-extensions``. For example:
             webserver-workers:
               type: int
               description: The number of webserver worker processes for handling requests.
+            webserver-worker-class:
+              type: string
+              description: The webserver worker process class for handling requests. Can
+                be either 'gevent' or 'sync'.
             flask-application-root:
               type: string
               description: Path in which the application / web server is mounted. This configuration
@@ -179,12 +208,67 @@ then run  ``charmcraft expand-extensions``. For example:
                 for any other security related needs by your Flask application. This configuration
                 will set the FLASK_SECRET_KEY environment variable. Run app.config.from_prefixed_env()
                 in your Flask application in order to receive this configuration.
+            flask-secret-key-id:
+              type: secret
+              description: 'This configuration is similar to `flask-secret-key`, but instead
+                accepts a Juju user secret ID. The secret should contain a single key, "value",
+                which maps to the actual Flask secret key. To create the secret, run the following
+                command: `juju add-secret my-flask-secret-key value=<secret-string> && juju
+                grant-secret my-flask-secret-key flask-k8s`, and use the output secret ID
+                to configure this option.'
             flask-session-cookie-secure:
               type: boolean
               description: Set the secure attribute in the Flask application cookies. This
                 configuration will set the FLASK_SESSION_COOKIE_SECURE environment variable.
                 Run app.config.from_prefixed_env() in your Flask application in order to
                 receive this configuration.
+
+With ``base: ubuntu@26.04``, the main differences in the expanded output are:
+
+.. dropdown:: Expanding an extension on Ubuntu 26.04
+
+    .. code-block:: yaml
+        :caption: charmcraft.yaml (excerpts of the expanded output)
+
+        base: ubuntu@26.04
+        parts:
+          charm:
+            plugin: uv
+            source: .
+            uv-groups:
+            - charmlibs-pydeps
+            build-snaps:
+            - astral-uv
+            - rustup
+            override-build: |-
+              rustup default stable
+              craftctl default
+        charm-libs:
+        # The Redis, tracing, OpenFGA and OAuth libraries are not included.
+        - lib: traefik-k8s.ingress
+          version: '2'
+        # ...
+        containers:
+          app:
+            resource: app-image
+        peers:
+          peers:
+            interface: peers
+        resources:
+          app-image:
+            type: oci-image
+            description: flask application image.
+        config:
+          options:
+            # ...
+            app-secret-key:
+              type: secret
+              description: 'Long secret you can use for sessions, csrf or any other thing
+                where you need a random secret shared by all units. The secret should contain
+                a single key, "value", which maps to the actual application secret key. To
+                create the secret, run the following command: `juju add-secret my-app-secret-key
+                value=<secret-string> && juju grant-secret my-app-secret-key my-app`, and
+                use the output secret ID to configure this option.'
 
 To expand ``charmcraft.yaml`` using the extensions specified in the file
 and output the resulting configuration to the terminal, run

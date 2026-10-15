@@ -18,12 +18,16 @@ file through a separate config part.
 Charmcraft validation
 ---------------------
 
-Charmcraft validates the following properties when it expands the extension with base
-26.04 LTS during ``charmcraft pack`` or ``charmcraft expand-extensions``:
+Charmcraft validates the following properties when it expands the extension during
+``charmcraft pack`` or ``charmcraft expand-extensions``, for any base where the file
+exists:
 
 * The file contains valid YAML.
 * The top-level value is a mapping.
 * ``framework_logging_format: json`` is used only with Flask, Django, or FastAPI.
+
+With base 26.04 LTS, Charmcraft also validates the following properties:
+
 * ``port`` and ``metrics-port`` are integers from 1 through 65535.
 * ``metrics-path`` is a string that starts with ``/`` and is a valid RFC 3986 URL
   path.

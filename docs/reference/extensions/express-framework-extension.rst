@@ -23,11 +23,17 @@ may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``expressjs-framework`` are:
+The predefined configuration options for the ``expressjs-framework`` on Ubuntu 24.04 LTS
+are listed below. For the secret key option on Ubuntu 26.04 LTS, see
+:ref:`expressjs-framework-extension-secrets`.
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
-  ``APP_PORT``. Default value is 8080.
+  ``PORT``. Default value is 8080.
+
+* **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
+  where you need a random secret shared by all units. The environment variable passed
+  to the app is ``APP_SECRET_KEY``. The default value is random.
 
 * **app-secret-key-id**: A secret you can use for sessions, protection against
   cross-site request forgery, or any other thing where you need a random secret shared

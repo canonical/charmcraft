@@ -54,7 +54,7 @@ Ingress relation.
   * - MongoDB
     -
         - ``spring.data.mongodb.uri``
-  * - Redis
+  * - Redis (Ubuntu 22.04 LTS and 24.04 LTS only)
     -
         - ``spring.data.redis.url``
         - ``spring.data.redis.host``

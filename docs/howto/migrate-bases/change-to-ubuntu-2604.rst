@@ -72,3 +72,23 @@ We recommend replacing them with a dot (.), for example:
      parts:
     -  my/part:
     +  my.part:
+
+Migrate a 12-factor app charm
+-----------------------------
+
+For a charm that uses a 12-factor framework extension, such as ``flask-framework``,
+changing to Ubuntu 26.04 LTS also changes the contract that the extension generates.
+See :ref:`extensions` for the differences. In addition:
+
+- The extension is experimental on Ubuntu 26.04 LTS. Set
+  ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when you expand or pack the charm.
+- The extension generates the charm part with the uv plugin and the
+  ``charmlibs-pydeps`` dependency group. Define that group in the ``pyproject.toml``
+  file. Don't define a ``parts.charm`` key, because the extension is incompatible
+  with a customized charm part.
+- ``charmcraft pack`` fails without a ``uv.lock`` file. Generate it with ``uv lock``
+  and commit it with the project.
+
+For the full upgrade procedure, including the rock and the application secret key, see
+the `12-factor upgrade guide
+<https://canonical.com/juju/docs/12-factor/latest/how-to/upgrade/>`__.

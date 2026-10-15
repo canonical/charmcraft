@@ -30,14 +30,20 @@ project that uses the extension.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``spring-boot-framework`` are:
+The predefined configuration options for the ``spring-boot-framework`` on Ubuntu 24.04
+LTS are listed below. For the secret key option on Ubuntu 26.04 LTS, see
+:ref:`spring-boot-framework-extension-secrets`.
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
-  ``APP_PORT``. Default value is 8080.
+  ``SERVER_PORT``. Default value is 8080.
 
 * **app-profiles**: Comma-separated list of active Spring Boot profiles. The environment
   variable passed to the app is ``spring.profiles.active``.
+
+* **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
+  where you need a random secret shared by all units. The environment variable passed
+  to the app is ``APP_SECRET_KEY``. The default value is random.
 
 * **app-secret-key-id**: A secret you can use for sessions, protection against
   cross-site request forgery, or any other thing where you need a random secret shared
@@ -50,11 +56,11 @@ The predefined configuration options for the ``spring-boot-framework`` are:
   ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
 
 * **metrics-port**: Port where the prometheus metrics will be scraped. The environment
-  variable passed to the app is ``APP_PORT``. Default value is 8080.
+  variable passed to the app is ``MANAGEMENT_SERVER_PORT``. Default value is 8080.
 
 * **metrics-path**:
   Path where the prometheus metrics will be scraped. The environment variable passed to
-  the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
+  the app is ``METRICS_PATH``. Default value is ``/actuator/prometheus``.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will

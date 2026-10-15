@@ -256,8 +256,9 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 
 If successful, the command opens a SSH shell into the web app. From there,
 you can debug the app itself, manually run an action, or attempt to
-manually start the web app. The web app can be found in the ``/`` directory
-of the container, for instance, ``/django/app``.
+manually start the web app. On Ubuntu 22.04 LTS and 24.04 LTS, the web app can be
+found in the ``/`` directory of the container, for instance, ``/django/app``. On
+Ubuntu 26.04 LTS, it is in ``/app``.
 
 .. seealso::
 
@@ -524,7 +525,8 @@ Celery beat should run in only one unit, while Celery worker servers
 will run in all units.
 
 For a Flask app that has the Celery app in the module
-``webapp.app.celery_app``, you can declare them as services like this:
+``webapp.app.celery_app``, you can declare them as services like this. On Ubuntu 26.04
+LTS, replace ``/flask/app`` with ``/app`` in ``working-dir``.
 
 .. code-block:: yaml
     :caption: rockcraft.yaml

@@ -1,3 +1,6 @@
+.. meta::
+    :description: Reference for the ``SECURITY.md`` file, which describes the security policy for a charm and is required for public listing on Charmhub.
+
 .. _security-md-file:
 
 

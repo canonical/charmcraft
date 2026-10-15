@@ -1,3 +1,6 @@
+.. meta::
+    :description: Reference for the ``.github/workflows`` directory, including the linting and unit test, integration test, publish, and security workflows for charms hosted on GitHub.
+
 .. _github-workflows-directory:
 
 
@@ -6,18 +9,21 @@
 
 The ``.github/workflows`` directory contains GitHub Actions configuration for charms
 that are hosted on GitHub. This directory is created only when the
-profile is ``machine`` or ``kubernetes``. To opt out, simply delete the ``.github``
+profile is ``machine`` or ``kubernetes``. To opt out, delete the ``.github``
 directory.
 
+.. seealso::
+
+    :external+ops:ref:`How to set up continuous integration for a charm <set-up-ci>`
 
 .. _github-workflows-directory-ci-yaml:
 
 ``ci.yaml``
 -----------
 
-This workflow runs linting and unit tests. It runs with the Python versions matching what is available in the Charm's base.
+This workflow runs linting and unit tests. It runs with the Python version that matches the charm's base.
 
-    See more:
+.. seealso::
 
     :external+ops:ref:`Ops | Tool versions <tool-versions>`
 
@@ -36,16 +42,17 @@ This workflow packs the charm and runs the integration tests.
 
 This workflow uploads the charm to ``latest/edge`` on Charmhub for every push to the main branch.
 This workflow requires a ``publish`` environment with a ``CHARMHUB_TOKEN`` secret.
-The charm must be registered, and for the ``kubernetes`` profile, the resource must
-already be uploaded first.
+The charm must be registered, and for the ``kubernetes`` profile, the resource must have
+been uploaded.
 
-This worfklow is meant to be a starting point, and should be updated to match the Charm's development process.
+This workflow is meant to be a starting point, and should be updated to match the charm's development process.
 
-    See more:
+.. seealso::
 
     `GitHub | Managing environments for deployment
     <https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments>`__,
     :ref:`Manage the current Charmhub user <manage-the-current-charmhub-user>`,
+    :ref:`Publish a charm <publish-a-charm>`,
     :ref:`Publish a resource on Charmhub <publish-a-resource>`
 
 
@@ -54,12 +61,9 @@ This worfklow is meant to be a starting point, and should be updated to match th
 ``security.yaml``
 -----------------
 
-This workflow scans the charm's locked dependencies for vulnerabilities with ``pip-audit``.
-Only the runtime dependencies should be audited.
-
-    See more:
-
-    `pip-audit <https://github.com/pypa/pip-audit>`__
+This workflow checks the charm's locked dependencies for vulnerabilities with
+`pip-audit <https://github.com/pypa/pip-audit>`__.
+Only the runtime dependencies are audited.
 
 
 .. _github-workflows-directory-dependency-review-yaml:
@@ -67,12 +71,12 @@ Only the runtime dependencies should be audited.
 ``dependency-review.yaml``
 --------------------------
 
-This workflow reviews the dependencies that a pull request changes. It requires Dependency graph enabled.
+This workflow checks the dependencies that a pull request changes. It requires
+Dependency graph to be enabled.
 
+.. seealso::
 
-    See more:
-
-    `dependency-review-action <https://github.com/actions/dependency-review-action>`__
+    `dependency-review-action <https://github.com/actions/dependency-review-action>`__,
     `GitHub | Enabling the dependency graph <https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/enable-dependency-graph>`__
 
 .. _github-workflows-directory-zizmor-yaml:
@@ -80,8 +84,5 @@ This workflow reviews the dependencies that a pull request changes. It requires 
 ``zizmor.yaml``
 ---------------
 
-This workflow analyses other workflow files for security issues with ``zizmor``.
-
-    See more:
-
-    `zizmor <https://docs.zizmor.sh/>`__
+This workflow checks other workflow files for security issues with
+`zizmor <https://docs.zizmor.sh/>`__.

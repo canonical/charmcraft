@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   check-update:
+    if: false
     # Pinned to @main to get the latest logic, but the content version is controlled by .github/.copilot-collections.yaml
     uses: canonical/copilot-collections/.github/workflows/auto_update_collections.yaml@main
     secrets: inherit

@@ -8,6 +8,7 @@ on:
 
 jobs:
   source-wheel:
+    if: false
     runs-on: [self-hosted]
     permissions:
       contents: read
@@ -41,6 +42,7 @@ jobs:
   # that use starbase. Please ensure this job is excluded from merges/PRs
   # originating from starbase unless explicitly required for a specific app.
   pypi:
+    if: false
     needs: ["source-wheel"]
     runs-on: [self-hosted, amd64]
     permissions:
@@ -58,6 +60,7 @@ jobs:
         # https://docs.pypi.org/trusted-publishers/adding-a-publisher/#github-actions
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
   github-release:
+    if: false
     needs: ["source-wheel"]
     runs-on: [self-hosted]
     permissions:

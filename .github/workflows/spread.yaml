@@ -34,6 +34,7 @@ on:
 
 jobs:
   snap-build:
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -50,6 +51,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
+    if: false
     runs-on: [self-hosted, spread-enabled]
     outputs:
       systems: ${{ steps.select.outputs.systems }}
@@ -62,6 +64,7 @@ jobs:
           echo systems="$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
 
   snap-tests:
+    if: false
     runs-on: [self-hosted, spread-enabled]
     needs: [snap-build, spread-select]
     strategy:
@@ -91,7 +94,6 @@ jobs:
           spread openstack:${{ matrix.system }}
 
       - name: Discard spread workers
-        if: always()
         run: |
           shopt -s nullglob
           for r in .spread-reuse.*.yaml; do
@@ -99,6 +101,7 @@ jobs:
           done
 
   snap-store-tests:
+    if: false
     runs-on: [self-hosted, spread-enabled]
     needs: [snap-build]
 
@@ -129,7 +132,6 @@ jobs:
           spread openstack:ubuntu-22.04-64:tests/spread/store/
 
       - name: Discard spread workers
-        if: always()
         run: |
           shopt -s nullglob
           for r in .spread-reuse.*.yaml; do

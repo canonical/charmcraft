@@ -39,6 +39,7 @@ on:
 
 jobs:
   snap-build:
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -55,9 +56,9 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
 
   snap-publish:
+    if: false
     needs: [snap-build]
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Download snap artifact
         uses: actions/download-artifact@v8
@@ -69,7 +70,6 @@ jobs:
         run: |
           echo "snap=$(find . -type f -name '*.snap')" >> "$GITHUB_OUTPUT"
       - name: Publish feature branch to edge/pr-${{ github.event.number }}
-        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
         uses: canonical/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}

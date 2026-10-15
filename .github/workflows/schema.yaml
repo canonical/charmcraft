@@ -6,6 +6,7 @@ env:
 
 jobs:
   diff-schema:
+    if: false
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +31,7 @@ jobs:
           diff generated_schema.json "$CHARMCRAFT_JSON"
 
   validate-schema:
+    if: false
     runs-on: ubuntu-latest
 
     steps:

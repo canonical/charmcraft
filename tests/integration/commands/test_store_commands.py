@@ -16,7 +16,7 @@
 """Integration tests for store commands."""
 
 import argparse
-import datetime
+import datetime as dt
 import json
 import pathlib
 import re
@@ -292,7 +292,7 @@ def test_create_track(emitter, service_factory, config):
         {
             "name": "my-track",
             "automatic-phasing-percentage": None,
-            "created-at": datetime.datetime.now(),
+            "created-at": dt.datetime.now(),
         }
     )
     mock_get_package_metadata = mock.Mock(
@@ -310,7 +310,7 @@ def test_create_track(emitter, service_factory, config):
                         {
                             "name": "latest",
                             "automatic-phasing-percentage": None,
-                            "created-at": datetime.datetime.now(),
+                            "created-at": dt.datetime.now(),
                         }
                     ),
                 ],

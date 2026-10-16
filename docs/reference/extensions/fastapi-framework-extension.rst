@@ -176,6 +176,8 @@ underscores and all the letters capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
+
 .. _fastapi-grafana-graphs:
 
 Grafana dashboard graphs

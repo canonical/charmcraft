@@ -35,11 +35,6 @@ For Python projects, MySQL requires the pymysql driver. Add it to
     alembic
     PyMySQL[rsa]
 
-This guide uses Ubuntu 24.04 LTS. On Ubuntu 26.04 LTS, if your project has a
-``pyproject.toml`` and a ``uv.lock`` file, the rock installs its dependencies from
-those files and doesn't need ``requirements.txt``. In that case, add these packages
-to ``pyproject.toml`` and run ``uv lock``.
-
 When using pymysql, your connection string (handled later by the charm)
 follows the format ``mysql+pymysql://user:pass@host/db``.
 
@@ -133,8 +128,8 @@ Set up automated updates
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Create a ``migrate.sh`` script for our migration commands so that 12-Factor
-app tooling can automatically run your upgrades. The charm runs this file when
-the database is created and when the database endpoints change.
+app tooling can automatically run your upgrades. The charm runs this file when it
+first starts the app, and again when the database is created or its endpoints change.
 
 .. code-block:: bash
     :caption: migrate.sh

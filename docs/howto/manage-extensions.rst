@@ -225,7 +225,7 @@ then run  ``charmcraft expand-extensions``. For example:
 
 With ``base: ubuntu@26.04``, the main differences in the expanded output are:
 
-.. dropdown:: Expanding an extension on Ubuntu 26.04
+.. dropdown:: Expanding an extension on Ubuntu 26.04 LTS
 
     .. code-block:: yaml
         :caption: charmcraft.yaml (excerpts of the expanded output)

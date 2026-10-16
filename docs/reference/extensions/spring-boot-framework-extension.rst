@@ -41,19 +41,16 @@ see :ref:`spring-boot-framework-extension-secrets`.
 * **app-profiles**: Comma-separated list of active Spring Boot profiles. The environment
   variable passed to the app is ``spring.profiles.active``.
 
-* **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
-  where you need a random secret shared by all units. The environment variable passed
-  to the app is ``APP_SECRET_KEY``. The default value is random.
-
 * **app-secret-key-id**: A secret you can use for sessions, protection against
   cross-site request forgery, or any other thing where you need a random secret shared
-  by all units. The environment variable passed to the app is ``APP_SECRET_KEY``.
+  by all units. The environment variable passed to the app is ``SECRET_KEY``.
   The secret should contain a single key, ``value``, which maps to the actual
   application secret key. To create the secret, run the following command:
   ``juju add-secret my-app-secret-key value=<secret-string>``, grant the application
   access to the secret and use the output secret ID to configure
-  this option. If this configuration option is not set, the environment variable
-  ``APP_SECRET_KEY`` is a 64 byte Base64 encoded random string.
+  this option. If this configuration option is not set, the ``SECRET_KEY``
+  environment variable isn't set, and the environment variable ``APP_SECRET_KEY`` is a
+  64 byte Base64 encoded random string.
 
 * **metrics-port**: Port where the prometheus metrics will be scraped. The environment
   variable passed to the app is ``MANAGEMENT_SERVER_PORT``. Default value is 8080.
@@ -174,10 +171,10 @@ capitalised.
 
         The extension automatically adds the secret-typed ``app-secret-key-id``
         configuration option. The secret must contain a single key ``value``, which
-        holds the actual Spring Boot app secret key and is exposed as the ``APP_SECRET_KEY``
+        holds the actual Spring Boot app secret key and is exposed as the ``SECRET_KEY``
         environment variable. If this configuration option is not set,
-        ``APP_SECRET_KEY`` is automatically assigned a random value.
-
+        ``SECRET_KEY`` isn't set, and ``APP_SECRET_KEY`` is automatically assigned a
+        random value.
 
     .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
@@ -187,6 +184,8 @@ capitalised.
         holds the actual Spring Boot app secret key and is exposed as the ``APP_SECRET_KEY``
         environment variable. If this configuration option is not set,
         ``APP_SECRET_KEY`` is automatically assigned a random value.
+
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
 
 .. _spring-boot-grafana-graphs:
 

@@ -54,7 +54,7 @@ the first one it finds in this order:
    the Django migration command, so Django apps need no extra script.
 #. ``migrate.py``, which runs ``python3 migrate.py``.
 #. ``migrate.sh``, which runs ``bash -eo pipefail migrate.sh``.
-#. ``migrate``, an executable file that the charm runs directly.
+#. ``migrate``, a file that the charm runs directly.
 
 Using ``migrate.sh`` isn't mandatory. You can use programmatic approaches instead. Some
 popular libraries for programmatic database migration are:
@@ -115,7 +115,7 @@ To view the Pebble logs for a deployed web app, run:
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
     .. tab-item:: Ubuntu 26.04 LTS
-        :sync: base-26-plus
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -171,7 +171,7 @@ To view more details about the web app itself, run:
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
     .. tab-item:: Ubuntu 26.04 LTS
-        :sync: base-26-plus
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -239,7 +239,7 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
             /charm/bin/pebble  exec --context=spring-boot -- bash
 
     .. tab-item:: Ubuntu 26.04 LTS
-        :sync: base-26-plus
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -347,7 +347,7 @@ name of the web app with the ``-c`` option.
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
     .. tab-item:: Ubuntu 26.04 LTS
-        :sync: base-26-plus
+        :sync: base-26
 
         **All frameworks on MicroK8s**
 
@@ -536,8 +536,8 @@ Celery beat should run in only one unit, while Celery worker servers
 will run in all units.
 
 For a Flask app that has the Celery app in the module
-``webapp.app.celery_app``, you can declare them as services like this. On Ubuntu 26.04
-LTS, replace ``/flask/app`` with ``/app`` in ``working-dir``.
+``webapp.app.celery_app``, you can declare them as services like this. On
+Ubuntu 26.04 LTS, replace ``/flask/app`` with ``/app`` in ``working-dir``.
 
 .. code-block:: yaml
     :caption: rockcraft.yaml

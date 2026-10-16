@@ -202,6 +202,8 @@ capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
+
 .. _express-grafana-graphs:
 
 Grafana dashboard graphs

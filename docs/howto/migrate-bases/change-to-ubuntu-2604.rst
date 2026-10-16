@@ -84,8 +84,7 @@ See :ref:`extensions` for the differences. In addition:
   ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when you expand or pack the charm.
 - The extension generates the charm part with the uv plugin and the
   ``charmlibs-pydeps`` dependency group. Define that group in the ``pyproject.toml``
-  file. Don't define a ``parts.charm`` key, because the extension is incompatible
-  with a customized charm part.
+  file.
 - ``charmcraft pack`` fails without a ``uv.lock`` file. Generate it with ``uv lock``
   and commit it with the project.
 

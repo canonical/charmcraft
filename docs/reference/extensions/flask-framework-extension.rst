@@ -167,6 +167,8 @@ capitalised.
         environment variable. If this configuration option is not set,
         ``FLASK_SECRET_KEY`` is automatically assigned a random value.
 
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
+
 .. _flask-grafana-graphs:
 
 Grafana dashboard graphs

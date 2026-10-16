@@ -310,15 +310,17 @@ Add the Juju secret ID to the application:
 
         The ``DJANGO_SECRET_KEY`` environment variable is initialized to a
         random value. You can override it using the built-in configuration option
-        ``django-secret-key-id`` (``app-secret-key`` on Ubuntu 26.04 LTS),
-        which accepts a Juju secret whose ``value`` key is exposed as the
-        ``DJANGO_SECRET_KEY`` environment variable. For example, on Ubuntu 24.04 LTS:
+        ``django-secret-key-id``, which accepts a Juju secret whose ``value`` key is
+        exposed as the ``DJANGO_SECRET_KEY`` environment variable. For example:
 
         .. code-block:: bash
 
             juju add-secret my-django-secret-key value=<secret-string>
             juju grant-secret my-django-secret-key <app name>
             juju config <app name> django-secret-key-id=secret:<secret id>
+
+        On Ubuntu 26.04 LTS, set ``app-secret-key`` instead of
+        ``django-secret-key-id``.
 
     .. tab-item:: Express
         :sync: express
@@ -380,7 +382,7 @@ Make the rock async
 ~~~~~~~~~~~~~~~~~~~
 
 To make the rock async, make sure to put the following in its ``requirements.txt``
-or ``pyproject.toml`` file:
+file:
 
 .. literalinclude:: ../code/flask-async/requirements.txt
     :caption: requirements.txt

@@ -42,6 +42,14 @@ Project information
 - :ref:`readme-md-file`
 - :ref:`contributing-md-file`
 - :ref:`icon-svg-file`
+- :ref:`security-md-file`
+
+
+GitHub Actions and Dependabot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- :ref:`github-dependabot-yaml-file`
+- :ref:`github-workflows-directory`
 
 
 Python modules

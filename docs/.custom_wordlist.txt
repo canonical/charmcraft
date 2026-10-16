@@ -28,6 +28,7 @@ crafters?
 cryptographically
 docstrings?
 dotnet
+Dependabot
 dvipng
 emacs
 filesets?
@@ -156,3 +157,4 @@ xml
 xz
 yaml
 YouTube
+zizmor

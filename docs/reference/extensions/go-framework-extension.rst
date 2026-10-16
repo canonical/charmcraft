@@ -22,7 +22,9 @@ application. This document describes all the keys that a user may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions`` for details)
 but also add your own, as needed.
 
-The predefined configuration options for the ``go-framework`` are:
+The predefined configuration options for the ``go-framework`` are listed below.
+The secret key options listed apply to Ubuntu 24.04 LTS. For Ubuntu 26.04 LTS,
+see :ref:`go-framework-extension-secrets`.
 
 * **app-port**: Port in which the application should listen. The ingress will be
   configured using this port. The environment variable passed to the app is
@@ -30,13 +32,24 @@ The predefined configuration options for the ``go-framework`` are:
 
 * **app-secret-key**: Long secret you can use for sessions, CSRF or any other thing
   where you need a random secret shared by all units. The environment variable passed
-  to the app is ``APP_METRICS_PORT``. The default value is random.
+  to the app is ``APP_SECRET_KEY``. The default value is random.
+
+* **app-secret-key-id**: A secret you can use for sessions, CSRF or any other thing
+  where you need a random secret shared by all units. The secret should contain a single
+  key, ``value``, which maps to the actual application secret key. Use the secret ID to
+  configure this option, as described in :ref:`go-framework-extension-secrets`.
 
 * **metrics-port**: Port where the prometheus metrics will be scraped. The environment
-  variable passed to the app is ``APP_PORT``. Default value is 8080.
+  variable passed to the app is ``APP_METRICS_PORT``. Default value is 8080.
 
 * **metrics-path**: Path where the prometheus metrics will be scraped. The environment
   variable passed to the app is ``APP_METRICS_PATH``. Default value is ``/metrics``.
+
+.. note::
+
+    On Ubuntu 26.04 LTS, the ``app-port``, ``metrics-port``, and ``metrics-path`` options
+    are not generated. Set ``port``, ``metrics-port``, and ``metrics-path`` in the
+    :ref:`paas-config.yaml file <paas-config-yaml-file>` instead.
 
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
@@ -177,7 +190,7 @@ capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
+    .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
 
         The extension automatically adds the secret-typed ``app-secret-key``
@@ -185,6 +198,8 @@ capitalised.
         holds the actual Go app secret key and is exposed as the ``APP_SECRET_KEY``
         environment variable. If this configuration option is not set,
         ``APP_SECRET_KEY`` is automatically assigned a random value.
+
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
 
 .. _go-grafana-graphs:
 

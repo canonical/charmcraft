@@ -57,7 +57,7 @@ Ingress relation.
         - ``MONGODB_DB_HOSTNAME``
         - ``MONGODB_DB_PORT``
         - ``MONGODB_DB_NAME``
-  * - Redis
+  * - Redis (Ubuntu 22.04 LTS and 24.04 LTS only)
     -
         - ``REDIS_DB_CONNECT_STRING``
         - ``REDIS_DB_SCHEME``
@@ -85,10 +85,10 @@ Ingress relation.
         - ``VALKEY_DB_HOSTNAME``
         - ``VALKEY_DB_PORT``
         - ``VALKEY_DB_NAME``
-        - ``VALKEY_DB_TLS``
-        - ``VALKEY_DB_MODE``
-        - ``VALKEY_DB_TLS_CA``
-        - ``VALKEY_DB_VERSION``
+        - ``VALKEY_DB_READ_ONLY_ENDPOINTS``
+        - ``VALKEY_DB_SENTINEL_ENDPOINTS``
+        - ``VALKEY_MODE``
+        - ``VALKEY_VERSION``
   * - SAML
     -
         - ``SAML_ENTITY_ID`` (required)
@@ -123,6 +123,7 @@ Ingress relation.
         - ``RABBITMQ_HOSTNAME``
         - ``RABBITMQ_PORT``
         - ``RABBITMQ_VHOST``
+        - ``RABBITMQ_CONNECT_STRINGS``
   * - Tracing
     -
         - ``OTEL_EXPORTER_OTLP_ENDPOINT``
@@ -132,10 +133,11 @@ Ingress relation.
         - ``SMTP_HOST``
         - ``SMTP_PORT``
         - ``SMTP_USER``
-        - ``SMTP_PASSWORD_ID``
+        - ``SMTP_PASSWORD``
         - ``SMTP_AUTH_TYPE``
         - ``SMTP_TRANSPORT_SECURITY``
         - ``SMTP_DOMAIN``
+        - ``SMTP_SKIP_SSL_VERIFY``
   * - OpenFGA
     -
         - ``FGA_STORE_ID``
@@ -145,11 +147,10 @@ Ingress relation.
   * - OpenID Connect
     -
         - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
-        - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_ID`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_SECRET`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_ACCESS_TOKEN_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_AUTHORIZE_URL`
-        - :substitution-code:`|framework_prefix|_{endpoint_name}_USERINFO_URL`
+        - :substitution-code:`|framework_prefix|_{endpoint_name}_USER_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_JWKS_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_API_BASE_URL`
         - :substitution-code:`|framework_prefix|_{endpoint_name}_CLIENT_KWARGS`
@@ -157,3 +158,4 @@ Ingress relation.
     -
         - ``HTTP_PROXY``
         - ``HTTPS_PROXY``
+        - ``NO_PROXY``

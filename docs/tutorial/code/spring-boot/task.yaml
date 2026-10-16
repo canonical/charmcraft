@@ -84,11 +84,9 @@ execute: |
   # [docs:ls-rock-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:spring-boot-hello-world_0.1_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/spring-boot-hello-world:0.1
+    docker://localhost:5000/spring-boot-hello-world:0.1
   # [docs:skopeo-copy-end]
 
   # [docs:create-charm-dir]
@@ -120,7 +118,7 @@ execute: |
   juju deploy \
     ./spring-boot-hello-world_$(dpkg --print-architecture).charm \
     spring-boot-hello-world --resource \
-    app-image=localhost:32000/spring-boot-hello-world:0.1
+    app-image=localhost:5000/spring-boot-hello-world:0.1
   # [docs:deploy-app-end]
 
   # [docs:deploy-nginx]
@@ -138,7 +136,9 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # [docs:curl-init-deployment]
-  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+  # Canonical Kubernetes serves the ingress at the VM's address
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
   # [docs:curl-init-deployment-end]
 
   cd ..
@@ -149,7 +149,7 @@ execute: |
   rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:spring-boot-hello-world_0.2_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/spring-boot-hello-world:0.2
+    docker://localhost:5000/spring-boot-hello-world:0.2
   # [docs:skopeo-update-end]
 
   cat $HOME/tmp/greeting_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -159,14 +159,14 @@ execute: |
   charmcraft pack
   juju refresh spring-boot-hello-world \
     --path=./spring-boot-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/spring-boot-hello-world:0.2
+    --resource app-image=localhost:5000/spring-boot-hello-world:0.2
   # [docs:refresh-deployment-end]
 
   # give Juju some time to refresh the app
   juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config spring-boot-hello-world greeting='Hi!'
@@ -175,7 +175,7 @@ execute: |
   juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi"
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   # [docs:add-generate-ddl]
@@ -208,7 +208,7 @@ execute: |
   rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:spring-boot-hello-world_0.3_$(dpkg --print-architecture).rock \
-    docker://localhost:32000/spring-boot-hello-world:0.3
+    docker://localhost:5000/spring-boot-hello-world:0.3
   # [docs:skopeo-2nd-update-end]
 
   cat $HOME/tmp/visitors_charmcraft.yaml >> ./charm/charmcraft.yaml
@@ -218,7 +218,7 @@ execute: |
   charmcraft pack
   juju refresh spring-boot-hello-world \
     --path=./spring-boot-hello-world_$(dpkg --print-architecture).charm \
-    --resource app-image=localhost:32000/spring-boot-hello-world:0.3
+    --resource app-image=localhost:5000/spring-boot-hello-world:0.3
   # [docs:refresh-2nd-deployment-end]
 
   # In the relation with postgresql-k8s test we may hit the issue
@@ -234,10 +234,10 @@ execute: |
   juju wait-for application postgresql-k8s --query='status=="active"' --timeout 20m | juju status --relations
   juju wait-for application spring-boot-hello-world --query='status=="active"' --timeout 20m | juju status --relations
 
-  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi"
-  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1 | grep 1
-  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1 | grep Hi
-  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1 | grep 2
+  retry -n 10 --wait 20 sh -c "curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP | grep Hi"
+  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP | grep 1
+  curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP | grep 2
 
   # [docs:clean-environment]
   charmcraft clean

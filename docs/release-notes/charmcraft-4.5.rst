@@ -108,6 +108,15 @@ Minor init profile improvements
 - Charms created with the ``kubernetes`` profile now use an Ubuntu image as a
   placeholder for the charm's real image, so that integration tests pass by default.
 
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charmcraft 4.5 includes the following documentation changes:
+
+- The 12-factor app :ref:`tutorials <tutorial>` now use Canonical Kubernetes
+  instead of MicroK8s, including a local OCI registry and load-balancer-backed
+  ingress.
+
 
 Backwards-incompatible changes
 ------------------------------

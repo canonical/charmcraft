@@ -6,7 +6,7 @@ option isn't set, run the action on the leader unit to generate a new random key
 
 .. code-block:: bash
 
-    juju run <leader unit> rotate-secret-key
+    juju run <LEADER_UNIT> rotate-secret-key
 
 The action fails on units that aren't the leader. Rotating the key invalidates any
 sessions signed with the previous key. The action doesn't change a key that you set

@@ -89,5 +89,5 @@ See :ref:`extensions` for the differences. In addition:
   and commit it with the project.
 
 For the full upgrade procedure, including the rock and the application secret key, see
-the `12-factor upgrade guide
-<https://canonical.com/juju/docs/12-factor/latest/how-to/upgrade/>`__.
+the :external+12-factor:ref:`12-factor upgrade guide
+<how_to_upgrade>`.

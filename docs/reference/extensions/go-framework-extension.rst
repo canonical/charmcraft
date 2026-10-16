@@ -40,7 +40,7 @@ The predefined configuration options for the ``go-framework`` are:
 
 .. note::
 
-    On Ubuntu 26.04, the ``app-port``, ``metrics-port``, and ``metrics-path`` options
+    On Ubuntu 26.04 LTS, the ``app-port``, ``metrics-port``, and ``metrics-path`` options
     are not generated. Set ``port``, ``metrics-port``, and ``metrics-path`` in the
     :ref:`paas-config.yaml file <paas-config-yaml-file>` instead.
 

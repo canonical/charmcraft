@@ -25,7 +25,7 @@ for details) but also add your own, as needed.
 
 .. note::
 
-    On Ubuntu 26.04, the ``webserver-port``, ``metrics-port``, and ``metrics-path``
+    On Ubuntu 26.04 LTS, the ``webserver-port``, ``metrics-port``, and ``metrics-path``
     options are not generated. Set ``port``, ``metrics-port``, and ``metrics-path`` in the
     :ref:`paas-config.yaml file <paas-config-yaml-file>` instead.
 

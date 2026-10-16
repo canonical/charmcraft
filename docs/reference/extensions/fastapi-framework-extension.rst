@@ -166,7 +166,7 @@ underscores and all the letters capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
+    .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
 
         The extension automatically adds the secret-typed ``app-secret-key``
@@ -175,6 +175,8 @@ underscores and all the letters capitalised.
         environment variable. If this configuration option is not set,
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
+
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
 
 .. _fastapi-grafana-graphs:
 

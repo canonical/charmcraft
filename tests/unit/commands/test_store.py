@@ -16,7 +16,7 @@
 """Unit tests for store commands."""
 
 import argparse
-import datetime
+import datetime as dt
 import pathlib
 import textwrap
 import types
@@ -171,7 +171,7 @@ def test_login_export_otp(
             [
                 get_fake_revision(
                     revision=123,
-                    updated_at=datetime.datetime(1900, 1, 1),
+                    updated_at=dt.datetime(1900, 1, 1),
                     bases=[models.ResponseCharmResourceBase()],
                 )
             ],
@@ -292,7 +292,7 @@ def test_list_lib_warns_deprecation(monkeypatch, emitter, service_factory) -> No
             [
                 get_fake_revision(
                     revision=123,
-                    updated_at=datetime.datetime(1900, 1, 1),
+                    updated_at=dt.datetime(1900, 1, 1),
                     bases=[models.ResponseCharmResourceBase()],
                 )
             ],

@@ -1378,3 +1378,34 @@ def test_v1_secret_option_names_unchanged():
     assert "app-secret-key" not in DjangoFrameworkV1.options
     assert "app-secret-key" in FlaskFrameworkV2.options
     assert "app-secret-key" in DjangoFrameworkV2.options
+
+
+@pytest.mark.parametrize(
+    ("extension", "expected_options"),
+    [
+        ("go-framework", {"app-secret-key"}),
+        ("expressjs-framework", {"app-secret-key"}),
+        (
+            "fastapi-framework",
+            {"app-secret-key", "webserver-workers", "webserver-log-level"},
+        ),
+        ("spring-boot-framework", {"app-secret-key", "app-profiles"}),
+    ],
+)
+def test_v2_config_options_exclude_paas_config_options(
+    monkeypatch, tmp_path, extension, expected_options
+):
+    monkeypatch.setenv("CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS", "1")
+    input_yaml = {
+        "type": "charm",
+        "name": "test-v2",
+        "summary": "test summary",
+        "description": "test description",
+        "base": "ubuntu@26.04",
+        "platforms": {"amd64": None},
+        "extensions": [extension],
+    }
+
+    applied = extensions.apply_extensions(tmp_path, input_yaml)
+
+    assert set(applied["config"]["options"]) == expected_options

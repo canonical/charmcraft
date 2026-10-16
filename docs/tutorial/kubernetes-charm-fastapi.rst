@@ -8,9 +8,9 @@ Write your first Kubernetes charm for a FastAPI app
 
 .. note::
 
-    For Ubuntu 26.04, follow the
-    `FastAPI tutorial <https://canonical.com/juju/docs/12-factor/latest/tutorial/kubernetes-charm-fastapi-26-04/>`__
-    in the paas-charm documentation.
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`FastAPI tutorial <tutorial-kubernetes-charm-fastapi-26-04>`
+    in the 12-Factor app support documentation.
 
 Imagine you have a FastAPI app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,

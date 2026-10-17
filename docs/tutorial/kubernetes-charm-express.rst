@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for an Express app
 ======================================================
 
+.. note::
+
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`Express tutorial <tutorial-kubernetes-charm-express-26-04>`
+    in the 12-Factor app support documentation.
+
 Imagine you have an Express app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find

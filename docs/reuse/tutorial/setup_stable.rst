@@ -69,14 +69,16 @@ Enable the necessary features:
     sudo k8s enable ingress
 
 Canonical Kubernetes exposes ingress through a load-balancer service. Enable
-the built-in load balancer and point its address pool at the VM's own IP so
-the ingress is assigned a reachable address:
+the built-in load balancer, wait for it to become ready, then point its
+address pool at the VM's own IP so the ingress is assigned a reachable
+address:
 
 .. code-block:: bash
 
     sudo k8s enable load-balancer
-    VM_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
-    sudo k8s set load-balancer.l2-mode=true load-balancer.cidrs="$VM_IP/32"
+    sudo k8s status --wait-ready
+    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+    sudo k8s set load-balancer.l2-mode=true load-balancer.cidrs="$INGRESS_IP/32"
 
 Check the status of Canonical Kubernetes:
 
@@ -90,57 +92,65 @@ along with a list of enabled and disabled features.
 Set up a local registry
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Canonical Kubernetes pulls application images from an OCI registry.
-It doesn't bundle a registry, so we run a small local one. Download
-the registry and start it as a service:
+Canonical Kubernetes pulls application images from an OCI registry. Deploy a
+small registry inside the cluster, exposed on the node at ``localhost:32000``:
 
 .. code-block:: bash
 
-    ARCH=$(dpkg --print-architecture)
-    sudo curl -sSL -o /tmp/registry.tar.gz \
-      "https://github.com/distribution/distribution/releases/download/v2.8.3/registry_2.8.3_linux_${ARCH}.tar.gz"
-    sudo tar -xzf /tmp/registry.tar.gz -C /usr/local/bin registry
-    sudo mkdir -p /etc/distribution
-    sudo tee /etc/distribution/config.yml > /dev/null <<'EOF'
-    version: 0.1
-    storage:
-      filesystem:
-        rootdirectory: /var/lib/registry
-    http:
-      addr: :5000
+    sudo k8s kubectl apply -f - <<'EOF'
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: container-registry
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: registry
+      namespace: container-registry
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: registry
+      template:
+        metadata:
+          labels:
+            app: registry
+        spec:
+          containers:
+            - name: registry
+              image: registry:2.8.3
+              ports:
+                - containerPort: 5000
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: registry
+      namespace: container-registry
+    spec:
+      type: NodePort
+      selector:
+        app: registry
+      ports:
+        - port: 5000
+          targetPort: 5000
+          nodePort: 32000
     EOF
-    sudo tee /etc/systemd/system/registry.service > /dev/null <<'EOF'
-    [Unit]
-    Description=OCI registry
-    After=network.target
 
-    [Service]
-    ExecStart=/usr/local/bin/registry serve /etc/distribution/config.yml
-    Restart=always
-
-    [Install]
-    WantedBy=multi-user.target
-    EOF
-    sudo systemctl enable --now registry
-
-Finally, let Canonical Kubernetes pull from this registry over plain HTTP by
-adding a containerd hosts configuration:
+Wait for the registry to become available:
 
 .. code-block:: bash
 
-    sudo mkdir -p /etc/containerd/hosts.d/localhost:5000
-    sudo tee /etc/containerd/hosts.d/localhost:5000/hosts.toml > /dev/null <<'EOF'
-    server = "http://localhost:5000"
-
-    [host."http://localhost:5000"]
-      capabilities = ["pull", "resolve"]
-    EOF
+    sudo k8s kubectl rollout status deployment/registry \
+      -n container-registry --timeout=5m
 
 Juju is required to deploy the |12FactorApp| application.
 We'll install Juju using the ``3.6/stable`` channel. Since the snap is
 sandboxed, we'll also manually create a directory to contain
 its files. Canonical Kubernetes isn't automatically registered as a Juju
-cloud, so we add it before bootstrapping a development controller:
+cloud, so let's add it before bootstrapping a development controller:
 
 .. code-block:: text
 

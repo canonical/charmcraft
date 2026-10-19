@@ -299,48 +299,6 @@ suites:
       refresh_or_install_snap k8s "$k8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
 
-      # The tutorial pushes the application image to a local OCI registry. Run it
-      # as a plain systemd service (no Docker, which would conflict with the k8s
-      # snap's own containerd), as done in the k8s-snap integration test harness.
-      ARCH=$(dpkg --print-architecture)
-      curl -sSL -o /tmp/registry.tar.gz \
-        "https://github.com/distribution/distribution/releases/download/v2.8.3/registry_2.8.3_linux_${ARCH}.tar.gz"
-      tar -xzf /tmp/registry.tar.gz -C /usr/local/bin registry
-      mkdir -p /etc/distribution
-      cat <<'EOF' > /etc/distribution/config.yml
-      version: 0.1
-      storage:
-        filesystem:
-          rootdirectory: /var/lib/registry
-      http:
-        addr: :5000
-      EOF
-      cat <<'EOF' > /etc/systemd/system/registry.service
-      [Unit]
-      Description=OCI registry
-      After=network.target
-
-      [Service]
-      ExecStart=/usr/local/bin/registry serve /etc/distribution/config.yml
-      Restart=always
-
-      [Install]
-      WantedBy=multi-user.target
-      EOF
-      systemctl enable --now registry
-      retry -n 10 --wait 1 curl -sf http://localhost:5000/v2/
-
-      # Let Canonical Kubernetes pull from the insecure local registry. The k8s
-      # snap uses the standard containerd hosts.d path; it is read per-pull, so no
-      # restart is required.
-      mkdir -p "/etc/containerd/hosts.d/localhost:5000"
-      cat <<'EOF' > "/etc/containerd/hosts.d/localhost:5000/hosts.toml"
-      server = "http://localhost:5000"
-
-      [host."http://localhost:5000"]
-        capabilities = ["pull", "resolve"]
-      EOF
-
       k8s bootstrap
       k8s status --wait-ready --timeout 5m
 
@@ -350,12 +308,62 @@ suites:
       # Unlike the MicroK8s ingress addon (which binds the node's host ports), the
       # Canonical Kubernetes ingress is exposed through a LoadBalancer service, so a
       # load balancer with an address pool is required for the ingress to be reachable.
+      # Wait for the load-balancer (MetalLB) webhook to come up before configuring
+      # the address pool, otherwise the "set" races the validating webhook.
       k8s enable load-balancer
-      IPADDR=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
-      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$IPADDR/32"
+      k8s status --wait-ready --timeout 5m
+      INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$INGRESS_IP/32"
 
       k8s status --wait-ready --timeout 5m
       k8s kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=10m
+
+      # The tutorial pushes the application image to an in-cluster OCI registry
+      # exposed on the node at localhost:32000, mirroring the MicroK8s registry
+      # addon. Canonical Kubernetes' containerd trusts this node-local registry.
+      k8s kubectl apply -f - <<'EOF'
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: container-registry
+      ---
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: registry
+        namespace: container-registry
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: registry
+        template:
+          metadata:
+            labels:
+              app: registry
+          spec:
+            containers:
+              - name: registry
+                image: registry:2.8.3
+                ports:
+                  - containerPort: 5000
+      ---
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: registry
+        namespace: container-registry
+      spec:
+        type: NodePort
+        selector:
+          app: registry
+        ports:
+          - port: 5000
+            targetPort: 5000
+            nodePort: 32000
+      EOF
+      k8s kubectl rollout status deployment/registry -n container-registry --timeout=5m
+      retry -n 30 --wait 2 curl -sf http://localhost:32000/v2/
 
       # Canonical Kubernetes isn't autodetected by Juju, so register it as a cloud.
       k8s config | juju add-k8s k8s-cloud --client

@@ -684,12 +684,11 @@ Now that we have the greeting app, we can disable debug mode:
 
 Use ``juju status --watch 2s`` again to wait until the App is active
 again. You may visit http://django-hello-world from a web browser, or
-inside the Multipass VM run:
+inside the Multipass VM run the following, which reuses the ``INGRESS_IP``
+value you set during setup:
 
 .. code-block:: bash
 
-    # Canonical Kubernetes serves the ingress at the VM's address
-    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
     curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP
 
 Either way, the Django app should respond with ``Hello, world!``.

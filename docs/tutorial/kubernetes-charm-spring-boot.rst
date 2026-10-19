@@ -426,12 +426,11 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Send a request via the ingress:
+Send a request via the ingress. The following commands reuse the
+``INGRESS_IP`` value you set during setup:
 
 .. code-block:: bash
 
-    # Canonical Kubernetes serves the ingress at the VM's address
-    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
     curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 The request should return the ``Hello, world!`` greeting.

@@ -434,12 +434,11 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Test the deployment by sending a request via the ingress:
+Test the deployment by sending a request via the ingress. The following
+commands reuse the ``INGRESS_IP`` value you set during setup:
 
 .. code-block:: bash
 
-    # Canonical Kubernetes serves the ingress at the VM's address
-    INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
     curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
 It should return the ``{"message":"Hello, world!"}`` greeting.

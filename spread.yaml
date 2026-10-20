@@ -308,10 +308,10 @@ suites:
       # Unlike the MicroK8s ingress addon (which binds the node's host ports), the
       # Canonical Kubernetes ingress is exposed through a LoadBalancer service, so a
       # load balancer with an address pool is required for the ingress to be reachable.
-      # Wait for the load-balancer (MetalLB) webhook to come up before configuring
-      # the address pool, otherwise the "set" races the validating webhook.
+      # Wait for MetalLB's controller (which hosts the validating webhook) to roll out
+      # before configuring the address pool, otherwise the "set" races the webhook.
       k8s enable load-balancer
-      k8s status --wait-ready --timeout 5m
+      k8s kubectl rollout status deployment/metallb-controller -n metallb-system --timeout=5m
       INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
       k8s set load-balancer.l2-mode=true load-balancer.cidrs="$INGRESS_IP/32"
 

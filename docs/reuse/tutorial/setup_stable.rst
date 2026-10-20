@@ -69,14 +69,15 @@ Enable the necessary features:
     sudo k8s enable ingress
 
 Canonical Kubernetes exposes ingress through a load-balancer service. Enable
-the built-in load balancer, wait for it to become ready, then point its
-address pool at the VM's own IP so the ingress is assigned a reachable
-address:
+the built-in load balancer, wait for the MetalLB controller (which hosts the
+load balancer's validating webhook) to roll out, then point its address pool
+at the VM's own IP so the ingress is assigned a reachable address:
 
 .. code-block:: bash
 
     sudo k8s enable load-balancer
-    sudo k8s status --wait-ready
+    sudo k8s kubectl rollout status deployment/metallb-controller \
+      -n metallb-system --timeout=5m
     INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
     sudo k8s set load-balancer.l2-mode=true load-balancer.cidrs="$INGRESS_IP/32"
 

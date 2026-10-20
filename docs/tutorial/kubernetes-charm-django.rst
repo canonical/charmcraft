@@ -541,7 +541,8 @@ Let's expose the app using ingress so that we can access it. Deploy the
     :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
-the ingress. We will also set the default route to be the root endpoint:
+the ingress. We also set the default route to the root endpoint and target
+the ``cilium`` ingress class that Canonical Kubernetes uses for its ingress:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash

@@ -329,7 +329,7 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed spring-boot-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+``Packed spring-boot-hello-world_<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 

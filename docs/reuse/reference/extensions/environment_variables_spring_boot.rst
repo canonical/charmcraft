@@ -54,13 +54,20 @@ Ingress relation.
   * - MongoDB
     -
         - ``spring.data.mongodb.uri``
-  * - Redis
+  * - Redis (Ubuntu 22.04 LTS and 24.04 LTS only)
     -
         - ``spring.data.redis.url``
         - ``spring.data.redis.host``
         - ``spring.data.redis.port``
         - ``spring.data.redis.username``
         - ``spring.data.redis.password``
+  * - Valkey (Ubuntu 26.04 LTS only)
+    -
+        - ``spring.data.valkey.url``
+        - ``spring.data.valkey.host``
+        - ``spring.data.valkey.port``
+        - ``spring.data.valkey.username``
+        - ``spring.data.valkey.password``
   * - SAML
     -
         - ``spring.security.saml2.relyingparty.registration.``\

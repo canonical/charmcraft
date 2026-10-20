@@ -157,6 +157,10 @@ parts:
       sed -i 's|#!/bin/sh|#!/snap/charmcraft/current/bin/python3|' $CRAFT_PART_INSTALL/bin/craftctl
 
       version="$(uv pip show charmcraft | grep "Version:" | cut -d' ' -f2)"
+      # snapd caps the version field at 32 characters. setuptools_scm's
+      # generated version grows with commit distance from the last tag, so
+      # truncate defensively to avoid failing the build.
+      version="${version:0:32}"
       /snap/snapcraft/current/libexec/snapcraft/craftctl set version="${version}"
       [ -n "$(echo $version | grep "post")" ] && grade=devel || grade=stable
       /snap/snapcraft/current/libexec/snapcraft/craftctl set grade="${grade}"

@@ -9,6 +9,7 @@ environment:
   CHARM/dex_auth: https://github.com/canonical/dex-auth-operator
   CHARM/github_runner: https://github.com/canonical/github-runner-operator
   CHARM/hardware_observer: https://github.com/canonical/hardware-observer-operator
+  CHARM/juju_controller: https://github.com/juju/juju-controller
   CHARM/kafka: https://github.com/canonical/kafka-operator
   CHARM/kratos: https://github.com/canonical/kratos-operator
   CHARM/minio: https://github.com/canonical/minio-operator
@@ -42,8 +43,24 @@ restore: |
 
 execute: |
   cd charm
-  charmcraft pack --verbose
+
+  # juju-controller declares platforms for several Ubuntu bases (22.04, 24.04, 26.04)
+  # that all match this system's architecture, so charmcraft errors out with
+  # "Multiple builds match the current platform" unless one is pinned explicitly.
+  # Regression test for https://github.com/canonical/charmcraft/issues/2816
+  platform_args=()
+  if [ "$CHARM" = "https://github.com/juju/juju-controller" ]; then
+    platform_args=(--platform "ubuntu@$(lsb_release -rs):$(dpkg --print-architecture)")
+  fi
+
+  charmcraft pack --verbose "${platform_args[@]}"
 
   mv *.charm ~/
+  # juju-controller is only used internally by "juju bootstrap"; juju refuses
+  # to "deploy" it directly, so just confirm it packed successfully.
+  if [ "$CHARM" = "https://github.com/juju/juju-controller" ]; then
+    exit 0
+  fi
+
   # We can only deploy one of the charms in the model, so deploy the first one.
   ls -1 ~/*.charm | head -n 1 | xargs -n 1 juju deploy

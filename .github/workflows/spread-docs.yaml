@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   snap-build:
-    runs-on: [self-hosted, linux, amd64, noble, medium]
+    runs-on: self-hosted-linux-amd64-noble-medium
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -38,7 +38,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: [spread-installed]
+    runs-on: spread-installed
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:

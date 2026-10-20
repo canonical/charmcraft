@@ -26,7 +26,7 @@ You can provide the integration to your deployed 12-factor app using:
 
 .. code-block:: bash
 
-    juju integrate <app charm> <endoint name>
+    juju integrate <app charm> <endpoint name>
 
 After the integration has been established, the connection string and other
 configuration options will be available as environment variables that you may

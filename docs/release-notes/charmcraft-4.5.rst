@@ -6,7 +6,7 @@
 Charmcraft 4.5 release notes
 ============================
 
-21 October 2026
+3 November 2026
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.5.
 

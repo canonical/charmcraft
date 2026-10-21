@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Charmcraft-specific overrides for the remote build service."""
 
-import datetime
+import datetime as dt
 import pathlib
 from collections.abc import Mapping
 from typing import Any
@@ -44,7 +44,7 @@ class RemoteBuildService(remotebuild.RemoteBuildService):
         project_name = self._name.split("-", maxsplit=2)[1]
         logs: dict[str, pathlib.Path | None] = {}
         log_downloads: dict[str, pathlib.Path] = {}
-        fetch_time = datetime.datetime.now().isoformat(timespec="seconds")
+        fetch_time = dt.datetime.now().isoformat(timespec="seconds")
         for build in self._builds:
             url = build.build_log_url
             if not url:

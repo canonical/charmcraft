@@ -5,22 +5,47 @@ Relations
 Your charm already has the following ``peers``, ``provides``, and ``requires``
 relations, as they were automatically supplied by the |framework| extension:
 
-.. code-block:: yaml
+.. tab-set::
 
-    peers:
-      secret-storage:
-        interface: secret-storage
-    provides:
-      metrics-endpoint:
-        interface: prometheus_scrape
-      grafana-dashboard:
-        interface: grafana_dashboard
-    requires:
-      logging:
-        interface: loki_push_api
-      ingress:
-        interface: ingress
-        limit: 1
+    .. tab-item:: Ubuntu 22.04 LTS and 24.04 LTS
+        :sync: base-22-24
+
+        .. code-block:: yaml
+
+            peers:
+              secret-storage:
+                interface: secret-storage
+            provides:
+              metrics-endpoint:
+                interface: prometheus_scrape
+              grafana-dashboard:
+                interface: grafana_dashboard
+            requires:
+              logging:
+                interface: loki_push_api
+              ingress:
+                interface: ingress
+                limit: 1
+
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
+
+        .. code-block:: yaml
+
+            peers:
+              peers:
+                interface: peers
+            provides:
+              metrics-endpoint:
+                interface: prometheus_scrape
+              grafana-dashboard:
+                interface: grafana_dashboard
+            requires:
+              logging:
+                interface: loki_push_api
+              ingress:
+                interface: ingress
+                limit: 1
 
 In addition to these relations, in each ``provides`` and ``requires``
 block you may specify further relations, to integrate with
@@ -31,8 +56,9 @@ the following charms:
 
   * - Relation
     - Endpoint definition
-  * - Ingress `traefik <https://charmhub.io/traefik-k8s>`__ and `nginx
-      ingress integrator <https://charmhub.io/nginx-ingress-integrator>`__
+  * - Ingress `Gateway API integrator
+      <https://charmhub.io/gateway-api-integrator>`__ and
+      `Traefik <https://charmhub.io/traefik-k8s>`__
     - Already available in the charm
   * - MySQL `machine <https://charmhub.io/mysql>`__ and
       `Kubernetes <https://charmhub.io/mysql-k8s>`__ charm
@@ -66,7 +92,8 @@ the following charms:
   * - `Canonical Observability Stack
       (COS) <https://charmhub.io/cos-lite>`__
     - Already available in the charm
-  * - `Redis <https://charmhub.io/redis-k8s>`__ charm
+  * - `Redis <https://charmhub.io/redis-k8s>`__ charm (not generated on Ubuntu 26.04
+      LTS)
     - .. code-block:: yaml
 
           requires:
@@ -153,9 +180,9 @@ the following charms:
               limit: 1
 
       The relation will create two configuration options,
-      ``{endpoint_name}-redirect-path`` and ``{endoint_name}-scopes``.
+      ``{endpoint_name}-redirect-path`` and ``{endpoint_name}-scopes``.
       ``{endpoint_name}-scopes`` is a space separated list of scopes, and the scope
-      ``openid`` is manadatory.
+      ``openid`` is mandatory.
   * - `Squid Forward Proxy <https://charmhub.io/squid-forward-proxy>`__ charm
     - .. code-block:: yaml
 
@@ -171,6 +198,12 @@ the following charms:
 
     The key ``optional`` with value ``False`` means that the charm will
     get blocked and stop the services if the integration is not provided.
+
+.. note::
+
+    Ubuntu 26.04 LTS generates only the Valkey relation, not the Redis relation.
+    See :ref:`extensions` for the full list of contract differences by base.
+    The Valkey integration doesn't support TLS.
 
 To add one of these relations, e.g., PostgreSQL, in the
 project file, include the appropriate ``requires`` block and

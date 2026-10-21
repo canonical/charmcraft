@@ -34,7 +34,7 @@ class PythonPlugin(python_plugin.PythonPlugin):
     """Charmcraft-specific version of the python plugin."""
 
     properties_class = PythonPluginProperties
-    _options: PythonPluginProperties  # type: ignore[reportIncompatibleVariableOverride]
+    _options: PythonPluginProperties  # type: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
 
     @override
     def get_build_environment(self) -> dict[str, str]:

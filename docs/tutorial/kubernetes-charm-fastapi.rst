@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for a FastAPI app
 ===================================================
 
+.. note::
+
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`FastAPI tutorial <tutorial-kubernetes-charm-fastapi-26-04>`
+    in the 12-Factor app support documentation.
+
 Imagine you have a FastAPI app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
@@ -220,11 +226,6 @@ Now let's :external+rockcraft:ref:`ref_commands_pack` the rock:
     :end-before: [docs:pack-end]
     :dedent: 2
 
-.. note::
-
-    ``ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the FastAPI
-    extension is experimental.
-
 Depending on your system and network, this step can take several
 minutes to finish.
 
@@ -334,11 +335,6 @@ Let's :literalref:`pack<ref_commands_pack>` the charm:
     :start-after: [docs:charm-pack]
     :end-before: [docs:charm-pack-end]
     :dedent: 2
-
-.. note::
-
-    ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS`` is required while the FastAPI
-    extension is experimental.
 
 Depending on your system and network, this step may take several
 minutes to finish.

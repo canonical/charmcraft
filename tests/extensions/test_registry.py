@@ -194,7 +194,7 @@ def test_real_framework_factories_experimental_status_correct():
             "spring-boot",
             SpringBootFrameworkFactory,
             [
-                (("ubuntu", "24.04"), False),  # V1: stable
+                (("ubuntu", "24.04"), True),  # V1: experimental
                 (("ubuntu", "26.04"), True),  # V2: experimental
             ],
         ),
@@ -206,3 +206,14 @@ def test_real_framework_factories_experimental_status_correct():
             assert actual == expected_experimental, (
                 f"{name} on {base}: expected is_experimental={expected_experimental}, got {actual}"
             )
+
+
+def test_spring_boot_framework_all_bases_are_experimental():
+    extension = next(
+        item
+        for item in extensions.get_extensions()
+        if item["name"] == "spring-boot-framework"
+    )
+
+    assert extension["bases"] == []
+    assert extension["experimental_bases"] == ["ubuntu@24.04", "ubuntu@26.04"]

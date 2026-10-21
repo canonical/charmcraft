@@ -83,7 +83,7 @@ class FakeResponse(requests.Response):
             raise requests.exceptions.JSONDecodeError(exc.msg, exc.doc, exc.pos)
 
     @property
-    def reason(self):
+    def reason(self):  # ty: ignore[invalid-property-type-override]
         return self._content
 
     @property

@@ -60,7 +60,7 @@ Skip repacking unchanged charms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Charmcraft now mediates the generation of ``actions.yaml``, ``config.yaml``,
-``manifest.yaml``, and ``metadata.yaml``, allowing Charmcraft to skip repacking
+``manifest.yaml``, and ``metadata.yaml``, so it can skip repacking
 when no project files or metadata have changed.
 
 

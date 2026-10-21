@@ -30,8 +30,8 @@ In order to create the charm, you'll need to install Charmcraft:
 
     sudo snap install charmcraft --channel latest/stable --classic
 
-Install LXD, Canonical Kubernetes, and Juju
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Install LXD and Canonical Kubernetes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LXD will be required for building the rock.
 Make sure it is installed:

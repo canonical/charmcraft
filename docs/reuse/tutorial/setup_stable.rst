@@ -98,47 +98,9 @@ small registry inside the cluster, exposed on the node at ``localhost:32000``:
 
 .. code-block:: bash
 
-    sudo k8s kubectl apply -f - <<'EOF'
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: container-registry
-    ---
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: registry
-      namespace: container-registry
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          app: registry
-      template:
-        metadata:
-          labels:
-            app: registry
-        spec:
-          containers:
-            - name: registry
-              image: registry:2.8.3
-              ports:
-                - containerPort: 5000
-    ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: registry
-      namespace: container-registry
-    spec:
-      type: NodePort
-      selector:
-        app: registry
-      ports:
-        - port: 5000
-          targetPort: 5000
-          nodePort: 32000
-    EOF
+    curl --fail --location --output registry.yaml \
+      https://raw.githubusercontent.com/canonical/charmcraft/main/docs/reuse/tutorial/registry.yaml
+    sudo k8s kubectl apply -f registry.yaml
 
 Wait for the registry to become available:
 

@@ -299,6 +299,11 @@ suites:
       refresh_or_install_snap k8s "$k8s_channel" --classic
       refresh_or_install_snap rockcraft latest/edge --classic
 
+      # A pre-existing containerd (e.g. from Docker) holds /run/containerd and
+      # makes the k8s bootstrap pre-init checks fail.
+      systemctl stop docker.socket docker containerd 2>/dev/null || true
+      rm -rf /run/containerd
+
       k8s bootstrap
       k8s status --wait-ready --timeout 5m
 

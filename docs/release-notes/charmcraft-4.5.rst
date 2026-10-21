@@ -56,12 +56,10 @@ Minor features
 Charmcraft 4.5 brings the following minor changes.
 
 
-Skip repacking unchanged charms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Smarter repacking
+~~~~~~~~~~~~~~~~~
 
-Charmcraft now mediates the generation of ``actions.yaml``, ``config.yaml``,
-``manifest.yaml``, and ``metadata.yaml``, so it can skip repacking
-when no project files or metadata have changed.
+Charmcraft will now skip re-packing the image if the project files are unchanged.
 
 
 Base-specific init profiles

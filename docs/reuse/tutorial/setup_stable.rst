@@ -147,6 +147,9 @@ Wait for the registry to become available:
     sudo k8s kubectl rollout status deployment/registry \
       -n container-registry --timeout=5m
 
+Install Juju
+~~~~~~~~~~~~
+
 Juju is required to deploy the |12FactorApp| application.
 We'll install Juju using the ``3.6/stable`` channel. Since the snap is
 sandboxed, we'll also manually create a directory to contain

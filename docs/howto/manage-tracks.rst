@@ -46,7 +46,7 @@ To create a new track yourself, follow the steps below:
 
 .. important::
 
-    As you might notice, this path is currently a little hacky. In the long-term it
+    As you might notice, this path is currently a little :vale-ignore:`hacky`. In the long-term it
     should become a lot smoother as there are plans to support it through the Charmcraft
     CLI.
 

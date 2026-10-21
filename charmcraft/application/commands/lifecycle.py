@@ -24,7 +24,6 @@ from typing import TYPE_CHECKING, Any, cast
 import craft_cli
 from craft_application.commands import lifecycle
 from craft_application.util import is_managed_mode
-from craft_cli import CraftError
 from typing_extensions import override
 
 from charmcraft import models, utils
@@ -109,24 +108,6 @@ class PackCommand(lifecycle.PackCommand):
     def _should_add_shell_args() -> bool:
         return True
 
-    def _validate_bases_indices(self, bases_indices):
-        """Validate that bases index is valid."""
-        if bases_indices is None:
-            return
-
-        project = cast(models.Charm, self._services.project)
-
-        msg = "Bases index '{}' is invalid (must be >= 0 and fit in configured bases)."
-        if isinstance(project, models.BasesCharm):
-            len_configured_bases = len(project.bases)
-        else:
-            len_configured_bases = 0
-        for bases_index in bases_indices:
-            if bases_index < 0:
-                raise CraftError(msg.format(bases_index))
-            if bases_index >= len_configured_bases:
-                raise CraftError(msg.format(bases_index))
-
     def _update_charm_libs(self) -> None:
         """Update charm libs attached to the project."""
         craft_cli.emit.progress(
@@ -181,13 +162,15 @@ class PackCommand(lifecycle.PackCommand):
         # Move artifacts in the outer instance.
         if not is_managed_mode():
             package_service = cast("PackageService", self._services.get("package"))
-            try:
-                artifacts = package_service.read_artifacts_state()
-            except KeyError:
-                craft_cli.emit.debug(
-                    "Could not find artifacts in the state service. Not moving."
-                )
-            else:
+            found_any = False
+            for build_info in self._services.get("build_plan").plan():
+                try:
+                    artifacts = package_service.read_artifacts_state(
+                        build_info.platform
+                    )
+                except KeyError:
+                    continue
+                found_any = True
                 project_dir = parsed_args.project_dir or pathlib.Path.cwd()
                 output_dir = parsed_args.output or pathlib.Path.cwd()
 
@@ -197,5 +180,9 @@ class PackCommand(lifecycle.PackCommand):
                     if old_path != new_path:
                         new_path.parent.mkdir(parents=True, exist_ok=True)
                         old_path.rename(new_path)
+            if not found_any:
+                craft_cli.emit.debug(
+                    "Could not find artifacts in the state service. Not moving."
+                )
 
         return result

@@ -24,6 +24,7 @@ jobs:
       osv-exclude-paths: |
         docs
         tests/spread
+        tests
       uv-export-no-groups: |
         docs
         docs-sphinx-stack

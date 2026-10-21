@@ -150,14 +150,14 @@ def test_charmpluginproperties_entrypoint_ok():
     """Simple valid entrypoint."""
     content = {"source": ".", "charm-entrypoint": "myep.py"}
     properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "myep.py"
+    assert properties.charm_entrypoint == "myep.py"  # ty: ignore[unresolved-attribute]
 
 
 def test_charmpluginproperties_entrypoint_default():
     """Specific default if not configured."""
     content = {"source": "."}
     properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "src/charm.py"
+    assert properties.charm_entrypoint == "src/charm.py"  # ty: ignore[unresolved-attribute]
 
 
 def test_charmpluginproperties_entrypoint_relative(tmp_path):
@@ -165,7 +165,7 @@ def test_charmpluginproperties_entrypoint_relative(tmp_path):
     absolute_path = tmp_path / "myep.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
     properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "myep.py"
+    assert properties.charm_entrypoint == "myep.py"  # ty: ignore[unresolved-attribute]
 
 
 def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
@@ -202,7 +202,7 @@ def test_charmpluginproperties_requirements_default(tmp_path):
     """The configuration is empty by default."""
     content = {"source": str(tmp_path)}
     properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_requirements == []
+    assert properties.charm_requirements == []  # ty: ignore[unresolved-attribute]
 
 
 def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Path):
@@ -219,4 +219,4 @@ def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path)
     (tmp_path / "alternative.txt").write_text("somedep")
     content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
     properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_requirements == ["alternative.txt"]
+    assert properties.charm_requirements == ["alternative.txt"]  # ty: ignore[unresolved-attribute]

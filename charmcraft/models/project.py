@@ -16,7 +16,7 @@
 """Project-related models for Charmcraft."""
 
 import abc
-import datetime
+import datetime as dt
 import os
 import pathlib
 import re
@@ -227,11 +227,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
     version: SkipJsonSchema[VersionStr | None] = None
-    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
     # These are inside the "links" child model.
-    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
-    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
-    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
+    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
+    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
 
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
@@ -239,13 +239,13 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # These private attributes are not part of the project model but are attached here
     # because Charmcraft uses this metadata.
-    _started_at: datetime.datetime = pydantic.PrivateAttr(
-        default_factory=lambda: datetime.datetime.now(tz=datetime.timezone.utc)
+    _started_at: dt.datetime = pydantic.PrivateAttr(
+        default_factory=lambda: dt.datetime.now(tz=dt.timezone.utc)
     )
     _valid: bool = pydantic.PrivateAttr(default=False)
 
     @property
-    def started_at(self) -> datetime.datetime:
+    def started_at(self) -> dt.datetime:
         """Get the time that Charmcraft started running."""
         return self._started_at
 
@@ -418,10 +418,10 @@ class CharmProject(CharmcraftProject):
             "mysql-k8s",
         ],
     )
-    summary: CharmcraftSummaryStr = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]
+    summary: CharmcraftSummaryStr = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[invalid-mutable-override]
         description="A brief (one-line) summary of your charm.",
     )
-    description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]
+    description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[invalid-mutable-override]
         description="A multi-line summary of your charm."
     )
 
@@ -863,7 +863,7 @@ class BasesCharm(CharmProject):
         Annotated[BasesConfiguration, pydantic.BeforeValidator(_validate_base)]
     ] = pydantic.Field(min_length=1)
 
-    base: None = None
+    base: None = None  # ty: ignore[invalid-mutable-override]
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         default={"charm": {"plugin": "charm", "source": "."}},
@@ -893,8 +893,8 @@ class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
 
     # Silencing pyright because it complains about missing default value
-    base: BaseStr | None = None
-    build_base: BuildBaseStr | None = None
+    base: BaseStr | None = None  # ty: ignore[invalid-mutable-override]
+    build_base: BuildBaseStr | None = None  # ty: ignore[invalid-mutable-override]
     platforms: PlatformsDict
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(

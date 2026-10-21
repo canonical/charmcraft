@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for an Express app
 ======================================================
 
+.. note::
+
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`Express tutorial <tutorial-kubernetes-charm-express-26-04>`
+    in the 12-Factor app support documentation.
+
 Imagine you have an Express app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
@@ -67,15 +73,6 @@ Create a directory for the app:
     :language: bash
     :start-after: [docs:create-working-dir]
     :end-before: [docs:create-working-dir-end]
-    :dedent: 2
-
-As the ``expressjs-framework`` extensions for Rockcraft and Charmcraft are
-still in development, we must enable experimental extensions for each:
-
-.. literalinclude:: code/expressjs/task.yaml
-    :language: bash
-    :start-after: [docs:export-experimental-env-vars]
-    :end-before: [docs:export-experimental-env-vars-end]
     :dedent: 2
 
 Create the Express app

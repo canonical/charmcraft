@@ -18,7 +18,6 @@
 
 from typing import Annotated
 
-import craft_parts.constraints
 import pydantic
 
 
@@ -50,7 +49,6 @@ def _validate_linter_name(value: str) -> str:
     return value
 
 
-RelativePath = craft_parts.constraints.RelativePathStr
 AttributeName = Annotated[  # TODO: Turn this into a StrEnum
     str,
     pydantic.Field(strict=True),

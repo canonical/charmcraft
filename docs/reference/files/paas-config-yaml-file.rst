@@ -42,6 +42,48 @@ For example:
     metrics-path: /metrics
     framework_logging_format: json
 
+Workload settings
+-----------------
+
+With base 26.04 LTS, the charm reads ``port``, ``metrics-port``, and ``metrics-path``
+from the file and passes them to the workload. When you omit a value, the framework
+default applies. The following table shows the defaults and how each framework receives
+the values.
+
+.. list-table::
+    :header-rows: 1
+
+    * - Framework
+      - Port (default)
+      - Metrics port (default)
+      - Metrics path (default)
+    * - Flask
+      - 8000 (Gunicorn bind address)
+      - ``FLASK_METRICS_PORT`` (9102)
+      - ``FLASK_METRICS_PATH`` (``/metrics``)
+    * - Django
+      - 8000 (Gunicorn bind address)
+      - ``DJANGO_METRICS_PORT`` (9102)
+      - ``DJANGO_METRICS_PATH`` (``/metrics``)
+    * - FastAPI
+      - ``UVICORN_PORT`` (8000)
+      - ``METRICS_PORT`` (8000)
+      - ``METRICS_PATH`` (``/metrics``)
+    * - Express
+      - ``PORT`` (8080)
+      - ``METRICS_PORT`` (9464)
+      - ``METRICS_PATH`` (``/metrics``)
+    * - Go
+      - ``PORT`` (8080)
+      - ``METRICS_PORT`` (8080)
+      - ``METRICS_PATH`` (``/metrics``)
+    * - Spring Boot
+      - ``SERVER_PORT`` (8080)
+      - ``management.server.port`` (8080)
+      - ``management.endpoints.web.base-path`` and
+        ``management.endpoints.web.path-mapping.prometheus``
+        (``/actuator/prometheus``)
+
 The `paas-config reference
 <https://canonical.com/juju/docs/12-factor/latest/reference/paas-config/>`__ defines runtime defaults, framework
 behavior, and the rest of the schema.

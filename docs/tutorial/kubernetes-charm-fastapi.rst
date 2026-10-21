@@ -72,6 +72,15 @@ Set things up
 .. include:: /reuse/tutorial/setup_edge.rst
 .. |12FactorApp| replace:: FastAPI
 
+The Ubuntu 26.04 extension for the rock is experimental. Enable it in the
+terminal where you'll build the rock:
+
+.. literalinclude:: code/fastapi/task.yaml
+    :language: bash
+    :start-after: [docs:export-experimental-env-vars]
+    :end-before: [docs:export-experimental-env-vars-end]
+    :dedent: 2
+
 Let's create a directory for this tutorial and enter into it:
 
 .. code-block:: bash
@@ -176,6 +185,9 @@ From the ``~/fastapi-hello-world`` directory, initialize the rock:
 The ``rockcraft.yaml`` file will be automatically created, with the name being
 set based on your working directory.
 
+The Ubuntu 26.04 profile uses a bare runtime base and Ubuntu 26.04 as its
+build environment. Keep these generated settings.
+
 Let's verify that the project file is compatible with your host machine.
 Check the architecture of your system:
 
@@ -197,7 +209,8 @@ The top of the file should look similar to the following snippet:
     name: fastapi-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI app
+    base: bare # as an alternative, an ubuntu base can be used
+    build-base: ubuntu@26.04 # build-base is required when the base is bare
     version: '0.1' # just for humans. Semantic versioning is recommended
     summary: A summary of your FastAPI app # 79 char long summary
     description: |
@@ -487,12 +500,13 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
     :caption: ~/fastapi-hello-world/rockcraft.yaml
-    :emphasize-lines: 5
+    :emphasize-lines: 6
 
     name: fastapi-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI app
+    base: bare # as an alternative, an ubuntu base can be used
+    build-base: ubuntu@26.04 # build-base is required when the base is bare
     version: '0.2' # just for humans. Semantic versioning is recommended
     summary: A summary of your FastAPI app # 79 char long summary
     description: |
@@ -625,12 +639,13 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
 
 .. code-block:: yaml
     :caption: ~/fastapi-hello-world/rockcraft.yaml
-    :emphasize-lines: 5
+    :emphasize-lines: 6
 
     name: fastapi-hello-world
     # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
-    base: ubuntu@24.04 # the base environment for this FastAPI app
+    base: bare # as an alternative, an ubuntu base can be used
+    build-base: ubuntu@26.04 # build-base is required when the base is bare
     version: '0.3' # just for humans. Semantic versioning is recommended
     summary: A summary of your FastAPI app # 79 char long summary
     description: |

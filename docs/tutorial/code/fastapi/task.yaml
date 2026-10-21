@@ -17,6 +17,10 @@ restore: |
 environment:
 
 execute: |
+  # [docs:export-experimental-env-vars]
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1
+  # [docs:export-experimental-env-vars-end]
+
   # Move everything to $HOME so that Juju deployment works
   mkdir $HOME/fastapi
   mv *.yaml *.py *.txt $HOME/fastapi
@@ -47,7 +51,7 @@ execute: |
   kill $!
 
   # [docs:create-rockcraft-yaml]
-  rockcraft init --profile fastapi-framework
+  rockcraft init --profile fastapi-framework --base ubuntu@26.04
   # [docs:create-rockcraft-yaml-end]
 
   sed -i "s/name: .*/name: fastapi-hello-world/g" rockcraft.yaml

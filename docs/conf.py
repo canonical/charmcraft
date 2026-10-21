@@ -327,7 +327,7 @@ intersphinx_mapping = {
     "craft-parts": ("https://documentation.ubuntu.com/craft-parts/latest", None),
     "juju": ("https://canonical.com/juju/docs/juju-cli/3.6", None),
     "ops": ("https://canonical.com/juju/docs/ops/latest", None),
-    "rockcraft": ("https://documentation.ubuntu.com/rockcraft/stable", None),
+    "rockcraft": ("https://ubuntu.com/containers/rockcraft/docs/stable", None),
     "12-factor": ("https://canonical.com/juju/docs/12-factor/latest", None),
     "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
     "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),

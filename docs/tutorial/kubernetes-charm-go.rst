@@ -181,7 +181,7 @@ The top of the file should look similar to the following snippet:
     :caption: ~/go-hello-world/rockcraft.yaml
 
     name: go-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare
@@ -475,7 +475,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 6
 
     name: go-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare
@@ -633,7 +633,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 6
 
     name: go-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare

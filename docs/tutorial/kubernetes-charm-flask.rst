@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for a Flask app
 =================================================
 
+.. note::
+
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`Flask tutorial <tutorial-kubernetes-charm-flask-26-04>`
+    in the 12-Factor app support documentation.
+
 Imagine you have a Flask app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find

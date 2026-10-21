@@ -457,7 +457,7 @@ app. Deploy using Juju by specifying the OCI image name with the
     :end-before: [docs:deploy-django-app-end]
     :dedent: 2
 
-Now let's deploy PostgreSQL:
+Now let's deploy PostgreSQL 16:
 
 .. literalinclude:: code/django/task.yaml
     :language: bash
@@ -508,7 +508,7 @@ following output:
 
     App                 Version  Status  Scale  Charm               Channel    Rev  Address         Exposed  Message
     django-hello-world           active      1  django-hello-world               3  10.152.183.126  no
-    postgresql-k8s      14.11    active      1  postgresql-k8s      14/stable  281  10.152.183.197  no
+    postgresql-k8s      16       active      1  postgresql-k8s      16/stable  957  10.152.183.197  no
 
     Unit                   Workload  Agent  Address      Ports  Message
     django-hello-world/0*  active    idle   10.1.157.80

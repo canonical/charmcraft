@@ -116,7 +116,7 @@ execute: |
   # [docs:deploy-django-app-end]
 
   # [docs:deploy-postgres]
-  juju deploy postgresql-k8s --trust --channel 14/edge
+  juju deploy postgresql-k8s --trust --channel 16/stable
   # [docs:deploy-postgres-end]
 
   # [docs:integrate-postgres]

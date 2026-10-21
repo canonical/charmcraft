@@ -164,6 +164,9 @@ The following issues have been resolved in Charmcraft 4.5.
   instead of fetching the corresponding libraries from Charmhub. V2 profiles no longer
   generate the obsolete Redis relation or library and retain Valkey support.
 - The Spring Boot extension on Ubuntu 24.04 LTS is experimental, matching Rockcraft.
+- Experimental V2 12-factor extensions no longer generate the ``app-port``,
+  ``webserver-port``, ``metrics-port``, and ``metrics-path`` configuration options.
+  Configure them in ``paas-config.yaml`` instead.
 
 
 Spring Boot extension

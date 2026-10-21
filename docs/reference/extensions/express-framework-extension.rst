@@ -51,6 +51,12 @@ see :ref:`expressjs-framework-extension-secrets`.
 * **metrics-path**: Path where the Prometheus metrics will be scraped. The environment
   variable passed to the app is ``METRICS_PATH``. Default value is ``/metrics``.
 
+.. note::
+
+    On Ubuntu 26.04 LTS, the ``app-port``, ``metrics-port``, and ``metrics-path`` options
+    are not generated. Set ``port``, ``metrics-port``, and ``metrics-path`` in the
+    :ref:`paas-config.yaml file <paas-config-yaml-file>` instead.
+
 In case you want to add extra configuration options, any option you define will be used
 to generate environment variables; a user-defined option ``config-option-name`` will
 generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where the option name

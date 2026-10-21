@@ -36,7 +36,7 @@ What you'll need
 
 - A local system, e.g., a laptop, with AMD64 or ARM64 architecture
   which has sufficient resources to launch a virtual machine with 4
-  CPUs, 4 GB RAM, and a 50 GB disk.
+  CPUs, 8 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
 The RAM and disk space are necessary to set up all the required software and

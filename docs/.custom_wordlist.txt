@@ -10,6 +10,7 @@ Autotools
 backend
 backends
 backported
+balancer('s)?
 Bazel
 boolean
 bugfix(es)?

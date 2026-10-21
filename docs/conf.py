@@ -332,6 +332,7 @@ intersphinx_mapping = {
     "charmlibs": ("https://canonical.com/juju/docs/charmlibs", None),
     "multipass": ("https://documentation.ubuntu.com/multipass/latest", None),
     "gateway-api-integrator-charm": ("https://canonical.com/juju/docs/gateway-api-integrator-charm/latest/", None),
+    "launchpad": ("https://ubuntu.com/docs/launchpad", None),
 }
 
 # Block Intersphinx from looking up external sources with internal references. In other

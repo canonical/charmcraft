@@ -6,6 +6,12 @@
 Write your first Kubernetes charm for a Spring Boot app
 =======================================================
 
+.. note::
+
+    For Ubuntu 26.04 LTS, follow the
+    :external+12-factor:ref:`Spring Boot tutorial <tutorial-kubernetes-charm-spring-boot-26-04>`
+    in the 12-Factor app support documentation.
+
 Imagine you have a Spring Boot app backed up by a database
 such as PostgreSQL and need to deploy it. In a traditional setup,
 this can be quite a challenge, but with Charmcraft you'll find
@@ -32,7 +38,7 @@ What you'll need
 
 - A local system, e.g., a laptop, with AMD64 or ARM64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
-  4 GB RAM, and a 50 GB disk.
+  8 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
 The RAM and disk space are necessary to set up all the required software and
@@ -183,7 +189,7 @@ The top of the file should look similar to the following snippet:
     :caption: ~/spring-boot-hello-world/rockcraft.yaml
 
     name: spring-boot-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare
@@ -224,7 +230,7 @@ the terminal will respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry. This registry acts as a
+The rock needs to be copied to the local registry. This registry acts as a
 temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
@@ -239,9 +245,9 @@ This command contains the following pieces:
 - ``--insecure-policy``: adopts a permissive policy that
   removes the need for a dedicated policy file.
 - ``--dest-tls-verify=false``: disables the need for HTTPS
-  and verify certificates while interacting with the MicroK8s registry.
+  and certificate verification while interacting with the local registry.
 - ``oci-archive``: specifies the rock we created for our Spring Boot app.
-- ``docker``: specifies the name of the image in the MicroK8s registry.
+- ``docker``: specifies the name of the image in the local registry.
 
 Create the charm
 ----------------
@@ -329,7 +335,7 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed spring-boot-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+``Packed spring-boot-hello-world_<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
@@ -392,7 +398,7 @@ following output:
     juju status
 
     Model                    Controller      Cloud/Region        Version  SLA          Timestamp
-    spring-boot-hello-world  dev-controller  microk8s/localhost  3.6.6    unsupported  16:22:04+02:00
+    spring-boot-hello-world  dev-controller  k8s-cloud  3.6.6    unsupported  16:22:04+02:00
 
     App                      Version  Status  Scale  Charm                    Channel  Rev  Address         Exposed  Message
     spring-boot-hello-world           active      1  spring-boot-hello-world             0  10.152.183.157  no
@@ -410,7 +416,8 @@ Let's expose the app using ingress so that we can access it. Deploy the
     :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
-the ingress. We will also set the default route to be the root endpoint:
+the ingress. We also route all paths to the app with the ``/.*`` pattern, since a plain ``/`` only matches the root endpoint, and target
+the ``cilium`` ingress class that Canonical Kubernetes uses for its ingress:
 
 .. literalinclude:: code/spring-boot/task.yaml
     :language: bash
@@ -426,17 +433,18 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Send a request via the ingress:
+Send a request via the ingress. The following commands reuse the
+``INGRESS_IP`` value you set during setup:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
-    The ``--resolve spring-boot-hello-world:80:127.0.0.1`` option to the ``curl``
+    The ``--resolve spring-boot-hello-world:80:$INGRESS_IP`` option to the ``curl``
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
@@ -474,7 +482,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 6
 
     name: spring-boot-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare
@@ -545,7 +553,7 @@ Check that the response is still ``Hello, world!`` using:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1``
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 Now let's change the greeting:
 
@@ -559,7 +567,7 @@ Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world  --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world  --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 The response should now return the updated ``Hi!`` greeting.
 
@@ -658,7 +666,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 6
 
     name: spring-boot-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/latest/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: bare # as an alternative, a ubuntu base can be used
     build-base: ubuntu@24.04 # build-base is required when the base is bare
@@ -725,7 +733,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 It should still return the ``Hi!`` greeting.
 
@@ -733,7 +741,7 @@ Check the local visitors:
 
 .. code-block:: bash
 
-    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP
 
 This request should return ``Number of visitors 1`` after the
 previous request to the root endpoint.
@@ -745,7 +753,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/spring-boot-hello-world/charm
 
-    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world --resolve spring-boot-hello-world:80:$INGRESS_IP
 
     Hi!
 
@@ -754,7 +762,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/spring-boot-hello-world/charm
 
-    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:127.0.0.1
+    curl http://spring-boot-hello-world/visitors --resolve spring-boot-hello-world:80:$INGRESS_IP
 
     Number of visitors 2
 

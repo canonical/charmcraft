@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import os
 from typing import Any
 
@@ -90,7 +90,7 @@ class Charmcraft(craft_application.Application):
             self.services.get("state").set(
                 "charmcraft",
                 "started_at",
-                value=datetime.datetime.now().isoformat(),
+                value=dt.datetime.now().isoformat(),
                 overwrite=True,
             )
 

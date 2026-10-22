@@ -10,12 +10,13 @@ Use a 12-factor app charm
 
      Extension behaviour differs between Ubuntu base versions.
 
-     - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) use the original
-       ``paas-charm`` templates.
-     - Ubuntu 26.04 LTS (Resolute) and higher use the ``-26.04`` templates, with
+     - Ubuntu 22.04 LTS (Jammy) and Ubuntu 24.04 LTS (Noble) charms use
+       ``paas-charm`` 1.x.
+     - Ubuntu 26.04 LTS (Resolute) charms use ``paas-charm`` 2.x, with
        updated configuration and behaviour.
 
-     If you are targeting Ubuntu 26.04 LTS or higher, use the ``-26.04`` templates.
+     To initialize a charm for Ubuntu 26.04 LTS, use ``--base ubuntu@26.04``
+     with ``charmcraft init``.
      The guides on this page apply to both base groups unless noted otherwise.
 
 .. _use-12-factor-charms-admin-user-django:
@@ -45,6 +46,15 @@ script will run on every unit. The script is assumed to be idempotent (in other 
 can be run multiple times) and that it can be run on multiple units simultaneously
 without issue. Handling multiple migration scripts that run concurrently
 can be achieved by, for example, locking any tables during the migration.
+
+The charm looks for the following files in the root of your project and runs
+the first one it finds in this order:
+
+#. ``manage.py``, which runs ``python3 manage.py migrate``. This is
+   the Django migration command, so Django apps need no extra script.
+#. ``migrate.py``, which runs ``python3 migrate.py``.
+#. ``migrate.sh``, which runs ``bash -eo pipefail migrate.sh``.
+#. ``migrate``, a file that the charm runs directly.
 
 Using ``migrate.sh`` isn't mandatory. You can use programmatic approaches instead. Some
 popular libraries for programmatic database migration are:
@@ -104,8 +114,8 @@ To view the Pebble logs for a deployed web app, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble logs
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -160,8 +170,8 @@ To view more details about the web app itself, run:
             juju ssh <APP-NAME>/0 \
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket /charm/bin/pebble plan
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -228,8 +238,8 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
             PEBBLE_SOCKET=/charm/containers/app/pebble.socket \
             /charm/bin/pebble  exec --context=spring-boot -- bash
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **Django, Express, FastAPI, Flask, and Go**
 
@@ -256,8 +266,9 @@ For ``<FRAMEWORK>``, use ``django``, ``expressjs``, ``fastapi``, ``flask``, or
 
 If successful, the command opens a SSH shell into the web app. From there,
 you can debug the app itself, manually run an action, or attempt to
-manually start the web app. The web app can be found in the ``/`` directory
-of the container, for instance, ``/django/app``.
+manually start the web app. On Ubuntu 22.04 LTS and 24.04 LTS, the web app can be
+found in the ``/`` directory of the container, for instance, ``/django/app``. On
+Ubuntu 26.04 LTS, it is in ``/app``.
 
 .. seealso::
 
@@ -335,8 +346,8 @@ name of the web app with the ``-c`` option.
 
             microk8s kubectl logs <pod-name> -n <model-namespace> -c flask-app
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
-        :sync: base-26-plus
+    .. tab-item:: Ubuntu 26.04 LTS
+        :sync: base-26
 
         **All frameworks on MicroK8s**
 
@@ -450,9 +461,10 @@ The logs shown in the dashboard depend on the web framework, but they are
 typically access logs, or the history of the requests sent to your web
 app and their status codes.
 
-The Pebble logs are available via Grafana or Loki and can be viewed in
-the **WebApp Operator** dashboard for Flask and Django.
-For other frameworks, you may access the logs by picking ``loki`` in the
+The Pebble logs are available via Grafana or Loki and can be viewed in the
+**Application Logs** panel of the **WebApp Operator** dashboard.
+The Go dashboard doesn't have this panel. For Go, you may access the logs by
+picking ``loki`` in the
 ``http://<IP_ADDRESS>/<JUJU_MODEL_NAME>-grafana/explore`` page.
 
 .. _use-12-factor-charms-configure-tls:
@@ -468,12 +480,13 @@ charm as a certificate provider.
 First, :ref:`integrate your web app with ingress
 <integrate-web-app-charm-integrate-ingress>`.
 
-Using the `Nginx Ingress Integrator <https://charmhub.io/nginx-ingress-integrator>`_
-charm as an ingress provider, set the hostname with:
+Using the `Gateway API integrator
+<https://charmhub.io/gateway-api-integrator>`__ charm as an ingress provider,
+set the hostname with:
 
 .. code-block:: bash
 
-    juju config nginx-ingress-integrator service-hostname=<yourdomain.example.com>
+    juju config gateway-api-integrator external-hostname=<YOUR-DOMAIN>
 
 Deploy the `Self Signed X.509 Certificates
 <https://charmhub.io/self-signed-certificates>`_ charm and integrate the two charms:
@@ -481,22 +494,23 @@ Deploy the `Self Signed X.509 Certificates
 .. code-block:: bash
 
     juju deploy self-signed-certificates
-    juju integrate self-signed-certificates nginx-ingress-integrator
+    juju integrate self-signed-certificates:certificates \
+      gateway-api-integrator:certificates
 
 Your 12-factor app is now accessible over HTTPS. If you access the external URL of your
-app using HTTP, it returns an HTTP ``308 Permanent Redirect`` status and a redirect to
+app using HTTP, it returns an HTTP ``301 Moved Permanently`` status and a redirect to
 the HTTPS URL. You can access the HTTPS URL of your app with a command like:
 
 .. code-block:: bash
 
-   curl -v --insecure https://<yourdomain.example.com> \
-     --resolve <yourdomain.example.com>:443:<ingress-ip>
+   curl -v --insecure https://<YOUR-DOMAIN> \
+     --resolve <YOUR-DOMAIN>:443:<INGRESS-IP>
 
 .. note::
 
     The ``--insecure`` option is needed because the certificate authority in the
-    ``self-signed-certificate`` charm is not trusted.
-    The ``--resolve <yourdomain.example.com>:443:<ingress-ip>`` option is a way of
+    ``self-signed-certificates`` charm is not trusted.
+    The ``--resolve <YOUR-DOMAIN>:443:<INGRESS-IP>`` option is a way of
     resolving the hostname of the request without
     setting a DNS record.
 
@@ -522,7 +536,8 @@ Celery beat should run in only one unit, while Celery worker servers
 will run in all units.
 
 For a Flask app that has the Celery app in the module
-``webapp.app.celery_app``, you can declare them as services like this:
+``webapp.app.celery_app``, you can declare them as services like this. On
+Ubuntu 26.04 LTS, replace ``/flask/app`` with ``/app`` in ``working-dir``.
 
 .. code-block:: yaml
     :caption: rockcraft.yaml

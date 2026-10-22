@@ -500,8 +500,8 @@ Manage relations
     See more: :external+ops:ref:`Ops | Manage relations <manage-relations>`
 
 
-Specify necessary libs
-~~~~~~~~~~~~~~~~~~~~~~
+Specify necessary :vale-ignore:`libs`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     See more: :ref:`manage-libraries`
 
@@ -619,7 +619,7 @@ to pack, whether to force pack if there are linting errors, etc.
 
 .. important::
 
-    When the charm is packed, a series of analyses and lintings will happen,
+    When the charm is packed, a series of analyses and lint checks will happen,
     you may receive warnings and even errors to help improve the quality of the
     charm. See more:
     :ref:`Charmcraft analyzers and linters <charmcraft-analyzers-and-linters>`

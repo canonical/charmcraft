@@ -23,6 +23,12 @@ keys that a user may interact with.
 You can use the predefined options (run ``charmcraft expand-extensions``
 for details) but also add your own, as needed.
 
+.. note::
+
+    On Ubuntu 26.04 LTS, the ``webserver-port``, ``metrics-port``, and ``metrics-path``
+    options are not generated. Set ``port``, ``metrics-port``, and ``metrics-path`` in the
+    :ref:`paas-config.yaml file <paas-config-yaml-file>` instead.
+
 In the latter case, any option you define will be used to generate
 environment variables; a user-defined option ``config-option-name`` will
 generate an environment variable named ``APP_CONFIG_OPTION_NAME`` where
@@ -166,7 +172,7 @@ underscores and all the letters capitalised.
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
+    .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
 
         The extension automatically adds the secret-typed ``app-secret-key``
@@ -175,6 +181,8 @@ underscores and all the letters capitalised.
         environment variable. If this configuration option is not set,
         ``APP_SECRET_KEY`` is automatically assigned a random value.
 
+
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
 
 .. _fastapi-grafana-graphs:
 

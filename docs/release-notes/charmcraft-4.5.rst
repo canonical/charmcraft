@@ -124,16 +124,6 @@ Charmcraft 4.5 includes the following documentation changes:
   ingress.
 
 
-Backwards-incompatible changes
-------------------------------
-
-The following changes are incompatible with previous versions of Charmcraft.
-
-
-<Removed or disabled feature B>
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-<Describe what changed, why, and what users should do next.>
 
 
 Feature deprecations

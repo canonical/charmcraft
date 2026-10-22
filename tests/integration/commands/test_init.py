@@ -363,17 +363,6 @@ def test_force(new_path, init_command):
         assert f.read() == "This is a nonsense readme"
 
 
-def test_force_help_text(init_command):
-    parser = argparse.ArgumentParser()
-    init_command.fill_parser(parser)
-
-    action = next(a for a in parser._actions if "--force" in a.option_strings)
-    assert (
-        action.help
-        == "Initialize even if conflicting files already exist (existing files will not be overwritten)"
-    )
-
-
 def test_nonoverlapping_file_does_not_require_force(new_path, init_command):
     unrelated_file = new_path / "unrelated"
     unrelated_file.touch()

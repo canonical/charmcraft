@@ -156,7 +156,7 @@ class InitCommand(BaseInitCommand):
             "-f",
             "--force",
             action="store_true",
-            help="Initialize even if conflicting files already exist (existing files will not be overwritten)",
+            help="Initialize in a directory with conflicting files (existing template files are not overwritten)",
         )
         parser.add_argument(
             "-p",

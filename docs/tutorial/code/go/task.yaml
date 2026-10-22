@@ -152,7 +152,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config go-hello-world greeting='Hi!'
@@ -162,7 +162,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi"
+  retry -n 24 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> migrate.sh

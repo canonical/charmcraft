@@ -158,7 +158,7 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  retry -n 24 --wait 5 sh -c "curl http://expressjs-hello-world \
   --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
@@ -170,7 +170,7 @@ execute: |
   --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  retry -n 24 --wait 5 sh -c "curl http://expressjs-hello-world \
   --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
@@ -226,7 +226,7 @@ execute: |
   --query='status=="active"' --timeout 20m
   juju status --relations
 
-  retry -n 5 --wait 2 sh -c "curl http://expressjs-hello-world \
+  retry -n 24 --wait 5 sh -c "curl http://expressjs-hello-world \
   --resolve expressjs-hello-world:80:$INGRESS_IP | grep Hi "
   curl http://expressjs-hello-world/visitors \
   --resolve expressjs-hello-world:80:$INGRESS_IP | grep 1

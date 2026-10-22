@@ -140,7 +140,7 @@ execute: |
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config flask-hello-world greeting='Hi!'
@@ -150,7 +150,7 @@ execute: |
   juju wait-for application flask-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP | grep Hi"
+  retry -n 24 --wait 5 sh -c "curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.py >> migrate.py

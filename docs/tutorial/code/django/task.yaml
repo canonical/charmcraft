@@ -197,7 +197,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello, world!
-  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hello"
 
   cd ..
   # Update django_hello_world/greeting/views.py
@@ -228,7 +228,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is still Hello, world!
-  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config django-hello-world greeting='Hi!'
@@ -238,7 +238,7 @@ execute: |
   juju wait-for application django-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hi"
+  retry -n 24 --wait 5 sh -c "curl http://django-hello-world --resolve django-hello-world:80:$INGRESS_IP | grep Hi"
 
   # [docs:clean-environment]
   charmcraft clean

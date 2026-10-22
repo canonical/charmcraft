@@ -229,7 +229,7 @@ The top of the file should look similar to the following snippet:
     :caption: ~/django-tutorial/rockcraft.yaml
 
     name: django-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@22.04 # the base environment for this Django app
     version: '0.1' # just for humans. Semantic versioning is recommended
@@ -640,7 +640,7 @@ the ``rockcraft.yaml`` file should look similar to the following:
     :emphasize-lines: 5
 
     name: django-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@22.04 # the base environment for this Django app
     version: '0.2' # just for humans. Semantic versioning is recommended
@@ -728,7 +728,7 @@ top of the ``rockcraft.yaml`` file looks similar to the following:
     :emphasize-lines: 5
 
     name: django-hello-world
-    # see https://documentation.ubuntu.com/rockcraft/en/1.6.0/explanation/bases/
+    # see https://ubuntu.com/containers/rockcraft/docs/latest/explanation/bases/
     # for more information about bases and using 'bare' bases for chiselled rocks
     base: ubuntu@22.04 # the base environment for this Django app
     version: '0.3' # just for humans. Semantic versioning is recommended

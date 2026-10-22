@@ -1,5 +1,3 @@
-:orphan:
-
 .. meta::
     :description: Learn about the new features, changes, and fixes introduced in Charmcraft 4.5.
 
@@ -8,7 +6,7 @@
 Charmcraft 4.5 release notes
 ============================
 
-TBD
+3 November 2026
 
 Learn about the new features, changes, and fixes introduced in Charmcraft 4.5.
 
@@ -56,6 +54,12 @@ Minor features
 --------------
 
 Charmcraft 4.5 brings the following minor changes.
+
+
+Smarter repacking
+~~~~~~~~~~~~~~~~~
+
+Charmcraft will now skip re-packing the image if the project files are unchanged.
 
 
 Base-specific init profiles
@@ -107,6 +111,8 @@ Minor init profile improvements
   that live logs are not emitted from the charm code during unit tests.
 - Charms created with the ``kubernetes`` profile now use an Ubuntu image as a
   placeholder for the charm's real image, so that integration tests pass by default.
+- Charms created with the 12-factor framework profiles targeting Ubuntu 26.04 now default
+  to ``charm-user: non-root``.
 
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,18 +152,6 @@ explains what to do instead. New and existing charm libraries should now be dist
 as Python packages.
 
 
-Scheduled feature deprecations
-------------------------------
-
-The following features will be deprecated in Charmcraft <planned version>.
-
-
-<Feature D>
-~~~~~~~~~~~
-
-<Describe planned deprecations that have been formally announced.>
-
-
 Fixed bugs and issues
 ---------------------
 
@@ -167,6 +161,10 @@ The following issues have been resolved in Charmcraft 4.5.
   Packing a charm sometimes fails with "Too many levels of symbolic links"
 - `#2839 <https://github.com/canonical/charmcraft/issues/2839>`__
   Charm plugins fail to copy source and lib when source-subdir is used
+- `#2909 <https://github.com/canonical/charmcraft/issues/2909>`__
+  Regression in ``charmcraft pack`` when there are multiple bases
+- `#2889 <https://github.com/canonical/charmcraft/issues/2889>`__
+  ``make setup`` fails on Apple Silicon due to hard-coded ``/usr/local`` libgit2 path
 - Experimental V2 12-factor extensions now generate the paas-charm 2.x peer,
   secret, configuration, and dependency contracts while preserving V1 output. The V2
   profiles rely on ``paas-charm`` for the PyPI OAuth, OpenFGA, and tracing interfaces
@@ -193,13 +191,34 @@ patch releases.
 
 See individual issue links for any mitigations.
 
-- No entries yet.
+- `#2078 <https://github.com/canonical/charmcraft/issues/2078>`__
+  ``charmcraft clean`` does not clean all platforms for a charm
+- `#1990 <https://github.com/canonical/charmcraft/issues/1990>`__ Cannot stage
+  packages with Charmcraft
+- `#2492 <https://github.com/canonical/charmcraft/issues/2492>`__ Internal error when
+  uploading a charm outside of a project directory
+- `#2788 <https://github.com/canonical/charmcraft/issues/2788>`__
+  uv plugin fails on core26: dispatch script uses system Python instead of venv
 
 
 Contributors
 ------------
 
 We would like to express a big thank you to all the people who contributed to
-this release.
+this release:
 
-Contributor list is pending.
+:literalref:`@alithethird <https://github.com/alithethird>`,
+:literalref:`@canon-cat <https://github.com/canon-cat>`,
+:literalref:`@cmatsuoka <https://github.com/cmatsuoka>`,
+:literalref:`@dwilding <https://github.com/dwilding>`,
+:literalref:`@erinecon <https://github.com/erinecon>`,
+:literalref:`@jahn-junior <https://github.com/jahn-junior>`,
+:literalref:`@james-garner-canonical <https://github.com/james-garner-canonical>`,
+:literalref:`@javierdelapuente <https://github.com/javierdelapuente>`,
+:literalref:`@lengau <https://github.com/lengau>`,
+:literalref:`@medubelko <https://github.com/medubelko>`,
+:literalref:`@Omjaiswal26 <https://github.com/Omjaiswal26>`,
+:literalref:`@swetha1654 <https://github.com/swetha1654>`,
+:literalref:`@Thanhphan1147 <https://github.com/Thanhphan1147>`,
+:literalref:`@tonyandrewmeyer <https://github.com/tonyandrewmeyer>`,
+and :literalref:`@tromai <https://github.com/tromai>`

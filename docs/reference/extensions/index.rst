@@ -27,7 +27,13 @@ There is no version key in ``charmcraft.yaml``.
   framework supports the base.
 * Ubuntu 26.04 LTS generates an experimental contract. It requires
   ``CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1`` when Charmcraft expands or packs the
-  project. The lower bases don't require the environment variable.
+  project.
+
+The Spring Boot extension is also experimental on Ubuntu 24.04 LTS in both Charmcraft
+and Rockcraft. The
+:ref:`Spring Boot tutorial <write-your-first-kubernetes-charm-for-a-spring-boot-app>`
+shows the required settings. Other Charmcraft framework extensions don't require the
+environment variable on lower bases.
 
 On Ubuntu 26.04 LTS, all six framework extensions generate the following contract:
 
@@ -52,13 +58,24 @@ On Ubuntu 26.04 LTS, all six framework extensions generate the following contrac
     * - Secret options
       - A string secret key and a separate secret-ID option
       - One ``app-secret-key`` option of type ``secret``
+    * - Port and metrics options
+      - Go, ExpressJS, FastAPI, and Spring Boot generate ``app-port`` (``webserver-port``
+        for FastAPI), ``metrics-port``, and ``metrics-path`` options. Django and Flask
+        don't generate them.
+      - Not generated for any framework. Set ``port``, ``metrics-port``, and
+        ``metrics-path`` in :ref:`paas-config-yaml-file`
     * - Optional build input
       - None
       - :ref:`paas-config-yaml-file`
+    * - OAuth, OpenFGA, and tracing libraries
+      - Libraries fetched from Charmhub
+      - PyPI interface packages provided transitively by ``paas-charm``
+    * - Cache relations
+      - Redis and Valkey
+      - Valkey
 
 Charmcraft stages ``paas-config.yaml`` only when the file exists in an Ubuntu 26.04 LTS
-project. Changing the base of an existing project partially migrates it to the other
-contract.
+project.
 
 
 .. toctree::

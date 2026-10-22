@@ -62,13 +62,11 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" rockcraft.yaml
 
   # [docs:pack]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:go-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/go-hello-world:0.1
   # [docs:skopeo-copy-end]
@@ -86,7 +84,7 @@ execute: |
   sed -i "s/amd64/$(dpkg --print-architecture)/g" charmcraft.yaml
 
   # [docs:charm-pack]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   # [docs:charm-pack-end]
 
   # [docs:add-juju-model]
@@ -112,7 +110,8 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=go-hello-world path-routes=/ rewrite-enabled=false rewrite-target=/
+    service-hostname=go-hello-world path-routes='/.*' rewrite-enabled=false rewrite-target=/ \
+    ingress-class=cilium
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
@@ -120,10 +119,12 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+  # Canonical Kubernetes serves the ingress at the VM's address
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  retry -n 24 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
 
   # [docs:curl-init-deployment]
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
   # [docs:curl-init-deployment-end]
 
   cd ..
@@ -131,7 +132,7 @@ execute: |
   sed -i "s/version: .*/version: 0.2/g" rockcraft.yaml
 
   # [docs:docker-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:go-hello-world_0.2_$(dpkg --print-architecture).rock \
     docker://localhost:32000/go-hello-world:0.2
@@ -141,7 +142,7 @@ execute: |
   cd charm
 
   # [docs:refresh-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh go-hello-world \
     --path=./go-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/go-hello-world:0.2
@@ -151,7 +152,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config go-hello-world greeting='Hi!'
@@ -161,7 +162,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi"
+  retry -n 24 --wait 5 sh -c "curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.sh >> migrate.sh
@@ -180,7 +181,7 @@ execute: |
   # [docs:check-go-app-end]
 
   # [docs:docker-2nd-update]
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft pack
+  rockcraft pack
   rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:go-hello-world_0.3_$(dpkg --print-architecture).rock \
     docker://localhost:32000/go-hello-world:0.3
@@ -190,7 +191,7 @@ execute: |
   cd charm
 
   # [docs:refresh-2nd-deployment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft pack
+  charmcraft pack
   juju refresh go-hello-world \
     --path=./go-hello-world_$(dpkg --print-architecture).charm \
     --resource app-image=localhost:32000/go-hello-world:0.3
@@ -212,18 +213,18 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 20m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1
+  retry -n 24 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP
 
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 1
-  curl http://go-hello-world --resolve go-hello-world:80:127.0.0.1 | grep Hi
-  curl http://go-hello-world/visitors --resolve go-hello-world:80:127.0.0.1 | grep 2
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP | grep 1
+  curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP | grep 2
 
   # [docs:clean-environment]
-  CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true charmcraft clean
+  charmcraft clean
   # Back out to main directory for cleanup
   cd ..
-  ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=true rockcraft clean
+  rockcraft clean
   # exit and delete the charm dir
   rm -rf charm
   # delete all the files created during the tutorial

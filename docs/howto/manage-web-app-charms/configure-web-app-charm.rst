@@ -222,7 +222,8 @@ Add the custom action to the project file:
     :language: yaml
     :caption: charmcraft.yaml
 
-Add ``requests`` to the ``charm/requirements.txt`` file, and
+Add ``requests`` to the ``requirements.txt`` file (or to ``dependencies`` in
+``pyproject.toml`` on Ubuntu 26.04 LTS), and
 add ``import requests`` to the start of ``src/charm.py``. Finally, define
 your custom action as part of the class and provide the function definition:
 
@@ -309,15 +310,17 @@ Add the Juju secret ID to the application:
 
         The ``DJANGO_SECRET_KEY`` environment variable is initialized to a
         random value. You can override it using the built-in configuration option
-        ``django-secret-key-id``, which accepts a Juju secret whose ``value`` key
-        is exposed as the ``DJANGO_SECRET_KEY`` environment variable.
-        For example:
+        ``django-secret-key-id``, which accepts a Juju secret whose ``value`` key is
+        exposed as the ``DJANGO_SECRET_KEY`` environment variable. For example:
 
         .. code-block:: bash
 
             juju add-secret my-django-secret-key value=<secret-string>
             juju grant-secret my-django-secret-key <app name>
             juju config <app name> django-secret-key-id=secret:<secret id>
+
+        On Ubuntu 26.04 LTS, set ``app-secret-key`` instead of
+        ``django-secret-key-id``.
 
     .. tab-item:: Express
         :sync: express
@@ -340,8 +343,8 @@ Add the Juju secret ID to the application:
 
         The following environment variables are available for the application:
 
-        - ``APP_API_TOKEN_VALUE: "1234"``
-        - ``APP_API_TOKEN_OTHERVALUE: "5678"``
+        - ``FLASK_API_TOKEN_VALUE: "1234"``
+        - ``FLASK_API_TOKEN_OTHERVALUE: "5678"``
 
     .. tab-item:: Go
         :sync: go

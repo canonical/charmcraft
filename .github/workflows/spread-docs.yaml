@@ -16,6 +16,10 @@ on:
   schedule:
     - cron: "0 0 * * 0" # Midnight UTC on Sundays
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   snap-build:
     runs-on: [self-hosted, linux, amd64, noble, medium]
@@ -34,7 +38,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: [spread-installed]
+    runs-on: spread-enabled
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:

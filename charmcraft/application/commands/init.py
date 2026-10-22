@@ -87,7 +87,7 @@ files and directories::
     │                                linting tools. Specifies Python dependencies for
     │                                all profiles except 12-factor app charms
     │                                targeting Ubuntu 24.04 LTS or lower
-    ├── README.md                  - Frontpage for your charmhub.io/charm/
+    ├── README.md                  - Front page for your charmhub.io/charm/
     ├── requirements.txt           - Python dependencies for 12-factor app charms
     │                                targeting Ubuntu 24.04 LTS or lower
     ├── src

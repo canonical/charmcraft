@@ -110,7 +110,7 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=go-hello-world path-routes=/ rewrite-enabled=false rewrite-target=/ \
+    service-hostname=go-hello-world path-routes='/.*' rewrite-enabled=false rewrite-target=/ \
     ingress-class=cilium
   # [docs:config-nginx-end]
 
@@ -121,7 +121,7 @@ execute: |
   # wait until the endpoint works
   # Canonical Kubernetes serves the ingress at the VM's address
   INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
-  retry -n 5 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
+  retry -n 24 --wait 5 curl --fail http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
 
   # [docs:curl-init-deployment]
   curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP
@@ -213,7 +213,7 @@ execute: |
   juju wait-for application go-hello-world --query='status=="active"' --timeout 20m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP
+  retry -n 24 --wait 5 curl --fail http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP
 
   curl http://go-hello-world --resolve go-hello-world:80:$INGRESS_IP | grep Hi
   curl http://go-hello-world/visitors --resolve go-hello-world:80:$INGRESS_IP | grep 1

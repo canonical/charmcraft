@@ -398,7 +398,7 @@ Let's expose the app using ingress so that we can access it. Deploy the
     :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
-the ingress. We also set the default route to the root endpoint and target
+the ingress. We also route all paths to the app with the ``/.*`` pattern, since a plain ``/`` only matches the root endpoint, and target
 the ``cilium`` ingress class that Canonical Kubernetes uses for its ingress:
 
 .. literalinclude:: code/expressjs/task.yaml

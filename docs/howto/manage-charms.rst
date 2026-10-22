@@ -42,6 +42,12 @@ available base variant, provide the base in ``<distribution>@<version>`` format.
 example, initialize an Ubuntu 26.04 LTS Flask charm with
 ``--profile flask-framework --base ubuntu@26.04``.
 
+If you run ``charmcraft init`` in a directory that already contains files,
+initialization succeeds as long as none of the existing files conflict with the
+files the template creates. If any existing files conflict with the template,
+``charmcraft init`` stops without modifying them. To proceed anyway without
+overwriting existing files, pass ``--force``.
+
 .. dropdown:: Example session
 
     .. terminal::

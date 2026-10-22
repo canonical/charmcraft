@@ -101,10 +101,7 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.6.
 
-- Clarified the ``charmcraft init --force`` help text and documentation to
-  reflect that ``init`` allows non-empty directories when no files conflict,
-  and that ``--force`` permits proceeding when files conflict without
-  overwriting them.
+- No entries yet.
 
 
 Known issues

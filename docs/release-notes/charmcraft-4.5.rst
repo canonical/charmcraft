@@ -202,6 +202,7 @@ this release:
 :literalref:`@cmatsuoka <https://github.com/cmatsuoka>`,
 :literalref:`@dwilding <https://github.com/dwilding>`,
 :literalref:`@erinecon <https://github.com/erinecon>`,
+:literalref:`@florentianayuwono <https://github.com/florentianayuwono>`,
 :literalref:`@jahn-junior <https://github.com/jahn-junior>`,
 :literalref:`@james-garner-canonical <https://github.com/james-garner-canonical>`,
 :literalref:`@javierdelapuente <https://github.com/javierdelapuente>`,

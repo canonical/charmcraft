@@ -126,6 +126,10 @@ execute: |
   juju wait-for application nginx-ingress-integrator \
   --query='status=="active"' --timeout 10m
 
+  # wait until the endpoint works
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  retry -n 24 --wait 5 curl --fail -I http://expressjs-hello-world --resolve expressjs-hello-world:80:$INGRESS_IP
+
   # [docs:curl-init-deployment]
   # Canonical Kubernetes serves the ingress at the VM's address
   INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')

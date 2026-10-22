@@ -46,6 +46,10 @@ Initialize a charm operator package tree and files.
 This command will modify the directory to create the necessary files for a
 charm operator package. By default it will work in the current directory.
 
+Init can work in an existing project directory. If files in the directory would
+conflict with template files, the command will fail unless --force is used.
+With --force, existing files will not be overwritten.
+
 Available profiles are:
     kubernetes:
         A basic Kubernetes charm with example container.
@@ -152,7 +156,7 @@ class InitCommand(BaseInitCommand):
             "-f",
             "--force",
             action="store_true",
-            help="Initialize even if the directory is not empty (will not overwrite files)",
+            help="Initialize even if conflicting files already exist (existing files will not be overwritten)",
         )
         parser.add_argument(
             "-p",

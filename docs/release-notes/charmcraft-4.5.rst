@@ -114,6 +114,17 @@ Minor init profile improvements
 - Charms created with the 12-factor framework profiles targeting Ubuntu 26.04 now default
   to ``charm-user: non-root``.
 
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Charmcraft 4.5 includes the following documentation changes:
+
+- The 12-factor app :ref:`tutorials <tutorial>` now use Canonical Kubernetes
+  instead of MicroK8s, including a local OCI registry and load-balancer-backed
+  ingress.
+
+
+
 
 Feature deprecations
 --------------------

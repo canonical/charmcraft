@@ -38,7 +38,7 @@ What you'll need
 
 - A local system, e.g., a laptop, with AMD64 or ARM64 architecture which
   has sufficient resources to launch a virtual machine with 4 CPUs,
-  4 GB RAM, and a 50 GB disk.
+  8 GB RAM, and a 50 GB disk.
 - Familiarity with Linux.
 
 The RAM and disk space are necessary to set up all the required software and
@@ -231,7 +231,7 @@ the terminal will respond with something similar to
 reflects your system's architecture. After the initial
 pack, subsequent rock packings are faster.
 
-The rock needs to be copied to the MicroK8s registry. This registry acts as a
+The rock needs to be copied to the local registry. This registry acts as a
 temporary Docker Hub, storing OCI archives so they can be downloaded and
 deployed in the Kubernetes cluster. Copy the rock:
 
@@ -246,9 +246,9 @@ This command contains the following pieces:
 - ``--insecure-policy``: adopts a permissive policy that
   removes the need for a dedicated policy file.
 - ``--dest-tls-verify=false``: disables the need for HTTPS
-  and verify certificates while interacting with the MicroK8s registry.
+  and certificate verification while interacting with the local registry.
 - ``oci-archive``: specifies the rock we created for our Flask app.
-- ``docker``: specifies the name of the image in the MicroK8s registry.
+- ``docker``: specifies the name of the image in the local registry.
 
 
 Create the charm
@@ -300,7 +300,7 @@ minutes to finish.
 
 Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
-``Packed flask-hello-world_ubuntu-24.04-<architecture>.charm``. The file name
+``Packed flask-hello-world_<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
 pack, subsequent charm packings are faster.
 
@@ -368,7 +368,7 @@ following output:
     juju status
 
     Model              Controller      Cloud/Region        Version  SLA          Timestamp
-    flask-hello-world  dev-controller  microk8s/localhost  3.6.2    unsupported  17:04:11+10:00
+    flask-hello-world  dev-controller  k8s-cloud  3.6.2    unsupported  17:04:11+10:00
 
     App           Version  Status  Scale  Charm              Channel  Rev  Address         Exposed  Message
     flask-hello-world      active      1  flask-hello-world             0  10.152.183.166  no
@@ -386,7 +386,8 @@ Let's expose the app using ingress so that we can access it. Deploy the
     :dedent: 2
 
 The hostname of the app needs to be defined so that it is accessible via
-the ingress. We will also set the default route to be the root endpoint:
+the ingress. We also route all paths to the app with the ``/.*`` pattern, since a plain ``/`` only matches the root endpoint, and target
+the ``cilium`` ingress class that Canonical Kubernetes uses for its ingress:
 
 .. literalinclude:: code/flask/task.yaml
     :language: bash
@@ -396,17 +397,18 @@ the ingress. We will also set the default route to be the root endpoint:
 
 Monitor ``juju status`` until everything has a status of ``active``.
 
-Test the deployment by sending a request via the ingress:
+Test the deployment by sending a request via the ingress. The following
+commands reuse the ``INGRESS_IP`` value you set during setup:
 
 .. code-block:: bash
 
-    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP
 
 The request should return the ``Hello, world!`` greeting.
 
 .. note::
 
-    The ``--resolve flask-hello-world:80:127.0.0.1`` option to the ``curl``
+    The ``--resolve flask-hello-world:80:$INGRESS_IP`` option to the ``curl``
     command is a way of resolving the hostname of the request without
     setting a DNS record.
 
@@ -512,7 +514,7 @@ Check that the response is still ``Hello, world!`` using:
 
 .. code-block:: bash
 
-    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP
 
 Now let's change the greeting:
 
@@ -526,7 +528,7 @@ Wait for the app to restart, then check the response:
 
 .. code-block:: bash
 
-    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP
 
 The response should now return the updated ``Hi!`` greeting.
 
@@ -654,7 +656,7 @@ Send a request to the endpoint:
 
 .. code-block:: bash
 
-    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP
 
 It should still return the ``Hi!`` greeting.
 
@@ -662,7 +664,7 @@ Check the total number of visitors:
 
 .. code-block:: bash
 
-    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:$INGRESS_IP
 
 This request should return ``1`` after the previous request to the root endpoint.
 This should be incremented each time the root endpoint is requested. If we
@@ -673,7 +675,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/flask-hello-world/charm
 
-    curl http://flask-hello-world --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world --resolve flask-hello-world:80:$INGRESS_IP
 
     Hi!
 
@@ -682,7 +684,7 @@ repeat this process, the output should be as follows:
     :host: charm-dev
     :dir: ~/flask-hello-world/charm
 
-    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:127.0.0.1
+    curl http://flask-hello-world/visitors --resolve flask-hello-world:80:$INGRESS_IP
 
     2
 

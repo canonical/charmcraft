@@ -38,7 +38,7 @@ jobs:
           path: ${{ steps.charmcraft.outputs.snap }}
 
   spread-select:
-    runs-on: [spread-installed]
+    runs-on: spread-enabled
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:

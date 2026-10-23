@@ -14,7 +14,7 @@ possible, so when changes come we don't have to recreate them. The process isn't
 
 ### Gather the changes
 
-You first need the recent history of the standard documentation implementation in Starbase. We'll provide one way you could gather it.
+You first need the recent history of the standard documentation implementation in Starbase. We'll provide one way to gather it.
 
 Inside Starbase, find the commit that most recently updated the version of the Sphinx Stack:
 

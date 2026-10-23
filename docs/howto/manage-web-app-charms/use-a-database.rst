@@ -1,7 +1,7 @@
-.. _use-db-with-12-factor-charms:
-
-.. _meta::
+.. meta::
     :description: Integrate a MySQL database into your charmed 12-factor app written with FastAPI.
+
+.. _use-db-with-12-factor-charms:
 
 Use a database with your 12-factor app charm
 ============================================
@@ -27,7 +27,7 @@ Prepare the environment
 For Python projects, MySQL requires the pymysql driver. Add it to
 ``requirements.txt``.
 
-.. code-block::
+.. code-block:: text
     :caption: requirements.txt
 
     fastapi
@@ -127,9 +127,9 @@ to a non-existent SQLite instance:
 Set up automated updates
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create  a ``migrate.sh`` script for our migration commands so that 12-Factor
-app tooling can automatically run your upgrades. This file will automatically run
-when a database integration event happens (such as ``created``, ``changed```, or ``departed``).
+Create a ``migrate.sh`` script for our migration commands so that 12-Factor
+app tooling can automatically run your upgrades. The charm runs this file when it
+first starts the app, and again when the database is created or its endpoints change.
 
 .. code-block:: bash
     :caption: migrate.sh
@@ -157,7 +157,7 @@ Create ``database.py``:
     if not DATABASE_URL:
         raise ValueError("MYSQL_DB_CONNECT_STRING environment variable is not set")
     if DATABASE_URL.startswith("mysql://"):
-            DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+        DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
     engine = create_engine(DATABASE_URL)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -208,7 +208,7 @@ the Alembic related files and packages needed to run the database migrations.
     :caption: rockcraft.yaml
     :emphasize-lines: 6,24-37
 
-    # See https://documentation.ubuntu.com/rockcraft/1.16.0/reference/extensions/fastapi-framework
+    # See https://ubuntu.com/containers/rockcraft/docs/latest/reference/extensions/fastapi-framework
     # For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
 
     name: fastapi-hello-world

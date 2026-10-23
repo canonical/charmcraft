@@ -15,7 +15,7 @@
 .. _LXD: https://canonical.com/lxd
 .. _Multipass: https://documentation.ubuntu.com/multipass/
 .. _`Open Container Initiative`: https://opencontainers.org/
-.. _Rockcraft: https://documentation.ubuntu.com/rockcraft/
+.. _Rockcraft: https://ubuntu.com/containers/rockcraft/docs/
 .. _snapd: https://snapcraft.io/docs/installing-snapd
 .. _Spread: https://github.com/canonical/spread
 .. _skopeo: https://github.com/containers/skopeo

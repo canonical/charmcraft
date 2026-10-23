@@ -158,7 +158,7 @@ capitalised.
         variable. If this configuration option is not set, ``FLASK_SECRET_KEY`` is
         automatically assigned a random value.
 
-    .. tab-item:: Ubuntu 26.04 LTS and higher
+    .. tab-item:: Ubuntu 26.04 LTS
         :sync: base-26
 
         The extension automatically adds the secret-typed ``app-secret-key``
@@ -166,6 +166,8 @@ capitalised.
         holds the actual Flask secret key and is exposed as the ``FLASK_SECRET_KEY``
         environment variable. If this configuration option is not set,
         ``FLASK_SECRET_KEY`` is automatically assigned a random value.
+
+.. include:: /reuse/reference/extensions/rotate_secret_key.rst
 
 .. _flask-grafana-graphs:
 

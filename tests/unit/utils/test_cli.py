@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Unit tests for CLI-related utilities."""
 
-import datetime
+import datetime as dt
 import json
 from unittest.mock import call, patch
 
@@ -196,7 +196,7 @@ def test_confirm_with_user_pause_emitter(mock_isatty, emitter):
 
 def test_timestampstr_simple():
     """Converts a timestamp without timezone."""
-    source = datetime.datetime(2020, 7, 3, 20, 30, 40)
+    source = dt.datetime(2020, 7, 3, 20, 30, 40)
     result = format_timestamp(source)
     assert result == "2020-07-03T20:30:40Z"
 

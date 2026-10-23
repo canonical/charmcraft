@@ -46,6 +46,26 @@ METRICS_OPTIONS = {
         "description": "Path where the prometheus metrics will be scraped.",
     },
 }
+FASTAPI_WORKERS_OPTION = {
+    "webserver-workers": {
+        "type": "int",
+        "default": 1,
+        "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
+    }
+}
+FASTAPI_LOG_LEVEL_OPTION = {
+    "webserver-log-level": {
+        "type": "string",
+        "default": "info",
+        "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
+    }
+}
+SPRING_BOOT_PROFILES_OPTION = {
+    "app-profiles": {
+        "type": "string",
+        "description": "Comma-separated list of Spring Boot active profiles.",
+    }
+}
 SECRET_OPTIONS = {
     "app-secret-key": {
         "type": "string",
@@ -89,6 +109,19 @@ _VALID_URL_PATH_RE = re.compile(
 COS_SUBDIRS = {"grafana_dashboards", "loki_alert_rules", "prometheus_alert_rules"}
 PAAS_CONFIG_FILE = "paas-config.yaml"
 JSON_LOGGING_SUPPORTED_FRAMEWORKS = {"fastapi", "flask", "django"}
+
+_COMMON_CHARM_LIBS = [
+    {"lib": "traefik_k8s.ingress", "version": "2"},
+    {"lib": "observability_libs.juju_topology", "version": "0"},
+    {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
+    {"lib": "loki_k8s.loki_push_api", "version": "1"},
+    {"lib": "data_platform_libs.data_interfaces", "version": "0"},
+    {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+    {"lib": "data_platform_libs.s3", "version": "0"},
+    {"lib": "saml_integrator.saml", "version": "0"},
+    {"lib": "smtp_integrator.smtp", "version": "0"},
+    {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
+]
 
 
 class _FrameworkFactory:
@@ -147,20 +180,11 @@ class _AppBase(SinglePlatformExtension):
     """A base class for 12-factor applications."""
 
     _CHARM_LIBS = [
-        {"lib": "traefik_k8s.ingress", "version": "2"},
-        {"lib": "observability_libs.juju_topology", "version": "0"},
-        {"lib": "grafana_k8s.grafana_dashboard", "version": "0"},
-        {"lib": "loki_k8s.loki_push_api", "version": "1"},
-        {"lib": "data_platform_libs.data_interfaces", "version": "0"},
-        {"lib": "prometheus_k8s.prometheus_scrape", "version": "0"},
+        *_COMMON_CHARM_LIBS,
         {"lib": "redis_k8s.redis", "version": "0"},
-        {"lib": "data_platform_libs.s3", "version": "0"},
-        {"lib": "saml_integrator.saml", "version": "0"},
         {"lib": "tempo_coordinator_k8s.tracing", "version": "0"},
-        {"lib": "smtp_integrator.smtp", "version": "0"},
         {"lib": "openfga_k8s.openfga", "version": "1"},
         {"lib": "hydra.oauth", "version": "0"},
-        {"lib": "squid_forward_proxy.http_proxy", "version": "0"},
     ]
 
     @staticmethod
@@ -425,6 +449,8 @@ class _AppBase(SinglePlatformExtension):
 
 class _AppBaseV2(_AppBase):
     """V2 base class for 12-factor applications using uv."""
+
+    _CHARM_LIBS = [*_COMMON_CHARM_LIBS]
 
     @staticmethod
     def _validate_port(parsed: dict[str, Any], key: str) -> None:
@@ -727,11 +753,7 @@ class GoFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor Go applications."""
 
     framework = "go"
-    options = {
-        **APP_PORT_OPTION,
-        **METRICS_OPTIONS,
-        **V2_SECRET_OPTIONS,
-    }
+    options = {**V2_SECRET_OPTIONS}
 
 
 GoFrameworkFactory = _FrameworkFactory(GoFrameworkV1, GoFrameworkV2)
@@ -742,21 +764,13 @@ class FastAPIFrameworkV1(_AppBase):
 
     framework = "fastapi"
     options = {
-        "webserver-workers": {
-            "type": "int",
-            "default": 1,
-            "description": "Number of workers for uvicorn. Sets env variable WEB_CONCURRENCY. See https://www.uvicorn.org/#command-line-options.",
-        },
+        **FASTAPI_WORKERS_OPTION,
         "webserver-port": {
             "type": "int",
             "default": 8080,
             "description": "Bind to a socket with this port. Default: 8080. Sets env variable  UVICORN_PORT.",
         },
-        "webserver-log-level": {
-            "type": "string",
-            "default": "info",
-            "description": "Set the log level. Options: 'critical', 'error', 'warning', 'info', 'debug', 'trace'. Sets the env variable UVICORN_LOG_LEVEL.",
-        },
+        **FASTAPI_LOG_LEVEL_OPTION,
         **METRICS_OPTIONS,
         **SECRET_OPTIONS,
     }
@@ -783,11 +797,8 @@ class FastAPIFrameworkV2(_AppBaseV2):
 
     framework = "fastapi"
     options = {
-        **{
-            key: value
-            for key, value in FastAPIFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
+        **FASTAPI_WORKERS_OPTION,
+        **FASTAPI_LOG_LEVEL_OPTION,
         **V2_SECRET_OPTIONS,
     }
 
@@ -826,14 +837,7 @@ class ExpressJSFrameworkV2(_AppBaseV2):
     """Extension v2 for 12-factor ExpressJS applications."""
 
     framework = "expressjs"
-    options = {
-        **{
-            key: value
-            for key, value in ExpressJSFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
-        **V2_SECRET_OPTIONS,
-    }
+    options = {**V2_SECRET_OPTIONS}
 
 
 ExpressJSFrameworkFactory = _FrameworkFactory(
@@ -847,10 +851,7 @@ class SpringBootFrameworkV1(_AppBase):
     framework = "spring-boot"
     options = {
         **APP_PORT_OPTION,
-        "app-profiles": {
-            "type": "string",
-            "description": "Comma-separated list of Spring Boot active profiles.",
-        },
+        **SPRING_BOOT_PROFILES_OPTION,
         "metrics-port": {
             "type": "int",
             "default": 8080,
@@ -886,6 +887,12 @@ class SpringBootFrameworkV1(_AppBase):
         """Return supported bases."""
         return [("ubuntu", "24.04")]
 
+    @staticmethod
+    @override
+    def is_experimental(base: tuple[str, str] | None) -> bool:  # noqa: ARG004
+        """Check if the extension is in an experimental state."""
+        return True
+
     @override
     def get_image_name(self) -> str:
         """Return name of the app image."""
@@ -902,11 +909,7 @@ class SpringBootFrameworkV2(_AppBaseV2):
 
     framework = "spring-boot"
     options = {
-        **{
-            key: value
-            for key, value in SpringBootFrameworkV1.options.items()
-            if key not in SECRET_OPTIONS
-        },
+        **SPRING_BOOT_PROFILES_OPTION,
         **V2_SECRET_OPTIONS,
     }
     endpoint_dynamic_options = SpringBootFrameworkV1.endpoint_dynamic_options

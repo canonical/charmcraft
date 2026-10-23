@@ -281,8 +281,108 @@ suites:
       --destroy-storage --no-prompt --no-wait dev-controller
 
   docs/tutorial/code/:
-    <<: *docsuite
     summary: tests tutorial from the docs
+    systems:
+      - ubuntu-24.04-64
+    manual: true
+    prepare: |
+      juju_channel=3.6/stable
+      k8s_channel=1.34-classic/stable
+
+      lxc network set lxdbr0 ipv6.address none
+      mkdir -p ~/.local/share  # Workaround for Juju not being able to create the directory
+
+      #shellcheck source=tests/spread/tools/prepare.sh
+      . "/charmcraft/tests/spread/tools/prepare.sh"
+
+      refresh_or_install_snap juju "$juju_channel"
+      refresh_or_install_snap k8s "$k8s_channel" --classic
+      refresh_or_install_snap rockcraft latest/edge --classic
+
+      # A pre-existing containerd (e.g. from Docker) holds /run/containerd and
+      # makes the k8s bootstrap pre-init checks fail.
+      systemctl stop docker.socket docker containerd 2>/dev/null || true
+      rm -rf /run/containerd
+
+      k8s bootstrap
+      k8s status --wait-ready --timeout 5m
+
+      k8s enable local-storage
+      k8s enable ingress
+
+      # Unlike the MicroK8s ingress addon (which binds the node's host ports), the
+      # Canonical Kubernetes ingress is exposed through a LoadBalancer service, so a
+      # load balancer with an address pool is required for the ingress to be reachable.
+      # Wait for MetalLB's controller (which hosts the validating webhook) to roll out
+      # before configuring the address pool, otherwise the "set" races the webhook.
+      k8s enable load-balancer
+      k8s kubectl rollout status deployment/metallb-controller -n metallb-system --timeout=5m
+      INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+      k8s set load-balancer.l2-mode=true load-balancer.cidrs="$INGRESS_IP/32"
+
+      k8s status --wait-ready --timeout 5m
+      k8s kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=10m
+
+      # The tutorial pushes the application image to an in-cluster OCI registry
+      # exposed on the node at localhost:32000, mirroring the MicroK8s registry
+      # addon. Canonical Kubernetes' containerd trusts this node-local registry.
+      k8s kubectl apply -f - <<'EOF'
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: container-registry
+      ---
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: registry
+        namespace: container-registry
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: registry
+        template:
+          metadata:
+            labels:
+              app: registry
+          spec:
+            containers:
+              - name: registry
+                image: registry:2.8.3
+                ports:
+                  - containerPort: 5000
+      ---
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: registry
+        namespace: container-registry
+      spec:
+        type: NodePort
+        selector:
+          app: registry
+        ports:
+          - port: 5000
+            targetPort: 5000
+            nodePort: 32000
+      EOF
+      k8s kubectl rollout status deployment/registry -n container-registry --timeout=5m
+      retry -n 30 --wait 2 curl -sf http://localhost:32000/v2/
+
+      # Canonical Kubernetes isn't autodetected by Juju, so register it as a cloud.
+      k8s config | juju add-k8s k8s-cloud --client
+      juju bootstrap k8s-cloud dev-controller --config bootstrap-timeout=500
+
+      echo 'connect-timeout = 10' >> ~/.curlrc
+      echo 'max-time = 20' >> ~/.curlrc
+    debug-each: |
+      k8s kubectl get all,ingress -A
+      juju status --relations
+      juju debug-log --no-tail --limit 1000
+    restore: |
+      juju destroy-controller --force --destroy-all-models \
+      --destroy-storage --no-prompt --no-wait dev-controller
 
   tests/spread/commands/:
     summary: simple charmcraft commands

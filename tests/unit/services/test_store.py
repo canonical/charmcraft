@@ -15,7 +15,7 @@
 # For further info, check https://github.com/canonical/charmcraft
 """Tests for the store service."""
 
-import datetime
+import datetime as dt
 import platform
 from typing import cast
 from unittest import mock
@@ -181,7 +181,7 @@ def test_create_tracks(reusable_store: StoreService):
         "name": "my-track",
         "automatic-phasing-percentage": None,
     }
-    created_at = {"created-at": datetime.datetime.now()}
+    created_at = {"created-at": dt.datetime.now()}
     return_track = publisher.Track.unmarshal(user_track | created_at)
     mock_md.return_value = publisher.RegisteredName.unmarshal(
         {
@@ -374,7 +374,7 @@ def test_release(reusable_store: StoreService, requests):
                         ),
                         channel="latest/edge",
                         revision=1,
-                        when=datetime.datetime(2020, 1, 1),
+                        when=dt.datetime(2020, 1, 1),
                     )
                 ],
                 package=publisher.Package(channels=[]),
@@ -388,7 +388,7 @@ def test_release(reusable_store: StoreService, requests):
                         ],
                         version="1",
                         status="peachy",
-                        created_at=datetime.datetime(2020, 1, 1),
+                        created_at=dt.datetime(2020, 1, 1),
                         size=0,
                     )
                 ],
@@ -416,7 +416,7 @@ def test_release(reusable_store: StoreService, requests):
                         ),
                         channel="latest/edge",
                         revision=1,
-                        when=datetime.datetime(2020, 1, 1),
+                        when=dt.datetime(2020, 1, 1),
                         resources=[
                             publisher.Resource(name="file", revision=2, type="file"),
                             publisher.Resource(
@@ -436,7 +436,7 @@ def test_release(reusable_store: StoreService, requests):
                         ],
                         version="1",
                         status="peachy",
-                        created_at=datetime.datetime(2020, 1, 1),
+                        created_at=dt.datetime(2020, 1, 1),
                         size=0,
                     )
                 ],
@@ -467,7 +467,7 @@ def test_release(reusable_store: StoreService, requests):
                         ),
                         channel="latest/edge",
                         revision=1,
-                        when=datetime.datetime(2020, 1, 1),
+                        when=dt.datetime(2020, 1, 1),
                         resources=[
                             publisher.Resource(name="file", revision=2, type="file"),
                             publisher.Resource(
@@ -481,7 +481,7 @@ def test_release(reusable_store: StoreService, requests):
                         ),
                         channel="latest/edge",
                         revision=1,
-                        when=datetime.datetime(2020, 1, 1),
+                        when=dt.datetime(2020, 1, 1),
                         resources=[
                             publisher.Resource(name="file", revision=2, type="file"),
                             publisher.Resource(
@@ -504,7 +504,7 @@ def test_release(reusable_store: StoreService, requests):
                         ],
                         version="1",
                         status="peachy",
-                        created_at=datetime.datetime(2020, 1, 1),
+                        created_at=dt.datetime(2020, 1, 1),
                         size=0,
                     )
                 ],

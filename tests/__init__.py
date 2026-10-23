@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # For further info, check https://github.com/canonical/charmcraft
-import datetime
+import datetime as dt
 from typing import Any
 
 import pydantic
@@ -23,7 +23,7 @@ from craft_store import models
 def get_fake_revision(**kwargs) -> models.resource_revision_model.CharmResourceRevision:
     data: dict[str, Any] = {
         "bases": [],
-        "created_at": datetime.datetime(2024, 1, 2, 4, 8, 16),
+        "created_at": dt.datetime(2024, 1, 2, 4, 8, 16),
         "name": "my-resource",
         "revision": 0,
         "sha256": "sha256",

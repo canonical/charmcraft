@@ -67,6 +67,7 @@ docs = [
   "sphinx-lint~=1.0",
   "sphinx-structured-toc==0.2.0",
   "sphinx-substitution-extensions",
+  "sphinx-unified-search",
   { include-group = "docs-sphinx-stack" },
 ]
 # We disable the unused but default SP dependencies slated for removal
@@ -549,3 +550,4 @@ explicit = true
 
 [tool.uv.sources]
 python-apt = { index = "python-apt-wheels" }
+sphinx-unified-search = { git = "https://github.com/canonical/sphinx-unified-search.git", rev = "main" }

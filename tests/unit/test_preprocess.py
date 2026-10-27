@@ -98,6 +98,16 @@ def test_add_metadata_success(fs, yaml_data, metadata_yaml, expected):
                 "description": "A charm for testing!",
             },
             "",
+            "Empty file: 'metadata.yaml'",
+        ),
+        (
+            {"name": "test-charm"},
+            "# Only a comment",
+            "Empty file: 'metadata.yaml'",
+        ),
+        (
+            {"name": "test-charm"},
+            "- not\n- a\n- mapping",
             "Invalid file: 'metadata.yaml'",
         ),
         (

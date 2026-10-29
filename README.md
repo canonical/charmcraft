@@ -4,7 +4,6 @@
 [![Documentation Status][rtd-badge]](rtd-latest)
 [![Tests][tests-badge]](tests-results)
 [![Spread][spread-badge]](spread-results)
-[![Weekly Spread][weekly-spread-badge]](weekly-spread-results)
 
 **Charmcraft** is the command-line tool for initializing, packaging, and publishing
 charms, the software operators used by Juju. With Charmcraft, you can bypass the
@@ -95,9 +94,7 @@ Charmcraft is released under the [Apache-2.0 license](LICENSE)
 [charmcraft-site]: https://snapcraft.io/charmcraft
 [rtd-badge]: https://readthedocs.com/projects/canonical-charmcraft/badge/?version=latest
 [rtd-latest]: https://documentation.ubuntu.com/charmcraft/latest/?badge=latest
-[tests-badge]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml/badge.svg?event=push
-[tests-results]: https://github.com/canonical/charmcraft/actions/workflows/tests.yaml
+[tests-badge]: https://github.com/canonical/charmcraft/actions/workflows/qa.yaml/badge.svg?event=push
+[tests-results]: https://github.com/canonical/charmcraft/actions/workflows/qa.yaml
 [spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml/badge.svg?event=push
 [spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread.yaml
-[weekly-spread-badge]: https://github.com/canonical/charmcraft/actions/workflows/spread-manual.yaml/badge.svg
-[weekly-spread-results]: https://github.com/canonical/charmcraft/actions/workflows/spread-manual.yaml

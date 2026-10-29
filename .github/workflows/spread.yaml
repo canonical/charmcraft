@@ -1,43 +1,76 @@
-name: Spread tests for source
+name: Spread tests
 on:
-  pull_request:
-    paths-ignore:
-      - .github/**
-      - "!.github/workflows/spread.yaml" # Run on this file getting changed
-      - docs/**
-      - schema/**
-      - tests/** # Don't run if only tests changed, unless a spread test changed.
-      - "!tests/spread/**"
-      - .editorconfig
-      - .pre-commit-config.yaml
-      - .readthedocs.yaml
-      - "**/*.md"
-      - "*.md"
-  merge_group:
   push:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - "!.github/workflows/spread.yaml" # Run on this file getting changed
-      - docs/**
-      - schema/**
-      - tests/** # Don't run if only tests changed, unless a spread test changed.
-      - "!tests/spread/**"
-      - .editorconfig
-      - .pre-commit-config.yaml
-      - .readthedocs.yaml
-      - "**/*.md"
-      - "*.md"
+      - "feature/**"
+      - "hotfix/**"
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  merge_group:
   schedule:
     - cron: "0 0 */2 * *"
+    - cron: "0 0 * * 0"
+    - cron: "0 0 * * WED,SUN"
+  workflow_dispatch:
+    inputs:
+      test-suite:
+        description: "Spread test suite to run"
+        required: true
+        type: choice
+        options:
+          - all
+          - source
+          - docs
+          - manual
+          - store
+        default: all
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      source: ${{ steps.filter.outputs.source }}
+      docs: ${{ steps.filter.outputs.docs }}
+      manual: ${{ steps.filter.outputs.manual == 'true' || steps.manual-eval.outputs.manual == 'true' }}
+      snap-needed: ${{ steps.filter.outputs.source == 'true' || steps.filter.outputs.docs == 'true' || steps.filter.outputs.manual == 'true' || steps.manual-eval.outputs.manual == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            source:
+              - '!({docs/**,*.md,**/*.md,.readthedocs.yaml})'
+              - 'tests/spread/**'
+              - 'spread.yaml'
+              - '.github/workflows/spread.yaml'
+            docs:
+              - 'docs/**/code/**'
+              - 'spread.yaml'
+              - '.readthedocs.yaml'
+              - '.github/workflows/spread.yaml'
+            manual:
+              - 'tests/spread/charms/**'
+              - 'tests/spread/smoketests/parallel-build/**'
+              - 'tests/spread/smoketests/remote-build/**'
+              - '.github/workflows/spread.yaml'
+      - id: manual-eval
+        env:
+          IS_MANUAL: "${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') }}"
+        run: |
+          echo "manual=${IS_MANUAL}" >> "$GITHUB_OUTPUT"
+
   snap-build:
+    needs: filter
+    if: ${{ needs.filter.outputs.snap-needed == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'merge_group' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -45,7 +78,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build snap
-        uses: snapcore/action-build@v1
+        uses: canonical/action-build@v1
         id: charmcraft
       - name: Upload snap artifact
         uses: actions/upload-artifact@v7
@@ -53,8 +86,33 @@ jobs:
           name: snap
           path: ${{ steps.charmcraft.outputs.snap }}
 
+  snap-publish:
+    needs: [filter, snap-build]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && needs.filter.outputs.source == 'true' }}
+    steps:
+      - name: Download snap artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: snap
+          path: snap-artifacts
+      - name: Get snap filename
+        id: snap-name
+        run: |
+          echo "snap=$(find . -type f -name '*.snap')" >> "$GITHUB_OUTPUT"
+      - name: Publish feature branch to edge/pr-${{ github.event.number }}
+        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
+        uses: canonical/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snap-name.outputs.snap }}
+          release: edge/pr-${{ github.event.number }}
+
   spread-select:
     runs-on: [self-hosted, spread-enabled]
+    needs: filter
+    if: ${{ needs.filter.outputs.source == 'true' || github.event_name == 'schedule' || github.event_name == 'merge_group' || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'source')) }}
     outputs:
       systems: ${{ steps.select.outputs.systems }}
     steps:
@@ -67,7 +125,8 @@ jobs:
 
   snap-tests:
     runs-on: [self-hosted, spread-enabled]
-    needs: [snap-build, spread-select]
+    needs: [filter, snap-build, spread-select]
+    if: ${{ needs.filter.outputs.source == 'true' || github.event_name == 'schedule' || github.event_name == 'merge_group' || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'source')) }}
     strategy:
       fail-fast: false
       matrix:
@@ -91,8 +150,10 @@ jobs:
           name: snap
 
       - name: Run spread
+        env:
+          SPREAD_SYSTEM: ${{ matrix.system }}
         run: |
-          spread openstack:${{ matrix.system }}
+          spread openstack:"${SPREAD_SYSTEM}"
 
       - name: Discard spread workers
         if: always()
@@ -104,7 +165,8 @@ jobs:
 
   snap-store-tests:
     runs-on: [self-hosted, spread-enabled]
-    needs: [snap-build]
+    needs: [filter, snap-build]
+    if: ${{ (needs.filter.outputs.source == 'true' || github.event_name == 'schedule' || github.event_name == 'merge_group' || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'store'))) && ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }}
 
     steps:
       - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -135,6 +197,125 @@ jobs:
       - name: Discard spread workers
         if: always()
         run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
+  docs-spread-select:
+    runs-on: spread-enabled
+    needs: filter
+    if: ${{ needs.filter.outputs.docs == 'true' || (github.event_name == 'schedule' && contains(fromJSON('["0 0 * * 0", "0 0 */2 * *"]'), github.event.schedule)) || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'docs')) }}
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
+
+  docs-tests:
+    runs-on: [self-hosted, linux, amd64, noble, large]
+    needs: [filter, snap-build, docs-spread-select]
+    if: ${{ needs.filter.outputs.docs == 'true' || (github.event_name == 'schedule' && contains(fromJSON('["0 0 * * 0", "0 0 */2 * *"]'), github.event.schedule)) || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'docs')) }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        system: ${{ fromJSON(needs.docs-spread-select.outputs.systems) }}
+
+    steps:
+      - name: Fix network issues related to docker and lxd
+        run: |
+          sudo iptables -P FORWARD ACCEPT
+          sudo ip6tables -P FORWARD ACCEPT
+
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: snap
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 1.26
+
+      - name: Install spread
+        run: |
+          go install github.com/canonical/spread/cmd/spread@latest
+
+      - name: Run spread
+        env:
+          SPREAD_SYSTEM: ${{ matrix.system }}
+        run: |
+          "$(go env GOPATH)/bin/spread" "${SPREAD_SYSTEM}"
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
+  manual-spread-tests:
+    runs-on: spread-installed
+    needs: [filter, snap-build]
+    if: ${{ needs.filter.outputs.manual == 'true' || (github.event_name == 'schedule' && contains(fromJSON('["0 0 * * WED,SUN", "0 0 * * 3", "0 0 * * 0"]'), github.event.schedule)) || (github.event_name == 'workflow_dispatch' && (inputs.test-suite == 'all' || inputs.test-suite == 'manual')) }}
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        task:
+          - charms/k8s-operator
+          - charms/operator
+          - charms/reactive
+          - smoketests/parallel-build
+          - smoketests/remote-build
+
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: snap
+
+      - name: Spread manual task
+        env:
+          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
+        run: |
+          spread google:tests/spread/${{ matrix.task }}
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          spread -discard
           shopt -s nullglob
           for r in .spread-reuse.*.yaml; do
             spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"

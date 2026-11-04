@@ -17,6 +17,7 @@ Current releases
 Charmcraft 4
 ~~~~~~~~~~~~
 
+- :doc:`Charmcraft 4.5 <charmcraft-4.5>`
 - :doc:`Charmcraft 4.4 <charmcraft-4.4>`
 - :doc:`Charmcraft 4.3 <charmcraft-4.3>`
 - :doc:`Charmcraft 4.2 <charmcraft-4.2>`
@@ -93,6 +94,7 @@ keeps pace with the OS's new releases and support lifecycle.
     :hidden:
     :maxdepth: 1
 
+    Charmcraft 4.5 <charmcraft-4.5>
     Charmcraft 4.4 <charmcraft-4.4>
     Charmcraft 4.3 <charmcraft-4.3>
     Charmcraft 4.2 <charmcraft-4.2>

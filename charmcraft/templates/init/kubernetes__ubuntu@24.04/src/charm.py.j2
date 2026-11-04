@@ -61,7 +61,7 @@ class {{ class_name }}(ops.CharmBase):
         self.container.add_layer("base", layer, combine=True)
         # If the container image is a rock, the container already has a Pebble layer.
         # In this case, you could remove 'add_layer' or use 'add_layer' to extend the rock's layer.
-        # To learn about rocks, see https://documentation.ubuntu.com/rockcraft/en/stable/
+        # To learn about rocks, see https://ubuntu.com/containers/rockcraft/docs/
         self.container.replan()  # Starts the service (because 'startup' is enabled in the layer).
         self.wait_for_ready()
         version = {{ workload_module }}.get_version()

@@ -85,7 +85,7 @@ execute: |
     django-app-image=localhost:32000/django-hello-world:0.1
 
   # Deploy + integrate with postgres
-  juju deploy postgresql-k8s --trust --channel 14/edge
+  juju deploy postgresql-k8s --trust --channel 16/stable
   juju integrate django-hello-world postgresql-k8s
 
   # Check that django-hello-world and postgres are active idle

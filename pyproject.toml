@@ -14,13 +14,13 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "craft-application~=7.2",
-  "craft-cli~=3.4",
-  "craft-grammar>=2.3.0",
-  "craft-parts~=2.35.1",
-  "craft-platforms~=0.11",
-  "craft-providers>=3.7.1,<4.0",
-  "craft-store~=3.4",
+  "craft-application~=7.5.0",
+  "craft-cli~=3.4.1",
+  "craft-grammar~=2.3.0",
+  "craft-parts~=2.37.2",
+  "craft-platforms~=0.12.0",
+  "craft-providers~=3.8.0",
+  "craft-store~=3.4.0",
   "distro>=1.7.0",
   "docker>=7.0.0",
   "humanize>=2.6.0",
@@ -65,7 +65,7 @@ dev-stonking = ["python-apt~=3.0.0;sys_platform=='linux'"]
 docs = [
   "pydantic-kitbash~=1.0",
   "sphinx-lint~=1.0",
-  "sphinx-structured-toc==0.2.0",
+  "sphinx-structured-toc==0.2.1",
   "sphinx-substitution-extensions",
   { include-group = "docs-sphinx-stack" },
 ]
@@ -544,7 +544,7 @@ build-constraint-dependencies = []
 
 [[tool.uv.index]]
 name = "python-apt-wheels"
-url = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/"
+url = "https://lengau.github.io/python-apt-wheels/simple/"
 explicit = true
 
 [tool.uv.sources]

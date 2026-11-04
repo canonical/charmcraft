@@ -30,7 +30,7 @@ Publish a library on Charmhub
 .. caution::
 
     On Charmhub, a library is always associated with the charm that it was first created
-    for. When you publisht it to Charmhub, it's published to the page of that charm. To
+    for. When you publish it to Charmhub, it's published to the page of that charm. To
     be able to publish it, you need to be logged in to Charmhub as a user who owns the
     charm (see more: :ref:`publish-a-charm`) or as a user who is registered as a
     contributor to the charm (a status that can be requested via `Discourse`_).
@@ -55,8 +55,8 @@ inside the library file, then repeat the publish procedure.
     breaking changes, you must work with the major API version. Additionally, be mindful
     of the fact that users of your library will update it automatically to the latest
     PATCH version with the same API version. To avoid breaking other people's library
-    usage, make sure toincrement the ``LIBAPI`` version but reset ``LIBPATCH`` to ``0``.
-    Also, before adding the breaking changes and updating these values, make sureto copy
+    usage, make sure to increment the ``LIBAPI`` version but reset ``LIBPATCH`` to ``0``.
+    Also, before adding the breaking changes and updating these values, make sure to copy
     the library to the new path; this way you can maintain different major API versions
     independently, being able to update, for example, your v0 after publishing v1.
 

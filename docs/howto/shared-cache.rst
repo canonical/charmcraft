@@ -19,7 +19,9 @@ Local usage
 
 When packing locally, you can change where Charmcraft caches build artefacts by setting
 the ``CRAFT_SHARED_CACHE`` environment variable to the path of an existing directory to
-use instead::
+use instead:
+
+.. code-block:: bash
 
   mkdir -p /tmp/charmcraft
   CRAFT_SHARED_CACHE=/tmp/charmcraft charmcraft pack

@@ -135,6 +135,7 @@ def create_namespace(
         base=base,
         project_dir=project_dir,
         project_dir_option=project_dir_option,
+        vcs="none",
     )
 
 

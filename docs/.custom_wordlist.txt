@@ -10,6 +10,7 @@ Autotools
 backend
 backends
 backported
+balancer('s)?
 Bazel
 boolean
 bugfix(es)?
@@ -51,6 +52,7 @@ Inkscape
 Intersphinx
 io
 ip
+JARs?
 jemalloc
 JLink
 json
@@ -63,6 +65,7 @@ LaTeX
 latexmk
 lcm
 likeminded
+lockfile
 Makefile
 Makefiles?
 middleware
@@ -91,6 +94,7 @@ Pydantic
 Pygments
 pymarkdown
 pymysql
+pytest
 QEMU
 qmake
 rackup

@@ -17,6 +17,10 @@ restore: |
 environment:
 
 execute: |
+  # [docs:export-experimental-env-vars]
+  export ROCKCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS=1
+  # [docs:export-experimental-env-vars-end]
+
   # Move everything to $HOME so that Juju deployment works
   mkdir $HOME/fastapi
   mv *.yaml *.py *.txt $HOME/fastapi
@@ -47,7 +51,7 @@ execute: |
   kill $!
 
   # [docs:create-rockcraft-yaml]
-  rockcraft init --profile fastapi-framework
+  rockcraft init --profile fastapi-framework --base ubuntu@26.04
   # [docs:create-rockcraft-yaml-end]
 
   sed -i "s/name: .*/name: fastapi-hello-world/g" rockcraft.yaml
@@ -58,9 +62,7 @@ execute: |
   # [docs:pack-end]
 
   # [docs:skopeo-copy]
-  rockcraft.skopeo copy \
-    --insecure-policy \
-    --dest-tls-verify=false \
+  rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false \
     oci-archive:fastapi-hello-world_0.1_$(dpkg --print-architecture).rock \
     docker://localhost:32000/fastapi-hello-world:0.1
   # [docs:skopeo-copy-end]
@@ -104,7 +106,8 @@ execute: |
 
   # [docs:config-nginx]
   juju config nginx-ingress-integrator \
-    service-hostname=fastapi-hello-world path-routes=/ rewrite-enabled=false rewrite-target=/
+    service-hostname=fastapi-hello-world path-routes='/.*' rewrite-enabled=false rewrite-target=/ \
+    ingress-class=cilium
   # [docs:config-nginx-end]
 
   # give Juju some time to deploy the apps
@@ -112,10 +115,12 @@ execute: |
   juju wait-for application nginx-ingress-integrator --query='status=="active"' --timeout 10m
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+  # Canonical Kubernetes serves the ingress at the VM's address
+  INGRESS_IP=$(ip -4 route get 2.2.2.2 | grep -oP 'src \K[0-9.]+')
+  retry -n 24 --wait 5 curl --fail http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
 
   # [docs:curl-init-deployment]
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1
+  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP
   # [docs:curl-init-deployment-end]
 
   cd ..
@@ -143,7 +148,7 @@ execute: |
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is Hello
-  retry -n 5 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hello"
+  retry -n 24 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP | grep Hello"
 
   # [docs:change-config]
   juju config fastapi-hello-world greeting='Hi!'
@@ -153,7 +158,7 @@ execute: |
   juju wait-for application fastapi-hello-world --query='status=="active"' --timeout 10m
 
   # curl and check that the response is now Hi
-  retry -n 5 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi"
+  retry -n 24 --wait 5 sh -c "curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP | grep Hi"
 
   cd ..
   cat visitors_migrate.py >> migrate.py
@@ -193,12 +198,12 @@ execute: |
   juju status --relations
 
   # wait until the endpoint works
-  retry -n 5 --wait 5 curl --fail http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1
+  retry -n 24 --wait 5 curl --fail http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:$INGRESS_IP
 
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
-  curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 1
-  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:127.0.0.1 | grep Hi
-  curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:127.0.0.1 | grep 2
+  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:$INGRESS_IP | grep 1
+  curl http://fastapi-hello-world --resolve fastapi-hello-world:80:$INGRESS_IP | grep Hi
+  curl http://fastapi-hello-world/visitors --resolve fastapi-hello-world:80:$INGRESS_IP | grep 2
 
   # [docs:clean-environment]
   charmcraft clean

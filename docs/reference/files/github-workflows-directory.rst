@@ -1,5 +1,5 @@
 .. meta::
-    :description: Reference for the ``.github/workflows`` directory, including the linting and unit test, integration test, publish, and security workflows for charms hosted on GitHub.
+    :description: Reference for the ``.github/workflows`` directory, which includes testing, publication, and security workflows for charms hosted on GitHub.
 
 .. _github-workflows-directory:
 
@@ -7,25 +7,17 @@
 ``.github/workflows`` directory
 ===============================
 
-The ``.github/workflows`` directory contains GitHub Actions configuration for charms
-that are hosted on GitHub. This directory is created only when the
-profile is ``machine`` or ``kubernetes``. To opt out, delete the ``.github``
-directory.
+The ``.github/workflows`` directory contains GitHub workflows for charms.
+This directory is created in charms initialized with the ``machine`` and
+``kubernetes`` profiles. To opt out, delete the ``.github`` directory.
 
-.. seealso::
-
-    :external+ops:ref:`How to set up continuous integration for a charm <set-up-ci>`
-
-.. _github-workflows-directory-ci-yaml:
+The :external+ops:ref:`set-up-ci` guide contains practical guidance on running your
+charm's tests against GitHub pull requests.
 
 ``ci.yaml``
 -----------
 
-This workflow runs linting and unit tests. It runs with the Python version that matches the charm's base.
-
-.. seealso::
-
-    :external+ops:ref:`Ops | Tool versions <tool-versions>`
+This workflow runs linters and unit tests. It runs with the Python version that matches the charm's base.
 
 
 .. _github-workflows-directory-integration-yaml:
@@ -40,20 +32,13 @@ This workflow packs the charm and runs the integration tests.
 ``publish.yaml``
 ----------------
 
-This workflow uploads the charm to ``latest/edge`` on Charmhub for every push to the main branch.
-This workflow requires a ``publish`` environment with a ``CHARMHUB_TOKEN`` secret.
-The charm must be registered, and for the ``kubernetes`` profile, the resource must have
-been uploaded.
+This workflow uploads the charm to the latest/edge channel on Charmhub every time
+there's a push to the main branch.
+This workflow requires a ``publish`` `deployment environment <https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments>`__
+with a ``CHARMHUB_AUTH`` secret. This secret stores the credential from :ref:`logging into Charmhub <manage-the-current-charmhub-user>`.
+The charm must be :ref:`registered on Charmhub <publish-a-charm>`. For the ``kubernetes`` profile, the resource must be :ref:`published <publish-a-resource>` before this workflow runs.
 
-This workflow is meant to be a starting point, and should be updated to match the charm's development process.
-
-.. seealso::
-
-    `GitHub | Managing environments for deployment
-    <https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments>`__,
-    :ref:`Manage the current Charmhub user <manage-the-current-charmhub-user>`,
-    :ref:`Publish a charm <publish-a-charm>`,
-    :ref:`Publish a resource on Charmhub <publish-a-resource>`
+This workflow is meant to be a starting point and should be updated to match the charm's development process.
 
 
 .. _github-workflows-directory-security-yaml:
@@ -71,13 +56,8 @@ Only the runtime dependencies are audited.
 ``dependency-review.yaml``
 --------------------------
 
-This workflow checks the dependencies that a pull request changes. It requires
-Dependency graph to be enabled.
-
-.. seealso::
-
-    `dependency-review-action <https://github.com/actions/dependency-review-action>`__,
-    `GitHub | Enabling the dependency graph <https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/enable-dependency-graph>`__
+This workflow checks the dependencies that a pull request changes with the `dependency-review-action <https://github.com/actions/dependency-review-action>`__. It requires the
+`dependency graph to be enabled <https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/enable-dependency-graph>`__.
 
 .. _github-workflows-directory-zizmor-yaml:
 

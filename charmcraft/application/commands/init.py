@@ -79,6 +79,9 @@ Depending on the profile choice, Charmcraft will setup the following tree of
 files and directories::
 
     .
+    ├── .github                    - GitHub Actions and Dependabot
+    │                                configuration, created if profile is
+    │                                'kubernetes' or 'machine'
     ├── charmcraft.yaml            - Charm build configuration
     ├── CONTRIBUTING.md            - Instructions for how to build and develop
     │                                your charm
@@ -87,7 +90,9 @@ files and directories::
     │                                linting tools. Specifies Python dependencies for
     │                                all profiles except 12-factor app charms
     │                                targeting Ubuntu 24.04 LTS or lower
-    ├── README.md                  - Front page for your charmhub.io/charm/
+    ├── README.md                  - Frontpage for your charmhub.io/charm/
+    ├── SECURITY.md                - Security policy, created if profile is
+    │                                'kubernetes' or 'machine'
     ├── requirements.txt           - Python dependencies for 12-factor app charms
     │                                targeting Ubuntu 24.04 LTS or lower
     ├── src

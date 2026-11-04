@@ -19,6 +19,14 @@ Project information
 - :ref:`readme-md-file`
 - :ref:`contributing-md-file`
 - :ref:`icon-svg-file`
+- :ref:`security-md-file`
+
+
+GitHub Actions and Dependabot
+-----------------------------
+
+- :ref:`github-dependabot-yaml-file`
+- :ref:`github-workflows-directory`
 
 
 12-factor app configuration
@@ -59,6 +67,8 @@ Testing
     config-yaml-file
     contributing-md-file
     dispatch-file
+    github-dependabot-yaml-file
+    github-workflows-directory
     icon-svg-file
     libname-py-file
     license-file
@@ -69,6 +79,7 @@ Testing
     pyproject-toml-file
     readme-md-file
     requirements-txt-file
+    security-md-file
     src-charm-py-file
     src-workload-py-file
     tests-unit-test-charm-py-file

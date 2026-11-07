@@ -133,6 +133,49 @@ def test_get_metadata_yaml_adds_project_fields(
     }
 
 
+@pytest.mark.parametrize(
+    "metadata_yaml",
+    [
+        pytest.param("# A comment.\nsummary: A summary\n", id="trailing-newline"),
+        pytest.param("# A comment.\nsummary: A summary", id="no-trailing-newline"),
+    ],
+)
+def test_get_metadata_yaml_adds_project_fields_keeps_comments(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+    metadata_yaml: str,
+):
+    """The project's metadata.yaml is kept as-is, with the missing fields appended."""
+    project = service_factory.get("project").get()
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    (project_dir / const.METADATA_FILENAME).write_text(metadata_yaml)
+
+    result = package_service.get_metadata_yaml()
+
+    assert result.startswith("# A comment.\nsummary: A summary\n")
+    assert yaml.safe_load(result) == {
+        "name": project.name,
+        "summary": "A summary",
+        "description": project.description,
+    }
+
+
+def test_get_metadata_yaml_adds_project_fields_flow_mapping(
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """A metadata.yaml that can't be appended to is written out again."""
+    project = service_factory.get("project").get()
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    (project_dir / const.METADATA_FILENAME).write_text("{summary: A summary}\n")
+
+    assert yaml.safe_load(package_service.get_metadata_yaml()) == {
+        "name": project.name,
+        "summary": "A summary",
+        "description": project.description,
+    }
+
+
 def test_get_metadata_yaml_uses_sorted_serialization(
     package_service,
     service_factory: craft_application.ServiceFactory,

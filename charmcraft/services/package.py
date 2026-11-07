@@ -194,7 +194,8 @@ class PackageService(services.PackageService):
 
         Fields like ``name`` can be defined in either charmcraft.yaml or
         metadata.yaml. If any are missing from metadata.yaml, they're added from
-        the project. Otherwise, the file is used unchanged.
+        the project. The missing fields are appended so the file's comments and
+        formatting are kept.
 
         :param metadata_yaml: The contents of the project's metadata.yaml file.
         :returns: The contents of metadata.yaml for the packed charm.
@@ -210,10 +211,25 @@ class PackageService(services.PackageService):
         if not missing_fields:
             return metadata_yaml
         project_metadata = self.metadata.marshal()
-        for field in missing_fields:
-            if project_metadata.get(field) is not None:
-                metadata[field] = project_metadata[field]
-        return yaml.safe_dump(metadata, sort_keys=True)
+        missing = {
+            field: project_metadata[field]
+            for field in missing_fields
+            if project_metadata.get(field) is not None
+        }
+        if not missing:
+            return metadata_yaml
+
+        if not metadata_yaml.endswith("\n"):
+            metadata_yaml += "\n"
+        merged = metadata_yaml + yaml.safe_dump(missing, sort_keys=True)
+        # Appending doesn't work for every file, such as one using a flow mapping.
+        # In that case, write the whole file out again.
+        try:
+            if yaml.safe_load(merged) == {**metadata, **missing}:
+                return merged
+        except yaml.YAMLError:
+            pass
+        return yaml.safe_dump({**metadata, **missing}, sort_keys=True)
 
     @package_file(const.JUJU_ACTIONS_FILENAME)
     def get_actions_yaml(

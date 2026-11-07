@@ -181,13 +181,39 @@ class PackageService(services.PackageService):
                 )
                 return False
             if metadata_path.is_file():
-                return metadata_path.read_text()
+                return self._merge_project_metadata(metadata_path.read_text())
             return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
 
         if metadata_path.is_file():
-            return metadata_path.read_text()
+            return self._merge_project_metadata(metadata_path.read_text())
 
         return yaml.safe_dump(self.metadata.marshal(), sort_keys=True)
+
+    def _merge_project_metadata(self, metadata_yaml: str) -> str:
+        """Add fields defined in charmcraft.yaml to a project's metadata.yaml.
+
+        Fields like ``name`` can be defined in either charmcraft.yaml or
+        metadata.yaml. If any are missing from metadata.yaml, they're added from
+        the project. Otherwise, the file is used unchanged.
+
+        :param metadata_yaml: The contents of the project's metadata.yaml file.
+        :returns: The contents of metadata.yaml for the packed charm.
+        """
+        metadata = yaml.safe_load(metadata_yaml)
+        if not isinstance(metadata, dict):
+            return metadata_yaml
+        missing_fields = [
+            field
+            for field in const.METADATA_YAML_MIGRATE_FIELDS
+            if field not in metadata
+        ]
+        if not missing_fields:
+            return metadata_yaml
+        project_metadata = self.metadata.marshal()
+        for field in missing_fields:
+            if project_metadata.get(field) is not None:
+                metadata[field] = project_metadata[field]
+        return yaml.safe_dump(metadata, sort_keys=True)
 
     @package_file(const.JUJU_ACTIONS_FILENAME)
     def get_actions_yaml(

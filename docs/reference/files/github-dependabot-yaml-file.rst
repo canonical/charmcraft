@@ -11,7 +11,7 @@
 
 The ``.github/dependabot.yaml`` file configures Dependabot to open pull requests
 that update the charm's dependencies. Charmcraft creates this file only when the
-profile is ``machine`` or ``kubernetes``.
+profile is ``github-ci``.
 
 Dependabot updates are grouped into separate pull requests, so that they're easier to
 review. To receive updates, enable Dependabot in your charm's GitHub repository.

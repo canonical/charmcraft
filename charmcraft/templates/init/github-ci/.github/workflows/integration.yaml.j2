@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Integration tests
 
 on:
   workflow_call:
@@ -28,7 +28,7 @@ jobs:
       group: {% raw %}${{ github.workflow }}-${{ github.ref }}-${{ matrix.juju-version }}{% endraw %}
       cancel-in-progress: true
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false

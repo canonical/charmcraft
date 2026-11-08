@@ -2,7 +2,17 @@ name: Integration Tests
 
 on:
   workflow_call:
+    inputs:
+      concierge-preset:
+        description: The Concierge preset to prepare the test environment with, "k8s" or "machine".
+        type: string
+        required: true
   workflow_dispatch:
+    inputs:
+      concierge-preset:
+        description: The Concierge preset to prepare the test environment with, "k8s" or "machine".
+        type: string
+        required: true
 
 permissions: {}
 
@@ -30,7 +40,10 @@ jobs:
         run: sudo snap install --classic concierge
 
       - name: Set up Juju and charm development tools
-        run: sudo concierge prepare -p machine --juju-channel {% raw %}${{ matrix.juju-version }}{% endraw %}/stable
+        env:
+          CONCIERGE_PRESET: {% raw %}${{ inputs.concierge-preset }}{% endraw %}
+          JUJU_CHANNEL: {% raw %}${{ matrix.juju-version }}{% endraw %}/stable
+        run: sudo concierge prepare -p "$CONCIERGE_PRESET" --juju-channel "$JUJU_CHANNEL"
 
       - name: Pack the charm
         # The integration tests don't pack the charm. Instead, they look for a .charm

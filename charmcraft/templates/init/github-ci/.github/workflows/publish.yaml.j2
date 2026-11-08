@@ -32,7 +32,11 @@ jobs:
       - name: Pack the charm
         run: charmcraft pack
 
-      - name: Upload charm to latest/edge
+      # An example of uploading a charm with a resource. Remove this
+      # step and the '--resource' option in the Upload charm step if your charm
+      # doesn't have any resources.
+      - name: Find the resource to attach
+        id: resource
         run: |
           set -euo pipefail
 
@@ -53,11 +57,22 @@ jobs:
             echo "No revision found for resource '$RESOURCE_NAME'. Upload one with 'charmcraft upload-resource' first."
             exit 1
           fi
-          echo "Using $RESOURCE_NAME revision $rev"
 
-          for charm in *.charm; do
-            charmcraft upload "$charm" --release latest/edge --resource $RESOURCE_NAME:"$rev"
-          done
+          echo "Using $RESOURCE_NAME revision $rev"
+          echo "name=$RESOURCE_NAME" >> "$GITHUB_OUTPUT"
+          echo "revision=$rev" >> "$GITHUB_OUTPUT"
         env:
           CHARMCRAFT_AUTH: {% raw %}${{ secrets.CHARMHUB_TOKEN }}{% endraw %}
           RESOURCE_NAME: some-container-image
+
+      - name: Upload charm to latest/edge
+        run: |
+          set -euo pipefail
+
+          for charm in *.charm; do
+            charmcraft upload "$charm" --release latest/edge --resource "$RESOURCE_NAME:$RESOURCE_REVISION"
+          done
+        env:
+          CHARMCRAFT_AUTH: {% raw %}${{ secrets.CHARMHUB_TOKEN }}{% endraw %}
+          RESOURCE_NAME: {% raw %}${{ steps.resource.outputs.name }}{% endraw %}
+          RESOURCE_REVISION: {% raw %}${{ steps.resource.outputs.revision }}{% endraw %}

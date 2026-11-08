@@ -45,11 +45,12 @@ jobs:
     name: Integration Tests
     needs: [lint, unit]
     uses: $/.github/workflows/integration.yaml
+    with:
+      concierge-preset: k8s
 
   publish:
     name: Publish
     needs: [integration]
-    # For publish.yaml
     secrets:
       CHARMHUB_TOKEN: {% raw %}${{ secrets.CHARMHUB_TOKEN }}{% endraw %}
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

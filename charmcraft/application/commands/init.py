@@ -54,6 +54,10 @@ Available profiles are:
         A basic charm but meant to be deployed in machine-based environments,
         without container requirements.
 
+    github-ci:
+        GitHub Actions and Dependabot configuration for an existing charm
+        created with the 'kubernetes' or 'machine' profile.
+
     django-framework:
         A basic Kubernetes charm for a 12-factor Django app.
 
@@ -81,7 +85,7 @@ files and directories::
     .
     ├── .github                    - GitHub Actions and Dependabot
     │                                configuration, created if profile is
-    │                                'kubernetes' or 'machine'
+    │                                'github-ci'
     ├── charmcraft.yaml            - Charm build configuration
     ├── CONTRIBUTING.md            - Instructions for how to build and develop
     │                                your charm

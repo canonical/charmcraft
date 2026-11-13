@@ -1,0 +1,58 @@
+name: Check
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions: {}
+
+env:
+  UV_PYTHON: "3.12"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Run lint
+        run: uv run --frozen --only-group ci tox -e lint
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Run tests
+        run: uv run --frozen --only-group ci tox -e unit
+
+  integration:
+    name: Integration tests
+    needs: [lint, unit]
+    uses: $/.github/workflows/integration.yaml
+    with:
+      # For a machine charm, set concierge-preset to "machine".
+      concierge-preset: k8s
+
+  publish:
+    name: Publish
+    needs: [integration]
+    secrets:
+      CHARMHUB_TOKEN: {% raw %}${{ secrets.CHARMHUB_TOKEN }}{% endraw %}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: $/.github/workflows/publish.yaml

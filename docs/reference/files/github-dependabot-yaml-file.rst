@@ -1,0 +1,16 @@
+.. meta::
+    :description: Reference for the ``.github/dependabot.yaml`` file, which configures Dependabot to open pull requests that update the charm's dependencies.
+
+.. _github-dependabot-yaml-file:
+
+
+``.github/dependabot.yaml`` file
+================================
+
+The ``.github/dependabot.yaml`` file configures Dependabot to open pull requests
+that update the charm's dependencies. Charmcraft creates this file in charms initialized
+with the ``github-ci`` profile.
+
+Dependabot updates are grouped into separate pull requests, so that they're easier to
+review. To receive updates, `enable Dependabot in your charm's GitHub repository
+<https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/dependabot-quickstart#enabling-dependabot-for-your-repository>`__.

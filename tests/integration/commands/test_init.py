@@ -49,6 +49,7 @@ BASIC_INIT_FILES = frozenset(
         "LICENSE",
         "pyproject.toml",
         "README.md",
+        "SECURITY.md",
         "src",
         "src/charm.py",
         "tests",
@@ -58,6 +59,20 @@ BASIC_INIT_FILES = frozenset(
         "tests/unit",
         "tests/unit/test_charm.py",
         "tox.ini",
+    )
+)
+GITHUB_CI_FILES = frozenset(
+    pathlib.Path(p)
+    for p in (
+        ".github",
+        ".github/dependabot.yaml",
+        ".github/workflows",
+        ".github/workflows/ci.yaml",
+        ".github/workflows/dependency-review.yaml",
+        ".github/workflows/integration.yaml",
+        ".github/workflows/publish.yaml",
+        ".github/workflows/security.yaml",
+        ".github/workflows/zizmor.yaml",
     )
 )
 UNKNOWN_AUTHOR_REGEX = re.compile(
@@ -83,6 +98,7 @@ V2_PROJECT_DEPENDENCIES = {
 }
 ALL_PROFILES = [
     *FRAMEWORK_PROFILES,
+    "github-ci",
     "kubernetes",
     "machine",
     "test-kubernetes",
@@ -361,6 +377,19 @@ def test_force(new_path, init_command):
     # Check that init did not overwrite files
     with tmp_file.open("r") as f:
         assert f.read() == "This is a nonsense readme"
+
+
+@pytest.mark.parametrize("profile", ["machine", "kubernetes"])
+def test_github_ci_profile_adds_to_existing_charm(
+    new_path, init_command, emitter, profile: str
+):
+    init_command.run(create_namespace(profile=profile))
+    files_before = {p.relative_to(new_path) for p in new_path.rglob("*")}
+
+    init_command.run(create_namespace(profile="github-ci"))
+
+    files_after = {p.relative_to(new_path) for p in new_path.rglob("*")}
+    assert files_after - files_before == GITHUB_CI_FILES
 
 
 def test_nonoverlapping_file_does_not_require_force(new_path, init_command):

@@ -22,6 +22,8 @@ To log in to Charmhub, run:
 
 This will open a web browser and prompt you to log in with your Ubuntu One account.
 
+.. _login-remote-environments:
+
 Remote environments
 ~~~~~~~~~~~~~~~~~~~
 

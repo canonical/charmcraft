@@ -1,0 +1,62 @@
+name: Integration tests
+
+on:
+  workflow_call:
+    inputs:
+      concierge-preset:
+        description: The Concierge preset to prepare the test environment with, "k8s" or "machine".
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      concierge-preset:
+        description: The Concierge preset to prepare the test environment with, "k8s" or "machine".
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-version: ["3.6", "4.0"]
+    concurrency:
+      group: {% raw %}${{ github.workflow }}-${{ github.ref }}-${{ matrix.juju-version }}{% endraw %}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+
+      - name: Set up Concierge
+        run: sudo snap install --classic concierge
+
+      - name: Set up Juju and charm development tools
+        env:
+          CONCIERGE_PRESET: {% raw %}${{ inputs.concierge-preset }}{% endraw %}
+          JUJU_CHANNEL: {% raw %}${{ matrix.juju-version }}{% endraw %}/stable
+        run: sudo concierge prepare -p "$CONCIERGE_PRESET" --juju-channel "$JUJU_CHANNEL"
+
+      - name: Pack the charm
+        # The integration tests don't pack the charm. Instead, they look for a .charm
+        # file in the project dir (or use CHARM_PATH, if set).
+        run: charmcraft pack
+
+      - name: Run integration tests
+        timeout-minutes: 60
+        run: uv run --frozen --only-group ci tox -e integration -- --juju-dump-logs logs --log-file logs/verbose.log
+
+      - name: Upload logs
+        if: {% raw %}${{ !cancelled() }}{% endraw %}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: integration-test-logs-juju-{% raw %}${{ matrix.juju-version }}{% endraw %}
+          path: logs

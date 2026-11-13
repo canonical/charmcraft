@@ -26,7 +26,11 @@ from charmcraft import utils
 class UvPlugin(uv_plugin.UvPlugin):
     @override
     def get_build_environment(self) -> dict[str, str]:
-        return utils.extend_python_build_environment(super().get_build_environment())
+        # Set UV_CACHE_DIR to the part's cache directory to enable caching of wheels
+        # built from source (when no-binary=true is set in pyproject.toml)
+        return {
+            "UV_CACHE_DIR": str(self._part_info.part_cache_dir / "uv"),
+        } | utils.extend_python_build_environment(super().get_build_environment())
 
     @override
     def _get_venv_directory(self) -> Path:

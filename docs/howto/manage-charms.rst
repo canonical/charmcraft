@@ -45,7 +45,7 @@ command in its project directory:
     charmcraft init --profile github-ci
 
 The ``github-ci`` profile creates a ``.github`` directory with workflows catered to
-kubernetes charms. If you're working with a machine charm, change the
+Kubernetes charms. If you're working with a machine charm, change the
 ``concierge-preset`` input in the ``ci.yaml`` file from ``k8s`` to ``machine``. If your
 charm doesn't have any resources, remove the resource step from the publish workflow as
 well.

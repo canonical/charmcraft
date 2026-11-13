@@ -101,7 +101,8 @@ Fixed bugs and issues
 
 The following issues have been resolved in Charmcraft 4.6.
 
-- No entries yet.
+- `#2071 <https://github.com/canonical/charmcraft/issues/2071>`__
+  Packing a charm with an empty ``metadata.yaml`` reports an unhelpful validation error
 
 
 Known issues

@@ -54,10 +54,30 @@ Minor features
 Charmcraft 4.6 brings the following minor changes.
 
 
-<Feature A>
-~~~~~~~~~~~
+A new github-ci profile
+~~~~~~~~~~~~~~~~~~~~~~~
 
-- <Add a short description of a minor change.>
+- The new ``github-ci`` profile adds a ``.github`` directory with GitHub Actions and
+  Dependabot configuration to charms created with the ``machine`` and ``kubernetes``
+  profiles.
+- The ``pyproject.toml`` file of the ``machine`` and ``kubernetes`` profiles now has a
+  ``ci`` dependency group with the tools that the ``github-ci`` workflows use.
+- The integration workflow takes a ``concierge-preset`` input, ``k8s`` or ``machine``.
+  By default, ``ci.yaml`` passes ``k8s``; for a machine charm, change it to ``machine``.
+  The publish workflow resolves the resource to attach in its own step and uses the
+  step's output in the upload; remove the step and the ``--resource`` option if your
+  charm doesn't have any resources. See :ref:`the workflows reference
+  <github-workflows-directory>` for details.
+
+Minor init profile improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The ``machine`` and ``kubernetes`` profiles now include a ``SECURITY.md`` file, as a
+  placeholder security policy for the charm.
+- The pytest configuration of the ``machine`` and ``kubernetes`` profiles now writes
+  debug-level logs to a file when you invoke pytest with the ``--log-file`` option. The
+  integration test workflow in the ``github-ci`` profile uses this option to save the
+  logs.
 
 
 Backwards-incompatible changes

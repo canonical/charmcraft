@@ -1,5 +1,8 @@
 .. _charmcraft-yaml-file:
 
+.. meta::
+    :description: Charmcraft.yaml is the file that defines how a charm is packed by Charmcraft to be deployed by Juju.
+
 ``charmcraft.yaml`` file
 ========================
 

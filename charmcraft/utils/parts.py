@@ -56,11 +56,14 @@ def get_charm_copy_commands(
     return commands
 
 
-def get_venv_cleanup_commands(venv_path: pathlib.Path, *, keep_bins: bool) -> list[str]:
+def get_venv_cleanup_commands(
+    venv_path: pathlib.Path, *, keep_bins: bool, make_relocatable: bool = True
+) -> list[str]:
     """Get a script do Charmcraft-specific venv cleanup.
 
     :param venv_path: The path to the venv.
     :param keep_bins: Whether to keep the bin directory of the venv.
+    :param make_relocatable: Whether to make the activate script portable
     :returns: A shell script to do this, as a string.
     """
     venv_bin = venv_path / "bin"
@@ -74,12 +77,15 @@ def get_venv_cleanup_commands(venv_path: pathlib.Path, *, keep_bins: bool) -> li
             f"rm -rf {venv_bin}/!(activate)",
             "shopt -u extglob",
         ]
-    update_activate = [
-        # Replace hard-coded path in `activate` with portable path
-        # "\&" is escape for sed
-        'sed -i \'s#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \\&> /dev/null \\&\\& pwd )"#\' '
-        + str(venv_bin / "activate"),
-    ]
+    if make_relocatable:
+        update_activate = [
+            # Replace hard-coded path in `activate` with portable path
+            # "\&" is escape for sed
+            'sed -i \'s#^VIRTUAL_ENV=.*$#VIRTUAL_ENV="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." \\&> /dev/null \\&\\& pwd )"#\' '
+            + str(venv_bin / "activate"),
+        ]
+    else:
+        update_activate = []
     delete_lib64 = textwrap.dedent(f"""
         if [ -L '{venv_lib64}' ]; then
           rm -f '{venv_lib64}'

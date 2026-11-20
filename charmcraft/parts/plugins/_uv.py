@@ -61,6 +61,9 @@ class UvPlugin(uv_plugin.UvPlugin):
         return [
             *super().get_build_commands(),
             *utils.get_venv_cleanup_commands(
-                self._get_venv_directory(), keep_bins=False
+                self._get_venv_directory(),
+                keep_bins=False,
+                # craft-parts already uses `uv venv --relocatable`
+                make_relocatable=False,
             ),
         ]

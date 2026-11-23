@@ -246,7 +246,7 @@ Once Rockcraft has finished packing the FastAPI rock,
 the terminal will respond with something similar to
 ``Packed fastapi-hello-world_0.1_<architecture>.rock``. The file name
 reflects your system's architecture. After the initial
-pack, subsequent rock packings are faster.
+pack, subsequent rock packs are faster.
 
 The rock needs to be copied to the local registry. This registry acts as a
 temporary Docker Hub, storing OCI archives so they can be downloaded and
@@ -356,7 +356,7 @@ Once Charmcraft has finished packing the charm, the terminal will
 respond with something similar to
 ``Packed fastapi-hello-world_<architecture>.charm``. The file name
 reflects your system's architecture. After the initial
-pack, subsequent charm packings are faster.
+pack, subsequent charm packs are faster.
 
 .. _write-your-first-kubernetes-charm-for-a-fastapi-app-deploy-the-fastapi-app:
 

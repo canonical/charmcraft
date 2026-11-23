@@ -13,5 +13,5 @@ on.
 
 The file is created automatically by ``charmcraft pack`` and you can inspect it by
 unzipping the ``.charm`` archive (``unzip <charm name>.charm`` ) or by deploying the
-charm, SSHing into one its units, and inspecting the charm directory in there (e.g., for
+charm, using SSH to connect to one of its units, and inspecting the charm directory in there (e.g., for
 unit ``0``: ``ls agents/unit-<charm name>-0/charm``).

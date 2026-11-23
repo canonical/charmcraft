@@ -74,7 +74,7 @@ class FakeResponse(requests.Response):
     def ok(self):
         return self.status_code == 200
 
-    def json(self):  # ty: ignore[invalid-method-override]
+    def json(self):  # ty: ignore[incompatible-method-override]
         try:
             return json.loads(self._content)  # type: ignore
         except json.JSONDecodeError as exc:
@@ -83,7 +83,7 @@ class FakeResponse(requests.Response):
             raise requests.exceptions.JSONDecodeError(exc.msg, exc.doc, exc.pos)
 
     @property
-    def reason(self):  # ty: ignore[invalid-property-type-override]
+    def reason(self):  # ty: ignore[incompatible-property-override]
         return self._content
 
     @property

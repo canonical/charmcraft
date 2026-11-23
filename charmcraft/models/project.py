@@ -227,11 +227,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
     version: SkipJsonSchema[VersionStr | None] = None
-    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
+    license: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
     # These are inside the "links" child model.
-    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
-    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
-    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
+    contact: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
+    issues: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
+    source_code: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
 
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
@@ -418,10 +418,10 @@ class CharmProject(CharmcraftProject):
             "mysql-k8s",
         ],
     )
-    summary: CharmcraftSummaryStr = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[invalid-mutable-override]
+    summary: CharmcraftSummaryStr = pydantic.Field(  # ty: ignore[incompatible-mutable-override]
         description="A brief (one-line) summary of your charm.",
     )
-    description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[invalid-mutable-override]
+    description: str = pydantic.Field(  # ty: ignore[incompatible-mutable-override]
         description="A multi-line summary of your charm."
     )
 
@@ -814,7 +814,7 @@ class CharmProject(CharmcraftProject):
 
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
     """Check that the given base is a legacy base, usable with 'bases'."""
-    base_str = f"{base['name']}@{base['channel']}"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+    base_str = f"{base['name']}@{base['channel']}"
     return base_str in const.LEGACY_BASES
 
 
@@ -863,7 +863,7 @@ class BasesCharm(CharmProject):
         Annotated[BasesConfiguration, pydantic.BeforeValidator(_validate_base)]
     ] = pydantic.Field(min_length=1)
 
-    base: None = None  # ty: ignore[invalid-mutable-override]
+    base: None = None  # ty: ignore[incompatible-mutable-override]
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(
         default={"charm": {"plugin": "charm", "source": "."}},
@@ -893,8 +893,8 @@ class PlatformCharm(CharmProject):
     """Model for defining a charm using Platforms."""
 
     # Silencing pyright because it complains about missing default value
-    base: BaseStr | None = None  # ty: ignore[invalid-mutable-override]
-    build_base: BuildBaseStr | None = None  # ty: ignore[invalid-mutable-override]
+    base: BaseStr | None = None  # ty: ignore[incompatible-mutable-override]
+    build_base: BuildBaseStr | None = None  # ty: ignore[incompatible-mutable-override]
     platforms: PlatformsDict
 
     parts: dict[str, dict[str, Any]] = pydantic.Field(

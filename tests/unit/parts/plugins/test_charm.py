@@ -17,6 +17,7 @@
 
 import pathlib
 import sys
+from typing import cast
 from unittest.mock import patch
 
 import pydantic
@@ -149,23 +150,32 @@ def test_charmpluginproperties_invalid_properties():
 def test_charmpluginproperties_entrypoint_ok():
     """Simple valid entrypoint."""
     content = {"source": ".", "charm-entrypoint": "myep.py"}
-    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "myep.py"  # ty: ignore[missing-attribute]
+    properties = cast(
+        type[parts.plugins.CharmPluginProperties],
+        parts.plugins.CharmPlugin.properties_class,
+    ).unmarshal(content)
+    assert properties.charm_entrypoint == "myep.py"
 
 
 def test_charmpluginproperties_entrypoint_default():
     """Specific default if not configured."""
     content = {"source": "."}
-    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "src/charm.py"  # ty: ignore[missing-attribute]
+    properties = cast(
+        type[parts.plugins.CharmPluginProperties],
+        parts.plugins.CharmPlugin.properties_class,
+    ).unmarshal(content)
+    assert properties.charm_entrypoint == "src/charm.py"
 
 
 def test_charmpluginproperties_entrypoint_relative(tmp_path):
     """The configuration is stored relative no matter what."""
     absolute_path = tmp_path / "myep.py"
     content = {"source": str(tmp_path), "charm-entrypoint": str(absolute_path)}
-    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_entrypoint == "myep.py"  # ty: ignore[missing-attribute]
+    properties = cast(
+        type[parts.plugins.CharmPluginProperties],
+        parts.plugins.CharmPlugin.properties_class,
+    ).unmarshal(content)
+    assert properties.charm_entrypoint == "myep.py"
 
 
 def test_charmpluginproperties_entrypoint_outside_project_absolute(tmp_path):
@@ -201,8 +211,11 @@ def test_charmpluginproperties_entrypoint_outside_project_relative(tmp_path):
 def test_charmpluginproperties_requirements_default(tmp_path):
     """The configuration is empty by default."""
     content = {"source": str(tmp_path)}
-    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_requirements == []  # ty: ignore[missing-attribute]
+    properties = cast(
+        type[parts.plugins.CharmPluginProperties],
+        parts.plugins.CharmPlugin.properties_class,
+    ).unmarshal(content)
+    assert properties.charm_requirements == []
 
 
 def test_charmpluginproperties_requirements_filepresent_ok(tmp_path: pathlib.Path):
@@ -218,5 +231,8 @@ def test_charmpluginproperties_requirements_filepresent_but_configured(tmp_path)
     (tmp_path / "requirements.txt").write_text("somedep")
     (tmp_path / "alternative.txt").write_text("somedep")
     content = {"source": str(tmp_path), "charm-requirements": ["alternative.txt"]}
-    properties = parts.plugins.CharmPlugin.properties_class.unmarshal(content)
-    assert properties.charm_requirements == ["alternative.txt"]  # ty: ignore[missing-attribute]
+    properties = cast(
+        type[parts.plugins.CharmPluginProperties],
+        parts.plugins.CharmPlugin.properties_class,
+    ).unmarshal(content)
+    assert properties.charm_requirements == ["alternative.txt"]

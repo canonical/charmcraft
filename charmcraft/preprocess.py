@@ -54,6 +54,13 @@ def add_metadata(project_dir: pathlib.Path, yaml_data: dict[str, Any]) -> None:
 
     with metadata_path.open() as file:
         metadata_yaml = util.safe_yaml_load(file)
+    if metadata_yaml is None:
+        raise errors.CraftValidationError(
+            "Empty file: 'metadata.yaml'",
+            resolution="Add the charm metadata to metadata.yaml or delete the file.",
+            docs_url="https://juju.is/docs/sdk/metadata-yaml",
+            retcode=65,
+        )
     if not isinstance(metadata_yaml, dict):
         raise errors.CraftValidationError(
             "Invalid file: 'metadata.yaml'",

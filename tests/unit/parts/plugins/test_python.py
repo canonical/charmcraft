@@ -80,7 +80,7 @@ def test_get_package_install_commands(
             part=part, part_info=part_info, properties=plugin_properties
         ),
     )
-    plugin._get_pip = lambda: "/python -m pip"  # ty: ignore[invalid-assignment]
+    plugin._get_pip = lambda: "/python -m pip"
 
     build_path = part_info.part_build_dir
     build_subdir = part_info.part_build_subdir

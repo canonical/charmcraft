@@ -227,11 +227,11 @@ class CharmcraftProject(models.Project, metaclass=abc.ABCMeta):
 
     # Allow setting this - we don't do anything with it though, so we don't show it in the schema.
     version: SkipJsonSchema[VersionStr | None] = None
-    license: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[incompatible-mutable-override]
+    license: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
     # These are inside the "links" child model.
-    contact: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[incompatible-mutable-override]
-    issues: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[incompatible-mutable-override]
-    source_code: SkipJsonSchema[None] = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[incompatible-mutable-override]
+    contact: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
+    issues: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
+    source_code: SkipJsonSchema[None] = None  # ty: ignore[incompatible-mutable-override]
 
     charm_libs: list[CharmLib] = pydantic.Field(
         default_factory=list, title="List of libraries to use for this charm"
@@ -418,10 +418,10 @@ class CharmProject(CharmcraftProject):
             "mysql-k8s",
         ],
     )
-    summary: CharmcraftSummaryStr = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[incompatible-mutable-override]
+    summary: CharmcraftSummaryStr = pydantic.Field(  # ty: ignore[incompatible-mutable-override]
         description="A brief (one-line) summary of your charm.",
     )
-    description: str = pydantic.Field(  # pyright: ignore[reportGeneralTypeIssues]  # ty: ignore[incompatible-mutable-override]
+    description: str = pydantic.Field(  # ty: ignore[incompatible-mutable-override]
         description="A multi-line summary of your charm."
     )
 
@@ -814,7 +814,7 @@ class CharmProject(CharmcraftProject):
 
 def _check_base_is_legacy(base: charmcraft.BaseDict) -> bool:
     """Check that the given base is a legacy base, usable with 'bases'."""
-    base_str = f"{base['name']}@{base['channel']}"  # pyright: ignore[reportTypedDictNotRequiredAccess]
+    base_str = f"{base['name']}@{base['channel']}"
     return base_str in const.LEGACY_BASES
 
 

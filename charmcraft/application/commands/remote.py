@@ -26,7 +26,7 @@ from craft_application.commands import ExtensibleCommand
 from craft_application.launchpad.models import Build, BuildState
 from craft_application.remote.utils import get_build_id
 from craft_cli import emit
-from overrides import override  # pyright: ignore[reportUnknownVariableType]
+from overrides import override
 
 from charmcraft import models, utils
 

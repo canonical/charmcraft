@@ -627,5 +627,5 @@ def test_get_libraries_metadata_name_error(
         craft_store.errors.StoreServerError(bad_response)
     )
 
-    with pytest.raises(errors.LibraryError, match="One or more declared"):
+    with pytest.raises(errors.LibraryError, match="charms.boop.v-1.snoot"):
         store.get_libraries_metadata([CharmLib(lib="boop.snoot", version="-1")])

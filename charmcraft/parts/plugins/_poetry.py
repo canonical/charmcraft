@@ -34,7 +34,7 @@ class PoetryPlugin(poetry_plugin.PoetryPlugin):
     """Charmcraft-specific version of the poetry plugin."""
 
     properties_class = PoetryPluginProperties
-    _options: PoetryPluginProperties  # type: ignore[reportIncompatibleVariableOverride]  # ty: ignore[incompatible-mutable-override]
+    _options: PoetryPluginProperties  # ty: ignore[incompatible-mutable-override]
 
     def get_build_environment(self) -> dict[str, str]:
         return utils.extend_python_build_environment(super().get_build_environment())

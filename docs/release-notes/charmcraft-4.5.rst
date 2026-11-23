@@ -170,9 +170,8 @@ The following issues have been resolved in Charmcraft 4.5.1:
 - Pass the host's release to Chisel with ``--release`` when cutting slices, as
   Chisel can no longer infer it on Ubuntu 26.10 and higher, which don't ship
   ``/etc/lsb-release``.
-- Disable AppArmor DFA differential encoding on Ubuntu 20.04 (Focal) and lower
-  bases so that snapd and snaps can run on Linux 7.0 and higher host kernels
-  (`LP: #2174837 <https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2174837>`__).
+- `#2816 <https://github.com/canonical/charmcraft/issues/2816>`__
+  ``charmcraft pack`` fails for Ubuntu 20.04 on Resolute
 
 
 Spring Boot extension

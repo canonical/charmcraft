@@ -37,6 +37,21 @@ If the charm name you want is different from the current directory name, don't s
 charm, or a 12-factor app charm such as ``flask-framework``. If you don't specify a
 profile, you get the ``kubernetes`` profile.
 
+To add GitHub workflows and a Dependabot configuration to your charm, run the following
+command in its project directory:
+
+.. code-block:: bash
+
+    charmcraft init --profile github-ci
+
+The ``github-ci`` profile creates a ``.github`` directory with workflows catered to
+Kubernetes charms. If you're working with a machine charm, change the
+``concierge-preset`` input in the ``ci.yaml`` file from ``k8s`` to ``machine``. If your
+charm doesn't have any resources, remove the resource step from the publish workflow as
+well.
+
+:ref:`github-workflows-directory` describes the workflows and what they do.
+
 Profiles that support multiple bases use Ubuntu 24.04 LTS by default. To select another
 available base variant, provide the base in ``<distribution>@<version>`` format. For
 example, initialize an Ubuntu 26.04 LTS Flask charm with

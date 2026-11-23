@@ -145,7 +145,7 @@ as Python packages.
 Fixed bugs and issues
 ---------------------
 
-The following issues have been resolved in Charmcraft 4.5.
+The following issues have been resolved in Charmcraft 4.5.0:
 
 - `#2661 <https://github.com/canonical/charmcraft/issues/2661>`__
   Packing a charm sometimes fails with "Too many levels of symbolic links"
@@ -164,6 +164,12 @@ The following issues have been resolved in Charmcraft 4.5.
 - Experimental V2 12-factor extensions no longer generate the ``app-port``,
   ``webserver-port``, ``metrics-port``, and ``metrics-path`` configuration options.
   Configure them in ``paas-config.yaml`` instead.
+
+The following issues have been resolved in Charmcraft 4.5.1:
+
+- Pass the host's release to Chisel with ``--release`` when cutting slices, as
+  Chisel can no longer infer it on Ubuntu 26.10 and higher, which don't ship
+  ``/etc/lsb-release``.
 
 
 Spring Boot extension

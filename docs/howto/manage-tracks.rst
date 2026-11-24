@@ -121,4 +121,23 @@ To create a new track yourself, follow the steps below:
    For the API reference for creating a new track, see
    `create_tracks <https://api.charmhub.io/docs/default/#create-tracks>`__
 
+Set the default track
+---------------------
+
+After creating a track, you can set it as the default track for your charm. The default
+track is used when a channel does not specify a track.
+
+To set ``v.2`` as the default track for ``hello-world-charm``, issue an HTTP ``PATCH``
+request to ``/v1/<namespace>/<name>``:
+
+.. code-block:: bash
+
+    curl https://api.charmhub.io/v1/charm/hello-world-charm -X PATCH \
+        -H 'Content-type: application/json' \
+        -H "$CHARMHUB_MACAROON_HEADER" \
+        -d '{"default-track": "v.2"}'
+
+For the API reference for setting a default track, see
+`update_package_metadata <https://api.charmhub.io/docs/default/#update-package-metadata>`__.
+
 That's it, you now have a new track for your charm!

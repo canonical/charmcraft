@@ -353,7 +353,7 @@ For a complete list of commits, see the `3.0.0`_ release on GitHub.
 ------------------
 
 - Bump minimum pip version to 24
-- set ``--no-binary=:all:`` in strict mode if no binary deps are declared
+- set ``--no-binary=:all:`` in strict mode if no binary dependencies are declared
 
 For a complete list of commits, see the `2.7.1`_ release on GitHub.
 

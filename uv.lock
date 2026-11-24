@@ -3,8 +3,8 @@ revision = 5
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
     "python_full_version < '3.11'",
@@ -579,7 +579,7 @@ requires-dist = [
     { name = "craft-grammar", specifier = "~=2.3.0" },
     { name = "craft-parts", specifier = "~=2.37.2" },
     { name = "craft-platforms", specifier = "~=0.12.0" },
-    { name = "craft-providers", specifier = "~=3.7.1" },
+    { name = "craft-providers", specifier = "~=3.7.3" },
     { name = "craft-store", specifier = "~=3.4.0" },
     { name = "distro", specifier = ">=1.7.0" },
     { name = "docker", specifier = ">=7.0.0" },
@@ -1037,8 +1037,8 @@ version = "7.17.5"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1278,7 +1278,7 @@ wheels = [
 
 [[package]]
 name = "craft-providers"
-version = "3.7.2"
+version = "3.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
@@ -1288,9 +1288,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-unixsocket2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/68/51385bc6055cb812aa54edf9e700b2a90c12350b8da860633baa66430d09/craft_providers-3.7.2.tar.gz", hash = "sha256:3d81cf4db0bd3ff7794c532fed26dab125715f249e3a329385ef4f7a5bd2aecd", size = 379978, upload-time = "2026-11-23T19:34:39.899Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/66/37352a2654f8c24458485f71aa2629332be0f27658781ad22dcee128f137/craft_providers-3.7.3.tar.gz", hash = "sha256:80e51a604be10ee1534919615ee8734c6017107bbae9faa47ae0c80b80b86ee8", size = 381006, upload-time = "2026-11-23T21:39:25.329Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0c/df/6d64908d212099063233877196826e6154f699a09e77041ad5b32cca07ce/craft_providers-3.7.2-py3-none-any.whl", hash = "sha256:48dafaff4c6487694d2c6d165413341f06f231f73edf9bdeb1d853c2df391bd9", size = 119003, upload-time = "2026-11-23T19:34:38.11Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/cb/2abfb42fd751ecccafa40daa70d25f8241619e00a46edc06b055bf536acd/craft_providers-3.7.3-py3-none-any.whl", hash = "sha256:1d0aee9877a929f5954c5979d958301dcc7c047c5cba364755ecce9e6e4d69e6", size = 119366, upload-time = "2026-11-23T21:39:23.662Z" },
 ]
 
 [[package]]
@@ -1570,8 +1570,8 @@ version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1617,8 +1617,8 @@ version = "7.5.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1705,8 +1705,8 @@ version = "2.16.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1771,8 +1771,8 @@ version = "2.16.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1816,8 +1816,8 @@ version = "4.17.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -1931,8 +1931,8 @@ version = "6.170.17"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -2661,8 +2661,8 @@ version = "11.2.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -2867,8 +2867,8 @@ version = "2.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -2895,8 +2895,8 @@ version = "4.14.8"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -3022,8 +3022,8 @@ version = "3.12"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -3239,8 +3239,8 @@ version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -3565,8 +3565,8 @@ version = "2.4.0+ubuntu4"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
     "python_full_version < '3.11'",
@@ -3611,8 +3611,8 @@ version = "2.7.7+ubuntu5"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
     "python_full_version < '3.11'",
@@ -3656,8 +3656,8 @@ version = "2.9.9"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
     "python_full_version < '3.11'",
@@ -3675,8 +3675,8 @@ version = "3.0.0+ubuntu1"
 source = { registry = "https://people.canonical.com/~lengau/python-apt-ubuntu-wheels/" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
     "python_full_version < '3.11'",
@@ -3730,8 +3730,8 @@ version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -3998,8 +3998,8 @@ version = "3.14.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -4255,8 +4255,8 @@ version = "2026.11.19"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -4547,8 +4547,8 @@ version = "4.1.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/82/77/d59ca6aa338bdd8d880234d15b7c466cb176e44502899a9df81ba2e13cd0/soupsieve-4.1.3.tar.gz", hash = "sha256:13f70186c8f40bf8d0ff7bbab09a18fb149600b465269207b5e5b588f55fda08", size = 181564, upload-time = "2026-11-20T12:58:27.613Z" }
@@ -4610,8 +4610,8 @@ version = "2025.8.25"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -4805,8 +4805,8 @@ version = "2025.2.19"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -4935,8 +4935,8 @@ version = "1.10.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]
@@ -5375,8 +5375,8 @@ version = "17.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version == '3.14.*'",
-    "python_full_version == '3.12.*'",
     "python_full_version == '3.13.*' or python_full_version >= '3.15'",
+    "python_full_version == '3.12.*'",
     "python_full_version >= '3.11.5' and python_full_version < '3.12'",
     "python_full_version >= '3.11' and python_full_version < '3.11.5'",
 ]

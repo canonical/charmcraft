@@ -164,17 +164,43 @@ jobs:
           snap: ${{ steps.snap-name.outputs.snap }}
           release: edge/pr-${{ github.event.pull_request.number }}
 
-  spread:
+  spread-source:
     needs: [filter, pack]
     if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
     uses: ./.github/workflows/spread.yaml
     with:
-      source: ${{ needs.filter.outputs.run-spread-source == 'true' }}
-      store: ${{ needs.filter.outputs.run-spread-store == 'true' }}
-      docs: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
-      manual: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
+      run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
+      list-command: "spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/'"
+
+  spread-store:
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
+      targets: '["openstack:ubuntu-22.04-64:tests/spread/store/"]'
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
       CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
       STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
+
+  spread-docs:
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
+      list-command: "spread -list ci:docs/"
+      timeout-minutes: 90
+
+  spread-manual:
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
+      runs-on: '["spread-installed"]'
+      max-parallel: 2
+      targets: '["google:tests/spread/charms/k8s-operator","google:tests/spread/charms/operator","google:tests/spread/charms/reactive","google:tests/spread/smoketests/parallel-build","google:tests/spread/smoketests/remote-build"]'
+    secrets:
       LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

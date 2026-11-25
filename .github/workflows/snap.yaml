@@ -121,6 +121,41 @@ jobs:
             echo "run-spread-manual=$run_spread_manual"
           } >> "$GITHUB_OUTPUT"
 
+  spread-select:
+    needs: filter
+    if: needs.filter.outputs.run-spread-source == 'true' || needs.filter.outputs.run-spread-docs == 'true'
+    runs-on: [self-hosted, spread-enabled]
+    outputs:
+      source-targets: ${{ steps.select.outputs.source-targets }}
+      docs-targets: ${{ steps.select.outputs.docs-targets }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+      - name: Find spread targets
+        id: select
+        env:
+          RUN_SOURCE: ${{ needs.filter.outputs.run-spread-source }}
+          RUN_DOCS: ${{ needs.filter.outputs.run-spread-docs }}
+        run: |
+          source_targets='[]'
+          if [ "$RUN_SOURCE" = "true" ]; then
+            source_targets="$(spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/' | jq --raw-input . | jq --slurp --compact-output)"
+          fi
+
+          docs_targets='[]'
+          if [ "$RUN_DOCS" = "true" ]; then
+            docs_targets="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)"
+          fi
+
+          {
+            echo "source-targets=$source_targets"
+            echo "docs-targets=$docs_targets"
+          } >> "$GITHUB_OUTPUT"
+
   pack:
     runs-on: ubuntu-24.04
     steps:
@@ -165,12 +200,12 @@ jobs:
           release: edge/pr-${{ github.event.pull_request.number }}
 
   spread-source:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    needs: [filter, spread-select, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled' && needs.spread-select.result != 'failure' && needs.spread-select.result != 'cancelled'
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
-      list-command: "spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/'"
+      targets: ${{ needs.spread-select.outputs.source-targets || '[]' }}
 
   spread-store:
     needs: [filter, pack]
@@ -185,12 +220,12 @@ jobs:
       STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
 
   spread-docs:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    needs: [filter, spread-select, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled' && needs.spread-select.result != 'failure' && needs.spread-select.result != 'cancelled'
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
-      list-command: "spread -list ci:docs/"
+      targets: ${{ needs.spread-select.outputs.docs-targets || '[]' }}
       timeout-minutes: 90
 
   spread-manual:

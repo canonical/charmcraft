@@ -6,18 +6,13 @@ on:
       run:
         type: boolean
         required: true
+      targets:
+        type: string
+        required: true
       runs-on:
         type: string
         required: false
         default: '["self-hosted", "spread-enabled"]'
-      list-command:
-        type: string
-        required: false
-        default: ""
-      targets:
-        type: string
-        required: false
-        default: ""
       max-parallel:
         type: number
         required: false
@@ -40,41 +35,15 @@ permissions:
   contents: read
 
 jobs:
-  select:
-    if: ${{ inputs.run }}
-    runs-on: [self-hosted, spread-enabled]
-    outputs:
-      targets: ${{ steps.select.outputs.targets }}
-    steps:
-      - name: Checkout charmcraft
-        if: ${{ inputs.targets == '' }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          submodules: true
-          persist-credentials: false
-      - name: Select spread targets
-        id: select
-        env:
-          STATIC_TARGETS: ${{ inputs.targets }}
-          LIST_COMMAND: ${{ inputs.list-command }}
-        run: |
-          if [ -n "$STATIC_TARGETS" ]; then
-            echo "targets=$STATIC_TARGETS" | tee -a "${GITHUB_OUTPUT}"
-          else
-            echo "targets=$(eval "$LIST_COMMAND" | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
-          fi
-
   spread:
     if: ${{ inputs.run }}
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    needs: [select]
     timeout-minutes: ${{ inputs.timeout-minutes }}
     strategy:
       fail-fast: false
       max-parallel: ${{ inputs.max-parallel }}
       matrix:
-        target: ${{ fromJSON(needs.select.outputs.targets) }}
+        target: ${{ fromJSON(inputs.targets) }}
 
     steps:
       - name: Cleanup job workspace

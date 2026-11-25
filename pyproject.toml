@@ -478,6 +478,8 @@ exclude = [
 constraint-dependencies = [
   "build>=0.1.0",
   "cffi>=1.15",
+  # filelock>=4.2.0 requires Python >=3.11
+  "filelock>=4.2.1;python_version>='3.11'",
   "httplib2>=0.20.0",
   "iniconfig>=1.1.0",
   "jaraco-classes>=3.2",
@@ -490,7 +492,7 @@ constraint-dependencies = [
   "markupsafe>=2.0",
   "matplotlib>=3.7.0",
   "numpy>=1.22.0",
-  "oauthlib>=3.0.0",
+  "oauthlib>=4.0.1",
   "ops>=2.0.0",
   "overrides>=7.3",
   "protobuf>=5.0",
@@ -508,6 +510,7 @@ constraint-dependencies = [
   "tabulate>=0.8.8",
   "tornado>=4.0",
   "urllib3>=2.0",
+  "virtualenv>=21.14.13",
   "webencodings>=0.4.0",
   "wheel>=0.38",
 

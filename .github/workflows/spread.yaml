@@ -1,0 +1,251 @@
+name: Spread
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        type: boolean
+        required: false
+        default: false
+      store:
+        type: boolean
+        required: false
+        default: false
+      docs:
+        type: boolean
+        required: false
+        default: false
+      manual:
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      CHARMCRAFT_AUTH:
+        required: false
+      CHARMCRAFT_SINGLE_CHARM_AUTH:
+        required: false
+      STAGING_SSO_PASSWORD:
+        required: false
+      LAUNCHPAD_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  select-source:
+    if: ${{ inputs.source }}
+    runs-on: [self-hosted, spread-enabled]
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems="$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
+
+  source:
+    if: ${{ inputs.source }}
+    runs-on: [self-hosted, spread-enabled]
+    needs: [select-source]
+    strategy:
+      fail-fast: false
+      matrix:
+        system: ${{ fromJSON(needs.select-source.outputs.systems) }}
+
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: snap
+
+      - name: Run spread
+        env:
+          SPREAD_SYSTEM: ${{ matrix.system }}
+        run: |
+          spread "openstack:${SPREAD_SYSTEM}"
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
+  store:
+    if: ${{ inputs.store }}
+    runs-on: [self-hosted, spread-enabled]
+
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: snap
+
+      - name: Run spread
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
+          CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
+          CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
+          STAGING_SSO_USERNAME: ${{ vars.STAGING_SSO_USERNAME }}
+          STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
+          CHARMCRAFT_STORE_SSO_URL: https://login.staging.ubuntu.com
+        run: |
+          spread openstack:ubuntu-22.04-64:tests/spread/store/
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
+  select-docs:
+    if: ${{ inputs.docs }}
+    runs-on: spread-enabled
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
+
+  docs:
+    if: ${{ inputs.docs }}
+    runs-on: [self-hosted, linux, amd64, noble, large]
+    needs: [select-docs]
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        system: ${{ fromJSON(needs.select-docs.outputs.systems) }}
+
+    steps:
+      - name: Fix network issues related to docker and lxd
+        run: |
+          sudo iptables -P FORWARD ACCEPT
+          sudo ip6tables -P FORWARD ACCEPT
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Download snap artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: snap
+
+      - name: Set up Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: 1.26
+
+      - name: Install spread
+        run: |
+          go install github.com/canonical/spread/cmd/spread@latest
+
+      - name: Run spread
+        env:
+          SPREAD_SYSTEM: ${{ matrix.system }}
+        run: |
+          "$(go env GOPATH)/bin/spread" "${SPREAD_SYSTEM}"
+
+      - name: Discard spread workers
+        if: always()
+        run: |
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done
+
+  manual:
+    if: ${{ inputs.manual }}
+    runs-on: spread-installed
+    strategy:
+      fail-fast: false
+      # Each of these tasks can spin up several machines in spread.
+      max-parallel: 2
+      matrix:
+        task:
+          - charms/k8s-operator
+          - charms/operator
+          - charms/reactive
+          - smoketests/parallel-build
+          - smoketests/remote-build
+
+    steps:
+      - name: Cleanup job workspace
+        run: |
+          rm -rf "${{ github.workspace }}"
+          mkdir "${{ github.workspace }}"
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+      - name: Download snap artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: snap
+      - name: Spread k8s operator
+        env:
+          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
+          SPREAD_TASK: ${{ matrix.task }}
+        run: |
+          spread "google:tests/spread/${SPREAD_TASK}"
+      - name: Clean up jobs
+        if: ${{ always() }}
+        run: |
+          spread -discard
+          shopt -s nullglob
+          for r in .spread-reuse.*.yaml; do
+            spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
+          done

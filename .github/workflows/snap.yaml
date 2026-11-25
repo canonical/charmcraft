@@ -49,16 +49,16 @@ jobs:
               - '!({.github/**,docs/**,schema/**,tests/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md})'
               - 'tests/spread/**'
               - '.github/workflows/snap.yaml'
-              - '.github/workflows/spread-source.yaml'
+              - '.github/workflows/spread.yaml'
             docs:
               - '.github/workflows/snap.yaml'
-              - '.github/workflows/spread-docs.yaml'
+              - '.github/workflows/spread.yaml'
               - 'spread.yaml'
               - '.readthedocs.yaml'
               - 'docs/**/code/**'
             manual:
               - '.github/workflows/snap.yaml'
-              - '.github/workflows/spread-manual.yaml'
+              - '.github/workflows/spread.yaml'
               - 'tests/spread/charms/**'
               - 'tests/spread/smoketests/parallel-build/*'
               - 'tests/spread/smoketests/remote-build/*'
@@ -173,30 +173,17 @@ jobs:
           snap: ${{ steps.snap-name.outputs.snap }}
           release: edge/pr-${{ github.event.pull_request.number }}
 
-  spread-source:
+  spread:
     needs: [filter, pack]
     if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
-    uses: ./.github/workflows/spread-source.yaml
+    uses: ./.github/workflows/spread.yaml
     with:
-      run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
-      run-store: ${{ needs.filter.outputs.run-spread-store == 'true' }}
+      source: ${{ needs.filter.outputs.run-spread-source == 'true' }}
+      store: ${{ needs.filter.outputs.run-spread-store == 'true' }}
+      docs: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
+      manual: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
       CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
       STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
-
-  spread-docs:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
-    uses: ./.github/workflows/spread-docs.yaml
-    with:
-      run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
-
-  spread-manual:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
-    uses: ./.github/workflows/spread-manual.yaml
-    with:
-      run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
-    secrets:
       LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

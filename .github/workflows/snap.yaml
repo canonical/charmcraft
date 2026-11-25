@@ -29,6 +29,7 @@ jobs:
       run-pack: ${{ steps.eval.outputs.run-pack }}
       run-publish: ${{ steps.eval.outputs.run-publish }}
       run-spread-source: ${{ steps.eval.outputs.run-spread-source }}
+      run-spread-store: ${{ steps.eval.outputs.run-spread-store }}
       run-spread-docs: ${{ steps.eval.outputs.run-spread-docs }}
       run-spread-manual: ${{ steps.eval.outputs.run-spread-manual }}
     steps:
@@ -72,8 +73,10 @@ jobs:
           FILTER_DOCS: ${{ steps.filter.outputs.docs }}
           FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
         run: |
           run_spread_source=false
+          run_spread_store=false
           run_spread_docs=false
           run_spread_manual=false
           run_publish=false
@@ -111,10 +114,15 @@ jobs:
             run_pack=true
           fi
 
+          if [ "$run_spread_source" = "true" ] && [ -n "$CHARMCRAFT_AUTH" ]; then
+            run_spread_store=true
+          fi
+
           {
             echo "run-pack=$run_pack"
             echo "run-publish=$run_publish"
             echo "run-spread-source=$run_spread_source"
+            echo "run-spread-store=$run_spread_store"
             echo "run-spread-docs=$run_spread_docs"
             echo "run-spread-manual=$run_spread_manual"
           } >> "$GITHUB_OUTPUT"
@@ -170,6 +178,7 @@ jobs:
     uses: ./.github/workflows/spread-source.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
+      run-store: ${{ needs.filter.outputs.run-spread-store == 'true' }}
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
       CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}

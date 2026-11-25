@@ -6,6 +6,9 @@ on:
       run:
         type: boolean
         required: true
+      run-store:
+        type: boolean
+        required: true
     secrets:
       CHARMCRAFT_AUTH:
         required: false
@@ -75,26 +78,23 @@ jobs:
           done
 
   snap-store-tests:
-    if: ${{ inputs.run }}
+    if: ${{ inputs.run-store }}
     runs-on: [self-hosted, spread-enabled]
 
     steps:
-      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        name: Checkout charmcraft
+      - name: Checkout charmcraft
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
           persist-credentials: false
 
-      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        name: Download snap artifact
+      - name: Download snap artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: snap
 
-      - if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'canonical') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        name: Run spread
+      - name: Run spread
         env:
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
           CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}

@@ -29,10 +29,6 @@ jobs:
     if: ${{ inputs.run }}
     runs-on: [self-hosted, spread-enabled]
     timeout-minutes: ${{ inputs.timeout-minutes }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJSON(inputs.targets) }}
 
     steps:
       - name: Cleanup job workspace
@@ -67,9 +63,10 @@ jobs:
 
       - name: Run spread
         env:
-          SPREAD_TARGET: ${{ matrix.target }}
+          SPREAD_TARGETS: ${{ inputs.targets }}
         run: |
-          spread "${SPREAD_TARGET}"
+          # shellcheck disable=SC2086
+          spread $SPREAD_TARGETS
 
       - name: Discard spread workers
         if: always()

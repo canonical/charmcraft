@@ -165,7 +165,7 @@ jobs:
                 "openstack:ubuntu-24.04-64:tests/spread/smoketests/parallel-build" \
                 "openstack:ubuntu-24.04-64:tests/spread/smoketests/remote-build"
             fi
-          } | jq --raw-input . | jq --slurp --compact-output)
+          } | tr '\n' ' ' | sed 's/ *$//')
 
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
@@ -217,7 +217,7 @@ jobs:
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread == 'true' }}
-      targets: ${{ needs.spread-select.outputs.targets || '[]' }}
+      targets: ${{ needs.spread-select.outputs.targets }}
     secrets:
       env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}
 
@@ -226,7 +226,7 @@ jobs:
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
-      targets: '["openstack:ubuntu-22.04-64:tests/spread/store/"]'
+      targets: openstack:ubuntu-22.04-64:tests/spread/store/
       env: ${{ format('{{"CHARM_DEFAULT_NAME":"gh-ci-charmcraft-charm","STAGING_SSO_USERNAME":{0},"CHARMCRAFT_STORE_SSO_URL":"https://login.staging.ubuntu.com"}}', toJSON(vars.STAGING_SSO_USERNAME)) }}
     secrets:
       env: ${{ format('{{"CHARMCRAFT_AUTH":{0},"CHARMCRAFT_SINGLE_CHARM_AUTH":{1},"STAGING_SSO_PASSWORD":{2}}}', toJSON(secrets.CHARMCRAFT_AUTH), toJSON(secrets.CHARMCRAFT_SINGLE_CHARM_AUTH), toJSON(secrets.STAGING_SSO_PASSWORD)) }}

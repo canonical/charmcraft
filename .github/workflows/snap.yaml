@@ -214,10 +214,9 @@ jobs:
     with:
       run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
       targets: '["openstack:ubuntu-22.04-64:tests/spread/store/"]'
+      env: ${{ format('{{"CHARM_DEFAULT_NAME":"gh-ci-charmcraft-charm","STAGING_SSO_USERNAME":{0},"CHARMCRAFT_STORE_SSO_URL":"https://login.staging.ubuntu.com"}}', toJSON(vars.STAGING_SSO_USERNAME)) }}
     secrets:
-      CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
-      CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
-      STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
+      env: ${{ format('{{"CHARMCRAFT_AUTH":{0},"CHARMCRAFT_SINGLE_CHARM_AUTH":{1},"STAGING_SSO_PASSWORD":{2}}}', toJSON(secrets.CHARMCRAFT_AUTH), toJSON(secrets.CHARMCRAFT_SINGLE_CHARM_AUTH), toJSON(secrets.STAGING_SSO_PASSWORD)) }}
 
   spread-docs:
     needs: [filter, spread-select, pack]
@@ -238,4 +237,4 @@ jobs:
       max-parallel: 2
       targets: '["google:tests/spread/charms/k8s-operator","google:tests/spread/charms/operator","google:tests/spread/charms/reactive","google:tests/spread/smoketests/parallel-build","google:tests/spread/smoketests/remote-build"]'
     secrets:
-      LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
+      env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}

@@ -21,14 +21,12 @@ on:
         type: number
         required: false
         default: 360
+      env:
+        type: string
+        required: false
+        default: "{}"
     secrets:
-      CHARMCRAFT_AUTH:
-        required: false
-      CHARMCRAFT_SINGLE_CHARM_AUTH:
-        required: false
-      STAGING_SSO_PASSWORD:
-        required: false
-      LAUNCHPAD_TOKEN:
+      env:
         required: false
 
 permissions:
@@ -51,7 +49,7 @@ jobs:
           rm -rf "${{ github.workspace }}"
           mkdir "${{ github.workspace }}"
 
-      - name: Checkout charmcraft
+      - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -63,16 +61,22 @@ jobs:
         with:
           name: snap
 
+      - name: Export spread environment
+        env:
+          SPREAD_ENV: ${{ inputs.env }}
+          SPREAD_SECRET_ENV: ${{ secrets.env }}
+        run: |
+          jq -r 'to_entries[] | select(.value != null and .value != "") | "\(.key)=\(.value)"' <<< "$SPREAD_ENV" >> "$GITHUB_ENV"
+          if [ -n "$SPREAD_SECRET_ENV" ]; then
+            while IFS='=' read -r key val; do
+              echo "::add-mask::$val"
+              echo "$key=$val" >> "$GITHUB_ENV"
+            done < <(jq -r 'to_entries[] | select(.value != null and .value != "") | "\(.key)=\(.value)"' <<< "$SPREAD_SECRET_ENV")
+          fi
+
       - name: Run spread
         env:
           SPREAD_TARGET: ${{ matrix.target }}
-          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
-          CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
-          CHARM_DEFAULT_NAME: gh-ci-charmcraft-charm
-          STAGING_SSO_USERNAME: ${{ vars.STAGING_SSO_USERNAME }}
-          STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
-          CHARMCRAFT_STORE_SSO_URL: https://login.staging.ubuntu.com
-          LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}
         run: |
           spread "${SPREAD_TARGET}"
 

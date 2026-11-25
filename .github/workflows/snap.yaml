@@ -86,7 +86,9 @@ jobs:
             pull_request)
               [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
               [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
-              [ "$HAS_MANUAL_LABEL" = "true" ] && [ "$FILTER_MANUAL" = "true" ] && run_spread_manual=true
+              if [ "$HAS_MANUAL_LABEL" = "true" ] || [ "$FILTER_MANUAL" = "true" ]; then
+                run_spread_manual=true
+              fi
               [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && run_publish=true
               ;;
             push)

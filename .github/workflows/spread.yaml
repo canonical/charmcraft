@@ -19,14 +19,6 @@ on:
         type: boolean
         required: false
         default: false
-      source-systems:
-        type: string
-        required: false
-        default: "[]"
-      docs-systems:
-        type: string
-        required: false
-        default: "[]"
     secrets:
       CHARMCRAFT_AUTH:
         required: false
@@ -41,13 +33,29 @@ permissions:
   contents: read
 
 jobs:
+  select-source:
+    if: ${{ inputs.source }}
+    runs-on: [self-hosted, spread-enabled]
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems="$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
+
   source:
     if: ${{ inputs.source }}
     runs-on: [self-hosted, spread-enabled]
+    needs: [select-source]
     strategy:
       fail-fast: false
       matrix:
-        system: ${{ fromJSON(inputs.source-systems) }}
+        system: ${{ fromJSON(needs.select-source.outputs.systems) }}
 
     steps:
       - name: Cleanup job workspace
@@ -117,14 +125,32 @@ jobs:
             spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
           done
 
+  select-docs:
+    if: ${{ inputs.docs }}
+    runs-on: spread-enabled
+    outputs:
+      systems: ${{ steps.select.outputs.systems }}
+    steps:
+      - name: Checkout charmcraft
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+      - name: Find spread systems
+        id: select
+        run: |
+          echo systems="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)" | tee -a "${GITHUB_OUTPUT}"
+
   docs:
     if: ${{ inputs.docs }}
     runs-on: [self-hosted, linux, amd64, noble, large]
+    needs: [select-docs]
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        system: ${{ fromJSON(inputs.docs-systems) }}
+        system: ${{ fromJSON(needs.select-docs.outputs.systems) }}
 
     steps:
       - name: Fix network issues related to docker and lxd

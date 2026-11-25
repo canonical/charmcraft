@@ -231,7 +231,7 @@ def test_fetchlib_store_is_old(
                 "error_message": error_message,
             },
         ]
-        emitter.assert_json_output(  # ty: ignore[unresolved-attribute]
+        emitter.assert_json_output(  # ty: ignore[missing-attribute]
             expected
         )
     else:

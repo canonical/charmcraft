@@ -33,28 +33,28 @@ class JujuStringOption(_BaseJujuOption):
     """A Juju option field containing a string."""
 
     type: Literal["string"]
-    default: str | None = None  # ty: ignore[invalid-mutable-override]
+    default: str | None = None  # ty: ignore[incompatible-mutable-override]
 
 
 class JujuIntOption(_BaseJujuOption):
     """A Juju option field containing an integer."""
 
     type: Literal["int"]
-    default: pydantic.StrictInt | None = None  # ty: ignore[invalid-mutable-override]
+    default: pydantic.StrictInt | None = None  # ty: ignore[incompatible-mutable-override]
 
 
 class JujuFloatOption(_BaseJujuOption):
     """A Juju option field containing a floating-point number."""
 
     type: Literal["float"]
-    default: float | None = None  # ty: ignore[invalid-mutable-override]
+    default: float | None = None  # ty: ignore[incompatible-mutable-override]
 
 
 class JujuBooleanOption(_BaseJujuOption):
     """A Juju option field containing a boolean value."""
 
     type: Literal["boolean"]
-    default: bool | None = None  # ty: ignore[invalid-mutable-override]
+    default: bool | None = None  # ty: ignore[incompatible-mutable-override]
 
 
 class JujuSecretOption(_BaseJujuOption):
@@ -65,7 +65,7 @@ class JujuSecretOption(_BaseJujuOption):
     # that anyone would know what the secret ID (specific to
     # the deployment in a model) is at the time that they are
     # writing the config, but included for completeness.
-    default: (  # ty: ignore[invalid-mutable-override]
+    default: (  # ty: ignore[incompatible-mutable-override]
         Annotated[str, pydantic.StringConstraints(pattern=r"^secret:[a-z0-9]{20}$")]
         | None
     ) = None

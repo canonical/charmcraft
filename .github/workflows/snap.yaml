@@ -148,7 +148,7 @@ jobs:
 
           docs_targets='[]'
           if [ "$RUN_DOCS" = "true" ]; then
-            docs_targets="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)"
+            docs_targets="$(spread -list openstack:docs/ | jq --raw-input . | jq --slurp --compact-output)"
           fi
 
           {

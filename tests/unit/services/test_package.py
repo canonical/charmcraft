@@ -263,6 +263,25 @@ def test_get_actions_yaml_prefers_project_file(
     assert package_service.get_actions_yaml() == expected
 
 
+def test_get_actions_yaml_uses_project_file_when_model_empty(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """A project-local actions.yaml is still used when actions is absent from the model."""
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.actions = None
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    expected = "pause\n"
+    (project_dir / const.JUJU_ACTIONS_FILENAME).write_text(expected)
+
+    assert package_service.get_actions_yaml() == expected
+
+
 def test_get_actions_yaml_skips_reactive_generated(
     emitter: craft_cli.pytest_plugin.RecordingEmitter,
     package_service,
@@ -313,6 +332,25 @@ def test_get_config_yaml_prefers_project_file(
     """A project-local config.yaml is preferred over model data."""
     project_dir = service_factory.get("project").resolve_project_file_path().parent
     expected = "options:\n  my-option:\n    type: string\n"
+    (project_dir / const.JUJU_CONFIG_FILENAME).write_text(expected)
+
+    assert package_service.get_config_yaml() == expected
+
+
+def test_get_config_yaml_uses_project_file_when_model_empty(
+    monkeypatch: pytest.MonkeyPatch,
+    package_service,
+    service_factory: craft_application.ServiceFactory,
+):
+    """A project-local config.yaml is still used when config is absent from the model."""
+    project = cast(
+        models.BasesCharm | models.PlatformCharm,
+        service_factory.get("project").get(),
+    )
+    project.config = None
+    monkeypatch.setattr(service_factory.get("project"), "get", lambda: project)
+    project_dir = service_factory.get("project").resolve_project_file_path().parent
+    expected = "options:\n  max-body-size:\n    type: int\n"
     (project_dir / const.JUJU_CONFIG_FILENAME).write_text(expected)
 
     assert package_service.get_config_yaml() == expected

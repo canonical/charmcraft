@@ -14,20 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  predicate:
-    if: ${{ inputs.run }}
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.eval.outputs.should_run }}
-    steps:
-      - id: eval
-        run: |
-          should_run=${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-
   spread:
-    needs: predicate
-    if: ${{ inputs.run && needs.predicate.outputs.should_run == 'true' }}
+    if: ${{ inputs.run }}
     runs-on: spread-installed
     strategy:
       fail-fast: false

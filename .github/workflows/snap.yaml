@@ -72,6 +72,7 @@ jobs:
           FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
           FILTER_DOCS: ${{ steps.filter.outputs.docs }}
           FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
+          HAS_MANUAL_LABEL: "${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') }}"
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
           CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
         run: |
@@ -85,7 +86,7 @@ jobs:
             pull_request)
               [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
               [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
-              [ "$FILTER_MANUAL" = "true" ] && run_spread_manual=true
+              [ "$HAS_MANUAL_LABEL" = "true" ] && [ "$FILTER_MANUAL" = "true" ] && run_spread_manual=true
               [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && run_publish=true
               ;;
             push)

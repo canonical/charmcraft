@@ -177,8 +177,8 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snaps }}
 
   publish:
-    needs: [filter, pack]
-    if: needs.filter.outputs.run-publish == 'true'
+    needs: [filter, spread-select, pack]
+    if: always() && needs.filter.outputs.run-publish == 'true' && needs.pack.result == 'success' && needs.spread-select.result != 'failure' && needs.spread-select.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
       - name: Download snap artifact
@@ -208,8 +208,8 @@ jobs:
       targets: ${{ needs.spread-select.outputs.source-targets || '[]' }}
 
   spread-store:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    needs: [filter, spread-select, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled' && needs.spread-select.result != 'failure' && needs.spread-select.result != 'cancelled'
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
@@ -229,8 +229,8 @@ jobs:
       timeout-minutes: 90
 
   spread-manual:
-    needs: [filter, pack]
-    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
+    needs: [filter, spread-select, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled' && needs.spread-select.result != 'failure' && needs.spread-select.result != 'cancelled'
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}

@@ -26,11 +26,11 @@ jobs:
   filter:
     runs-on: ubuntu-slim
     outputs:
-      run-snap: ${{ steps.eval.outputs.run-snap }}
-      run-spread: ${{ steps.eval.outputs.run-spread }}
-      run-docs: ${{ steps.eval.outputs.run-docs }}
-      run-manual: ${{ steps.eval.outputs.run-manual }}
-      has-store-credentials: ${{ steps.eval.outputs.has-store-credentials }}
+      run-pack: ${{ steps.eval.outputs.run-pack }}
+      run-publish: ${{ steps.eval.outputs.run-publish }}
+      run-spread-source: ${{ steps.eval.outputs.run-spread-source }}
+      run-spread-docs: ${{ steps.eval.outputs.run-spread-docs }}
+      run-spread-manual: ${{ steps.eval.outputs.run-spread-manual }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,55 +73,55 @@ jobs:
           FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
-          run_spread=false
-          run_docs=false
-          run_manual=false
-          has_store_credentials=false
-          [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && has_store_credentials=true
+          run_spread_source=false
+          run_spread_docs=false
+          run_spread_manual=false
+          run_publish=false
 
           case "$EVENT_NAME" in
             pull_request)
-              [ "$FILTER_SPREAD" = "true" ] && run_spread=true
-              [ "$FILTER_DOCS" = "true" ] && run_docs=true
-              [ "$FILTER_MANUAL" = "true" ] && run_manual=true
+              [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
+              [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
+              [ "$FILTER_MANUAL" = "true" ] && run_spread_manual=true
+              [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && run_publish=true
               ;;
             push)
               if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-                [ "$FILTER_SPREAD" = "true" ] && run_spread=true
-                [ "$FILTER_DOCS" = "true" ] && run_docs=true
+                [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
+                [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
               fi
               ;;
             merge_group)
-              run_spread=true
+              run_spread_source=true
               ;;
             workflow_dispatch)
-              run_manual=true
+              run_spread_manual=true
               ;;
             schedule)
               case "$SCHEDULE" in
-                "0 0 */2 * *") run_spread=true ;;
-                "0 0 * * 0") run_docs=true ;;
-                "0 0 * * WED,SUN") run_manual=true ;;
+                "0 0 */2 * *") run_spread_source=true ;;
+                "0 0 * * 0") run_spread_docs=true ;;
+                "0 0 * * WED,SUN") run_spread_manual=true ;;
               esac
               ;;
           esac
 
-          run_snap=false
-          if [ "$run_spread" = "true" ] || [ "$run_docs" = "true" ] || [ "$run_manual" = "true" ]; then
-            run_snap=true
+          run_pack=false
+          if [ "$run_spread_source" = "true" ] || [ "$run_spread_docs" = "true" ] || [ "$run_spread_manual" = "true" ] || [ "$run_publish" = "true" ]; then
+            run_pack=true
           fi
 
           {
-            echo "run-snap=$run_snap"
-            echo "run-spread=$run_spread"
-            echo "run-docs=$run_docs"
-            echo "run-manual=$run_manual"
-            echo "has-store-credentials=$has_store_credentials"
+            echo "run-pack=$run_pack"
+            echo "run-publish=$run_publish"
+            echo "run-spread-source=$run_spread_source"
+            echo "run-spread-docs=$run_spread_docs"
+            echo "run-spread-manual=$run_spread_manual"
           } >> "$GITHUB_OUTPUT"
 
   snap-build:
     needs: filter
-    if: needs.filter.outputs.run-snap == 'true'
+    if: needs.filter.outputs.run-pack == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -140,7 +140,7 @@ jobs:
 
   snap-publish:
     needs: [filter, snap-build]
-    if: github.event_name == 'pull_request' && needs.filter.outputs.has-store-credentials == 'true'
+    if: needs.filter.outputs.run-publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Download snap artifact
@@ -166,7 +166,7 @@ jobs:
     if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
     uses: ./.github/workflows/spread-source.yaml
     with:
-      run: ${{ needs.filter.outputs.run-spread == 'true' }}
+      run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
       CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
@@ -177,13 +177,13 @@ jobs:
     if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
     uses: ./.github/workflows/spread-docs.yaml
     with:
-      run: ${{ needs.filter.outputs.run-docs == 'true' }}
+      run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
 
   spread-manual:
     needs: [filter, snap-build]
     if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
     uses: ./.github/workflows/spread-manual.yaml
     with:
-      run: ${{ needs.filter.outputs.run-manual == 'true' }}
+      run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
     secrets:
       LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

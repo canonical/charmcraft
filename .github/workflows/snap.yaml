@@ -24,19 +24,21 @@ permissions:
 
 jobs:
   filter:
-    runs-on: ubuntu-slim
+    runs-on: [self-hosted, spread-enabled]
     outputs:
-      run-pack: ${{ steps.eval.outputs.run-pack }}
       run-publish: ${{ steps.eval.outputs.run-publish }}
       run-spread-source: ${{ steps.eval.outputs.run-spread-source }}
       run-spread-store: ${{ steps.eval.outputs.run-spread-store }}
       run-spread-docs: ${{ steps.eval.outputs.run-spread-docs }}
       run-spread-manual: ${{ steps.eval.outputs.run-spread-manual }}
+      source-systems: ${{ steps.eval.outputs.source-systems }}
+      docs-systems: ${{ steps.eval.outputs.docs-systems }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          submodules: true
           persist-credentials: false
 
       - name: Filter changed paths
@@ -63,7 +65,7 @@ jobs:
               - 'tests/spread/smoketests/parallel-build/*'
               - 'tests/spread/smoketests/remote-build/*'
 
-      - name: Evaluate workflow triggers
+      - name: Evaluate workflow triggers and spread systems
         id: eval
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -110,27 +112,31 @@ jobs:
               ;;
           esac
 
-          run_pack=false
-          if [ "$run_spread_source" = "true" ] || [ "$run_spread_docs" = "true" ] || [ "$run_spread_manual" = "true" ] || [ "$run_publish" = "true" ]; then
-            run_pack=true
-          fi
-
           if [ "$run_spread_source" = "true" ] && [ -n "$CHARMCRAFT_AUTH" ]; then
             run_spread_store=true
           fi
 
+          source_systems='[]'
+          if [ "$run_spread_source" = "true" ]; then
+            source_systems="$(spread -list openstack: | cut -d: -f2 | sort | uniq | jq --raw-input . | jq --slurp --compact-output)"
+          fi
+
+          docs_systems='[]'
+          if [ "$run_spread_docs" = "true" ]; then
+            docs_systems="$(spread -list ci:docs/ | jq --raw-input . | jq --slurp --compact-output)"
+          fi
+
           {
-            echo "run-pack=$run_pack"
             echo "run-publish=$run_publish"
             echo "run-spread-source=$run_spread_source"
             echo "run-spread-store=$run_spread_store"
             echo "run-spread-docs=$run_spread_docs"
             echo "run-spread-manual=$run_spread_manual"
+            echo "source-systems=$source_systems"
+            echo "docs-systems=$docs_systems"
           } >> "$GITHUB_OUTPUT"
 
   pack:
-    needs: filter
-    if: needs.filter.outputs.run-pack == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -182,6 +188,8 @@ jobs:
       store: ${{ needs.filter.outputs.run-spread-store == 'true' }}
       docs: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
       manual: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
+      source-systems: ${{ needs.filter.outputs.source-systems }}
+      docs-systems: ${{ needs.filter.outputs.docs-systems }}
     secrets:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
       CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}

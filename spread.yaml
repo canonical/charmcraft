@@ -42,10 +42,6 @@ backends:
       NO_PROXY: "127.0.0.1,127.0.0.53,localhost,10.0.0.0/8"
       NTP_SERVER: "ntp.ps7.internal"
     systems: &openstack-systems
-      - ubuntu-18.04-64:
-          image: snapd-spread/ubuntu-18.04-64
-          workers: 1
-          storage: 40G
       - ubuntu-20.04-64:
           image: snapd-spread/ubuntu-20.04-64-hwe
           workers: 3
@@ -137,8 +133,6 @@ backends:
       instance_name=$(multipass list --format csv | grep $SPREAD_SYSTEM_ADDRESS | cut -f1 -d\,)
       multipass delete --purge "${instance_name}"
     systems:
-      - ubuntu-18.04-64:
-          workers: 1
       - ubuntu-20.04-64:
           workers: 1
       - ubuntu-22.04-64:

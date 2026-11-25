@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-slim
     outputs:
       run-publish: ${{ steps.eval.outputs.run-publish }}
+      run-spread: ${{ steps.eval.outputs.run-spread }}
       run-spread-source: ${{ steps.eval.outputs.run-spread-source }}
       run-spread-store: ${{ steps.eval.outputs.run-spread-store }}
       run-spread-docs: ${{ steps.eval.outputs.run-spread-docs }}
@@ -62,7 +63,7 @@ jobs:
               - 'tests/spread/smoketests/parallel-build/*'
               - 'tests/spread/smoketests/remote-build/*'
 
-      - name: Evaluate workflow triggers and spread systems
+      - name: Evaluate workflow triggers
         id: eval
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -109,12 +110,18 @@ jobs:
               ;;
           esac
 
+          run_spread=false
+          if [ "$run_spread_source" = "true" ] || [ "$run_spread_docs" = "true" ] || [ "$run_spread_manual" = "true" ]; then
+            run_spread=true
+          fi
+
           if [ "$run_spread_source" = "true" ] && [ -n "$CHARMCRAFT_AUTH" ]; then
             run_spread_store=true
           fi
 
           {
             echo "run-publish=$run_publish"
+            echo "run-spread=$run_spread"
             echo "run-spread-source=$run_spread_source"
             echo "run-spread-store=$run_spread_store"
             echo "run-spread-docs=$run_spread_docs"
@@ -123,11 +130,10 @@ jobs:
 
   spread-select:
     needs: filter
-    if: needs.filter.outputs.run-spread-source == 'true' || needs.filter.outputs.run-spread-docs == 'true'
+    if: needs.filter.outputs.run-spread == 'true'
     runs-on: [self-hosted, spread-enabled]
     outputs:
-      source-targets: ${{ steps.select.outputs.source-targets }}
-      docs-targets: ${{ steps.select.outputs.docs-targets }}
+      targets: ${{ steps.select.outputs.targets }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -140,21 +146,26 @@ jobs:
         env:
           RUN_SOURCE: ${{ needs.filter.outputs.run-spread-source }}
           RUN_DOCS: ${{ needs.filter.outputs.run-spread-docs }}
+          RUN_MANUAL: ${{ needs.filter.outputs.run-spread-manual }}
         run: |
-          source_targets='[]'
-          if [ "$RUN_SOURCE" = "true" ]; then
-            source_targets="$(spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/' | jq --raw-input . | jq --slurp --compact-output)"
-          fi
+          targets=$({
+            if [ "$RUN_SOURCE" = "true" ]; then
+              spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/'
+            fi
+            if [ "$RUN_DOCS" = "true" ]; then
+              spread -list openstack:docs/
+            fi
+            if [ "$RUN_MANUAL" = "true" ]; then
+              printf '%s\n' \
+                "openstack:ubuntu-24.04-64:tests/spread/charms/k8s-operator" \
+                "openstack:ubuntu-24.04-64:tests/spread/charms/operator" \
+                "openstack:ubuntu-24.04-64:tests/spread/charms/reactive" \
+                "openstack:ubuntu-24.04-64:tests/spread/smoketests/parallel-build" \
+                "openstack:ubuntu-24.04-64:tests/spread/smoketests/remote-build"
+            fi
+          } | jq --raw-input . | jq --slurp --compact-output)
 
-          docs_targets='[]'
-          if [ "$RUN_DOCS" = "true" ]; then
-            docs_targets="$(spread -list openstack:docs/ | jq --raw-input . | jq --slurp --compact-output)"
-          fi
-
-          {
-            echo "source-targets=$source_targets"
-            echo "docs-targets=$docs_targets"
-          } >> "$GITHUB_OUTPUT"
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
   pack:
     runs-on: ubuntu-24.04
@@ -199,15 +210,17 @@ jobs:
           snap: ${{ steps.snap-name.outputs.snap }}
           release: edge/pr-${{ github.event.pull_request.number }}
 
-  spread-source:
+  spread:
     needs: [filter, spread-select, pack]
     uses: ./.github/workflows/spread.yaml
     with:
-      run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
-      targets: ${{ needs.spread-select.outputs.source-targets || '[]' }}
+      run: ${{ needs.filter.outputs.run-spread == 'true' }}
+      targets: ${{ needs.spread-select.outputs.targets || '[]' }}
+    secrets:
+      env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}
 
   spread-store:
-    needs: [filter, spread-select, pack]
+    needs: [filter, pack]
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
@@ -215,20 +228,3 @@ jobs:
       env: ${{ format('{{"CHARM_DEFAULT_NAME":"gh-ci-charmcraft-charm","STAGING_SSO_USERNAME":{0},"CHARMCRAFT_STORE_SSO_URL":"https://login.staging.ubuntu.com"}}', toJSON(vars.STAGING_SSO_USERNAME)) }}
     secrets:
       env: ${{ format('{{"CHARMCRAFT_AUTH":{0},"CHARMCRAFT_SINGLE_CHARM_AUTH":{1},"STAGING_SSO_PASSWORD":{2}}}', toJSON(secrets.CHARMCRAFT_AUTH), toJSON(secrets.CHARMCRAFT_SINGLE_CHARM_AUTH), toJSON(secrets.STAGING_SSO_PASSWORD)) }}
-
-  spread-docs:
-    needs: [filter, spread-select, pack]
-    uses: ./.github/workflows/spread.yaml
-    with:
-      run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
-      targets: ${{ needs.spread-select.outputs.docs-targets || '[]' }}
-      timeout-minutes: 90
-
-  spread-manual:
-    needs: [filter, spread-select, pack]
-    uses: ./.github/workflows/spread.yaml
-    with:
-      run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
-      targets: '["openstack:ubuntu-24.04-64:tests/spread/charms/k8s-operator","openstack:ubuntu-24.04-64:tests/spread/charms/operator","openstack:ubuntu-24.04-64:tests/spread/charms/reactive","openstack:ubuntu-24.04-64:tests/spread/smoketests/parallel-build","openstack:ubuntu-24.04-64:tests/spread/smoketests/remote-build"]'
-    secrets:
-      env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}

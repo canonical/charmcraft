@@ -129,6 +129,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Use wheels
+        run: |
+          yq e 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -i snap/snapcraft.yaml
       - name: Pack snap
         uses: canonical/craft-actions/snapcraft/pack@5d072661cd0e3a60ad1b79d6ba93db88344e2b5b # v1
         id: snapcraft

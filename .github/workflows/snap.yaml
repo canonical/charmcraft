@@ -27,7 +27,6 @@ jobs:
     runs-on: ubuntu-slim
     outputs:
       run-snap: ${{ steps.eval.outputs.run-snap }}
-      run-tests: ${{ steps.eval.outputs.run-tests }}
       run-spread: ${{ steps.eval.outputs.run-spread }}
       run-docs: ${{ steps.eval.outputs.run-docs }}
       run-manual: ${{ steps.eval.outputs.run-manual }}
@@ -44,9 +43,6 @@ jobs:
         id: filter
         with:
           filters: |
-            tests:
-              - '!({.github/**,docs/**,schema/**,tests/spread/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md,spread.yaml})'
-              - '.github/workflows/snap.yaml'
             spread:
               - '!({.github/**,docs/**,schema/**,tests/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md})'
               - 'tests/spread/**'
@@ -71,36 +67,30 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           GITHUB_REF: ${{ github.ref }}
           SCHEDULE: ${{ github.event.schedule }}
-          FILTER_TESTS: ${{ steps.filter.outputs.tests }}
           FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
           FILTER_DOCS: ${{ steps.filter.outputs.docs }}
           FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
         run: |
-          run_tests=false
           run_spread=false
           run_docs=false
           run_manual=false
 
           case "$EVENT_NAME" in
             pull_request)
-              [ "$FILTER_TESTS" = "true" ] && run_tests=true
               [ "$FILTER_SPREAD" = "true" ] && run_spread=true
               [ "$FILTER_DOCS" = "true" ] && run_docs=true
               [ "$FILTER_MANUAL" = "true" ] && run_manual=true
               ;;
             push)
-              [ "$FILTER_TESTS" = "true" ] && run_tests=true
               if [ "$GITHUB_REF" = "refs/heads/main" ]; then
                 [ "$FILTER_SPREAD" = "true" ] && run_spread=true
                 [ "$FILTER_DOCS" = "true" ] && run_docs=true
               fi
               ;;
             merge_group)
-              run_tests=true
               run_spread=true
               ;;
             workflow_dispatch)
-              run_tests=true
               run_manual=true
               ;;
             schedule)
@@ -113,13 +103,12 @@ jobs:
           esac
 
           run_snap=false
-          if [ "$run_tests" = "true" ] || [ "$run_spread" = "true" ] || [ "$run_docs" = "true" ] || [ "$run_manual" = "true" ]; then
+          if [ "$run_spread" = "true" ] || [ "$run_docs" = "true" ] || [ "$run_manual" = "true" ]; then
             run_snap=true
           fi
 
           {
             echo "run-snap=$run_snap"
-            echo "run-tests=$run_tests"
             echo "run-spread=$run_spread"
             echo "run-docs=$run_docs"
             echo "run-manual=$run_manual"
@@ -145,8 +134,8 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snaps }}
 
   snap-publish:
-    needs: [filter, snap-build]
-    if: needs.filter.outputs.run-tests == 'true' && github.event_name == 'pull_request'
+    needs: snap-build
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Download snap artifact

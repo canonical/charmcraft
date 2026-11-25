@@ -51,7 +51,7 @@ jobs:
               - '!({.github/**,docs/**,schema/**,tests/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md})'
               - 'tests/spread/**'
               - '.github/workflows/snap.yaml'
-              - '.github/workflows/spread.yaml'
+              - '.github/workflows/spread-source.yaml'
             docs:
               - '.github/workflows/snap.yaml'
               - '.github/workflows/spread-docs.yaml'
@@ -167,10 +167,10 @@ jobs:
           snap: ${{ steps.snap-name.outputs.snap }}
           release: edge/pr-${{ github.event.pull_request.number }}
 
-  spread:
+  spread-source:
     needs: [filter, snap-build]
     if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
-    uses: ./.github/workflows/spread.yaml
+    uses: ./.github/workflows/spread-source.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread == 'true' }}
     secrets:

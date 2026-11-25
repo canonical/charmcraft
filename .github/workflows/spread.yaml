@@ -9,10 +9,6 @@ on:
       targets:
         type: string
         required: true
-      max-parallel:
-        type: number
-        required: false
-        default: 256
       timeout-minutes:
         type: number
         required: false
@@ -35,7 +31,6 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
     strategy:
       fail-fast: false
-      max-parallel: ${{ inputs.max-parallel }}
       matrix:
         target: ${{ fromJSON(inputs.targets) }}
 

@@ -30,6 +30,7 @@ jobs:
       run-spread: ${{ steps.eval.outputs.run-spread }}
       run-docs: ${{ steps.eval.outputs.run-docs }}
       run-manual: ${{ steps.eval.outputs.run-manual }}
+      has-store-credentials: ${{ steps.eval.outputs.has-store-credentials }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -70,10 +71,13 @@ jobs:
           FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
           FILTER_DOCS: ${{ steps.filter.outputs.docs }}
           FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         run: |
           run_spread=false
           run_docs=false
           run_manual=false
+          has_store_credentials=false
+          [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && has_store_credentials=true
 
           case "$EVENT_NAME" in
             pull_request)
@@ -112,6 +116,7 @@ jobs:
             echo "run-spread=$run_spread"
             echo "run-docs=$run_docs"
             echo "run-manual=$run_manual"
+            echo "has-store-credentials=$has_store_credentials"
           } >> "$GITHUB_OUTPUT"
 
   snap-build:
@@ -134,8 +139,8 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snaps }}
 
   snap-publish:
-    needs: snap-build
-    if: github.event_name == 'pull_request'
+    needs: [filter, snap-build]
+    if: github.event_name == 'pull_request' && needs.filter.outputs.has-store-credentials == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Download snap artifact

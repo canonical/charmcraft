@@ -127,7 +127,7 @@ jobs:
             echo "run-spread-manual=$run_spread_manual"
           } >> "$GITHUB_OUTPUT"
 
-  snap-build:
+  pack:
     needs: filter
     if: needs.filter.outputs.run-pack == 'true'
     runs-on: ubuntu-24.04
@@ -149,8 +149,8 @@ jobs:
           name: snap
           path: ${{ steps.snapcraft.outputs.snaps }}
 
-  snap-publish:
-    needs: [filter, snap-build]
+  publish:
+    needs: [filter, pack]
     if: needs.filter.outputs.run-publish == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -173,8 +173,8 @@ jobs:
           release: edge/pr-${{ github.event.pull_request.number }}
 
   spread-source:
-    needs: [filter, snap-build]
-    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
     uses: ./.github/workflows/spread-source.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-source == 'true' }}
@@ -185,15 +185,15 @@ jobs:
       STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
 
   spread-docs:
-    needs: [filter, snap-build]
-    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
     uses: ./.github/workflows/spread-docs.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-docs == 'true' }}
 
   spread-manual:
-    needs: [filter, snap-build]
-    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    needs: [filter, pack]
+    if: always() && needs.pack.result != 'failure' && needs.pack.result != 'cancelled'
     uses: ./.github/workflows/spread-manual.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}

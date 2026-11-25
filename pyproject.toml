@@ -478,6 +478,7 @@ exclude = [
 constraint-dependencies = [
   "build>=0.1.0",
   "cffi>=1.15",
+  # filelock>=4.2.0 requires Python >=3.11
   "filelock>=4.2.1;python_version>='3.11'",
   "httplib2>=0.20.0",
   "iniconfig>=1.1.0",

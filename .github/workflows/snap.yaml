@@ -1,0 +1,185 @@
+name: Snap
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "hotfix/**"
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 */2 * *"
+    - cron: "0 0 * * 0"
+    - cron: "0 0 * * WED,SUN"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  filter:
+    runs-on: ubuntu-slim
+    outputs:
+      run-snap: ${{ steps.eval.outputs.run-snap }}
+      run-tests: ${{ steps.eval.outputs.run-tests }}
+      run-spread: ${{ steps.eval.outputs.run-spread }}
+      run-docs: ${{ steps.eval.outputs.run-docs }}
+      run-manual: ${{ steps.eval.outputs.run-manual }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Filter changed paths
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            tests:
+              - '!({.github/**,docs/**,schema/**,tests/spread/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md,spread.yaml})'
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/tests.yaml'
+            spread:
+              - '!({.github/**,docs/**,schema/**,tests/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md})'
+              - 'tests/spread/**'
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread.yaml'
+            docs:
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread-docs.yaml'
+              - 'spread.yaml'
+              - '.readthedocs.yaml'
+              - 'docs/**/code/**'
+            manual:
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread-manual.yaml'
+              - 'tests/spread/charms/**'
+              - 'tests/spread/smoketests/parallel-build/*'
+              - 'tests/spread/smoketests/remote-build/*'
+
+      - name: Evaluate workflow triggers
+        id: eval
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REF: ${{ github.ref }}
+          SCHEDULE: ${{ github.event.schedule }}
+          HAS_MANUAL_LABEL: "${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') }}"
+          FILTER_TESTS: ${{ steps.filter.outputs.tests }}
+          FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
+          FILTER_DOCS: ${{ steps.filter.outputs.docs }}
+          FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
+        run: |
+          run_tests=false
+          run_spread=false
+          run_docs=false
+          run_manual=false
+
+          case "$EVENT_NAME" in
+            pull_request)
+              [ "$FILTER_TESTS" = "true" ] && run_tests=true
+              [ "$FILTER_SPREAD" = "true" ] && run_spread=true
+              [ "$FILTER_DOCS" = "true" ] && run_docs=true
+              if [ "$HAS_MANUAL_LABEL" = "true" ] && [ "$FILTER_MANUAL" = "true" ]; then
+                run_manual=true
+              fi
+              ;;
+            push)
+              [ "$FILTER_TESTS" = "true" ] && run_tests=true
+              if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+                [ "$FILTER_SPREAD" = "true" ] && run_spread=true
+                [ "$FILTER_DOCS" = "true" ] && run_docs=true
+              fi
+              ;;
+            merge_group)
+              run_tests=true
+              run_spread=true
+              ;;
+            workflow_dispatch)
+              run_tests=true
+              run_manual=true
+              ;;
+            schedule)
+              case "$SCHEDULE" in
+                "0 0 */2 * *") run_spread=true ;;
+                "0 0 * * 0") run_docs=true ;;
+                "0 0 * * WED,SUN") run_manual=true ;;
+              esac
+              ;;
+          esac
+
+          run_snap=false
+          if [ "$run_tests" = "true" ] || [ "$run_spread" = "true" ] || [ "$run_docs" = "true" ] || [ "$run_manual" = "true" ]; then
+            run_snap=true
+          fi
+
+          {
+            echo "run-snap=$run_snap"
+            echo "run-tests=$run_tests"
+            echo "run-spread=$run_spread"
+            echo "run-docs=$run_docs"
+            echo "run-manual=$run_manual"
+          } >> "$GITHUB_OUTPUT"
+
+  snap-build:
+    needs: filter
+    if: needs.filter.outputs.run-snap == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pack snap
+        uses: canonical/craft-actions/snapcraft/pack@5d072661cd0e3a60ad1b79d6ba93db88344e2b5b # v1
+        id: snapcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snaps }}
+
+  tests:
+    needs: [filter, snap-build]
+    if: always() && needs.filter.outputs.run-tests == 'true' && needs.snap-build.result == 'success'
+    uses: ./.github/workflows/tests.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-tests == 'true' }}
+    secrets:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+
+  spread:
+    needs: [filter, snap-build]
+    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread == 'true' }}
+    secrets:
+      CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
+      CHARMCRAFT_SINGLE_CHARM_AUTH: ${{ secrets.CHARMCRAFT_SINGLE_CHARM_AUTH }}
+      STAGING_SSO_PASSWORD: ${{ secrets.STAGING_SSO_PASSWORD }}
+
+  spread-docs:
+    needs: [filter, snap-build]
+    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    uses: ./.github/workflows/spread-docs.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-docs == 'true' }}
+
+  spread-manual:
+    needs: [filter, snap-build]
+    if: always() && needs.snap-build.result != 'failure' && needs.snap-build.result != 'cancelled'
+    uses: ./.github/workflows/spread-manual.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-manual == 'true' }}
+    secrets:
+      LAUNCHPAD_TOKEN: ${{ secrets.LAUNCHPAD_TOKEN }}

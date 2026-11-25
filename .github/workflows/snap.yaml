@@ -233,8 +233,7 @@ jobs:
     uses: ./.github/workflows/spread.yaml
     with:
       run: ${{ needs.filter.outputs.run-spread-manual == 'true' }}
-      runs-on: '["spread-installed"]'
       max-parallel: 2
-      targets: '["google:tests/spread/charms/k8s-operator","google:tests/spread/charms/operator","google:tests/spread/charms/reactive","google:tests/spread/smoketests/parallel-build","google:tests/spread/smoketests/remote-build"]'
+      targets: '["openstack:ubuntu-24.04-64:tests/spread/charms/k8s-operator","openstack:ubuntu-24.04-64:tests/spread/charms/operator","openstack:ubuntu-24.04-64:tests/spread/charms/reactive","openstack:ubuntu-24.04-64:tests/spread/smoketests/parallel-build","openstack:ubuntu-24.04-64:tests/spread/smoketests/remote-build"]'
     secrets:
       env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}

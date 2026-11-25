@@ -9,10 +9,6 @@ on:
       targets:
         type: string
         required: true
-      runs-on:
-        type: string
-        required: false
-        default: '["self-hosted", "spread-enabled"]'
       max-parallel:
         type: number
         required: false
@@ -35,7 +31,7 @@ permissions:
 jobs:
   spread:
     if: ${{ inputs.run }}
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: [self-hosted, spread-enabled]
     timeout-minutes: ${{ inputs.timeout-minutes }}
     strategy:
       fail-fast: false

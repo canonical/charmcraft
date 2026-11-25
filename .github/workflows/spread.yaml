@@ -112,18 +112,3 @@ jobs:
           for r in .spread-reuse.*.yaml; do
             spread -discard -reuse-pid="$(echo "$r" | grep -o -E '[0-9]+')"
           done
-
-  spread-status:
-    runs-on: ubuntu-slim
-    needs: [snap-tests, snap-store-tests]
-    if: always()
-    steps:
-      - name: Check spread results
-        env:
-          SNAP_TESTS_RESULT: ${{ needs.snap-tests.result }}
-          SNAP_STORE_TESTS_RESULT: ${{ needs.snap-store-tests.result }}
-        run: |
-          if [ "$SNAP_TESTS_RESULT" = "failure" ] || [ "$SNAP_TESTS_RESULT" = "cancelled" ] || \
-             [ "$SNAP_STORE_TESTS_RESULT" = "failure" ] || [ "$SNAP_STORE_TESTS_RESULT" = "cancelled" ]; then
-            exit 1
-          fi

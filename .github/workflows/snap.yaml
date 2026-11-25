@@ -71,7 +71,6 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           GITHUB_REF: ${{ github.ref }}
           SCHEDULE: ${{ github.event.schedule }}
-          HAS_MANUAL_LABEL: "${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') }}"
           FILTER_TESTS: ${{ steps.filter.outputs.tests }}
           FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
           FILTER_DOCS: ${{ steps.filter.outputs.docs }}
@@ -87,9 +86,7 @@ jobs:
               [ "$FILTER_TESTS" = "true" ] && run_tests=true
               [ "$FILTER_SPREAD" = "true" ] && run_spread=true
               [ "$FILTER_DOCS" = "true" ] && run_docs=true
-              if [ "$HAS_MANUAL_LABEL" = "true" ] && [ "$FILTER_MANUAL" = "true" ]; then
-                run_manual=true
-              fi
+              [ "$FILTER_MANUAL" = "true" ] && run_manual=true
               ;;
             push)
               [ "$FILTER_TESTS" = "true" ] && run_tests=true

@@ -21,6 +21,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   filter:
@@ -159,11 +160,11 @@ jobs:
             fi
             if [ "$RUN_MANUAL" = "true" ]; then
               printf '%s\n' \
-                "openstack:ubuntu-24.04-64:tests/spread/charms/k8s-operator" \
-                "openstack:ubuntu-24.04-64:tests/spread/charms/operator" \
-                "openstack:ubuntu-24.04-64:tests/spread/charms/reactive" \
-                "openstack:ubuntu-24.04-64:tests/spread/smoketests/parallel-build" \
-                "openstack:ubuntu-24.04-64:tests/spread/smoketests/remote-build"
+                "openstack:ubuntu-22.04-64:tests/spread/charms/k8s-operator" \
+                "openstack:ubuntu-22.04-64:tests/spread/charms/operator" \
+                "openstack:ubuntu-22.04-64:tests/spread/charms/reactive" \
+                "openstack:ubuntu-22.04-64:tests/spread/smoketests/parallel-build" \
+                "openstack:ubuntu-22.04-64:tests/spread/smoketests/remote-build"
             fi
           } | tr '\n' ' ' | sed 's/ *$//')
 

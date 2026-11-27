@@ -1,0 +1,233 @@
+name: Snap
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "hotfix/**"
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 */2 * *"
+    - cron: "0 0 * * 0"
+    - cron: "0 0 * * WED,SUN"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  filter:
+    runs-on: ubuntu-slim
+    outputs:
+      run-publish: ${{ steps.eval.outputs.run-publish }}
+      run-spread: ${{ steps.eval.outputs.run-spread }}
+      run-spread-source: ${{ steps.eval.outputs.run-spread-source }}
+      run-spread-store: ${{ steps.eval.outputs.run-spread-store }}
+      run-spread-docs: ${{ steps.eval.outputs.run-spread-docs }}
+      run-spread-manual: ${{ steps.eval.outputs.run-spread-manual }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Filter changed paths
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            spread:
+              - '!({.github/**,docs/**,schema/**,tests/**,.editorconfig,.pre-commit-config.yaml,.readthedocs.yaml,*.md,**/*.md})'
+              - 'tests/spread/**'
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread.yaml'
+            docs:
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread.yaml'
+              - 'spread.yaml'
+              - '.readthedocs.yaml'
+              - 'docs/**/code/**'
+            manual:
+              - '.github/workflows/snap.yaml'
+              - '.github/workflows/spread.yaml'
+              - 'tests/spread/charms/**'
+              - 'tests/spread/smoketests/parallel-build/*'
+              - 'tests/spread/smoketests/remote-build/*'
+
+      - name: Evaluate workflow triggers
+        id: eval
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REF: ${{ github.ref }}
+          SCHEDULE: ${{ github.event.schedule }}
+          FILTER_SPREAD: ${{ steps.filter.outputs.spread }}
+          FILTER_DOCS: ${{ steps.filter.outputs.docs }}
+          FILTER_MANUAL: ${{ steps.filter.outputs.manual }}
+          HAS_MANUAL_LABEL: "${{ contains(github.event.pull_request.labels.*.name, 'PR: Run Manual Spread') }}"
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_AUTH }}
+        run: |
+          run_spread_source=false
+          run_spread_store=false
+          run_spread_docs=false
+          run_spread_manual=false
+          run_publish=false
+
+          case "$EVENT_NAME" in
+            pull_request)
+              [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
+              [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
+              if [ "$HAS_MANUAL_LABEL" = "true" ] || [ "$FILTER_MANUAL" = "true" ]; then
+                run_spread_manual=true
+              fi
+              [ -n "$SNAPCRAFT_STORE_CREDENTIALS" ] && run_publish=true
+              ;;
+            push)
+              if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+                [ "$FILTER_SPREAD" = "true" ] && run_spread_source=true
+                [ "$FILTER_DOCS" = "true" ] && run_spread_docs=true
+              fi
+              ;;
+            merge_group)
+              run_spread_source=true
+              ;;
+            workflow_dispatch)
+              run_spread_manual=true
+              ;;
+            schedule)
+              case "$SCHEDULE" in
+                "0 0 */2 * *") run_spread_source=true ;;
+                "0 0 * * 0") run_spread_docs=true ;;
+                "0 0 * * WED,SUN") run_spread_manual=true ;;
+              esac
+              ;;
+          esac
+
+          run_spread=false
+          if [ "$run_spread_source" = "true" ] || [ "$run_spread_docs" = "true" ] || [ "$run_spread_manual" = "true" ]; then
+            run_spread=true
+          fi
+
+          if [ "$run_spread_source" = "true" ] && [ -n "$CHARMCRAFT_AUTH" ]; then
+            run_spread_store=true
+          fi
+
+          {
+            echo "run-publish=$run_publish"
+            echo "run-spread=$run_spread"
+            echo "run-spread-source=$run_spread_source"
+            echo "run-spread-store=$run_spread_store"
+            echo "run-spread-docs=$run_spread_docs"
+            echo "run-spread-manual=$run_spread_manual"
+          } >> "$GITHUB_OUTPUT"
+
+  spread-select:
+    needs: filter
+    if: needs.filter.outputs.run-spread == 'true'
+    runs-on: [self-hosted, spread-enabled]
+    outputs:
+      targets: ${{ steps.select.outputs.targets }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+      - name: Find spread targets
+        id: select
+        env:
+          RUN_SOURCE: ${{ needs.filter.outputs.run-spread-source }}
+          RUN_DOCS: ${{ needs.filter.outputs.run-spread-docs }}
+          RUN_MANUAL: ${{ needs.filter.outputs.run-spread-manual }}
+        run: |
+          targets=$({
+            if [ "$RUN_SOURCE" = "true" ]; then
+              spread -list openstack: | cut -d: -f2 | sort | uniq | sed 's/^/openstack:/'
+            fi
+            if [ "$RUN_DOCS" = "true" ]; then
+              spread -list openstack:docs/
+            fi
+            if [ "$RUN_MANUAL" = "true" ]; then
+              printf '%s\n' \
+                "openstack:ubuntu-22.04-64:tests/spread/charms/k8s-operator" \
+                "openstack:ubuntu-22.04-64:tests/spread/charms/operator" \
+                "openstack:ubuntu-22.04-64:tests/spread/charms/reactive" \
+                "openstack:ubuntu-22.04-64:tests/spread/smoketests/parallel-build" \
+                "openstack:ubuntu-22.04-64:tests/spread/smoketests/remote-build"
+            fi
+          } | tr '\n' ' ' | sed 's/ *$//')
+
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+  pack:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use wheels
+        run: |
+          yq e 'del(.parts.charmcraft."build-environment"[] | select(.UV_NO_BINARY == "true"))' -i snap/snapcraft.yaml
+      - name: Pack snap
+        uses: canonical/craft-actions/snapcraft/pack@5d072661cd0e3a60ad1b79d6ba93db88344e2b5b # v1
+        id: snapcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snaps }}
+
+  publish:
+    needs: [filter, pack]
+    if: needs.filter.outputs.run-publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download snap artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: snap
+          path: snap-artifacts
+      - name: Get snap filename
+        id: snap-name
+        run: |
+          echo "snap=$(find snap-artifacts -type f -name '*.snap')" >> "$GITHUB_OUTPUT"
+      - name: Publish feature branch to edge/pr-${{ github.event.pull_request.number }}
+        if: env.SNAPCRAFT_STORE_CREDENTIALS != ''
+        uses: canonical/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snap-name.outputs.snap }}
+          release: edge/pr-${{ github.event.pull_request.number }}
+
+  spread:
+    needs: [filter, spread-select, pack]
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread == 'true' }}
+      targets: ${{ needs.spread-select.outputs.targets }}
+    secrets:
+      env: ${{ format('{{"LAUNCHPAD_TOKEN":{0}}}', toJSON(secrets.LAUNCHPAD_TOKEN)) }}
+
+  spread-store:
+    needs: [filter, pack]
+    uses: ./.github/workflows/spread.yaml
+    with:
+      run: ${{ needs.filter.outputs.run-spread-store == 'true' }}
+      targets: openstack:ubuntu-22.04-64:tests/spread/store/
+      env: ${{ format('{{"CHARM_DEFAULT_NAME":"gh-ci-charmcraft-charm","STAGING_SSO_USERNAME":{0},"CHARMCRAFT_STORE_SSO_URL":"https://login.staging.ubuntu.com"}}', toJSON(vars.STAGING_SSO_USERNAME)) }}
+    secrets:
+      env: ${{ format('{{"CHARMCRAFT_AUTH":{0},"CHARMCRAFT_SINGLE_CHARM_AUTH":{1},"STAGING_SSO_PASSWORD":{2}}}', toJSON(secrets.CHARMCRAFT_AUTH), toJSON(secrets.CHARMCRAFT_SINGLE_CHARM_AUTH), toJSON(secrets.STAGING_SSO_PASSWORD)) }}
